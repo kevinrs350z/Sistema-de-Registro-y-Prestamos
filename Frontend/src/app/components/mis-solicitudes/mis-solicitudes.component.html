@@ -1,0 +1,26 @@
+<div class="wrap">
+  <h1>Mis solicitudes</h1>
+
+  <div *ngIf="solicitudes.length === 0" class="info">
+    Aún no has realizado ninguna solicitud.
+  </div>
+
+  <div *ngFor="let s of solicitudes" class="solicitud-card">
+    <h3>Solicitud #{{ s.id }} – {{ s.tipo }}</h3>
+    <ul>
+      <li><b>Periodo:</b> {{ s.fecha_inicio }} → {{ s.fecha_fin }}</li>
+      <li><b>Bloque:</b> {{ s.bloqueTxt }}</li>
+      <li>
+        <b>{{ s.tipo === 'INDIVIDUAL' ? '# Equipos' : 'Pack' }}:</b>
+        {{ s.tipo === 'INDIVIDUAL' ? s.equipos.length : s.packNombre }}
+      </li>
+      <li><b>Observación:</b> {{ s.observacion || '—' }}</li>
+      <li>
+        <b>Estado:</b>
+        <span class="estado" [ngClass]="s.estado.toLowerCase()">
+          {{ s.estado }}
+        </span>
+      </li>
+    </ul>
+  </div>
+</div>

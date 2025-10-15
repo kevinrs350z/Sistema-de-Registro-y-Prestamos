@@ -1,0 +1,57 @@
+.wrap {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 1rem;
+}
+
+.info {
+  background: #f6f6f6;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-style: italic;
+}
+
+.solicitud-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.solicitud-card h3 {
+  margin-bottom: 0.5rem;
+}
+
+.solicitud-card ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.solicitud-card li {
+  margin-bottom: 0.4rem;
+}
+
+.estado {
+  font-weight: bold;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.estado.pendiente {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.estado.aprobada {
+  background-color: #d4f4dd;
+  color: #247144;
+}
+
+.estado.rechazada {
+  background-color: #fcd6d6;
+  color: #a62828;
+}
