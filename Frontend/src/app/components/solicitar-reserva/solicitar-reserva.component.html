@@ -3,47 +3,54 @@
     <p class="sub">Formulario de solicitud (solo frontend – mock local).</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <!-- 🔹 1) Datos del alumno -->
         <div class="card">
             <h2>1) Datos del alumno</h2>
             <input type="hidden" formControlName="idUser" />
 
             <div class="grid-2">
-                <div>
-                    <label>Nombre</label>
-                    <input type="text" formControlName="nombre" [disabled]="true" />
+                <div class="grid-2">
+                    <div>
+                        <label>Nombre</label>
+                        <input type="text" formControlName="nombre" [disabled]="true" />
+                    </div>
+                    <div>
+                        <label>RUT</label>
+                        <input type="text" formControlName="rut" [disabled]="true" />
+                    </div>
+                    <div>
+                        <label>Teléfono</label>
+                        <input type="text" formControlName="telefono" [disabled]="true" />
+                    </div>
+                    <div>
+                        <label>Email</label>
+                        <input type="text" formControlName="email" [disabled]="true" />
+                    </div>
                 </div>
-                <div>
-                    <label>RUT</label>
-                    <input type="text" formControlName="rut" [disabled]="true" />
-                </div>
-                <div>
-                    <label>Teléfono</label>
-                    <input type="text" formControlName="telefono" [disabled]="true" />
-                </div>
-                <div>
-                    <label>Email</label>
-                    <input type="text" formControlName="email" [disabled]="true" />
-                </div>
+
             </div>
         </div>
 
-
-
+        <!-- 🔹 2) Tipo de solicitud -->
         <div class="card">
             <h2>2) Tipo de solicitud</h2>
             <label class="radio">
-                <input type="radio" value="INDIVIDUAL" formControlName="tipo" /> Individual
+                <input type="radio" [value]="'DENTRO'" formControlName="tipo_solicitud" />
+                Dentro de la universidad
             </label>
+
             <label class="radio">
-                <input type="radio" value="PACK" formControlName="tipo" /> Pack
+                <input type="radio" [value]="'FUERA'" formControlName="tipo_solicitud" />
+                Fuera de la universidad
             </label>
         </div>
 
+        <!-- 🔹 3) Equipos seleccionados -->
         <div class="card">
             <h2>3) Equipos seleccionados</h2>
             <ul>
                 <li *ngFor="let e of equiposSeleccionados()">
-                    {{e.nombre}} — {{e.categoria}} ({{e.codigo}})
+                    {{ e.nombre }} — {{ e.categoria }} ({{ e.codigo }})
                 </li>
             </ul>
             <div class="err" *ngIf="equiposSeleccionados().length === 0">
@@ -51,70 +58,61 @@
             </div>
         </div>
 
-
-        <div class="card" *ngIf="mostrarPack">
-            <h2>3) Pack</h2>
-            <label>Pack activo</label>
-            <select formControlName="idPack">
-                <option [ngValue]="null">— Selecciona —</option>
-                <option *ngFor="let p of packs" [ngValue]="p.idPack">{{ p.nombre }}</option>
-            </select>
-            <div class="err" *ngIf="f.idPack.touched && f.idPack.invalid">
-                Debes elegir un pack.
-            </div>
-        </div>
-
-        <div class="card">
+        <!-- 🔹 4) Periodo (solo fuera de la universidad) -->
+        <div class="card" *ngIf="esFuera()">
             <h2>4) Periodo</h2>
             <div class="grid-2">
                 <div>
                     <label>Fecha inicio</label>
-                    <input type="date" formControlName="fecha_inicio" />
+                    <input type="date" formControlName="fecha_inicio" [min]="minFechaInicio" />
                 </div>
                 <div>
                     <label>Fecha fin</label>
-                    <input type="date" formControlName="fecha_fin" />
+                    <input type="date" formControlName="fecha_fin" [min]="minFechaInicio" />
                 </div>
             </div>
-            <div class="err" *ngIf="form.touched && form.errors?.['rangoInvalido']">
+            <div class="err" *ngIf="form.errors?.['rangoInvalido']">
                 La fecha fin debe ser posterior a la fecha inicio.
             </div>
         </div>
 
-        <!-- ✅ Nuevo bloque -->
-        <div class="card">
-            <h2>5) Bloque horario</h2>
-            <select formControlName="bloque">
-                <option [ngValue]="null">— Selecciona bloque —</option>
-                <option *ngFor="let b of bloques" [ngValue]="b.id">{{ b.texto }}</option>
-            </select>
-            <div class="err" *ngIf="f.bloque.touched && f.bloque.invalid">
-                Debes seleccionar un bloque.
+        <!-- 🔹 5) Bloques (solo dentro de la universidad) -->
+        <div class="card" *ngIf="esDentro()">
+            <h2>4) Bloques horarios</h2>
+            <div class="equipos-grid">
+                <label class="radio" *ngFor="let b of bloques">
+                    <input type="checkbox" [checked]="form.get('bloques')?.value?.includes(b.id)"
+                        (change)="onBloqueChange($event, b.id)" />
+                    {{ b.texto }}
+                </label>
+            </div>
+            <div class="err" *ngIf="f.bloques.touched && f.bloques.invalid">
+                Debes seleccionar al menos un bloque.
             </div>
         </div>
 
+        <!-- 🔹 6) Observación -->
         <div class="card">
-            <h2>6) Observación (opcional)</h2>
+            <h2>5) Observación (opcional)</h2>
             <textarea rows="3" formControlName="observacion" placeholder="Uso previsto..."></textarea>
         </div>
 
+        <!-- 🔹 Botones -->
         <div class="actions">
             <button type="submit">Solicitar</button>
             <button type="button" class="ghost" (click)="limpiar()">Limpiar</button>
         </div>
     </form>
 
+    <!-- 🔹 Resumen lateral -->
     <aside class="resumen">
         <h3>Resumen</h3>
         <ul>
             <li><b>Alumno:</b> {{ resumen().usuario }}</li>
             <li><b>Tipo:</b> {{ resumen().tipo }}</li>
-            <li *ngIf="mostrarEquipos">
-                <b># Equipos:</b> {{ resumen().cantidadEquipos }}
-            </li>
-            <li *ngIf="mostrarPack"><b>Pack:</b> {{ resumen().pack }}</li>
+            <li><b># Equipos:</b> {{ resumen().cantidadEquipos }}</li>
             <li><b>Periodo:</b> {{ resumen().periodo }}</li>
-            <li><b>Bloque:</b> {{ resumen().bloqueTxt }}</li>
+            <li><b>Bloques:</b> {{ resumen().bloquesTxt }}</li>
         </ul>
     </aside>
 </div>

@@ -1,57 +1,128 @@
-.wrap {
-  max-width: 800px;
+.mis-solicitudes {
+  max-width: 1100px;
   margin: 40px auto;
-  padding: 1rem;
+  padding: 0 24px;
+  font-family: 'Inter', sans-serif;
+  color: #4a4a4a;
 }
 
-.info {
-  background: #f6f6f6;
-  padding: 1rem;
-  border-radius: 8px;
+/* ===== Título ===== */
+h1 {
+  color: #8f6277;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.sub {
+  color: #c594aa;
+  margin-bottom: 28px;
+}
+
+/* ===== Mensaje vacío ===== */
+.info-vacia {
   text-align: center;
-  font-style: italic;
+  background: #fff8fb;
+  border: 1px dashed #f4c3d8;
+  border-radius: 14px;
+  padding: 50px 20px;
+  color: #8f6277;
 }
 
-.solicitud-card {
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+.info-vacia i {
+  font-size: 36px;
+  color: #c594aa;
+  margin-bottom: 12px;
+  display: block;
 }
 
-.solicitud-card h3 {
-  margin-bottom: 0.5rem;
+/* ===== Tabla ===== */
+.tabla-solicitudes {
+  background: #fff;
+  border: 1px solid #f4c3d8;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(197, 148, 170, 0.08);
+  overflow-x: auto;
 }
 
-.solicitud-card ul {
-  list-style: none;
-  padding-left: 0;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
 }
 
-.solicitud-card li {
-  margin-bottom: 0.4rem;
+thead {
+  background: #fdcae1;
+  color: #8f6277;
+  font-weight: 700;
 }
 
+th, td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid #f9d9e7;
+}
+
+tr:hover {
+  background-color: #fff5f9;
+  transition: background 0.2s ease;
+}
+
+/* ===== Estado (chips de color) ===== */
 .estado {
-  font-weight: bold;
-  padding: 0.2rem 0.6rem;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .estado.pendiente {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: #fff0f6;
+  color: #8f6277;
+  border: 1px solid #f4c3d8;
 }
 
 .estado.aprobada {
-  background-color: #d4f4dd;
-  color: #247144;
+  background-color: #d8f5dc;
+  color: #267a4a;
+  border: 1px solid #a4e3b4;
 }
 
 .estado.rechazada {
-  background-color: #fcd6d6;
-  color: #a62828;
+  background-color: #fde2e2;
+  color: #a62323;
+  border: 1px solid #f5b9b9;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    margin-bottom: 14px;
+    background: #fff8fb;
+    border: 1px solid #f4c3d8;
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  td {
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #8f6277;
+  }
 }

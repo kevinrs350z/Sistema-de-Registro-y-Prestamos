@@ -1,22 +1,34 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
   template: `
   <nav class="navbar">
     <div class="nav-inner">
       <span class="logo">Registro y Préstamo</span>
       <ul>
-        <li><a routerLink="/reservas/solicitar">Solicitar reserva</a></li>
-        <li><a href="#">Mis reservas</a></li>
-        <li><a href="#">Cerrar sesión</a></li>
+        <li>
+          <a routerLink="/equipos/catalogo" routerLinkActive="active">
+            Solicitar equipo
+          </a>
+        </li>
+        <li>
+          <a routerLink="/mis-solicitudes" routerLinkActive="active">
+            Mis solicitudes
+          </a>
+        </li>
+        <li>
+          <a routerLink="/login" routerLinkActive="active">
+            Cerrar sesión
+          </a>
+        </li>
       </ul>
     </div>
   </nav>
   `,
-  styleUrl: './navbar.component.css'
+  styleUrls: ['./navbar.component.css'] // 🔹 Corregido: era 'styleUrl' (debe ser plural)
 })
 export class NavbarComponent {}

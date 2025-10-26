@@ -6,13 +6,17 @@ export interface User {
   telefono: string;
 }
 
+// ✅ Modelo de equipo unificado y correcto
 export interface Equipo {
   idEquipo: number;
   nombre: string;
   categoria: string;
+  descripcion: string;
   estado: 'DISPONIBLE' | 'OCUPADO' | 'MANTENCION';
   codigo: string;
+  disponible: boolean;
 }
+
 
 export interface Pack {
   idPack: number;
@@ -22,7 +26,7 @@ export interface Pack {
   equipos: number[];
 }
 
-export type TipoPrestamo = 'INDIVIDUAL' | 'PACK';
+export type TipoPrestamo = 'INDIVIDUAL' | 'PACK' | 'DENTRO' | 'FUERA';
 
 export interface PrestamoDraft {
   idUser: number;
@@ -32,6 +36,6 @@ export interface PrestamoDraft {
   fecha_inicio: string;
   fecha_fin: string;
   observacion?: string;
-  bloque: number; // ✅ AGREGAR ESTA LÍNEA
+  bloque: number | string; // ← CAMBIO CLAVE
   estado: string;
 }

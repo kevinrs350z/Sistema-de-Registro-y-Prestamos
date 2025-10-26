@@ -1,26 +1,44 @@
-<div class="wrap">
+<div class="mis-solicitudes">
   <h1>Mis solicitudes</h1>
+  <p class="sub">Visualiza tus solicitudes de préstamo y su estado actual.</p>
 
-  <div *ngIf="solicitudes.length === 0" class="info">
-    Aún no has realizado ninguna solicitud.
+  <!-- Si no hay solicitudes -->
+  <div *ngIf="solicitudes.length === 0" class="info-vacia">
+    <i class="bi bi-inbox"></i>
+    <p>Aún no has realizado ninguna solicitud.</p>
   </div>
 
-  <div *ngFor="let s of solicitudes" class="solicitud-card">
-    <h3>Solicitud #{{ s.id }} – {{ s.tipo }}</h3>
-    <ul>
-      <li><b>Periodo:</b> {{ s.fecha_inicio }} → {{ s.fecha_fin }}</li>
-      <li><b>Bloque:</b> {{ s.bloqueTxt }}</li>
-      <li>
-        <b>{{ s.tipo === 'INDIVIDUAL' ? '# Equipos' : 'Pack' }}:</b>
-        {{ s.tipo === 'INDIVIDUAL' ? s.equipos.length : s.packNombre }}
-      </li>
-      <li><b>Observación:</b> {{ s.observacion || '—' }}</li>
-      <li>
-        <b>Estado:</b>
-        <span class="estado" [ngClass]="s.estado.toLowerCase()">
-          {{ s.estado }}
-        </span>
-      </li>
-    </ul>
+  <!-- Tabla de solicitudes -->
+  <div *ngIf="solicitudes.length > 0" class="tabla-solicitudes">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Tipo</th>
+          <th>Periodo</th>
+          <th>Bloque</th>
+          <th>Pack / Equipos</th>
+          <th>Observación</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of solicitudes">
+          <td>{{ s.id }}</td>
+          <td>{{ s.tipo }}</td>
+          <td>{{ s.fecha_inicio }} → {{ s.fecha_fin }}</td>
+          <td>{{ s.bloqueTxt }}</td>
+          <td>
+            {{ s.tipo === 'INDIVIDUAL' ? s.equipos.length + ' equipo(s)' : s.packNombre }}
+          </td>
+          <td>{{ s.observacion || '—' }}</td>
+          <td>
+            <span class="estado" [ngClass]="s.estado.toLowerCase()">
+              {{ s.estado }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
