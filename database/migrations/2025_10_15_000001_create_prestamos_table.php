@@ -18,6 +18,7 @@ return new class extends Migration {
 
             $table->foreign('idUser')->references('idUser')->on('users');
             $table->foreign('idEquipo')->references('idEquipo')->on('equipos');
+             $table->timestamps();
         });
     }
 
