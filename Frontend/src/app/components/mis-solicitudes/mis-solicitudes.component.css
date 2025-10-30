@@ -1,36 +1,52 @@
+/* ===== Layout general ===== */
 .mis-solicitudes {
   max-width: 1100px;
   margin: 40px auto;
-  padding: 0 24px;
+  padding: 0 32px;
   font-family: 'Inter', sans-serif;
-  color: #4a4a4a;
+  color: #2c3a6b;
+}
+
+/* ===== Paleta pastel coherente con todo el sistema ===== */
+:root {
+  --primary: #5c77c9;          /* azul pastel */
+  --primary-600: #4a64b2;
+  --secondary: #f5b37f;        /* naranja pastel */
+  --accent: #ffe6d0;           /* naranja muy claro */
+  --surface: #f9fbff;          /* fondo tarjeta */
+  --border: #d8e1f0;           /* borde suave */
+  --radius: 14px;
+  --shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 
 /* ===== Título ===== */
 h1 {
-  color: #8f6277;
+  color: var(--primary-600);
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: 1.8rem;
 }
 
 .sub {
-  color: #c594aa;
-  margin-bottom: 28px;
+  color: #6b7280;
+  margin-bottom: 26px;
+  font-size: 0.95rem;
 }
 
 /* ===== Mensaje vacío ===== */
 .info-vacia {
   text-align: center;
-  background: #fff8fb;
-  border: 1px dashed #f4c3d8;
-  border-radius: 14px;
-  padding: 50px 20px;
-  color: #8f6277;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 60px 20px;
+  color: var(--primary-600);
+  box-shadow: var(--shadow);
 }
 
 .info-vacia i {
-  font-size: 36px;
-  color: #c594aa;
+  font-size: 40px;
+  color: var(--primary);
   margin-bottom: 12px;
   display: block;
 }
@@ -38,10 +54,15 @@ h1 {
 /* ===== Tabla ===== */
 .tabla-solicitudes {
   background: #fff;
-  border: 1px solid #f4c3d8;
-  border-radius: 14px;
-  box-shadow: 0 8px 20px rgba(197, 148, 170, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   overflow-x: auto;
+  transition: box-shadow 0.2s ease;
+}
+
+.tabla-solicitudes:hover {
+  box-shadow: 0 8px 20px rgba(68, 107, 169, 0.15);
 }
 
 table {
@@ -51,19 +72,21 @@ table {
 }
 
 thead {
-  background: #fdcae1;
-  color: #8f6277;
+  background: var(--accent);
+  color: #2c3a6b;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 th, td {
   padding: 14px 18px;
   text-align: left;
-  border-bottom: 1px solid #f9d9e7;
+  border-bottom: 1px solid #eef2ff;
 }
 
 tr:hover {
-  background-color: #fff5f9;
+  background-color: #f4f7ff;
   transition: background 0.2s ease;
 }
 
@@ -75,16 +98,18 @@ tr:hover {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  display: inline-block;
 }
 
+/* Colores de estado coherentes con el sistema */
 .estado.pendiente {
   background-color: #fff0f6;
-  color: #8f6277;
-  border: 1px solid #f4c3d8;
+  color: #b9733f;
+  border: 1px solid #f5b37f;
 }
 
 .estado.aprobada {
-  background-color: #d8f5dc;
+  background-color: #dff8e4;
   color: #267a4a;
   border: 1px solid #a4e3b4;
 }
@@ -107,10 +132,11 @@ tr:hover {
 
   tr {
     margin-bottom: 14px;
-    background: #fff8fb;
-    border: 1px solid #f4c3d8;
-    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     padding: 14px;
+    box-shadow: var(--shadow);
   }
 
   td {
@@ -123,6 +149,6 @@ tr:hover {
   td::before {
     content: attr(data-label);
     font-weight: 700;
-    color: #8f6277;
+    color: var(--primary-600);
   }
 }

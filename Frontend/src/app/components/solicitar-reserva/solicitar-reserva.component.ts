@@ -47,14 +47,17 @@ export class SolicitarReservaComponent {
 
   // Bloques disponibles
   bloques = [
-    { id: 1, texto: 'Bloque 1 (08:15 – 09:45)' },
-    { id: 2, texto: 'Bloque 2 (09:55 – 11:25)' },
-    { id: 3, texto: 'Bloque 3 (11:35 – 13:05)' },
-    { id: 4, texto: 'Bloque 4 (14:30 – 16:00)' },
-    { id: 5, texto: 'Bloque 5 (16:10 – 17:40)' },
+    { id: 1, texto: 'Bloque 1 (08:00 – 09:30)' },
+    { id: 2, texto: 'Bloque 2 (09:40 – 11:10)' },
+    { id: 3, texto: 'Bloque 3 (11:20 – 12:50)' },
+    { id: 4, texto: 'Bloque 4 (14:45 – 16:10)' },
+    { id: 5, texto: 'Bloque 5 (16:20 – 17:50)' },
+    { id: 5, texto: 'Bloque 5 (17:55 – 19:30)' },
+
   ];
 
   tipoSolicitud = signal<'DENTRO' | 'FUERA'>('DENTRO');
+  mostrarMotivo = false; // 👈 controla visibilidad del textarea “Otros motivos”
 
   form = this.fb.group(
     {
@@ -65,6 +68,10 @@ export class SolicitarReservaComponent {
       email: [{ value: '', disabled: true }],
 
       tipo_solicitud: ['DENTRO' as 'DENTRO' | 'FUERA', Validators.required],
+
+      // 🔹 Nueva sección: Asignatura o motivo
+      asignatura: ['', Validators.required],
+      motivo: [''],
 
       // comunes
       equipos: [[] as number[]],
@@ -80,10 +87,12 @@ export class SolicitarReservaComponent {
     { validators: rangoFechasValido }
   );
 
-  get f() { return this.form.controls; }
+  get f() {
+    return this.form.controls;
+  }
 
   esDentro = () => this.tipoSolicitud() === 'DENTRO';
-  esFuera  = () => this.tipoSolicitud() === 'FUERA';
+  esFuera = () => this.tipoSolicitud() === 'FUERA';
 
   /** Fecha mínima dinámica según el tipo */
   minFechaInicio = this.calcularMinFecha('DENTRO');
@@ -92,8 +101,8 @@ export class SolicitarReservaComponent {
     const hoy = new Date();
     let fechaMin =
       tipo === 'FUERA'
-        ? sumarDiasHabiles(hoy, 2) // 2 días hábiles
-        : new Date(hoy.getTime() + 2 * 24 * 60 * 60 * 1000); // 2 días corridos
+        ? sumarDiasHabiles(hoy, 2)
+        : new Date(hoy.getTime() + 2 * 24 * 60 * 60 * 1000);
 
     fechaMin = ajustarSiFinDeSemana(fechaMin);
     return fechaMin.toISOString().split('T')[0];
@@ -102,22 +111,28 @@ export class SolicitarReservaComponent {
   // Resumen lateral reactivo
   resumen = computed(() => {
     const v = this.form.getRawValue();
-    const usuario = this.usuarios.find(u => u.idUser === (v.idUser ?? -1))?.nombre ?? '—';
+    const usuario =
+      this.usuarios.find((u) => u.idUser === (v.idUser ?? -1))?.nombre ?? '—';
     const tipo = v.tipo_solicitud ?? '—';
     const cantidadEquipos = (v.equipos ?? []).length;
 
-    const periodo = v.fecha_inicio && v.fecha_fin ? `${v.fecha_inicio} → ${v.fecha_fin}` : '—';
+    const periodo =
+      v.fecha_inicio && v.fecha_fin
+        ? `${v.fecha_inicio} → ${v.fecha_fin}`
+        : '—';
 
     const bloquesTxt = this.bloques
-      .filter(b => (v.bloques ?? []).includes(b.id))
-      .map(b => b.texto)
+      .filter((b) => (v.bloques ?? []).includes(b.id))
+      .map((b) => b.texto)
       .join(', ');
 
     return { usuario, tipo, cantidadEquipos, periodo, bloquesTxt };
   });
 
   equiposSeleccionados = computed(() =>
-    this.equipos.filter(e => this.form.get('equipos')!.value?.includes(e.idEquipo))
+    this.equipos.filter((e) =>
+      this.form.get('equipos')!.value?.includes(e.idEquipo)
+    )
   );
 
   ngOnInit() {
@@ -131,7 +146,8 @@ export class SolicitarReservaComponent {
     }
 
     // usuario activo simulado
-    const usuarioActivo = this.reservas.getUsuarioActual?.() ?? this.usuarios[0] ?? null;
+    const usuarioActivo =
+      this.reservas.getUsuarioActual?.() ?? this.usuarios[0] ?? null;
     if (usuarioActivo) {
       this.form.patchValue({
         idUser: usuarioActivo.idUser,
@@ -142,48 +158,71 @@ export class SolicitarReservaComponent {
       });
     }
 
-    // Reaccionar al cambio de tipo: recalcular minFecha y ajustar campos
+    // Reaccionar al cambio de tipo de solicitud
     this.form.get('tipo_solicitud')!.valueChanges.subscribe((tipo) => {
       const valor = (tipo ?? 'DENTRO') as 'DENTRO' | 'FUERA';
       this.tipoSolicitud.set(valor);
       this.minFechaInicio = this.calcularMinFecha(valor);
 
       if (valor === 'DENTRO') {
-        // Limpia fechas y validadores
         this.f.fecha_inicio.clearValidators();
         this.f.fecha_fin.clearValidators();
         this.form.patchValue({ fecha_inicio: '', fecha_fin: '' });
 
-        // Exigir al menos 1 bloque
-        this.f.bloques.setValidators([Validators.required, (c) => (c.value?.length ? null : { requerido: true })]);
+        this.f.bloques.setValidators([
+          Validators.required,
+          (c) => (c.value?.length ? null : { requerido: true }),
+        ]);
       } else {
-        // Limpia bloques y validador
         this.f.bloques.clearValidators();
         this.form.patchValue({ bloques: [] });
 
-        // Exigir fechas
         this.f.fecha_inicio.setValidators([Validators.required]);
-        this.f.fecha_fin.setValidators([Validators.required, rangoFechasValido]);
+        this.f.fecha_fin.setValidators([
+          Validators.required,
+          rangoFechasValido,
+        ]);
       }
 
       this.f.fecha_inicio.updateValueAndValidity();
       this.f.fecha_fin.updateValueAndValidity();
       this.f.bloques.updateValueAndValidity();
     });
+
+    // Reaccionar al cambio de asignatura
+    this.form.get('asignatura')!.valueChanges.subscribe((valor) => {
+      if (valor === 'OTROS') {
+        this.mostrarMotivo = true;
+        this.f.motivo.setValidators([Validators.required]);
+      } else {
+        this.mostrarMotivo = false;
+        this.f.motivo.clearValidators();
+        this.form.patchValue({ motivo: '' });
+      }
+      this.f.motivo.updateValueAndValidity();
+    });
   }
 
+  // Maneja checkboxes de bloques
   onBloqueChange(event: Event, id: number) {
     const target = event.target as HTMLInputElement;
     const arr: number[] = this.form.get('bloques')!.value ?? [];
     if (target.checked) {
       if (!arr.includes(id)) this.form.get('bloques')!.setValue([...arr, id]);
     } else {
-      this.form.get('bloques')!.setValue(arr.filter(x => x !== id));
+      this.form.get('bloques')!.setValue(arr.filter((x) => x !== id));
     }
     this.form.get('bloques')!.markAsDirty();
     this.form.get('bloques')!.updateValueAndValidity();
   }
 
+  // Maneja cambio de select (solo para template clarity)
+  onAsignaturaChange(event: Event) {
+    const valor = (event.target as HTMLSelectElement).value;
+    this.mostrarMotivo = valor === 'OTROS';
+  }
+
+  // Envío del formulario
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -191,37 +230,61 @@ export class SolicitarReservaComponent {
       return;
     }
 
-    // 1) Tomamos los IDs de bloques y los convertimos a texto legible
     const ids: number[] = this.form.get('bloques')!.value ?? [];
     const bloquesTxt = this.bloques
-      .filter(b => ids.includes(b.id))
-      .map(b => b.texto)
+      .filter((b) => ids.includes(b.id))
+      .map((b) => b.texto)
       .join(', ');
 
-    // 2) Armamos el payload. En "DENTRO" guardamos los bloques legibles.
     const payload: PrestamoDraft = {
       idUser: this.form.get('idUser')!.value ?? 0,
-      tipo: (this.form.get('tipo_solicitud')!.value ?? 'DENTRO') as 'DENTRO' | 'FUERA',
+      tipo: (this.form.get('tipo_solicitud')!.value ?? 'DENTRO') as
+        | 'DENTRO'
+        | 'FUERA',
       equipos: this.form.get('equipos')!.value ?? [],
       fecha_inicio: this.form.get('fecha_inicio')!.value ?? '',
       fecha_fin: this.form.get('fecha_fin')!.value ?? '',
       bloque: this.tipoSolicitud() === 'DENTRO' ? (bloquesTxt || '—') : '—',
       observacion: this.form.get('observacion')!.value ?? '',
       estado: 'Pendiente',
+
+      // 🔹 Nuevos campos agregados
+      asignatura: this.form.get('asignatura')!.value ?? '',
+      motivo: this.form.get('motivo')!.value ?? '',
     };
 
     this.reservas.crearBorrador(payload);
     alert('✅ Solicitud guardada localmente (mock).');
 
-    // reset amable
-    this.form.reset({ tipo_solicitud: 'DENTRO', equipos: [], bloques: [] });
+    // Reset amable
+    this.form.reset({
+      tipo_solicitud: 'DENTRO',
+      equipos: [],
+      bloques: [],
+      asignatura: '',
+      motivo: '',
+      observacion: '',
+      fecha_inicio: '',
+      fecha_fin: '',
+    });
     this.tipoSolicitud.set('DENTRO');
     this.minFechaInicio = this.calcularMinFecha('DENTRO');
+    this.mostrarMotivo = false;
   }
 
   limpiar() {
-    this.form.reset({ tipo_solicitud: 'DENTRO', equipos: [], bloques: [], fecha_inicio: '', fecha_fin: '', observacion: '' });
+    this.form.reset({
+      tipo_solicitud: 'DENTRO',
+      equipos: [],
+      bloques: [],
+      fecha_inicio: '',
+      fecha_fin: '',
+      asignatura: '',
+      motivo: '',
+      observacion: '',
+    });
     this.tipoSolicitud.set('DENTRO');
     this.minFechaInicio = this.calcularMinFecha('DENTRO');
+    this.mostrarMotivo = false;
   }
 }

@@ -24,78 +24,108 @@ export class ReservasService {
       descripcion: 'Proyector Full HD ideal para presentaciones o clases en sala.',
       estado: 'DISPONIBLE',
       codigo: 'AV-001',
-      disponible: true
+      disponible: true,
+      imagen: 'assets/equipos/proyector.jpg'
     },
     {
       idEquipo: 2,
       nombre: 'Micrófono Shure SM58',
       categoria: 'Audiovisual',
-      descripcion: 'Micrófono dinámico con alta sensibilidad para eventos o grabaciones.',
-      estado: 'OCUPADO',
+      descripcion: 'Micrófono dinámico de alta calidad para conferencias y grabaciones.',
+      estado: 'DISPONIBLE',
       codigo: 'AV-002',
-      disponible: false
+      disponible: true,
+      imagen: 'assets/equipos/microfono.png'
+    },
+    {
+      idEquipo: 3,
+      nombre: 'Parlante Amplificado Behringer B108D',
+      categoria: 'Audiovisual',
+      descripcion: 'Parlante activo de 300W ideal para eventos o clases en auditorio.',
+      estado: 'DISPONIBLE',
+      codigo: 'AV-003',
+      disponible: true,
+      imagen: 'assets/equipos/parlante.jpg'
     },
 
     // 📸 FOTOGRAFÍA
     {
-      idEquipo: 3,
+      idEquipo: 4,
       nombre: 'Cámara Canon EOS Rebel T7',
       categoria: 'Fotografía',
-      descripcion: 'Cámara réflex digital con lente 18-55mm ideal para sesiones o proyectos.',
+      descripcion: 'Cámara réflex digital con lente 18-55 mm, ideal para proyectos académicos.',
       estado: 'DISPONIBLE',
       codigo: 'FOT-001',
-      disponible: true
+      disponible: true,
+      imagen: 'assets/equipos/camara.jpeg'
     },
-    {
-      idEquipo: 4,
-      nombre: 'Trípode Manfrotto Compact',
-      categoria: 'Fotografía',
-      descripcion: 'Trípode profesional de aluminio con ajuste de altura y rotación.',
-      estado: 'MANTENCION',
-      codigo: 'FOT-002',
-      disponible: true
-    },
-
-    // 💻 EQUIPO COMPUTACIONAL
     {
       idEquipo: 5,
-      nombre: 'Notebook HP ProBook 450',
-      categoria: 'Equipo Computacional',
-      descripcion: 'Notebook de 15” con procesador Intel i7 y 16GB RAM, ideal para desarrollo.',
-      estado: 'OCUPADO',
-      codigo: 'COMP-001',
-      disponible: false
+      nombre: 'Trípode Manfrotto Compact',
+      categoria: 'Fotografía',
+      descripcion: 'Trípode de aluminio ajustable, ideal para fotografía fija o de producto.',
+      estado: 'DISPONIBLE',
+      codigo: 'FOT-002',
+      disponible: true,
+      imagen: 'assets/equipos/tripode.png'
     },
     {
       idEquipo: 6,
-      nombre: 'Monitor Dell 24” LED',
-      categoria: 'Equipo Computacional',
-      descripcion: 'Pantalla Full HD con excelente reproducción de color.',
+      nombre: 'Flash Godox TT600',
+      categoria: 'Fotografía',
+      descripcion: 'Flash externo con control inalámbrico, compatible con cámaras Canon y Nikon.',
       estado: 'DISPONIBLE',
-      codigo: 'COMP-002',
-      disponible: true
+      codigo: 'FOT-003',
+      disponible: true,
+      imagen: 'assets/equipos/flash.png'
+    },
+
+    // 💻 EQUIPO COMPUTACIONAL (solo 1)
+    {
+      idEquipo: 7,
+      nombre: 'Notebook HP ProBook 450',
+      categoria: 'Equipo Computacional',
+      descripcion: 'Notebook de 15” con procesador Intel i7 y 16 GB RAM, ideal para desarrollo y análisis de datos.',
+      estado: 'DISPONIBLE',
+      codigo: 'COMP-001',
+      disponible: true,
+      imagen: 'assets/equipos/notebook.jpeg'
     },
 
     // 💡 ILUMINACIÓN
     {
-      idEquipo: 7,
+      idEquipo: 8,
       nombre: 'Panel LED Neewer 660',
       categoria: 'Iluminación',
-      descripcion: 'Panel LED ajustable con temperatura de color y soporte de estudio.',
+      descripcion: 'Panel LED ajustable con control de brillo y temperatura de color.',
       estado: 'DISPONIBLE',
       codigo: 'ILUM-001',
-      disponible: true
+      disponible: true,
+      imagen: 'assets/equipos/luz.jpg'
     },
     {
-      idEquipo: 8,
+      idEquipo: 9,
       nombre: 'Aro de Luz 18” RGB',
       categoria: 'Iluminación',
-      descripcion: 'Aro de luz regulable en intensidad y color.',
-      estado: 'OCUPADO',
+      descripcion: 'Aro de luz regulable en intensidad y temperatura, ideal para retratos y video.',
+      estado: 'DISPONIBLE',
       codigo: 'ILUM-002',
-      disponible: false
+      disponible: true,
+      imagen: 'assets/equipos/aro.jpeg'
+    },
+    {
+      idEquipo: 10,
+      nombre: 'Lámpara Softbox Neewer',
+      categoria: 'Iluminación',
+      descripcion: 'Lámpara profesional con difusor, perfecta para estudios fotográficos.',
+      estado: 'DISPONIBLE',
+      codigo: 'ILUM-003',
+      disponible: true,
+      imagen: 'assets/equipos/lampara.jpeg'
     }
   ];
+
+
 
   private packs: Pack[] = [
     {

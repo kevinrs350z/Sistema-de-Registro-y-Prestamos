@@ -8,7 +8,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   template: `
   <nav class="navbar">
     <div class="nav-inner">
-      <span class="logo">Registro y Préstamo</span>
+      <span class="logo">Registro y Préstamo. Diseño Multimedia</span>
       <ul>
         <li>
           <a routerLink="/equipos/catalogo" routerLinkActive="active">

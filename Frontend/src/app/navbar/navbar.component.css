@@ -1,29 +1,36 @@
+/* ======== NAVBAR PRINCIPAL ======== */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: linear-gradient(180deg, #fde5ef, #fff);
-  color: #8f6277;
+  width: 100%;
+  background-color: #446BA9; /* Azul fuerte principal */
   box-shadow: 0 6px 20px rgba(2, 6, 23, 0.25);
-  border-bottom: 1px solid rgba(197, 148, 170, 0.2);
+  border-bottom: 2px solid rgba(145, 181, 232, 0.3);
 }
 
+/* ======== CONTENEDOR INTERNO ======== */
 .nav-inner {
-  max-width: 1200px;
-  margin: auto;
-  padding: 12px 24px;
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 14px 40px; /* altura ajustada */
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: space-between; /* logo izquierda / botones derecha */
 }
 
+/* ======== TEXTO “REGISTRO Y PRÉSTAMO” ======== */
 .logo {
   font-weight: 800;
-  letter-spacing: 0.3px;
-  color: #8f6277;
+  font-size: 20px;
+  letter-spacing: 0.4px;
+  color: #ffffff; /* texto blanco */
+  text-transform: capitalize;
+  margin: 0;
 }
 
+/* ======== LISTA DE BOTONES ======== */
 ul {
   list-style: none;
   display: flex;
@@ -32,22 +39,48 @@ ul {
   padding: 0;
 }
 
+/* ======== BOTONES ======== */
 a {
-  color: #8f6277;
+  background-color: #F5A474; /* naranja pastel */
+  color: #ffffff; /* texto blanco */
   text-decoration: none;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 10px 18px;
   border-radius: 10px;
-  transition: all 0.18s ease;
+  transition: all 0.2s ease;
 }
 
+/* Hover */
 a:hover {
-  color: #fff;
-  background: rgba(197, 148, 170, 0.5);
+  background-color: #91B5E8; /* azul claro hover */
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(145, 181, 232, 0.4);
 }
 
+/* Enlace activo */
 a[routerLinkActive="active"],
 .active {
-  background: #c594aa;
-  color: #fff;
+  background-color: #91B5E8;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(145, 181, 232, 0.4);
+}
+
+/* ======== RESPONSIVE ======== */
+@media (max-width: 768px) {
+  .nav-inner {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  ul {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  a {
+    width: 100%;
+    text-align: center;
+  }
 }

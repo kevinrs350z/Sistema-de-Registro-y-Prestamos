@@ -15,6 +15,7 @@ export interface Equipo {
   estado: 'DISPONIBLE' | 'OCUPADO' | 'MANTENCION';
   codigo: string;
   disponible: boolean;
+  imagen: string;
 }
 
 
@@ -38,4 +39,6 @@ export interface PrestamoDraft {
   observacion?: string;
   bloque: number | string; // ← CAMBIO CLAVE
   estado: string;
+  asignatura: string;
+  motivo: string;
 }
