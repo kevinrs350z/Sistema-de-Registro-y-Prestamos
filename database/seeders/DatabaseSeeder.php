@@ -14,6 +14,14 @@ class DatabaseSeeder extends Seeder
             UsersTableSeeder::class,
             EquiposTableSeeder::class,
             PrestamosTableSeeder::class,
+            BloqueSeeder::class,
+            ObservacionSeeder::class,
+            SancionSeeder::class,
+            UserSancionSeeder::class,
+            DocenteSeeder::class,
+            AsignaturaSeeder::class,
+            AsignaturaDocenteSeeder::class,
+            BloquePrestamosSeeder::class
         ]);
     }
 }

@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Controllers\AsignaturaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController; 
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\BloqueController;
 use App\Http\Controllers\Prestamo\PrestamoController;
-
+use App\Http\Controllers\EquipoController;
+use App\Http\Controllers\mostrar\usuario;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -21,6 +24,8 @@ use App\Http\Controllers\Prestamo\PrestamoController;
 // 1. RUTAS PÚBLICAS 
 Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset', [ResetPasswordController::class, 'reset']);
+Route::get('/password/validate-token/{token}', [ResetPasswordController::class, 'validateToken']);
+
 // Ruta para iniciar sesión
 // URL: /api/login
 Route::post('/login', [AuthController::class, 'login']);
@@ -41,10 +46,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Método: POST
     // URL: /api/logout
     Route::post('/logout', [AuthController::class, 'logout']); 
-    
+    //mostrar equipos
+    Route::get('/equipos', [EquipoController::class, 'index']);
+    Route::get('/userr', [usuario::class, 'index']);
+    Route::get('/bloques', [BloqueController::class, 'index']);// muestra los bloques
+    Route::get('/asignaturas', [AsignaturaController::class, 'index']);// mostramos las asignaturas
+    //dashboard de admin
     // Prestamos
     Route::post('/prestamos', [PrestamoController::class, 'store']);
     // Route::post('/prestamos/solicitar', [PrestamoController::class, 'solicitarPrestamo']);
+   
+    //Route::get('/admin/dashboard', [AdminDashboardController::class, 'getDashboardData']);
 });
 //Route::middleware('auth:sanctum')->post('/prestamos', [PrestamoController::class, 'store']);
     //Route::middleware('auth:sanctum')->post('/prestamos/solicitar', [PrestamoController::class, 'solicitarPrestamo']);

@@ -11,14 +11,16 @@ return new class extends Migration {
             $table->id('idPrestamo');
             $table->unsignedBigInteger('idUser');
             $table->unsignedBigInteger('idEquipo');
-            $table->date('fecha_inicio');
-            $table->date('fecha_fin');
+            $table->date('fecha_inicio')->nullable();
+            $table->date('fecha_fin')->nullable();
             $table->string('estado')->default('pendiente');
-            $table->string('tipo')->default('solicitud');
+            $table->string('otra_motivo')->nullable();;
+            $table->string('tipo')->default('externo');
+            $table->string('Observacion')->nullable();
 
             $table->foreign('idUser')->references('idUser')->on('users');
             $table->foreign('idEquipo')->references('idEquipo')->on('equipos');
-             $table->timestamps();
+            $table->timestamps();
         });
     }
 

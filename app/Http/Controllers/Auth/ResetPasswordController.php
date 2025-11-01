@@ -58,4 +58,17 @@ class ResetPasswordController extends Controller
 
         return response()->json(['message' => 'Contraseña restablecida correctamente.']);
     }
+    public function validateToken($token)
+    {
+        $record = DB::table('password_resets')
+            ->where('token', $token)
+            ->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'Token inválido o expirado.'], 400);
+        }
+
+        return response()->json(['email' => $record->email]);
+    }
+
 }

@@ -17,6 +17,7 @@ class CreateBloquePrestamosTable extends Migration
             $table->id('idBloquePrestamo');
             $table->unsignedBigInteger('idPrestamo');
             $table->unsignedBigInteger('idBloque');
+            $table->unsignedBigInteger('idAsignatura');
             //$table->timestamps();
 
            $table->foreign('idPrestamo')
@@ -28,7 +29,13 @@ class CreateBloquePrestamosTable extends Migration
                   ->references('idBloque')
                   ->on('bloques')
                   ->onDelete('cascade');
+
+            $table->foreign('idAsignatura')
+                  ->references('idAsignatura')
+                  ->on('asignaturas')
+                  ->onDelete('cascade');
         });
+
     }
 
     /**

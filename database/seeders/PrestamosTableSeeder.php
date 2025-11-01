@@ -20,7 +20,10 @@ class PrestamosTableSeeder extends Seeder
                 'fecha_inicio' => $now->copy()->subDays(rand(15, 25)),
                 'fecha_fin' => $now->copy()->subDays(rand(5, 10)),
                 'estado' => 'devuelto',
-                'tipo' => 'laboratorio',
+                'otra_motivo' => 'se usara uno 10 minutos',
+                'tipo' => 'externo',
+                'observacion' => 'necesito un lente extra',
+
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

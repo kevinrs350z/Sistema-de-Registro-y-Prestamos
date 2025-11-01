@@ -76,6 +76,11 @@ class User extends Authenticatable implements CanResetPasswordContract
         // belongsToMany(Modelo, tabla_pivote, clave_local, clave_relacionada)
         return $this->belongsToMany(Rol::class, 'rol_user', 'idUser', 'idRol');
     }
+    public function sanciones()
+    {
+        return $this->belongsToMany(Sancion::class, 'user_sancion', 'idUser', 'idSancion');
+    }
+
     /**
      * The attributes that should be cast.
      *

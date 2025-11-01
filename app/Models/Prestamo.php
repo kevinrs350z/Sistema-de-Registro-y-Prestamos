@@ -16,7 +16,9 @@ class Prestamo extends Model
         'fecha_inicio',
         'fecha_fin',
         'estado',
-        'tipo'
+        'otro_motivo',
+        'tipo',
+        'observacion'
     ];
 
     // 🔹 Relaciones
@@ -30,11 +32,14 @@ class Prestamo extends Model
     {
         return $this->belongsTo(Equipo::class, 'idEquipo');
     }
-
     public function bloquePrestamo()
     {
         return $this->hasMany(BloquePrestamo::class, 'idPrestamo');
     }
+   // public function bloquePrestamo()
+    //{
+     //   return $this->hasMany(BloquePrestamo::class, 'idPrestamo');
+    //}
 
     public function observacion()
     {

@@ -42,8 +42,8 @@ class ForgotPasswordController extends Controller
         'created_at' => now(),
     ]);
 
-    // 🔗 URL que se enviará al usuario
-    $frontendUrl = "http://localhost:4200/reset-password?token=$token&email=$email";
+    $frontendUrl = "http://localhost:4200/reset-password#$token";
+   // $frontendUrl = "http://localhost:4200/reset-password?token=$token&email=$email";
 
     // ✅ Envío del correo usando el Mailable
     \Illuminate\Support\Facades\Mail::to($email)

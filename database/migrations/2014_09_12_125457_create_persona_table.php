@@ -20,6 +20,10 @@ class CreatePersonaTable extends Migration
             $table->string('apellido2')->nullable();
             $table->string('Rut')->unique();
             $table->string('Email')->unique();
+            $table->string('telefono')->nullable();
+            $table->string('celular')->nullable();
+           
+
             $table->timestamps(); 
         });
     }

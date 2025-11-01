@@ -15,8 +15,13 @@ class Bloque extends Model
         'hora_fin'
     ];
 
-    public function bloquePrestamos()
+public function prestamos()
     {
-        return $this->hasMany(BloquePrestamo::class, 'idBloque');
+        return $this->belongsToMany(
+            Prestamo::class,
+            'bloquePrestamos',
+            'idBloque',
+            'idPrestamo'
+        );
     }
 }
