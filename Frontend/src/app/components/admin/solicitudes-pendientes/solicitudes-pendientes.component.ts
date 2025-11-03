@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SolicitudEquipo } from '../../../shared/models';
+import { AuthService } from '../../../services/auth.service';
 
-// 🔹 Tipo extendido con campos adicionales y códigos únicos de equipos
 type AdminSolicitud = SolicitudEquipo & {
   tipo?: 'DENTRO' | 'FUERA';
   bloque?: string;
@@ -11,6 +11,8 @@ type AdminSolicitud = SolicitudEquipo & {
   observacion?: string;
   equiposDetallados?: { nombre: string; codigoActivo: string }[];
   motivoAprobacion?: string;
+  estudiante?: string;
+  email?: string;
 };
 
 @Component({
@@ -24,78 +26,60 @@ export class SolicitudesPendientesComponent implements OnInit {
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
 
-  // 🔹 Motivos y control de modales
   motivoRechazo = '';
   motivoAprobacion = '';
   mostrarModal = false;
   mostrarModalAprobacion = false;
-
   filtroBusqueda = '';
   orden = 'recientes';
 
+  constructor(private api: AuthService) {}
+
   ngOnInit(): void {
-    // 🔹 Cargar solicitudes simuladas con códigos de activos fijos
-    this.solicitudes = [
-      {
-        id: 1,
-        estudiante: 'María González',
-        email: 'maria.gonzalez@example.com',
-        tipo: 'DENTRO',
-        bloque: 'Bloque 1 y 2',
-        equipos: ['Cámara Sony A6400', 'Trípode Manfrotto'],
-        equiposDetallados: [
-          { nombre: 'Cámara Sony A6400', codigoActivo: 'AF-0012' },
-          { nombre: 'Trípode Manfrotto', codigoActivo: 'AF-0045' }
-        ],
-        observacion: 'Grabación proyecto final',
-        fechaInicio: '2025-01-15',
-        fechaFin: '2025-01-20',
-        fechaSolicitud: '2025-01-10',
-        estado: 'PENDIENTE'
-      },
-      {
-        id: 2,
-        estudiante: 'Carlos Rodríguez',
-        email: 'carlos.rodriguez@example.com',
-        tipo: 'FUERA',
-        periodo: '17 ene - 24 ene 2025',
-        equipos: ['Micrófono Rode', 'Laptop MacBook Pro'],
-        equiposDetallados: [
-          { nombre: 'Micrófono Rode', codigoActivo: 'AF-0077' },
-          { nombre: 'Laptop MacBook Pro', codigoActivo: 'AF-0121' }
-        ],
-        observacion: 'Proyecto audiovisual externo',
-        fechaInicio: '2025-01-18',
-        fechaFin: '2025-01-25',
-        fechaSolicitud: '2025-01-12',
-        estado: 'PENDIENTE'
-      },
-      {
-        id: 3,
-        estudiante: 'Ana Martínez',
-        email: 'ana.martinez@example.com',
-        tipo: 'DENTRO',
-        bloque: 'Bloque 3',
-        equipos: ['Tablet iPad Pro'],
-        equiposDetallados: [
-          { nombre: 'Tablet iPad Pro', codigoActivo: 'AF-0034' }
-        ],
-        observacion: 'Pruebas de diseño',
-        fechaInicio: '2025-01-05',
-        fechaFin: '2025-01-10',
-        fechaSolicitud: '2025-01-03',
-        estado: 'APROBADA'
-      }
-    ];
+    this.cargarSolicitudes();
   }
 
-  // 🔹 Filtrar solicitudes
+  cargarSolicitudes() {
+    this.api.getPrestamos().subscribe({
+      next: (data: any[]) => {
+        this.solicitudes = data.map((p: any) => {
+          const esExterno = p.tipo === 'FUERA';
+          const periodo = esExterno
+            ? `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}`
+            : '—';
+
+          return {
+            id: p.idPrestamo,
+            estudiante: p.user?.nombre ?? 'Desconocido',
+            email: p.user?.email ?? '',
+            tipo: p.tipo,
+            bloque: p.bloquePrestamo ?? '—',
+            equipos: [p.equipo?.nombre ?? '—'],
+            equiposDetallados: [
+              {
+                nombre: p.equipo?.nombre ?? '—',
+                codigoActivo: p.equipo?.codigo_activo ?? '—'
+              }
+            ],
+            observacion: p.observacion ?? p.Observacion ?? 'Sin observación',
+            fechaSolicitud: p.created_at ?? '',
+            fechaInicio: p.fecha_inicio ?? '',
+            fechaFin: p.fecha_fin ?? '',
+            periodo,
+            estado: p.estado?.toUpperCase() ?? 'PENDIENTE'
+          };
+        });
+      },
+      error: (err: any) => console.error('Error al cargar préstamos:', err),
+    });
+  }
+
   get solicitudesFiltradas(): AdminSolicitud[] {
     let resultado = this.solicitudes.filter(
       s =>
         s.estado === 'PENDIENTE' &&
         (
-          s.estudiante.toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
+          s.estudiante?.toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
           s.equipos.join(', ').toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
           (s.observacion?.toLowerCase().includes(this.filtroBusqueda.toLowerCase()))
         )
@@ -114,58 +98,58 @@ export class SolicitudesPendientesComponent implements OnInit {
     this.solicitudSeleccionada = s;
   }
 
-  // 🔹 Mostrar modal para aprobar con motivo
   abrirAprobacion() {
     this.mostrarModalAprobacion = true;
   }
 
-  // 🔹 Confirmar aprobación con motivo obligatorio
   confirmarAprobacion() {
+    if (!this.solicitudSeleccionada) return;
     if (this.motivoAprobacion.trim() === '') {
-      alert('⚠️ Debes ingresar un motivo de aprobación.');
+      alert('Debes ingresar un motivo de aprobación.');
       return;
     }
 
-    if (this.solicitudSeleccionada) {
-      this.solicitudSeleccionada.estado = 'APROBADA';
-      this.solicitudSeleccionada.motivoAprobacion = this.motivoAprobacion;
-      alert(`✅ Solicitud de ${this.solicitudSeleccionada.estudiante} aprobada.\nMotivo: ${this.motivoAprobacion}`);
-      this.mostrarModalAprobacion = false;
-      this.motivoAprobacion = '';
-      this.solicitudSeleccionada = null;
-    }
+    this.api.cambiarEstado(this.solicitudSeleccionada.id!, 'aceptar', this.motivoAprobacion).subscribe({
+      next: () => {
+        alert(' Solicitud aprobada correctamente.');
+        this.cargarSolicitudes();
+        this.cerrarModal();
+      },
+      error: (err: any) => console.error('Error al aprobar:', err),
+    });
   }
 
-  // 🔹 Abrir modal de rechazo
   abrirRechazo() {
     this.mostrarModal = true;
   }
 
-  // 🔹 Confirmar rechazo con motivo obligatorio
   confirmarRechazo() {
+    if (!this.solicitudSeleccionada) return;
     if (this.motivoRechazo.trim() === '') {
-      alert('⚠️ Debes ingresar un motivo.');
+      alert('Debes ingresar un motivo.');
       return;
     }
-    if (this.solicitudSeleccionada) {
-      this.solicitudSeleccionada.estado = 'RECHAZADA';
-      this.solicitudSeleccionada.motivoRechazo = this.motivoRechazo;
-      alert(`❌ Solicitud de ${this.solicitudSeleccionada.estudiante} rechazada.\nMotivo: ${this.motivoRechazo}`);
-      this.mostrarModal = false;
-      this.motivoRechazo = '';
-      this.solicitudSeleccionada = null;
-    }
+
+    this.api.cambiarEstado(this.solicitudSeleccionada.id!, 'rechazar', this.motivoRechazo).subscribe({
+      next: () => {
+        alert(' Solicitud rechazada correctamente.');
+        this.cargarSolicitudes();
+        this.cerrarModal();
+      },
+      error: (err: any) => console.error('Error al rechazar:', err),
+    });
   }
 
-  // 🔹 Cerrar cualquier modal
   cerrarModal() {
     this.mostrarModal = false;
     this.mostrarModalAprobacion = false;
     this.motivoAprobacion = '';
     this.motivoRechazo = '';
+    this.solicitudSeleccionada = null;
   }
 
   formatearFecha(f: string): string {
+    if (!f) return '—';
     return new Date(f).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',

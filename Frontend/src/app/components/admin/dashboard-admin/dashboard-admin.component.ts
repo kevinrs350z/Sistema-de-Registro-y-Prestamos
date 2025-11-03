@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-// 👇 Componentes standalone
+
 import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 import { SolicitudesPendientesComponent } from '../solicitudes-pendientes/solicitudes-pendientes.component';
+
+
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard-admin',
@@ -21,13 +24,18 @@ import { SolicitudesPendientesComponent } from '../solicitudes-pendientes/solici
   styleUrls: ['./dashboard-admin.component.css']
 })
 export class DashboardAdminComponent implements OnInit {
+  private router = inject(Router);
+  private api = inject(AuthService);
+
   // 🔹 Controla qué sección se muestra
   seccionActiva: string = 'gestionar';
 
-  constructor(private router: Router) {}
+  // 🔹 Datos dinámicos
+  totalEquipos: number = 0;
 
   ngOnInit(): void {
     this.seccionActiva = 'gestionar';
+    this.cargarEquipos();
 
     // 🔹 Escuchar eventos del navbar admin (hamburguesa)
     window.addEventListener('admin-navegacion', (e: any) => {
@@ -41,5 +49,18 @@ export class DashboardAdminComponent implements OnInit {
     if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
       this.router.navigate(['/auth/login']);
     }
+  }
+
+  // 🔹 Obtener total de equipos desde el backend
+  private cargarEquipos(): void {
+    const token = localStorage.getItem('token') ?? '';
+    this.api.getEquipos(token).subscribe({
+      next: (data) => {
+        this.totalEquipos = data.length;
+      },
+      error: (err) => {
+        console.error('Error al cargar equipos:', err);
+      }
+    });
   }
 }

@@ -20,6 +20,7 @@ interface LoginResponse {
 })
 export class AuthService {
   private apiUrl = 'https://cofferlike-nonaseptic-stephen.ngrok-free.dev/api'; 
+ // private apiUrl = 'http://localhost:8000/api'; 
 
   constructor(private http: HttpClient) {}
 

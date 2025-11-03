@@ -24,11 +24,9 @@ import { Equipo, Pack } from '../../../shared/models';
   ],
 })
 export class MisSolicitudesComponent implements OnInit {
-  // --- Inyecciones ---
   private reservas = inject(ReservasService);
   private api = inject(AuthService);
 
-  // --- Signals principales ---
   solicitudes = signal<any[]>([]);
   estadoFiltro = signal('');
   orden = signal<'asc' | 'desc'>('desc');
@@ -45,7 +43,6 @@ export class MisSolicitudesComponent implements OnInit {
     { id: 5, texto: 'Bloque 5 (16:10 – 17:40)' },
   ];
 
-  // --- Computed dinámico ---
   solicitudesFiltradas = computed(() => {
     let lista = this.solicitudes();
     const filtro = this.estadoFiltro();
@@ -54,8 +51,8 @@ export class MisSolicitudesComponent implements OnInit {
     if (filtro) lista = lista.filter(s => s.estado === filtro);
     lista = lista.sort((a, b) =>
       orden === 'asc'
-        ? a.fecha_inicio.localeCompare(b.fecha_inicio)
-        : b.fecha_inicio.localeCompare(a.fecha_inicio)
+        ? (a.fecha_inicio || '').localeCompare(b.fecha_inicio || '')
+        : (b.fecha_inicio || '').localeCompare(a.fecha_inicio || '')
     );
 
     return lista;
@@ -65,7 +62,6 @@ export class MisSolicitudesComponent implements OnInit {
     this.cargarSolicitudes();
   }
 
-  // --- Cargar solicitudes desde backend ---
   private cargarSolicitudes() {
     const token = localStorage.getItem('token') ?? '';
     this.api.getSolicitudesUsuario(token).subscribe({
@@ -81,11 +77,11 @@ export class MisSolicitudesComponent implements OnInit {
           return {
             id: s.idPrestamo,
             tipo: s.tipo === 'DENTRO' ? 'Laboratorio' : 'Externo',
-            fecha_inicio: s.fecha_inicio ?? '—',
-            fecha_fin: s.fecha_fin ?? '—',
+            fecha_inicio: s.fecha_inicio || null,
+            fecha_fin: s.fecha_fin || null,
             bloqueTxt,
             equipos: [s.equipo?.nombre || '—'],
-            observacion: s.Observacion ?? '',
+            observacion: s.Observacion ?? 'Sin observación',
             estado: s.estado?.toUpperCase() ?? 'PENDIENTE',
           };
         });
@@ -96,7 +92,6 @@ export class MisSolicitudesComponent implements OnInit {
     });
   }
 
-  // --- Acciones UI ---
   filtrarEstado(event: Event) {
     const value = (event.target as HTMLSelectElement).value;
     this.estadoFiltro.set(value);
