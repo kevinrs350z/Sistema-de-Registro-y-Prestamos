@@ -11,6 +11,32 @@ use App\Models\BloquePrestamo;
 
 class PrestamoController extends Controller
 {
+     public function index(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+
+            $prestamos = Prestamo::with([
+                    'equipo',
+                    'bloquePrestamo.bloque',
+                    'bloquePrestamo.asignatura'
+                ])
+                ->where('idUser', $user->idUser)
+                ->orderByDesc('idPrestamo')
+                ->get();
+
+            return response()->json($prestamos);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener las solicitudes.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
     public function store(Request $request)
     {
         //  Validación base (común)

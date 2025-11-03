@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/asignaturas', [AsignaturaController::class, 'index']);// mostramos las asignaturas
     //dashboard de admin
     // Prestamos
+    Route::get('/prestamos', [PrestamoController::class, 'index']);
     Route::post('/prestamos', [PrestamoController::class, 'store']);
     // Route::post('/prestamos/solicitar', [PrestamoController::class, 'solicitarPrestamo']);
    
