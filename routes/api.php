@@ -10,6 +10,7 @@ use App\Http\Controllers\BloqueController;
 use App\Http\Controllers\Prestamo\PrestamoController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\mostrar\usuario;
+use App\Http\Controllers\Prestamo\PrestamoAdminController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -59,5 +60,14 @@ Route::middleware('auth:sanctum')->group(function () {
    
     //Route::get('/admin/dashboard', [AdminDashboardController::class, 'getDashboardData']);
 });
-//Route::middleware('auth:sanctum')->post('/prestamos', [PrestamoController::class, 'store']);
-    //Route::middleware('auth:sanctum')->post('/prestamos/solicitar', [PrestamoController::class, 'solicitarPrestamo']);
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
+    Route::get('/admin/prestamos', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
+});
+
+Route::prefix('admin/prestamos')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('/pendientes', [PrestamoAdminController::class, 'pendientes']);
+    Route::get('/historial', [PrestamoAdminController::class, 'historial']);
+    Route::post('/aprobar/{id}', [PrestamoAdminController::class, 'aprobar']);
+    Route::post('/rechazar/{id}', [PrestamoAdminController::class, 'rechazar']);
+});

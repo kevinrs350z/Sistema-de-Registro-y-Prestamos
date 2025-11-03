@@ -81,6 +81,21 @@ class User extends Authenticatable implements CanResetPasswordContract
         return $this->belongsToMany(Sancion::class, 'user_sancion', 'idUser', 'idSancion');
     }
 
+     // Verifica si el usuario tiene un rol específico
+    public function hasRole($rolNombre)
+    {
+        return $this->roles()
+                    ->whereRaw('LOWER(nombre) = ?', [strtolower($rolNombre)])
+                    ->exists();
+    }
+
+    //Verifica si el usuario es ADMIN
+    public function isAdmin()
+    {
+        return $this->hasRole('ADMIN');
+    }
+
+   
     /**
      * The attributes that should be cast.
      *
