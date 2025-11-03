@@ -1,0 +1,79 @@
+<app-navbar-admin></app-navbar-admin>
+
+<!-- 🧩 SECCIÓN GESTIONAR (FULL WIDTH) -->
+<div class="admin-full-container" *ngIf="seccionActiva === 'gestionar'">
+  <div class="admin-header">
+    <h1 class="admin-title">Panel de Administración</h1>
+    <p class="admin-subtitle">
+      Gestiona equipos, packs y sanciones del sistema
+    </p>
+  </div>
+
+  <!-- 🔹 Estadísticas -->
+  <div class="admin-stats">
+    <div class="stat-card">
+      <div class="stat-info">
+        <h3>15</h3>
+        <p>Equipos Totales</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-info">
+        <h3>8</h3>
+        <p>Packs Activos</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-info">
+        <h3>3</h3>
+        <p>Sanciones Activas</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 Acciones Rápidas -->
+  <div class="admin-actions">
+    <h2 class="section-title">Acciones Rápidas</h2>
+    <div class="action-grid">
+      <a routerLink="/admin/equipos" class="action-card equipos">
+        <div class="action-icon"><i class="bi bi-hdd-stack"></i></div>
+        <h3>Gestionar Equipos</h3>
+        <p>Crear, editar y eliminar equipos del sistema</p>
+      </a>
+
+      <a routerLink="/admin/packs" class="action-card packs">
+        <div class="action-icon"><i class="bi bi-box-seam"></i></div>
+        <h3>Gestionar Packs</h3>
+        <p>Crear y administrar paquetes de equipos</p>
+      </a>
+
+      <a routerLink="/admin/sanciones" class="action-card sanciones">
+        <div class="action-icon"><i class="bi bi-exclamation-triangle"></i></div>
+        <h3>Gestionar Sanciones</h3>
+        <p>Emitir y administrar sanciones a usuarios</p>
+      </a>
+    </div>
+  </div>
+
+  <!-- 🔹 Footer -->
+  <div class="admin-footer">
+    <p class="footer-text">
+    </p>
+  </div>
+</div>
+
+<!-- 🧩 SECCIÓN SOLICITUDES -->
+<div class="admin-full-container" *ngIf="seccionActiva === 'solicitudes'">
+  <div class="admin-header">
+    <h1 class="admin-title">Solicitudes Pendientes</h1>
+    <p class="admin-subtitle">
+    </p>
+  </div>
+
+  <app-solicitudes-pendientes></app-solicitudes-pendientes>
+
+  <div class="admin-footer">
+    <p class="footer-text">
+    </p>
+  </div>
+</div>

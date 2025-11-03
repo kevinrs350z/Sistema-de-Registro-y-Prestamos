@@ -1,0 +1,45 @@
+<div class="recuperar-page">
+  <div class="recuperar-card">
+    <div class="recuperar-header text-center">
+      <i class="bi bi-shield-lock-fill icono-header"></i>
+      <h1>Recuperar Contraseña</h1>
+      <p class="sub"></p>
+    </div>
+
+    <div class="recuperar-info">
+      <i class="bi bi-envelope-paper-heart-fill info-icon"></i>
+      <p class="info-text">
+        Ingresa tu correo electrónico institucional y te enviaremos las
+        instrucciones para restablecer tu contraseña.
+      </p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="recuperar-form">
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico institucional</label>
+        <input
+          id="email"
+          type="email"
+          class="form-control"
+          formControlName="email"
+          placeholder="alguien@uta.cl"
+          autocomplete="email"
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary w-100 btn-recuperar"
+        [disabled]="form.invalid"
+      >
+        <i class="bi bi-send-fill me-2"></i> Enviar solicitud
+      </button>
+    </form>
+
+    <div class="recuperar-footer">
+      <a routerLink="/auth/login" class="volver">
+        <i class="bi bi-arrow-left-circle me-1"></i> Volver al inicio de sesión
+      </a>
+    </div>
+  </div>
+</div>

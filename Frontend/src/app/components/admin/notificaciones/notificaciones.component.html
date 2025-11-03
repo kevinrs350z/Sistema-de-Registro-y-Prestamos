@@ -1,0 +1,164 @@
+<div class="notificaciones-container">
+  <div class="notificaciones-header">
+    <div class="header-top">
+      <h1 class="notificaciones-title">
+        Notificaciones de Solicitudes
+      </h1>
+      <div class="header-actions">
+        <button class="btn btn-outline back-btn" (click)="irAlDashboard()">
+          <span class="btn-icon">←</span>
+          Volver al Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Solicitudes Pendientes -->
+  <div class="solicitudes-section" *ngIf="solicitudesPendientes.length > 0">
+    <div class="section-header">
+      <h3 class="section-title">Solicitudes Pendientes</h3>
+      <div class="section-stats">
+        <span class="mini-stat pendientes">{{solicitudesPendientes.length}} Pendientes</span>
+        <span class="mini-stat procesadas">{{solicitudesProcesadas.length}} Procesadas</span>
+      </div>
+    </div>
+    <div class="solicitudes-list">
+      <div class="solicitud-item pendiente" *ngFor="let solicitud of solicitudesPendientes" (click)="abrirDetalleSolicitud(solicitud)">
+        <div class="solicitud-info">
+          <div class="estudiante-nombre">{{solicitud.estudiante}}</div>
+          <div class="solicitud-descripcion">{{solicitud.equipos.length}} equipos - {{formatearFecha(solicitud.fechaInicio)}} al {{formatearFecha(solicitud.fechaFin)}}</div>
+        </div>
+        <div class="solicitud-fecha">
+          {{formatearFecha(solicitud.fechaSolicitud)}}
+        </div>
+        <div class="solicitud-estado-badge pendiente">Pendiente</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Solicitudes Procesadas -->
+  <div class="solicitudes-section" *ngIf="solicitudesProcesadas.length > 0">
+    <h3 class="section-title">Solicitudes Procesadas</h3>
+    <div class="solicitudes-list">
+      <div class="solicitud-item procesada" *ngFor="let solicitud of solicitudesProcesadas" (click)="abrirDetalleSolicitud(solicitud)">
+        <div class="solicitud-info">
+          <div class="estudiante-nombre">{{solicitud.estudiante}}</div>
+          <div class="solicitud-descripcion">{{solicitud.equipos.length}} equipos - {{formatearFecha(solicitud.fechaInicio)}} al {{formatearFecha(solicitud.fechaFin)}}</div>
+        </div>
+        <div class="solicitud-fecha">
+          {{formatearFecha(solicitud.fechaSolicitud)}}
+        </div>
+        <div class="solicitud-estado-badge" [ngClass]="obtenerEstadoClass(solicitud.estado)">
+          {{obtenerEstadoTexto(solicitud.estado)}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje cuando no hay solicitudes -->
+  <div class="no-solicitudes" *ngIf="solicitudesPendientes.length === 0 && solicitudesProcesadas.length === 0">
+    <div class="no-solicitudes-content">
+      <h3>No hay solicitudes</h3>
+      <p>No se han recibido solicitudes de equipos aún.</p>
+    </div>
+  </div>
+  
+  <div class="footer-text">
+    <p>Sistema de Gestión de Equipos - Departamento de Diseño Multimedia</p>
+  </div>
+</div>
+
+<!-- Modal de Detalle de Solicitud -->
+<div class="modal-overlay" *ngIf="mostrarModalDetalle" (click)="cerrarModalDetalle()">
+  <div class="modal-content detalle-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Detalle de Solicitud</h3>
+      <button class="modal-close" (click)="cerrarModalDetalle()">×</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="solicitudDetalle">
+      <div class="solicitud-detalle-info">
+        <div class="info-row">
+          <span class="info-label">Estudiante:</span>
+          <span class="info-value">{{solicitudDetalle.estudiante}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email:</span>
+          <span class="info-value">{{solicitudDetalle.email}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Fecha de Solicitud:</span>
+          <span class="info-value">{{formatearFecha(solicitudDetalle.fechaSolicitud)}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Período de Reserva:</span>
+          <span class="info-value">{{formatearFecha(solicitudDetalle.fechaInicio)}} - {{formatearFecha(solicitudDetalle.fechaFin)}}</span>
+        </div>
+      </div>
+
+      <div class="equipos-detalle">
+        <h4 class="equipos-titulo">Equipos Solicitados:</h4>
+        <ul class="equipos-lista">
+          <li *ngFor="let equipo of solicitudDetalle.equipos" class="equipo-item-detalle">
+            {{equipo}}
+          </li>
+        </ul>
+      </div>
+
+      <div class="motivo-rechazo-detalle" *ngIf="solicitudDetalle.motivoRechazo">
+        <h4 class="motivo-titulo">Motivo de Rechazo:</h4>
+        <p class="motivo-texto">{{solicitudDetalle.motivoRechazo}}</p>
+      </div>
+    </div>
+    
+    <div class="modal-footer" *ngIf="solicitudDetalle && solicitudDetalle.estado === 'PENDIENTE'">
+      <button class="btn btn-secondary" (click)="cerrarModalDetalle()">
+        Cancelar
+      </button>
+      <button class="btn btn-success" (click)="aprobarSolicitud(solicitudDetalle)">
+        Aprobar
+      </button>
+      <button class="btn btn-danger" (click)="rechazarSolicitud(solicitudDetalle)">
+        Rechazar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Rechazo -->
+<div class="modal-overlay" *ngIf="mostrarModalRechazo" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Rechazar Solicitud</h3>
+      <button class="modal-close" (click)="cerrarModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="solicitud-info" *ngIf="solicitudSeleccionada">
+        <p><strong>Estudiante:</strong> {{solicitudSeleccionada.estudiante}}</p>
+        <p><strong>Equipos:</strong> {{solicitudSeleccionada.equipos.join(', ')}}</p>
+        <p><strong>Período:</strong> {{formatearFecha(solicitudSeleccionada.fechaInicio)}} - {{formatearFecha(solicitudSeleccionada.fechaFin)}}</p>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Motivo del Rechazo *</label>
+        <textarea 
+          class="form-textarea" 
+          [(ngModel)]="motivoRechazo" 
+          placeholder="Ingresa el motivo por el cual se rechaza esta solicitud..."
+          rows="4"
+          required>
+        </textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cerrarModal()">
+        Cancelar
+      </button>
+      <button class="btn btn-danger" (click)="confirmarRechazo()">
+        Confirmar Rechazo
+      </button>
+    </div>
+  </div>
+</div>

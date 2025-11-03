@@ -11,7 +11,6 @@ export interface Equipo {
   idEquipo: number;
   nombre: string;
   categoria: string;
-  descripcion: string;
   estado: 'DISPONIBLE' | 'OCUPADO' | 'MANTENCION';
   codigo: string;
   disponible: boolean;
@@ -41,4 +40,17 @@ export interface PrestamoDraft {
   estado: string;
   asignatura: string;
   motivo: string;
+}
+
+// ✅ Modelo para las solicitudes de notificación
+export interface SolicitudEquipo {
+  id: number;
+  estudiante: string;
+  email: string;
+  equipos: string[];
+  fechaInicio: string;
+  fechaFin: string;
+  fechaSolicitud: string;
+  estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
+  motivoRechazo?: string;
 }

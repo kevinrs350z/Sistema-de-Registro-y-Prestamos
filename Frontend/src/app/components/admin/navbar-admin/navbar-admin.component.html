@@ -1,0 +1,33 @@
+<nav class="navbar-admin">
+  <!-- Lado izquierdo -->
+  <div class="nav-left">
+    <!-- Botón de menú hamburguesa -->
+    <button class="icon-btn" (click)="toggleMenu()">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Íconos de navegación -->
+    <div class="nav-icons">
+      <i class="bi bi-house-door-fill" (click)="navegar('gestionar')" title="Inicio"></i>
+      <i class="bi bi-question-circle" title="Ayuda"></i>
+    </div>
+
+    <!-- Menú desplegable -->
+    <div class="menu-dropdown" *ngIf="menuAbierto">
+      <button (click)="navegar('gestionar')">Gestionar</button>
+      <button (click)="navegar('solicitudes')">Ver solicitudes</button>
+    </div>
+  </div>
+
+  <!-- Logo central -->
+  <div class="nav-center">
+    <span class="brand">Registro Y Préstamo. Diseño Multimedia</span>
+  </div>
+
+  <!-- Botón cerrar sesión -->
+  <div class="nav-right">
+    <button class="btn-logout" (click)="cerrarSesion()">
+      <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+    </button>
+  </div>
+</nav>

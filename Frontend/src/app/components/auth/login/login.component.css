@@ -1,0 +1,144 @@
+/* === CONTENEDOR PRINCIPAL === */
+.login-page {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f7faff;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+/* 🔹 Imagen de fondo tenue, más visible pero suave */
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../../../../assets/login.png") center/cover no-repeat;
+  filter: blur(4px) brightness(0.9) saturate(0.95); /* 🔹 Blur leve y color natural */
+  opacity: 0.55; /* 🔹 Más visible que antes, pero aún suave */
+  z-index: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+/* === CAJA DEL LOGIN === */
+.login-card {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  border: 1px solid #dbe5f1;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(75, 108, 183, 0.15);
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 480px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* === TITULOS === */
+.login-card h1 {
+  color: #4b6cb7;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.login-card .sub {
+  color: #6e7fa8;
+  text-align: center;
+  margin-bottom: 28px;
+  font-size: 1rem;
+}
+
+/* === CAMPOS === */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #4b6cb7;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  padding: 12px 14px;
+  border: 1px solid #c9d8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #4b6cb7;
+  box-shadow: 0 0 0 3px rgba(75, 108, 183, 0.15);
+  outline: none;
+}
+
+/* === BOTÓN === */
+.btn-login {
+  width: 100%;
+  background-color: #4b6cb7;
+  color: white;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 0;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.25s, transform 0.15s;
+}
+
+.btn-login:hover {
+  background-color: #39589a;
+  transform: translateY(-2px);
+}
+
+.btn-login:active {
+  transform: translateY(0);
+}
+
+/* === ENLACE OLVIDÉ CONTRASEÑA === */
+.recuperar {
+  text-align: center;
+  margin-top: 18px;
+}
+
+.recuperar a {
+  color: #4b6cb7;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.recuperar a:hover {
+  text-decoration: underline;
+}
+
+/* === ANIMACIÓN SUAVE === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 600px) {
+  .login-card {
+    max-width: 90%;
+    padding: 36px 28px;
+  }
+
+  .login-card h1 {
+    font-size: 1.6rem;
+  }
+}

@@ -1,7 +1,9 @@
 <nav class="navbar">
   <div class="nav-inner">
-    <div class="logo">Registro y Préstamo Diseño Multimedia</div>
-    <ul>
+    <span class="logo">Registro y Préstamo. Diseño Multimedia</span>
+
+    <!-- 🔹 Botones regulares (solo usuarios normales) -->
+    <ul *ngIf="!esAdmin">
       <li>
         <a routerLink="/equipos/catalogo" routerLinkActive="active">
           Solicitar equipo
@@ -13,10 +15,9 @@
         </a>
       </li>
       <li>
-        <a routerLink="/login" routerLinkActive="active">
+        <a (click)="cerrarSesion()">
           Cerrar sesión
         </a>
       </li>
+
     </ul>
-  </div>
-</nav>

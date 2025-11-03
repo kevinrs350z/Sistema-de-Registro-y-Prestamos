@@ -1,0 +1,157 @@
+.admin-container {
+  padding: 30px 60px;
+  font-family: 'Poppins', sans-serif;
+  color: #2a2a2a;
+}
+
+/* Filtros */
+.filtros-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.filtros-bar input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  width: 280px;
+}
+
+.filtros-bar select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+/* Layout */
+.solicitudes-wrapper {
+  display: flex;
+  gap: 30px;
+}
+
+.lista-solicitudes {
+  flex: 1;
+}
+
+.detalle-solicitud {
+  flex: 1.2;
+  background: #f9fbff;
+  border-radius: 14px;
+  padding: 20px 25px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Cards */
+.solicitud-card {
+  background: #ffffff;
+  border: 2px solid #ffb084;
+  border-radius: 14px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.solicitud-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+.solicitud-card.activa {
+  border-color: #446BA9;
+}
+
+.solicitud-card h4 {
+  color: #446BA9;
+  margin-bottom: 6px;
+}
+
+.fecha {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.estado.pendiente {
+  background: #F5A474;
+  color: white;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+/* Botones acción */
+.acciones {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn-aceptar {
+  background: #6ed48f;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.btn-rechazar {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  width: 420px;
+  text-align: center;
+}
+
+.modal textarea {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  resize: none;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.btn-confirmar {
+  background: #446BA9;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+}
+
+.btn-cancelar {
+  background: #ccc;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+}

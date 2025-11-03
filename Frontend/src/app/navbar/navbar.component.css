@@ -4,83 +4,203 @@
   top: 0;
   z-index: 50;
   width: 100%;
-  background-color: #446BA9; /* Azul fuerte principal */
+  height: 130px;
+  background-color: #446ba9; /* Azul institucional */
   box-shadow: 0 6px 20px rgba(2, 6, 23, 0.25);
   border-bottom: 2px solid rgba(145, 181, 232, 0.3);
-}
-
-/* ======== CONTENEDOR INTERNO ======== */
-.nav-inner {
-  width: 100%;
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: 14px 40px; /* altura ajustada */
   display: flex;
   align-items: center;
-  justify-content: space-between; /* logo izquierda / botones derecha */
+  justify-content: flex-start;
+  padding-left: 60px;
+  box-sizing: border-box;
 }
 
-/* ======== TEXTO “REGISTRO Y PRÉSTAMO” ======== */
 .logo {
   font-weight: 800;
-  font-size: 20px;
-  letter-spacing: 0.4px;
-  color: #ffffff; /* texto blanco */
+  font-size: 26px;
+  letter-spacing: 0.5px;
+  color: #ffffff;
   text-transform: capitalize;
-  margin: 0;
+  white-space: nowrap;
 }
 
-/* ======== LISTA DE BOTONES ======== */
+/* ======== BOTONES (usuarios normales) ======== */
 ul {
   list-style: none;
   display: flex;
-  gap: 18px;
+  align-items: center;
+  gap: 26px;
   margin: 0;
   padding: 0;
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-/* ======== BOTONES ======== */
 a {
-  background-color: #F5A474; /* naranja pastel */
-  color: #ffffff; /* texto blanco */
+  background-color: #f5a474;
+  color: #ffffff;
   text-decoration: none;
-  font-weight: 600;
-  padding: 10px 18px;
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  font-weight: 700;
+  padding: 16px 32px;
+  border-radius: 14px;
+  font-size: 18px;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  white-space: nowrap;
 }
 
-/* Hover */
 a:hover {
-  background-color: #91B5E8; /* azul claro hover */
-  color: #ffffff;
-  box-shadow: 0 2px 10px rgba(145, 181, 232, 0.4);
+  background-color: #91b5e8;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 16px rgba(145, 181, 232, 0.6);
 }
 
-/* Enlace activo */
-a[routerLinkActive="active"],
-.active {
-  background-color: #91B5E8;
+a.active,
+a[routerLinkActive="active"] {
+  background-color: #91b5e8;
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(145, 181, 232, 0.4);
+  box-shadow: 0 4px 12px rgba(145, 181, 232, 0.5);
+}
+
+/* ======== MENU ADMIN ======== */
+.admin-menu {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dropdown-btn {
+  background-color: #f5a474;
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-btn:hover {
+  background-color: #91b5e8;
+  transform: translateY(-2px);
+}
+
+/* Menú desplegable */
+.dropdown-menu {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  right: 0;
+  top: 70px;
+  background-color: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  min-width: 220px;
+  padding: 10px 0;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+  z-index: 100;
+}
+
+.dropdown-menu.show {
+  display: flex;
+}
+
+.dropdown-menu a {
+  color: #446ba9;
+  font-weight: 600;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  text-decoration: none;
+  transition: background 0.2s ease;
+  box-shadow: none;
+  border-radius: 0;
+  min-width: 100%;
+}
+
+.dropdown-menu a:hover {
+  background-color: #f5f8ff;
+}
+
+.dropdown-menu hr {
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid #e5e9f2;
+}
+
+.dropdown-menu a.cerrar {
+  color: #e94f64;
+}
+
+.dropdown-menu a.cerrar:hover {
+  background-color: #fff3f3;
+}
+
+/* Animación suave */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ======== RESPONSIVE ======== */
-@media (max-width: 768px) {
-  .nav-inner {
-    flex-direction: column;
-    align-items: center;
+@media (max-width: 1024px) {
+  .navbar {
+    height: auto;
+    padding: 20px;
     justify-content: center;
-    gap: 10px;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 12px;
   }
 
   ul {
+    position: static;
+    transform: none;
+    justify-content: center;
     flex-direction: column;
-    align-items: center;
+    gap: 15px;
   }
 
-  a {
+  a,
+  .dropdown-btn {
     width: 100%;
     text-align: center;
+    font-size: 16px;
+    padding: 14px 20px;
+  }
+
+  .admin-menu {
+    position: static;
+    transform: none;
+    margin-top: 12px;
+  }
+
+  .dropdown-menu {
+    top: auto;
+    right: 0;
+    left: 0;
+    width: 100%;
   }
 }

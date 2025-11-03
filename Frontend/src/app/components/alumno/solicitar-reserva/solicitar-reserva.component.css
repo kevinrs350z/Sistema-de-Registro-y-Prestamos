@@ -1,0 +1,292 @@
+/* === LAYOUT GENERAL === */
+.wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3.5rem;
+  width: 100%;
+  padding: 2rem 4rem;
+  background: linear-gradient(180deg, #f9faff 0%, #ffffff 100%);
+  box-sizing: border-box;
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+}
+
+/* === FORMULARIO === */
+.formulario {
+  flex: 0 0 68%;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem 2.8rem;
+  box-shadow: 0 8px 24px rgba(90, 121, 255, 0.08);
+  transition: all 0.3s ease-in-out;
+  animation: fadeIn 0.5s ease;
+  margin-top: 0;
+}
+
+.formulario:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(90, 121, 255, 0.12);
+}
+
+.formulario h1 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #3451b2;
+  margin-bottom: 1.4rem;
+}
+
+/* === TARJETAS / SECCIONES === */
+.card {
+  background: #ffffff;
+  border: 1.5px solid #ccd7ff;
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.8rem;
+  box-shadow: 0 3px 6px rgba(0, 40, 150, 0.04);
+  transition: all 0.25s ease;
+  animation: slideUp 0.6s ease both;
+}
+
+.card:hover {
+  border-color: #a5b9ff;
+  box-shadow: 0 4px 10px rgba(0, 50, 200, 0.06);
+}
+
+/* === BLOQUE DE DATOS DEL ALUMNO === */
+.card-datos {
+  background: #ffffff;
+  border: 1.5px solid #ccd7ff;
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 3px 6px rgba(0, 40, 150, 0.04);
+  animation: slideUp 0.6s ease both;
+}
+
+.card-datos h2 {
+  font-size: 1.1rem;
+  color: #ff855c; /* mismo naranjo que las demás secciones */
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+}
+
+
+.card-datos label {
+  font-weight: 500;
+  color: #2c2c2c;
+  font-size: 0.9rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem 1.4rem;
+}
+
+/* === CAMPOS === */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #c5cbe8;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background-color: #fdfdff;
+  transition: all 0.25s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #5a79ff;
+  box-shadow: 0 0 6px rgba(90, 121, 255, 0.2);
+  outline: none;
+}
+
+/* === RADIO Y CHECKBOX === */
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 1.2rem;
+  color: #333;
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+
+.radio input[type='checkbox'],
+.radio input[type='radio'] {
+  accent-color: #5a79ff;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* === TÍTULOS DE SECCIONES === */
+.card h2 {
+  font-size: 1.1rem;
+  color: #ff855c;
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+}
+
+/* === ERRORES === */
+.err {
+  font-size: 0.8rem;
+  color: #e05b5b;
+  margin-top: 0.5rem;
+}
+
+/* === BOTONES === */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 2.8rem;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+button[type='submit'] {
+  background-color: #ffb58c;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(255, 133, 92, 0.3);
+}
+
+button[type='submit']:hover {
+  background-color: #ff8b58;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 133, 92, 0.35);
+}
+
+button.ghost {
+  background-color: #f2f4ff;
+  color: #5a79ff;
+  border: 1.5px solid #b3c1ff;
+}
+
+button.ghost:hover {
+  background-color: #e8ecff;
+}
+
+/* === RESUMEN === */
+.resumen {
+  flex: 0 0 30%;
+  background: #f9fbff;
+  border: 1.5px solid #c7d3ff;
+  border-radius: 20px;
+  padding: 1.8rem 1.6rem;
+  box-shadow: 0 6px 14px rgba(80, 110, 255, 0.08);
+  animation: fadeIn 0.6s ease;
+  position: relative;
+  top: 0;
+  margin-top: 0.4rem;
+  margin-right: 3rem;
+}
+
+.resumen h3 {
+  color: #2e3f8a;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.resumen-sub {
+  color: #6b7fc9;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.resumen .detalle p {
+  font-size: 0.9rem;
+  color: #333;
+  margin: 0.3rem 0;
+}
+
+.resumen hr {
+  margin: 1.3rem 0;
+  border: none;
+  height: 1px;
+  background: #d9e1ff;
+}
+
+.equipos-resumen h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2f4abf;
+  margin-bottom: 0.5rem;
+}
+
+.equipos-resumen ul {
+  padding-left: 1rem;
+}
+
+.equipos-resumen li {
+  list-style: none;
+  margin: 0.4rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #555;
+}
+
+.equipos-resumen i {
+  color: #5a79ff;
+}
+
+.vacio {
+  color: #a4a4a4;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+/* === ANIMACIONES === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1024px) {
+  .wrap {
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .formulario {
+    width: 100%;
+  }
+
+  .resumen {
+    width: 100%;
+    margin-top: 0.5rem;
+    position: static;
+  }
+}

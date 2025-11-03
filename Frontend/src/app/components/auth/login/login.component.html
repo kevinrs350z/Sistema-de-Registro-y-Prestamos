@@ -1,0 +1,43 @@
+<div class="login-page">
+  <!-- Caja del formulario -->
+  <div class="login-card">
+    <h1>Iniciar sesión</h1>
+    <p class="sub">Préstamo de Equipos Multimedia</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Correo -->
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="alguien@uta.cl"
+          formControlName="email"
+          required
+        />
+      </div>
+
+      <!-- Contraseña -->
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Tu contraseña"
+          formControlName="password"
+          required
+        />
+      </div>
+
+      <!-- Botón de envío -->
+      <button type="submit" class="btn-login" [disabled]="form.invalid">
+        Iniciar sesión
+      </button>
+
+      <!-- Enlace de recuperación -->
+      <div class="recuperar">
+        <a routerLink="/auth/recuperar">¿Olvidaste tu contraseña?</a>
+      </div>
+    </form>
+  </div>
+</div>

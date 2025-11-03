@@ -1,0 +1,158 @@
+.solicitudes-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 3rem;
+  background: linear-gradient(180deg, #f9faff, #ffffff);
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ENCABEZADO */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.header h1 {
+  color: #d47a35;
+  font-weight: 700;
+  font-size: 1.6rem;
+}
+.header p {
+  color: #5a5a5a;
+  font-size: 0.9rem;
+}
+.filtros select {
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #ccd7ff;
+  border-radius: 8px;
+  background: #fff;
+  margin-left: 0.6rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+.filtros select:hover {
+  border-color: #a5b9ff;
+}
+
+/* CONTENIDO PRINCIPAL */
+.main-content {
+  display: grid;
+  grid-template-columns: 60% 38%;
+  gap: 2%;
+}
+
+/* LISTA IZQUIERDA */
+.lista-solicitudes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* TARJETAS DE SOLICITUD */
+.solicitud-card {
+  background: #fff;
+  border: 1.5px solid #ccd7ff;
+  border-radius: 14px;
+  padding: 1.3rem 1.6rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 8px rgba(0, 40, 150, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.solicitud-card:hover {
+  transform: translateY(-3px);
+  border-color: #5a79ff;
+  box-shadow: 0 6px 14px rgba(90, 121, 255, 0.1);
+}
+
+.solicitud-card.active {
+  border: 2px solid #ff855c;
+  box-shadow: 0 0 12px rgba(255, 133, 92, 0.25);
+}
+
+/* CABECERA DE TARJETA */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #2f2f2f;
+}
+
+/* ETIQUETAS DE ESTADO */
+.estado {
+  padding: 0.45rem 0.9rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.estado.pendiente {
+  background-color: #ffb58c;
+}
+
+.estado.aprobada {
+  background-color: #6cd38a;
+}
+
+.estado.rechazada {
+  background-color: #e05b5b;
+}
+
+/* CUERPO DE TARJETA */
+.card-body {
+  margin-top: 0.8rem;
+}
+
+.fecha {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3e4ba8;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* PANEL DERECHO */
+.detalle-solicitud {
+  background: #fff;
+  border: 1.5px solid #ccd7ff;
+  border-radius: 16px;
+  padding: 1.8rem;
+  box-shadow: 0 8px 24px rgba(90, 121, 255, 0.1);
+}
+.detalle-solicitud h2 {
+  font-size: 1.2rem;
+  color: #3451b2;
+  margin-bottom: 1rem;
+}
+.detalle p {
+  margin: 0.5rem 0;
+  color: #333;
+  font-size: 0.9rem;
+}
+.vacio {
+  text-align: center;
+  color: #999;
+  margin-top: 2rem;
+  font-style: italic;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+}
