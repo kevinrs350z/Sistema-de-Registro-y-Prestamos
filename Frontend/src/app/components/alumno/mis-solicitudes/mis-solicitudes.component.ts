@@ -1,6 +1,9 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, style, transition, animate } from '@angular/animations';
+import { ReservasService } from '../solicitar-reserva/reservas.service';
+import { AuthService } from '../../../services/auth.service';
+import { Equipo, Pack } from '../../../shared/models';
 
 @Component({
   selector: 'app-mis-solicitudes',
@@ -20,47 +23,80 @@ import { trigger, style, transition, animate } from '@angular/animations';
     ]),
   ],
 })
-export class MisSolicitudesComponent {
-  solicitudes = signal([
-    {
-      id: 1,
-      tipo: 'DENTRO',
-      fecha: '2025-10-10',
-      periodo: '→',
-      bloque: 'Bloque 1 y 2',
-      equipos: ['Cámara Canon', 'Micrófono Shure'],
-      observacion: 'Grabación proyecto final',
-      estado: 'PENDIENTE',
-    },
-    {
-      id: 2,
-      tipo: 'FUERA',
-      fecha: '2025-09-15',
-      periodo: '15/09 - 18/09',
-      bloque: '—',
-      equipos: ['Proyector Epson', 'Trípode Manfrotto'],
-      observacion: 'Presentación externa',
-      estado: 'APROBADA',
-    },
-  ]);
+export class MisSolicitudesComponent implements OnInit {
+  // --- Inyecciones ---
+  private reservas = inject(ReservasService);
+  private api = inject(AuthService);
 
+  // --- Signals principales ---
+  solicitudes = signal<any[]>([]);
   estadoFiltro = signal('');
   orden = signal<'asc' | 'desc'>('desc');
-  solicitudSeleccionada: any = null;
+  solicitudSeleccionada = signal<any | null>(null);
 
+  equipos = signal<Equipo[]>([]);
+  packs = signal<Pack[]>([]);
+
+  bloques = [
+    { id: 1, texto: 'Bloque 1 (08:15 – 09:45)' },
+    { id: 2, texto: 'Bloque 2 (09:55 – 11:25)' },
+    { id: 3, texto: 'Bloque 3 (11:35 – 13:05)' },
+    { id: 4, texto: 'Bloque 4 (14:30 – 16:00)' },
+    { id: 5, texto: 'Bloque 5 (16:10 – 17:40)' },
+  ];
+
+  // --- Computed dinámico ---
   solicitudesFiltradas = computed(() => {
     let lista = this.solicitudes();
-    if (this.estadoFiltro()) {
-      lista = lista.filter((s) => s.estado === this.estadoFiltro());
-    }
+    const filtro = this.estadoFiltro();
+    const orden = this.orden();
+
+    if (filtro) lista = lista.filter(s => s.estado === filtro);
     lista = lista.sort((a, b) =>
-      this.orden() === 'asc'
-        ? a.fecha.localeCompare(b.fecha)
-        : b.fecha.localeCompare(a.fecha)
+      orden === 'asc'
+        ? a.fecha_inicio.localeCompare(b.fecha_inicio)
+        : b.fecha_inicio.localeCompare(a.fecha_inicio)
     );
+
     return lista;
   });
 
+  ngOnInit(): void {
+    this.cargarSolicitudes();
+  }
+
+  // --- Cargar solicitudes desde backend ---
+  private cargarSolicitudes() {
+    const token = localStorage.getItem('token') ?? '';
+    this.api.getSolicitudesUsuario(token).subscribe({
+      next: (data) => {
+        const solicitudesMapeadas = data.map((s: any) => {
+          const bloqueTxt =
+            s.bloque_prestamo?.length > 0
+              ? s.bloque_prestamo
+                  .map((bp: any) => bp.bloque?.nombre || `Bloque ${bp.idBloque}`)
+                  .join(', ')
+              : '—';
+
+          return {
+            id: s.idPrestamo,
+            tipo: s.tipo === 'DENTRO' ? 'Laboratorio' : 'Externo',
+            fecha_inicio: s.fecha_inicio ?? '—',
+            fecha_fin: s.fecha_fin ?? '—',
+            bloqueTxt,
+            equipos: [s.equipo?.nombre || '—'],
+            observacion: s.Observacion ?? '',
+            estado: s.estado?.toUpperCase() ?? 'PENDIENTE',
+          };
+        });
+
+        this.solicitudes.set(solicitudesMapeadas);
+      },
+      error: (err) => console.error('Error al cargar solicitudes:', err),
+    });
+  }
+
+  // --- Acciones UI ---
   filtrarEstado(event: Event) {
     const value = (event.target as HTMLSelectElement).value;
     this.estadoFiltro.set(value);
@@ -72,6 +108,6 @@ export class MisSolicitudesComponent {
   }
 
   seleccionarSolicitud(s: any) {
-    this.solicitudSeleccionada = s;
+    this.solicitudSeleccionada.set(s);
   }
 }

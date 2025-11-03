@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ReservasService } from '../solicitar-reserva/reservas.service';
 import { Equipo } from '../../../shared/models';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-catalogo-equipos',
@@ -15,25 +16,38 @@ import { Equipo } from '../../../shared/models';
 export class CatalogoEquiposComponent {
   private reservas = inject(ReservasService);
   private router = inject(Router);
+  private api = inject(AuthService);
 
-  // ✅ Cargar equipos desde el servicio
+  
   equipos = signal<Equipo[]>([]);
   categoriaSeleccionada = signal<string>('TODOS');
   carrito = signal<number[]>([]);
   busqueda = signal<string>('');
 
-  // 🔹 Al iniciar, obtener equipos desde el servicio
+  
   ngOnInit() {
-    this.equipos.set(this.reservas.getEquiposDisponibles());
+    const token = localStorage.getItem('token') ?? '';
+    if (!token) {
+      alert('⚠️ Debes iniciar sesión para ver los equipos.');
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+
+    this.api.getEquipos(token).subscribe({
+      next: (data) => {
+        this.equipos.set(data);
+      },
+      error: (err) => {
+        console.error('❌ Error al obtener equipos:', err);
+      },
+    });
   }
 
-  // ✅ Listado de categorías dinámico
   categorias = computed(() => {
     const todas = this.equipos().map(e => e.categoria);
     return ['TODOS', ...new Set(todas)];
   });
 
-  // ✅ Filtro combinado: categoría + búsqueda
   equiposFiltrados = computed(() => {
     const texto = this.busqueda().toLowerCase();
     const categoria = this.categoriaSeleccionada();
@@ -46,18 +60,18 @@ export class CatalogoEquiposComponent {
     });
   });
 
-  // ✅ Cambiar categoría
+
   filtrarPorCategoria(cat: string) {
     this.categoriaSeleccionada.set(cat);
   }
 
-  // ✅ Buscar por texto
+
   filtrarPorBusqueda(event: Event) {
     const input = event.target as HTMLInputElement;
     this.busqueda.set(input.value);
   }
 
-  // ✅ Seleccionar o quitar equipo
+
   toggleEquipo(id: number) {
     const actuales = this.carrito();
     if (actuales.includes(id)) {
@@ -66,13 +80,27 @@ export class CatalogoEquiposComponent {
       this.carrito.set([...actuales, id]);
     }
   }
+  getImagenEquipo(equipo: any): string {
+    const nombre = equipo.nombre?.toLowerCase() || '';
 
-  // ✅ Saber si un equipo está en el carrito
+    if (nombre.includes('cámara') || nombre.includes('canon')) return 'assets/equipos/camara.jpg';
+    if (nombre.includes('micrófono') || nombre.includes('rode')) return 'assets/equipos/aro.jpg';
+    if (nombre.includes('tablet') || nombre.includes('wacom')) return 'assets/equipos/computador.jpg';
+    if (nombre.includes('proyector') || nombre.includes('epson')) return 'assets/equipos/proyector.jpg';
+    if (nombre.includes('grabadora') || nombre.includes('zoom')) return 'assets/equipos/luz.jpg';
+
+    // Si no coincide con ninguno, usa una de respaldo cualquiera
+    return 'assets/equipos/lampara.jpg';
+  }
+
+
+
+  
   estaSeleccionado(id: number): boolean {
     return this.carrito().includes(id);
   }
 
-  // ✅ Continuar hacia la vista de solicitud
+  
   continuarReserva() {
     if (this.carrito().length === 0) {
       alert('⚠️ Debes seleccionar al menos un equipo antes de continuar.');
@@ -84,4 +112,3 @@ export class CatalogoEquiposComponent {
     });
   }
 }
-

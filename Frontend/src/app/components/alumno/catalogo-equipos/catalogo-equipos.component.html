@@ -64,12 +64,17 @@
       [class.selected]="carrito().includes(e.idEquipo)"
     >
       <!-- Imagen del equipo -->
+       
       <img
-        [src]="e.imagen || 'assets/equipos/placeholder.jpg'"
+        [src]="getImagenEquipo(e)"
         alt="Foto de {{ e.nombre }}"
         class="img-fluid mb-2"
         style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px;"
       />
+      
+
+      
+
 
       <!-- Contenido -->
       <div class="contenido-card">

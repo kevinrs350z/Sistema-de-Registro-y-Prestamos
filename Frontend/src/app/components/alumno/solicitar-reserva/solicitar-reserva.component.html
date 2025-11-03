@@ -53,15 +53,13 @@
       <div class="grid-2">
         <div>
           <label>Asignatura</label>
-          <select formControlName="asignatura" (change)="onAsignaturaChange($event)">
-            <option value="">Seleccionar...</option>
-            <option value="Taller de Diseño">Taller de Diseño</option>
-            <option value="Percepción y Expresión Plástica I">Percepción y Expresión Plástica I</option>
-            <option value="Taller de Fotografía Digital">Taller de Fotografía Digital</option>
-            <option value="Lectura en la Disciplina">Lectura en la Disciplina</option>
-            <option value="Taller de Habilidades Interpersonales">Taller de Habilidades Interpersonales</option>
-            <option value="OTROS">Otros motivos</option>
-          </select>
+            <select formControlName="asignatura" (change)="onAsignaturaChange($event)">
+              <option value="">Seleccionar...</option>
+                <option *ngFor="let a of asignaturas" [value]="a.idAsignatura">
+                  {{ a.nombre }}
+                </option>
+            </select>
+
         </div>
 
         <div *ngIf="mostrarMotivo">

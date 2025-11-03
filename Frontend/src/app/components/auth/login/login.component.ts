@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../auth.service';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../../services/auth.service'; // 👈 ajusta si tu servicio está en otra carpeta
 
 @Component({
   selector: 'app-login',
@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  hide: boolean = true; 
+  hide: boolean = true;
   form: FormGroup;
   errorMessage = '';
   loading = false;
@@ -35,18 +35,22 @@ export class LoginComponent {
     this.loading = true;
     this.errorMessage = '';
 
+    // 🔥 Lógica igual que la versión anterior que funcionaba
     this.authService.login(email, password).subscribe({
       next: (res) => {
         this.loading = false;
+
+        // Guardar token y usuario
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
         localStorage.setItem('rol', res.user.rol.nombre);
 
+        // Redirigir según rol
         const rol = res.user.rol.nombre.toLowerCase();
         if (rol === 'admin') {
           this.router.navigate(['/admin/dashboard']);
         } else {
-          this.router.navigate(['/alumno/solicitud-equipo']);
+          this.router.navigate(['/equipos/catalogo']);
         }
       },
       error: () => {

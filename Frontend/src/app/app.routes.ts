@@ -18,7 +18,7 @@ export const routes: Routes = [
   { path: 'equipos/catalogo', component: CatalogoEquiposComponent },
   { path: 'reservas/solicitar', component: SolicitarReservaComponent },
   { path: 'mis-solicitudes', loadComponent: () => import('./components/alumno/mis-solicitudes/mis-solicitudes.component').then(m => m.MisSolicitudesComponent) },
-  { path: 'admin/gestionar', loadComponent: () => import('./components/alumno/gestionar-solicitudes/gestionar-solicitudes.component').then(m => m.GestionarSolicitudesComponent) },
+  //{ path: 'admin/gestionar', loadComponent: () => import('./components/alumno/gestionar-solicitudes/gestionar-solicitudes.component').then(m => m.GestionarSolicitudesComponent) },
   { path: 'admin/dashboard', component: DashboardAdminComponent },
   { path: 'admin/notificaciones', component: NotificacionesComponent },
   { path: 'admin/solicitudes', component: SolicitudesPendientesComponent },

@@ -26,18 +26,25 @@
       <div
         class="solicitud-card"
         *ngFor="let s of solicitudesFiltradas()"
-        [class.active]="solicitudSeleccionada === s"
+        [class.active]="solicitudSeleccionada() === s"
         (click)="seleccionarSolicitud(s)"
       >
         <div class="card-header">
-          <h3>{{ s.id }} Solicitud realizada: {{ s.tipo }}</h3>
+          <h3>Solicitud #{{ s.id }} — {{ s.tipo }}</h3>
           <span class="estado" [ngClass]="s.estado.toLowerCase()">
             {{ s.estado }}
           </span>
         </div>
 
         <div class="card-body">
-          <p class="fecha">📅 {{ s.fecha }}</p>
+          <p class="fecha">
+            📅
+            {{
+              s.fecha_fin && s.fecha_inicio !== s.fecha_fin
+                ? (s.fecha_inicio | date : 'dd/MM') + ' - ' + (s.fecha_fin | date : 'dd/MM')
+                : (s.fecha_inicio | date : 'dd/MM')
+            }}
+          </p>
         </div>
       </div>
 
@@ -49,17 +56,30 @@
     <!-- ======== DETALLE DE SOLICITUD ======== -->
     <div
       class="detalle-solicitud"
-      *ngIf="solicitudSeleccionada"
+      *ngIf="solicitudSeleccionada()"
       [@slideInRight]
     >
       <h2>Detalle de la solicitud</h2>
       <div class="detalle">
-        <p><b>Tipo:</b> {{ solicitudSeleccionada.tipo }}</p>
-        <p><b>Periodo:</b> {{ solicitudSeleccionada.periodo }}</p>
-        <p><b>Bloque:</b> {{ solicitudSeleccionada.bloque }}</p>
-        <p><b>Equipos:</b> {{ solicitudSeleccionada.equipos.join(', ') }}</p>
-        <p><b>Observación:</b> {{ solicitudSeleccionada.observacion }}</p>
-        <p><b>Estado:</b> {{ solicitudSeleccionada.estado }}</p>
+        <p><b>Tipo:</b> {{ solicitudSeleccionada().tipo }}</p>
+        <p>
+          <b>Periodo:</b>
+          {{
+            solicitudSeleccionada().fecha_fin &&
+            solicitudSeleccionada().fecha_inicio !== solicitudSeleccionada().fecha_fin
+              ? (solicitudSeleccionada().fecha_inicio | date : 'dd/MM') +
+                ' - ' +
+                (solicitudSeleccionada().fecha_fin | date : 'dd/MM')
+              : (solicitudSeleccionada().fecha_inicio | date : 'dd/MM')
+          }}
+        </p>
+        <p><b>Bloque:</b> {{ solicitudSeleccionada().bloqueTxt }}</p>
+        <p>
+          <b>Equipos:</b>
+          {{ solicitudSeleccionada().equipos.join(', ') }}
+        </p>
+        <p><b>Observación:</b> {{ solicitudSeleccionada().observacion }}</p>
+        <p><b>Estado:</b> {{ solicitudSeleccionada().estado }}</p>
       </div>
     </div>
   </div>

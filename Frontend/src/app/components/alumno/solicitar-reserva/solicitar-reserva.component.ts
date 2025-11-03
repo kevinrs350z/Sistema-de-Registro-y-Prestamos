@@ -1,19 +1,19 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
-import { ReservasService } from './reservas.service';
-import { Equipo, PrestamoDraft, User } from '../../../shared/models';
+import { AuthService } from '../../../services/auth.service';
+import { Equipo, User } from '../../../shared/models';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs/operators';
 
-/** Validador: fecha fin debe ser >= fecha inicio */
+/** Validador: fecha fin >= fecha inicio */
 function rangoFechasValido(ctrl: AbstractControl) {
   const i = ctrl.get('fecha_inicio')?.value;
   const f = ctrl.get('fecha_fin')?.value;
   return i && f && new Date(i) > new Date(f) ? { rangoInvalido: true } : null;
 }
 
-/** Suma días hábiles (omite sábados y domingos) */
+/** Suma días hábiles */
 function sumarDiasHabiles(fecha: Date, dias: number): Date {
   const result = new Date(fecha);
   let agregados = 0;
@@ -42,19 +42,14 @@ function ajustarSiFinDeSemana(fecha: Date): Date {
 })
 export class SolicitarReservaComponent {
   private fb = inject(FormBuilder);
-  private reservas = inject(ReservasService);
+  private api = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
-  usuarios: User[] = [];
+
+  usuarioActivo: any = null;
   equipos: Equipo[] = [];
-
-  bloques = [
-    { id: 1, texto: 'Bloque 1 (08:00 – 09:30)' },
-    { id: 2, texto: 'Bloque 2 (09:40 – 11:10)' },
-    { id: 3, texto: 'Bloque 3 (11:20 – 12:50)' },
-    { id: 4, texto: 'Bloque 4 (14:45 – 16:10)' },
-    { id: 5, texto: 'Bloque 5 (16:20 – 17:50)' },
-    { id: 6, texto: 'Bloque 6 (17:55 – 19:30)' }, // ✅ corregido id duplicado
-  ];
+  asignaturas: any[] = [];
+  bloques: any[] = [];
 
   tipoSolicitud = signal<'DENTRO' | 'FUERA'>('DENTRO');
   mostrarMotivo = false;
@@ -101,20 +96,16 @@ export class SolicitarReservaComponent {
     return fechaMin.toISOString().split('T')[0];
   }
 
-  // ✅ Paso 1: Hacemos el formulario realmente reactivo
+  // Señal reactiva del formulario
   formValueSig = toSignal(
     this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
     { initialValue: this.form.getRawValue() }
   );
 
-  // ✅ Resumen 100 % reactivo
   resumen = computed(() => {
     const v = this.formValueSig();
-    const tipo = (v.tipo_solicitud ?? 'DENTRO') as 'DENTRO' | 'FUERA';
-
-    const usuario =
-      this.usuarios.find((u) => u.idUser === (v.idUser ?? -1))?.nombre ?? '—';
-
+    const usuario = this.usuarioActivo?.persona?.Nombre ?? '—';
+    const tipo = v.tipo_solicitud ?? '—';
     const cantidadEquipos = (v.equipos ?? []).length;
 
     const periodo =
@@ -133,79 +124,124 @@ export class SolicitarReservaComponent {
     return { usuario, tipo, cantidadEquipos, periodo, bloquesTxt };
   });
 
-  equiposSeleccionados = computed(() =>
-    this.equipos.filter((e) =>
-      this.form.get('equipos')!.value?.includes(e.idEquipo)
-    )
-  );
+  equiposSeleccionados = computed(() => {
+    const seleccionados = this.form.get('equipos')?.value ?? [];
+    const filtrados = this.equipos.filter((e) =>
+      seleccionados.includes(e.idEquipo)
+    );
+    console.log('🎯 Equipos visibles en HTML:', filtrados);
+    return filtrados;
+  });
 
-  ngOnInit() {
-    this.usuarios = this.reservas.getUsuarios();
-    this.equipos = this.reservas.getEquiposDisponibles();
 
+
+
+ ngOnInit() {
+  const token = localStorage.getItem('token') ?? '';
+  if (!token) {
+    alert('⚠️ No se encontró token. Inicia sesión.');
+    return;
+  }
+
+  // 🔹 Usuario autenticado
+  this.api.getUsuario(token).subscribe({
+    next: (data) => {
+      if (!data) {
+        console.error('⚠️ Usuario vacío:', data);
+        return;
+      }
+
+      this.usuarioActivo = data;
+      this.form.patchValue({
+        idUser: data.idUser,
+        nombre: data.persona?.Nombre ?? '',
+        rut: data.persona?.Rut ?? '',
+        telefono: data.persona?.telefono ?? '',
+        email: data.Email ?? '',
+      });
+    },
+    error: (err) => {
+      console.error('❌ Error al obtener usuario:', err);
+      alert('Error al cargar datos del usuario.');
+    },
+  });
+
+ 
+  
+// 🔹 Traer equipos (protegidos)
+this.api.getEquipos(token).subscribe({
+  next: (data) => {
+    this.equipos = [...data]; // nueva referencia
+    console.log('📦 Equipos desde backend:', this.equipos);
+
+    // ✅ Restaurar los equipos seleccionados desde el catálogo (state)
     const state = history.state as { equiposSeleccionados?: number[] };
     if (state?.equiposSeleccionados?.length) {
       this.form.patchValue({ equipos: state.equiposSeleccionados });
+      console.log('🧩 Equipos seleccionados restaurados:', state.equiposSeleccionados);
     }
 
-    const usuarioActivo =
-      this.reservas.getUsuarioActual?.() ?? this.usuarios[0] ?? null;
-    if (usuarioActivo) {
-      this.form.patchValue({
-        idUser: usuarioActivo.idUser,
-        nombre: usuarioActivo.nombre ?? '',
-        rut: (usuarioActivo as any).rut ?? '',
-        telefono: (usuarioActivo as any).telefono ?? '',
-        email: usuarioActivo.email ?? '',
-      });
+    // 🔄 Forzar refresco del computed + cambio detectado en vista
+    setTimeout(() => {
+      this.form.updateValueAndValidity();
+      this.equipos = [...this.equipos]; // cambia referencia
+      this.cdr.detectChanges(); // fuerza refresco del DOM
+      console.log('♻️ Refresco forzado ejecutado');
+    }, 100);
+  },
+  error: (err) => console.error('❌ Error al cargar equipos:', err),
+});
+
+
+
+
+
+
+  // 🔹 Traer asignaturas desde el backend
+  this.api.getAsignaturas(token).subscribe({
+    next: (data) => {
+      this.asignaturas = [...data, { nombre: 'OTROS' }];
+      console.log('📚 Asignaturas cargadas:', this.asignaturas);
+    },
+    error: (err) => {
+      console.error('❌ Error al cargar asignaturas:', err);
+    },
+  });
+
+  // 🔹 Cargar bloques desde backend
+  this.api.getBloques(token).subscribe({
+    next: (data) => {
+      this.bloques = data.map((b) => ({
+        id: b.idBloque,
+        texto: `Bloque ${b.idBloque} (${b.hora_inicio} – ${b.hora_fin})`,
+      }));
+      console.log('⏰ Bloques cargados:', this.bloques);
+    },
+    error: (err) => console.error('❌ Error al cargar bloques:', err),
+  });
+
+  // 🔹 Cambios tipo solicitud
+  this.form.get('tipo_solicitud')!.valueChanges.subscribe((tipo) => {
+    const valor = (tipo ?? 'DENTRO') as 'DENTRO' | 'FUERA';
+    this.tipoSolicitud.set(valor);
+    this.minFechaInicio = this.calcularMinFecha(valor);
+  });
+
+  // 🔹 Cambios de asignatura
+  this.form.get('asignatura')!.valueChanges.subscribe((valor) => {
+    if (valor === 'OTROS') {
+      this.mostrarMotivo = true;
+      this.f.motivo.setValidators([Validators.required]);
+    } else {
+      this.mostrarMotivo = false;
+      this.f.motivo.clearValidators();
+      this.form.patchValue({ motivo: '' });
     }
+    this.f.motivo.updateValueAndValidity();
+  });
+}
 
-    // Cambios de tipo de solicitud
-    this.form.get('tipo_solicitud')!.valueChanges.subscribe((tipo) => {
-      const valor = (tipo ?? 'DENTRO') as 'DENTRO' | 'FUERA';
-      this.tipoSolicitud.set(valor);
-      this.minFechaInicio = this.calcularMinFecha(valor);
 
-      if (valor === 'DENTRO') {
-        this.f.fecha_inicio.clearValidators();
-        this.f.fecha_fin.clearValidators();
-        this.form.patchValue({ fecha_inicio: '', fecha_fin: '' });
-
-        this.f.bloques.setValidators([
-          Validators.required,
-          (c) => (c.value?.length ? null : { requerido: true }),
-        ]);
-      } else {
-        this.f.bloques.clearValidators();
-        this.form.patchValue({ bloques: [] });
-
-        this.f.fecha_inicio.setValidators([Validators.required]);
-        this.f.fecha_fin.setValidators([
-          Validators.required,
-          rangoFechasValido,
-        ]);
-      }
-
-      this.f.fecha_inicio.updateValueAndValidity();
-      this.f.fecha_fin.updateValueAndValidity();
-      this.f.bloques.updateValueAndValidity();
-    });
-
-    // Cambios de asignatura
-    this.form.get('asignatura')!.valueChanges.subscribe((valor) => {
-      if (valor === 'OTROS') {
-        this.mostrarMotivo = true;
-        this.f.motivo.setValidators([Validators.required]);
-      } else {
-        this.mostrarMotivo = false;
-        this.f.motivo.clearValidators();
-        this.form.patchValue({ motivo: '' });
-      }
-      this.f.motivo.updateValueAndValidity();
-    });
-  }
-
-  // Checkbox de bloques
   onBloqueChange(event: Event, id: number) {
     const target = event.target as HTMLInputElement;
     const arr: number[] = this.form.get('bloques')!.value ?? [];
@@ -214,13 +250,7 @@ export class SolicitarReservaComponent {
     } else {
       this.form.get('bloques')!.setValue(arr.filter((x) => x !== id));
     }
-    this.form.get('bloques')!.markAsDirty();
     this.form.get('bloques')!.updateValueAndValidity();
-  }
-
-  onAsignaturaChange(event: Event) {
-    const valor = (event.target as HTMLSelectElement).value;
-    this.mostrarMotivo = valor === 'OTROS';
   }
 
   submit() {
@@ -230,44 +260,44 @@ export class SolicitarReservaComponent {
       return;
     }
 
-    const ids: number[] = this.form.get('bloques')!.value ?? [];
-    const bloquesTxt = this.bloques
-      .filter((b) => ids.includes(b.id))
-      .map((b) => b.texto)
-      .join(', ');
-
-    const payload: PrestamoDraft = {
-      idUser: this.form.get('idUser')!.value ?? 0,
-      tipo: (this.form.get('tipo_solicitud')!.value ?? 'DENTRO') as
-        | 'DENTRO'
-        | 'FUERA',
+    const payload = {
+      idUser: this.form.get('idUser')!.value,
       equipos: this.form.get('equipos')!.value ?? [],
-      fecha_inicio: this.form.get('fecha_inicio')!.value ?? '',
-      fecha_fin: this.form.get('fecha_fin')!.value ?? '',
-      bloque: this.tipoSolicitud() === 'DENTRO' ? (bloquesTxt || '—') : '—',
-      observacion: this.form.get('observacion')!.value ?? '',
-      estado: 'Pendiente',
+      tipo: this.form.get('tipo_solicitud')!.value ?? 'DENTRO',
       asignatura: this.form.get('asignatura')!.value ?? '',
       motivo: this.form.get('motivo')!.value ?? '',
+      observacion: this.form.get('observacion')!.value ?? '',
+      fecha_inicio: this.form.get('fecha_inicio')!.value ?? '',
+      fecha_fin: this.form.get('fecha_fin')!.value ?? '',
+      bloques: this.form.get('bloques')!.value ?? [],
     };
 
-    this.reservas.crearBorrador(payload);
-    alert('✅ Solicitud guardada localmente (mock).');
-
-    this.form.reset({
-      tipo_solicitud: 'DENTRO',
-      equipos: [],
-      bloques: [],
-      asignatura: '',
-      motivo: '',
-      observacion: '',
-      fecha_inicio: '',
-      fecha_fin: '',
+    const token = localStorage.getItem('token') ?? '';
+    this.api.crearPrestamo(payload, token).subscribe({
+      next: (resp) => {
+        console.log('✅ Préstamo creado:', resp);
+        alert('✅ Solicitud enviada correctamente al backend.');
+        this.limpiar();
+      },
+      error: (err) => {
+        console.error('❌ Error al crear préstamo:', err);
+        alert('Error al crear préstamo. Revisa consola.');
+      },
     });
-    this.tipoSolicitud.set('DENTRO');
-    this.minFechaInicio = this.calcularMinFecha('DENTRO');
-    this.mostrarMotivo = false;
   }
+    onAsignaturaChange(event: Event) {
+    const valor = (event.target as HTMLSelectElement).value;
+    this.mostrarMotivo = valor === 'OTROS';
+
+    if (this.mostrarMotivo) {
+      this.f.motivo.setValidators([Validators.required]);
+    } else {
+      this.f.motivo.clearValidators();
+      this.form.patchValue({ motivo: '' });
+    }
+    this.f.motivo.updateValueAndValidity();
+  }
+
 
   limpiar() {
     this.form.reset({
