@@ -13,6 +13,11 @@ import { SolicitudesPendientesComponent } from './components/admin/solicitudes-p
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
   { path: 'auth/login', component: LoginComponent },
+    { 
+    path: 'auth/callback', 
+    loadComponent: () => import('./auth-callback/auth-callback.component')
+      .then(m => m.AuthCallbackComponent) 
+  },
   { path: 'auth/recuperar', component: RecuperarComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'equipos/catalogo', component: CatalogoEquiposComponent },

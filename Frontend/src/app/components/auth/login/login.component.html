@@ -33,6 +33,10 @@
       <button type="submit" class="btn-login" [disabled]="form.invalid">
         Iniciar sesión
       </button>
+      <button (click)="loginWithGoogle()" class="btn btn-danger w-100">
+          <img src="https://img.icons8.com/color/16/000000/google-logo.png"/>
+          Iniciar sesión con Google
+      </button>
 
       <!-- Enlace de recuperación -->
       <div class="recuperar">

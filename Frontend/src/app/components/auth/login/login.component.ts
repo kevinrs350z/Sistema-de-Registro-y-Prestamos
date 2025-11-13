@@ -27,6 +27,9 @@ export class LoginComponent {
       password: ['', Validators.required]
     });
   }
+  loginWithGoogle() {
+    window.location.href = 'http://localhost:8000/api/auth/google';
+  }
 
   submit() {
     if (this.form.invalid) return;
@@ -36,6 +39,7 @@ export class LoginComponent {
     this.errorMessage = '';
 
     // 🔥 Lógica igual que la versión anterior que funcionaba
+    
     this.authService.login(email, password).subscribe({
       next: (res) => {
         this.loading = false;
