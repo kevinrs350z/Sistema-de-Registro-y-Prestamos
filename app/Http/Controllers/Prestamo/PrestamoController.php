@@ -75,6 +75,8 @@ class PrestamoController extends Controller
                     'idEquipo'      => $idEquipo,
                     'fecha_inicio'  => $request->filled('fecha_inicio') ? $request->fecha_inicio : null,
                     'fecha_fin'     => $request->filled('fecha_fin') ? $request->fecha_fin : null,
+                    'otra_motivo'  => $request->motivo ?: null,
+
                     'tipo'          => $request->tipo,
                     'estado'        => 'pendiente',
                     'observacion'   => $request->observacion ?: null,

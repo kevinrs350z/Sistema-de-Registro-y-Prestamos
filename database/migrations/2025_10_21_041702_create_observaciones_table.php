@@ -16,6 +16,7 @@ class CreateObservacionesTable extends Migration
         Schema::create('observaciones', function (Blueprint $table) {
 $table->id('idObservacion');
             $table->unsignedBigInteger('idPrestamo'); 
+            
             $table->string('descripcion', 255)->nullable();
             $table->string('estado', 50)->default('habilitado');
             

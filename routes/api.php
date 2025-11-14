@@ -11,6 +11,8 @@ use App\Http\Controllers\Prestamo\PrestamoController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\mostrar\usuario;
 use App\Http\Controllers\Prestamo\PrestamoAdminController;
+use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\Auth\GoogleController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -30,6 +32,9 @@ Route::get('/password/validate-token/{token}', [ResetPasswordController::class, 
 // Ruta para iniciar sesión
 // URL: /api/login
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('auth/google', [GoogleController::class, 'redirectToGoogle']);
+Route::post('/auth/google', [AuthController::class, 'googleLogin']);
+
 
 // Ruta para registrar un nuevo usuario
 // URL: /api/register

@@ -17,7 +17,7 @@ class CreateBloquePrestamosTable extends Migration
             $table->id('idBloquePrestamo');
             $table->unsignedBigInteger('idPrestamo');
             $table->unsignedBigInteger('idBloque');
-            $table->unsignedBigInteger('idAsignatura');
+            $table->unsignedBigInteger('idAsignatura')->nullable();;
             //$table->timestamps();
 
            $table->foreign('idPrestamo')

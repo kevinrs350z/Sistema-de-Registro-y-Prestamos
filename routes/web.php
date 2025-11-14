@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\Auth\GoogleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::get('/', fn() => response()->json(['message' => 'API funcionando 🚀']));
-
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 //Auth::routes();
 

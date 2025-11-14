@@ -16,7 +16,7 @@ class Prestamo extends Model
         'fecha_inicio',
         'fecha_fin',
         'estado',
-        'otro_motivo',
+        'otra_motivo',
         'tipo',
         'observacion'
     ];
