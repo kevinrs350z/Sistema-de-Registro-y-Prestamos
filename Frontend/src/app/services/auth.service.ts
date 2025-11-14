@@ -37,6 +37,10 @@ export class AuthService {
       password
     });
   }
+  loginWithGoogle(token: string) {
+    return this.http.post('http://localhost:8000/api/auth/google', { token });
+  }
+
 
   forgotPassword(email: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/forgot`, { email });

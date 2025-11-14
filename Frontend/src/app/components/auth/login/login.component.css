@@ -9,6 +9,35 @@
   font-family: 'Inter', sans-serif;
   overflow: hidden;
 }
+.google-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  background: #ffffff;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+
+  padding: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+  transition: all 0.2s ease-in-out;
+
+  cursor: pointer;
+}
+
+.google-login-btn:hover {
+  background: #f5f5f5;
+  border-color: #c7c7c7;
+}
+
+.google-login-btn img {
+  width: 22px;
+  height: 22px;
+}
+
 
 /* 🔹 Imagen de fondo tenue, más visible pero suave */
 .login-page::before {

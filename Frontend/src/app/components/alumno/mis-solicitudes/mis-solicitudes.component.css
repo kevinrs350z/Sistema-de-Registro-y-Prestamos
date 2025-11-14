@@ -110,6 +110,14 @@
 .estado.rechazada {
   background-color: #e05b5b;
 }
+.estado.devuelto {
+  background-color: #15ff00;
+}
+
+.estado.aceptado{
+  background-color: #23439c;
+}
+
 
 /* CUERPO DE TARJETA */
 .card-body {

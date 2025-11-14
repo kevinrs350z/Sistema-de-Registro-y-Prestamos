@@ -2,7 +2,15 @@ import { Component } from '@angular/core';
 import { FormBuilder, Validators, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../services/auth.service'; // 👈 ajusta si tu servicio está en otra carpeta
+import { AuthService } from '../../../services/auth.service';
+declare var google: any;
+
+
+declare global {
+  interface Window {
+    handleCredentialResponse: (response: any) => void;
+  }
+}
 
 @Component({
   selector: 'app-login',
@@ -12,7 +20,7 @@ import { AuthService } from '../../../services/auth.service'; // 👈 ajusta si 
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  hide: boolean = true;
+  hide = true;
   form: FormGroup;
   errorMessage = '';
   loading = false;
@@ -27,39 +35,65 @@ export class LoginComponent {
       password: ['', Validators.required]
     });
   }
-  loginWithGoogle() {
-    window.location.href = 'http://localhost:8000/api/auth/google';
+
+  ngOnInit() {
+    window.handleCredentialResponse = (response: any) => {
+      this.sendTokenToApi(response.credential);
+    };
+  }
+    ngAfterViewInit() {
+    google.accounts.id.initialize({
+      client_id: "1022429090686-9bh9n3io1fkfkugsl5fska1rj6ivh222.apps.googleusercontent.com",
+      callback: (response: any) => this.sendTokenToApi(response.credential)
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById("googleBtn")!,
+      { theme: "outline", size: "large" }
+    );
+  }
+
+
+  sendTokenToApi(token: string) {
+    this.authService.loginWithGoogle(token).subscribe({
+      next: (res: any) => {
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        localStorage.setItem('rol', res.user.rol.nombre);
+
+        const rol = res.user.rol.nombre.toLowerCase();
+        if (rol === 'admin') this.router.navigate(['/admin/dashboard']);
+        else this.router.navigate(['/equipos/catalogo']);
+      },
+      error: () => {
+        this.errorMessage = 'Error al iniciar sesión con Google.';
+      }
+    });
   }
 
   submit() {
     if (this.form.invalid) return;
 
-    const { email, password } = this.form.value;
     this.loading = true;
     this.errorMessage = '';
 
-    // 🔥 Lógica igual que la versión anterior que funcionaba
-    
+    const { email, password } = this.form.value;
+
     this.authService.login(email, password).subscribe({
       next: (res) => {
         this.loading = false;
 
-        // Guardar token y usuario
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
         localStorage.setItem('rol', res.user.rol.nombre);
 
-        // Redirigir según rol
         const rol = res.user.rol.nombre.toLowerCase();
-        if (rol === 'admin') {
-          this.router.navigate(['/admin/dashboard']);
-        } else {
-          this.router.navigate(['/equipos/catalogo']);
-        }
+        if (rol === 'admin') this.router.navigate(['/admin/dashboard']);
+        else this.router.navigate(['/equipos/catalogo']);
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'Credenciales incorrectas o servidor no disponible.';
+        this.errorMessage = 'Credenciales incorrectas.';
       }
     });
   }

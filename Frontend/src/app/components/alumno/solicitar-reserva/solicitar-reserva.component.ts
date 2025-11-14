@@ -47,7 +47,8 @@ export class SolicitarReservaComponent {
 
 
   usuarioActivo: any = null;
-  equipos: Equipo[] = [];
+  equipos = signal<Equipo[]>([]);
+
   asignaturas: any[] = [];
   bloques: any[] = [];
 
@@ -101,6 +102,11 @@ export class SolicitarReservaComponent {
     this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
     { initialValue: this.form.getRawValue() }
   );
+  asignaturaSeleccionada = computed(() => {
+   const id = this.form.get('asignatura')?.value;
+   return this.asignaturas.find(a => a.idAsignatura == id)?.nombre || '—';
+  });
+
 
   resumen = computed(() => {
     const v = this.formValueSig();
@@ -125,13 +131,23 @@ export class SolicitarReservaComponent {
   });
 
   equiposSeleccionados = computed(() => {
-    const seleccionados = this.form.get('equipos')?.value ?? [];
-    const filtrados = this.equipos.filter((e) =>
+    const v = this.formValueSig();                  // 👈 signal, dispara recalculo
+    const seleccionados: number[] = v.equipos ?? [];
+    const todos = this.equipos();                   // 👈 signal, dispara recalculo
+
+    const filtrados = todos.filter((e) =>
       seleccionados.includes(e.idEquipo)
     );
-    console.log('🎯 Equipos visibles en HTML:', filtrados);
+
+    console.log('🎯 Equipos visibles en HTML:', {
+      seleccionados,
+      todos,
+      filtrados
+    });
+
     return filtrados;
   });
+
 
 
 
@@ -169,28 +185,24 @@ export class SolicitarReservaComponent {
  
   
 // 🔹 Traer equipos (protegidos)
-this.api.getEquipos(token).subscribe({
-  next: (data) => {
-    this.equipos = [...data]; // nueva referencia
-    console.log('📦 Equipos desde backend:', this.equipos);
+  this.api.getEquipos(token).subscribe({
+    next: (data) => {
+      this.equipos.set(data);                    // 👈 antes era: this.equipos = [...data]
+      console.log('📦 Equipos desde backend:', this.equipos());
+      
+      const state = history.state as { equiposSeleccionados?: number[] };
+      if (state?.equiposSeleccionados?.length) {
+        this.form.patchValue({ equipos: state.equiposSeleccionados });
+        console.log('🧩 Equipos seleccionados restaurados:', state.equiposSeleccionados);
+      }
 
-    // ✅ Restaurar los equipos seleccionados desde el catálogo (state)
-    const state = history.state as { equiposSeleccionados?: number[] };
-    if (state?.equiposSeleccionados?.length) {
-      this.form.patchValue({ equipos: state.equiposSeleccionados });
-      console.log('🧩 Equipos seleccionados restaurados:', state.equiposSeleccionados);
-    }
-
-    // 🔄 Forzar refresco del computed + cambio detectado en vista
-    setTimeout(() => {
+      // Ya no hace falta el setTimeout ni reasignar this.equipos
       this.form.updateValueAndValidity();
-      this.equipos = [...this.equipos]; // cambia referencia
-      this.cdr.detectChanges(); // fuerza refresco del DOM
-      console.log('♻️ Refresco forzado ejecutado');
-    }, 100);
-  },
-  error: (err) => console.error('❌ Error al cargar equipos:', err),
-});
+      this.cdr.detectChanges();
+    },
+    error: (err) => console.error('❌ Error al cargar equipos:', err),
+  });
+
 
 
 
@@ -200,7 +212,7 @@ this.api.getEquipos(token).subscribe({
   // 🔹 Traer asignaturas desde el backend
   this.api.getAsignaturas(token).subscribe({
     next: (data) => {
-      this.asignaturas = [...data, { nombre: 'OTROS' }];
+      this.asignaturas = [...data, { idAsignatura: 'OTROS', nombre: 'OTROS' }];
       console.log('📚 Asignaturas cargadas:', this.asignaturas);
     },
     error: (err) => {
@@ -260,17 +272,27 @@ this.api.getEquipos(token).subscribe({
       return;
     }
 
-    const payload = {
-      idUser: this.form.get('idUser')!.value,
-      equipos: this.form.get('equipos')!.value ?? [],
-      tipo: this.form.get('tipo_solicitud')!.value ?? 'DENTRO',
-      asignatura: this.form.get('asignatura')!.value ?? '',
-      motivo: this.form.get('motivo')!.value ?? '',
-      observacion: this.form.get('observacion')!.value ?? '',
-      fecha_inicio: this.form.get('fecha_inicio')!.value ?? '',
-      fecha_fin: this.form.get('fecha_fin')!.value ?? '',
-      bloques: this.form.get('bloques')!.value ?? [],
-    };
+  const asignaturaSel = this.form.get('asignatura')!.value;
+const motivoSel = this.form.get('motivo')!.value;
+
+const payload = {
+  idUser: this.form.get('idUser')!.value,
+  equipos: this.form.get('equipos')!.value ?? [],
+  tipo: this.form.get('tipo_solicitud')!.value ?? 'DENTRO',
+
+  // si asignatura = OTROS, enviamos null
+  asignatura: asignaturaSel === 'OTROS' ? null : asignaturaSel,
+
+  // si asignatura = OTROS → enviamos motivoSel
+  // si asignatura ≠ OTROS → enviamos ''
+  motivo: asignaturaSel === 'OTROS' ? motivoSel : '',
+
+  observacion: this.form.get('observacion')!.value ?? '',
+  fecha_inicio: this.form.get('fecha_inicio')!.value ?? '',
+  fecha_fin: this.form.get('fecha_fin')!.value ?? '',
+  bloques: this.form.get('bloques')!.value ?? [],
+};
+
 
     const token = localStorage.getItem('token') ?? '';
     this.api.crearPrestamo(payload, token).subscribe({

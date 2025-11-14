@@ -135,6 +135,9 @@
       <p><b>Alumno:</b> {{ resumen().usuario }}</p>
       <p><b>Tipo:</b> {{ resumen().tipo }}</p>
       <p><b>Asignatura:</b> {{ form.get('asignatura')?.value || '—' }}</p>
+      <p><b>Asignatura:</b> {{ asignaturaSeleccionada() }}</p>
+      
+
 
       <!-- Mostrar dinámicamente según tipo -->
       <ng-container *ngIf="resumen().tipo === 'FUERA'; else dentroBlock">
