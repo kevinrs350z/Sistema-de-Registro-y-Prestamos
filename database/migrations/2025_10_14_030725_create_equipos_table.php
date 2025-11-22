@@ -4,23 +4,41 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void
+class CreateEquiposTable extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up()
     {
         Schema::create('equipos', function (Blueprint $table) {
-            $table->id('idEquipo');
-            $table->string('nombre');
+            // Mantienes tu PK original
+            $table->id('id');
+
+            // Nueva FK hacia tipos de equipo
+            $table->unsignedBigInteger('tipo_equipo_id');
+
+            // Código único (etiqueta física del equipo)
             $table->string('codigo')->unique();
-            $table->string('categoria');
-            $table->string('estado');
-            //$table->string('tipo');
-            $table->timestamps(); // opcional
+
+            // Estado de la unidad física
+            $table->string('estado')->default('disponible');
+
+            $table->timestamps();
+
+            // Foreign Key
+            $table->foreign('tipo_equipo_id')
+                  ->references('id')
+                  ->on('tipo_equipos')
+                  ->onDelete('restrict');
         });
     }
 
-    public function down(): void
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
     {
         Schema::dropIfExists('equipos');
     }
-};
-
+}

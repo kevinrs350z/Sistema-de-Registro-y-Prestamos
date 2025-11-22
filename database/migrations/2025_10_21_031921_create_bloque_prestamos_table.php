@@ -6,45 +6,36 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateBloquePrestamosTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
-        Schema::create('bloquePrestamos', function (Blueprint $table) {
+        Schema::create('bloque_prestamos', function (Blueprint $table) {
             $table->id('idBloquePrestamo');
+
             $table->unsignedBigInteger('idPrestamo');
             $table->unsignedBigInteger('idBloque');
-            $table->unsignedBigInteger('idAsignatura')->nullable();;
-            //$table->timestamps();
+            $table->unsignedBigInteger('idAsignatura')->nullable();
+            $table->timestamps();
 
-           $table->foreign('idPrestamo')
-                  ->references('idPrestamo')
-                  ->on('prestamos')
-                  ->onDelete('cascade');
+            // Relaciones
+            $table->foreign('idPrestamo')
+                ->references('idPrestamo')
+                ->on('prestamos')
+                ->onDelete('cascade');
 
             $table->foreign('idBloque')
-                  ->references('idBloque')
-                  ->on('bloques')
-                  ->onDelete('cascade');
+                ->references('idBloque')
+                ->on('bloques')
+                ->onDelete('cascade');
 
             $table->foreign('idAsignatura')
-                  ->references('idAsignatura')
-                  ->on('asignaturas')
-                  ->onDelete('cascade');
+                ->references('idAsignatura')
+                ->on('asignaturas')
+                ->onDelete('cascade');
         });
-
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
-        Schema::dropIfExists('bloquePrestamos');
+        Schema::dropIfExists('bloque_prestamos');
     }
 }

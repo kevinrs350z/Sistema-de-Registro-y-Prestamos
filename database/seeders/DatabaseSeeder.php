@@ -12,16 +12,21 @@ class DatabaseSeeder extends Seeder
             RolesTableSeeder::class,
             PersonasTableSeeder::class,
             UsersTableSeeder::class,
-            EquiposTableSeeder::class,
-            PrestamosTableSeeder::class,
+            CategoriasSeeder::class,
+            TipoEquiposSeeder::class,
+            AsignaturaSeeder::class,
             BloqueSeeder::class,
+            EquiposTableSeeder::class,
+            PrestamoSeeder::class,
+            
             ObservacionSeeder::class,
             SancionSeeder::class,
             UserSancionSeeder::class,
             DocenteSeeder::class,
-            AsignaturaSeeder::class,
+            
             AsignaturaDocenteSeeder::class,
-            BloquePrestamosSeeder::class
+            //BloquePrestamosSeeder::class,
+            EquiposRelacionadosSeeder::class
         ]);
     }
 }

@@ -13,6 +13,10 @@ use App\Http\Controllers\mostrar\usuario;
 use App\Http\Controllers\Prestamo\PrestamoAdminController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\EquipoRelacionadoController;
+use App\Http\Controllers\TipoEquipoController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -76,3 +80,37 @@ Route::prefix('admin/prestamos')->middleware(['auth:sanctum', 'role:admin'])->gr
     Route::post('/aprobar/{id}', [PrestamoAdminController::class, 'aprobar']);
     Route::post('/rechazar/{id}', [PrestamoAdminController::class, 'rechazar']);
 });
+
+
+
+//Rutas nuevas, provando
+
+Route::get('/categoria', [CategoriaController::class, 'index']);
+Route::post('/categoria', [CategoriaController::class, 'store']);
+Route::get('/categoria/{id}', [CategoriaController::class, 'show']);
+Route::put('/categoria/{id}', [CategoriaController::class, 'update']);
+Route::delete('/categoria/{id}', [CategoriaController::class, 'destroy']);
+
+Route::post('/prestamos', [PrestamoController::class, 'store']);
+Route::get('/prestamos', [PrestamoController::class, 'index']);
+Route::get('/prestamos/{id}', [PrestamoController::class, 'show']);
+Route::delete('/prestamos/{id}', [PrestamoController::class, 'destroy']);
+
+
+
+Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
+Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
+Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
+
+
+Route::get('/tipoEquipo', [TipoEquipoController::class, 'index']);
+Route::post('/tipoEquipo', [TipoEquipoController::class, 'store']);
+Route::get('/tipoEquipo/{id}', [TipoEquipoController::class, 'show']);
+Route::put('/tipoEquipo/{id}', [TipoEquipoController::class, 'update']);
+Route::delete('/tipoEquipo/{id}', [TipoEquipoController::class, 'destroy']);
+Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
+Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
+Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
+
+
+Route::post('/equipos', [EquipoController::class, 'store']);

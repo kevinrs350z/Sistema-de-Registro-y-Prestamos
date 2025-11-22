@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Prestamo;
 use App\Models\BloquePrestamo;
+use App\Models\PrestamoEquipo;
 
 class PrestamoController extends Controller
 {
-     public function index(Request $request)
+    public function index(Request $request)
     {
         try {
             $user = Auth::user();
@@ -21,9 +22,10 @@ class PrestamoController extends Controller
             }
 
             $prestamos = Prestamo::with([
-                    'equipo',
+                    'equipos',                       // ✅ ahora plural
                     'bloquePrestamo.bloque',
-                    'bloquePrestamo.asignatura'
+                    'bloquePrestamo.asignatura',
+                    'user',
                 ])
                 ->where('idUser', $user->idUser)
                 ->orderByDesc('idPrestamo')
@@ -37,80 +39,94 @@ class PrestamoController extends Controller
             ], 500);
         }
     }
+
     public function store(Request $request)
     {
-        //  Validación base (común)
+        // 1️⃣ Validación base
         $request->validate([
-            'equipos' => 'required|array|min:1',
-            'equipos.*' => 'integer|exists:equipos,idEquipo',
-            'tipo' => 'required|string|in:DENTRO,FUERA',
-            'asignatura' => 'nullable|integer|exists:asignaturas,idAsignatura',
-            'motivo' => 'nullable|string|max:500',
-            'observacion' => 'nullable|string|max:500',
+            'equipos'       => 'required|array|min:1',
+            // OJO: aquí asumo que la PK de equipos es "id"
+            'equipos.*'     => 'integer|exists:equipos,id',
+
+            'tipo'          => 'required|string|in:DENTRO,FUERA',
+            'asignatura'    => 'nullable|integer|exists:asignaturas,idAsignatura',
+            'motivo'        => 'nullable|string|max:500',
+            'observacion'   => 'nullable|string|max:500',
         ]);
 
-        //  Validaciones adicionales según tipo
+        // 2️⃣ Validaciones adicionales según tipo
         if ($request->tipo === 'DENTRO') {
             $request->validate([
-                'bloques' => 'required|array|min:1',
+                'bloques'   => 'required|array|min:1',
                 'bloques.*' => 'integer|exists:bloques,idBloque',
             ]);
         } else { // tipo === 'FUERA'
             $request->validate([
                 'fecha_inicio' => 'required|date',
-                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+                'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
             ]);
         }
 
-        $usuarioId = Auth::id();
+        $usuario = Auth::user();
+
+        if (!$usuario) {
+            return response()->json(['error' => 'Usuario no autenticado'], 401);
+        }
+
+        $usuarioId = $usuario->idUser;
 
         DB::beginTransaction();
+
         try {
-            $prestamosCreados = [];
+            // 3️⃣ Crear UN SOLO préstamo (cabecera)
+            $prestamo = Prestamo::create([
+                'idUser'       => $usuarioId,
+                'fecha_inicio' => $request->filled('fecha_inicio') ? $request->fecha_inicio : null,
+                'fecha_fin'    => $request->filled('fecha_fin') ? $request->fecha_fin : null,
+                'otra_motivo'  => $request->motivo ?: null,
+                'tipo'         => $request->tipo,
+                'estado'       => 'pendiente',
+                'observacion'  => $request->observacion ?: null,
+            ]);
 
+            // 4️⃣ Asociar equipos en la tabla pivot prestamo_equipo
             foreach ($request->equipos as $idEquipo) {
-                // 🔹 Crear el préstamo base
-                $prestamo = Prestamo::create([
-                    'idUser'        => $usuarioId,
-                    'idEquipo'      => $idEquipo,
-                    'fecha_inicio'  => $request->filled('fecha_inicio') ? $request->fecha_inicio : null,
-                    'fecha_fin'     => $request->filled('fecha_fin') ? $request->fecha_fin : null,
-                    'otra_motivo'  => $request->motivo ?: null,
-
-                    'tipo'          => $request->tipo,
-                    'estado'        => 'pendiente',
-                    'observacion'   => $request->observacion ?: null,
+                PrestamoEquipo::create([
+                    'idPrestamo' => $prestamo->idPrestamo,
+                    'idEquipo'   => $idEquipo,
                 ]);
-
-                // 🔹 Si el préstamo es DENTRO, vincula bloques y asignatura
-                if ($request->tipo === 'DENTRO' && $request->bloques) {
-                    foreach ($request->bloques as $idBloque) {
-                        BloquePrestamo::create([
-                            'idPrestamo'   => $prestamo->idPrestamo,
-                            'idBloque'     => $idBloque,
-                            'idAsignatura' => $request->asignatura,
-                        ]);
-                    }
-                }
-
-                $prestamosCreados[] = $prestamo->load(
-                    'user',
-                    'equipo',
-                    'bloquePrestamo.bloque',
-                    'bloquePrestamo.asignatura'
-                );
             }
+
+            // 5️⃣ Si el préstamo es DENTRO, vincular bloques y asignatura
+            if ($request->tipo === 'DENTRO' && $request->bloques) {
+                foreach ($request->bloques as $idBloque) {
+                    BloquePrestamo::create([
+                        'idPrestamo'   => $prestamo->idPrestamo,
+                        'idBloque'     => $idBloque,
+                        'idAsignatura' => $request->asignatura,
+                    ]);
+                }
+            }
+
+            // 6️⃣ Cargar relaciones para responder bonito
+            $prestamo->load(
+                'user',
+                'equipos',
+                'bloquePrestamo.bloque',
+                'bloquePrestamo.asignatura'
+            );
 
             DB::commit();
 
             return response()->json([
-                'message' => '✅ Préstamos creados correctamente.',
-                'prestamos' => $prestamosCreados,
+                'message'  => '✅ Préstamo creado correctamente.',
+                'prestamo' => $prestamo,
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
-                'error' => '❌ Error al crear los préstamos.',
+                'error'   => '❌ Error al crear el préstamo.',
                 'message' => $e->getMessage(),
             ], 500);
         }
