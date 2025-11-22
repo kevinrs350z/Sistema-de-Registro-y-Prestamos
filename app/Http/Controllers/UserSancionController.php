@@ -2,84 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserSancion;
+use App\Models\User;
+use App\Models\Sancion;
 use Illuminate\Http\Request;
 
 class UserSancionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    // Solo admin puede ejecutar esto gracias al middleware
+    public function asignarSancion(Request $request)
     {
-        //
-    }
+        // Validación
+        $request->validate([
+            'idUser' => 'required|exists:users,idUser',
+            'nivel' => 'required|string',
+            'estado' => 'required|string',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        ]);
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
+        // Crear sanción nueva
+        $sancion = Sancion::create([
+            'nivel' => $request->nivel,
+            'estado' => $request->estado,
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        // Buscar usuario
+        $user = User::find($request->idUser);
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\UserSancion  $userSancion
-     * @return \Illuminate\Http\Response
-     */
-    public function show(UserSancion $userSancion)
-    {
-        //
-    }
+        // Asignar sanción en tabla pivote user_sancion
+        $user->sanciones()->attach($sancion->idSancion);
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\UserSancion  $userSancion
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(UserSancion $userSancion)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\UserSancion  $userSancion
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, UserSancion $userSancion)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\UserSancion  $userSancion
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(UserSancion $userSancion)
-    {
-        //
+        return response()->json([
+            'message' => 'Sanción creada y asignada correctamente',
+            'sancion' => $sancion,
+            'usuario' => $user->only(['idUser', 'name', 'email']),
+        ], 201);
     }
 }
