@@ -20,9 +20,9 @@ interface LoginResponse {
 })
 export class AuthService {
   //private apiUrl = 'https://cofferlike-nonaseptic-stephen.ngrok-free.dev/api'; 
- private apiUrl = 'http://localhost:8000/api'; 
+  private apiUrl = 'http://localhost:8000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { email, password });
@@ -42,4 +42,19 @@ export class AuthService {
     localStorage.removeItem('user');
     localStorage.removeItem('rol');
   }
+
+
+  // ============================================================
+  // OBTENER TODOS LOS EQUIPOS (PARA INVENTARIO ADMIN)
+  // ============================================================
+  getEquipos(token: string): Observable<any[]> {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json'
+    };
+
+    return this.http.get<any[]>(`${this.apiUrl}/equipos`, { headers });
+  }
+
+
 }

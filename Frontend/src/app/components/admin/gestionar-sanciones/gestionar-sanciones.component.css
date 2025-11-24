@@ -1,0 +1,79 @@
+.cuentas-container {
+  display: flex;
+  gap: 25px;
+  padding: 20px;
+}
+
+.lista {
+  width: 35%;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.detalle {
+  flex: 1;
+  background: #f9fbff;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.buscador {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+}
+
+.item {
+  padding: 12px 14px;
+  background: #fff;
+  border: 2px solid #ffd3b6;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: 0.2s;
+}
+
+.item:hover {
+  background: #fff3e8;
+}
+
+.item.activo {
+  background: #ffe1c7;
+  border-color: #ffb788;
+}
+
+.estado {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.estado.activa {
+  color: #d9534f;
+}
+
+.acciones {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-ampliar {
+  padding: 10px 14px;
+  background: #007bff;
+  color: white;
+  border-radius: 8px;
+  border: none;
+}
+
+.btn-quitar {
+  padding: 10px 14px;
+  background: #dc3545;
+  color: white;
+  border-radius: 8px;
+  border: none;
+}

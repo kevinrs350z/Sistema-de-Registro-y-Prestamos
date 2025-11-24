@@ -1,0 +1,46 @@
+<app-navbar-admin></app-navbar-admin>
+
+<div class="cuentas-container">
+
+  <!-- LISTA -->
+  <div class="lista">
+    <h3 class="titulo-lista">Sanciones</h3>
+
+    <input class="buscador"
+           type="text"
+           placeholder="Buscar..."
+           [(ngModel)]="filtro">
+
+    <div *ngFor="let s of sancionesFiltradas"
+         class="item"
+         [class.activo]="sancionSeleccionada?.id === s.id"
+         (click)="seleccionar(s)">
+
+      <p><strong>{{ s.usuario }}</strong></p>
+      <p>{{ s.motivo }}</p>
+      <p class="estado" [class.activa]="s.estado === 'ACTIVA'">
+        {{ s.estado }}
+      </p>
+
+    </div>
+  </div>
+
+  <!-- DETALLE -->
+  <div class="detalle" *ngIf="sancionSeleccionada">
+
+    <h2>Detalle de Sanción</h2>
+
+    <p><strong>Usuario:</strong> {{ sancionSeleccionada.usuario }}</p>
+    <p><strong>Motivo:</strong> {{ sancionSeleccionada.motivo }}</p>
+    <p><strong>Inicio:</strong> {{ sancionSeleccionada.fecha_inicio }}</p>
+    <p><strong>Fin:</strong> {{ sancionSeleccionada.fecha_fin }}</p>
+    <p><strong>Estado:</strong> {{ sancionSeleccionada.estado }}</p>
+
+    <div class="acciones">
+      <button class="btn-ampliar" (click)="ampliarSancion()">Ampliar 7 días</button>
+      <button class="btn-quitar" (click)="quitarSancion()">Quitar sanción</button>
+    </div>
+
+  </div>
+
+</div>

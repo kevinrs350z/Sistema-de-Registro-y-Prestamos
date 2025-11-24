@@ -15,7 +15,8 @@
     <!-- Menú desplegable -->
     <div class="menu-dropdown" *ngIf="menuAbierto">
       <button (click)="navegar('gestionar')">Gestionar</button>
-      <button (click)="navegar('solicitudes')">Ver solicitudes</button>
+      <button (click)="navegar('solicitudes')">Solicitudes pendientes</button>
+      <button (click)="navegar('finalizadas')">Solicitudes finalizadas</button>
     </div>
   </div>
 

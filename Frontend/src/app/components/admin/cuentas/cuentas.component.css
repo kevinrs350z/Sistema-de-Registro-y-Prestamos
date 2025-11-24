@@ -1,0 +1,168 @@
+/* 🔹 CONTENEDOR GENERAL */
+.cuentas-container {
+  display: flex;
+  gap: 25px;
+  padding: 20px;
+}
+
+/* 🔹 LISTA IZQUIERDA */
+.lista {
+  width: 32%;
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.titulo-lista {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* 🔹 Botón Crear Cuenta */
+.btn-crear {
+  width: 100%;
+  background-color: #f49b5e;
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-crear:hover {
+  background-color: #ff8a3d;
+}
+
+/* 🔹 Buscador */
+.buscador {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid #d0d0d0;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+/* 🔹 Items de la lista */
+.item {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff;
+  border: 2px solid #ffd3b6;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.item:hover {
+  background: #fff6ef;
+}
+
+.item.activo {
+  border-color: #446ba9;
+  background: #eef3ff;
+}
+
+.sin-alumnos {
+  margin-top: 20px;
+  color: #777;
+  text-align: center;
+}
+
+/* 🔹 PANEL DETALLE */
+.detalle {
+  flex: 1;
+  background: #f7faff;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Animación sutil */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.detalle h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: #344f7a;
+}
+
+/* Inputs */
+.detalle label {
+  font-weight: 600;
+  color: #333;
+}
+
+.detalle input {
+  width: 100%;
+  padding: 9px;
+  border-radius: 8px;
+  border: 1px solid #c9c9c9;
+  margin-bottom: 12px;
+  font-size: 14px;
+  background: white;
+  transition: 0.2s;
+}
+
+.detalle input:focus {
+  outline: none;
+  border-color: #446ba9;
+  box-shadow: 0 0 4px rgba(68,107,169,0.35);
+}
+
+/* 🔹 ACCIONES */
+.acciones {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-editar,
+.btn-guardar,
+.btn-cancelar {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+/* Botón editar */
+.btn-editar {
+  background: #446ba9;
+  color: white;
+}
+.btn-editar:hover {
+  background: #365689;
+}
+
+/* Botón guardar */
+.btn-guardar {
+  background: #6ed48f;
+  color: white;
+}
+.btn-guardar:hover {
+  background: #4dc475;
+}
+
+/* Botón cancelar */
+.btn-cancelar {
+  background: #c9c9c9;
+  color: #333;
+}
+.btn-cancelar:hover {
+  background: #b0b0b0;
+}

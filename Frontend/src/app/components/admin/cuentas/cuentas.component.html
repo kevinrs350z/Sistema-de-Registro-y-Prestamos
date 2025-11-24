@@ -1,0 +1,118 @@
+<div class="cuentas-container">
+
+  <!-- LISTA IZQUIERDA -->
+  <div class="lista">
+    <h3 class="titulo-lista">Alumnos Registrados</h3>
+
+    <button class="btn-crear" (click)="comenzarCrear()">+ Crear cuenta</button>
+
+    <input
+      type="text"
+      class="buscador"
+      placeholder="Buscar alumno..."
+      [(ngModel)]="filtro"
+    />
+
+    <div
+      class="item"
+      *ngFor="let a of alumnosFiltrados"
+      (click)="seleccionar(a)"
+      [class.activo]="a === alumnoSeleccionado"
+    >
+      <h4>{{ a.nombre }}</h4>
+      <p>{{ a.email }}</p>
+    </div>
+
+    <p *ngIf="alumnos.length === 0" class="sin-alumnos">
+      No hay alumnos registrados.
+    </p>
+  </div>
+
+  <!-- PANEL DERECHO -->
+  <div class="detalle" *ngIf="alumnoSeleccionado || creando">
+
+    <!-- PANEL DE CREACIÓN -->
+    <div *ngIf="creando">
+      <h3>Crear Nueva Cuenta</h3>
+
+      <label>Nombre:</label>
+      <input type="text" [(ngModel)]="nuevoAlumno.nombre" />
+
+      <label>Email:</label>
+      <input type="email" [(ngModel)]="nuevoAlumno.email" />
+
+      <label>RUT:</label>
+      <input type="text" [(ngModel)]="nuevoAlumno.rut" />
+
+      <label>Teléfono:</label>
+      <input type="text" [(ngModel)]="nuevoAlumno.telefono" />
+
+      <label>Carrera:</label>
+      <input type="text" [(ngModel)]="nuevoAlumno.carrera" />
+
+      <label>Contraseña:</label>
+      <input type="password" [(ngModel)]="nuevoAlumno.password" />
+
+      <label>Confirmar contraseña:</label>
+      <input type="password" />
+
+      <div class="acciones">
+        <button class="btn-guardar" (click)="crearCuenta()">Crear cuenta</button>
+        <button class="btn-cancelar" (click)="creando=false">Cancelar</button>
+      </div>
+    </div>
+
+
+
+    <!-- PANEL DE EDICIÓN -->
+    <div *ngIf="alumnoSeleccionado && !creando">
+      <h3>Datos del Alumno</h3>
+
+      <label>Nombre:</label>
+      <input
+        type="text"
+        [(ngModel)]="alumnoSeleccionado.nombre"
+        [disabled]="!editMode"
+      />
+
+      <label>Email:</label>
+      <input
+        type="email"
+        [(ngModel)]="alumnoSeleccionado.email"
+        [disabled]="!editMode"
+      />
+
+      <label>RUT:</label>
+      <input
+        type="text"
+        [(ngModel)]="alumnoSeleccionado.rut"
+        [disabled]="!editMode"
+      />
+
+      <label>Teléfono:</label>
+      <input
+        type="text"
+        [(ngModel)]="alumnoSeleccionado.telefono"
+        [disabled]="!editMode"
+      />
+
+      <label>Carrera:</label>
+      <input
+        type="text"
+        [(ngModel)]="alumnoSeleccionado.carrera"
+        [disabled]="!editMode"
+      />
+
+      <label>Contraseña:</label>
+      <input type="password" value="********" disabled />
+
+      <div class="acciones">
+        <button class="btn-editar" *ngIf="!editMode" (click)="editar()">Editar datos</button>
+        <button class="btn-guardar" *ngIf="editMode" (click)="guardar()">Guardar</button>
+        <button class="btn-cancelar" *ngIf="editMode" (click)="editMode=false">Cancelar</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>

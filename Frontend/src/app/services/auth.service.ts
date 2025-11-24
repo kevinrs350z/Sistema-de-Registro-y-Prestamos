@@ -82,7 +82,7 @@ export class AuthService {
   }
 
   /** 🔹 Cambiar estado de una solicitud (aceptar o rechazar) */
-    cambiarEstado(id: number, accion: 'aceptar' | 'rechazar', motivo: string): Observable<any> {
+    cambiarEstado(id: number, accion: 'aceptar' | 'rechazar' | 'devuelto', motivo: string): Observable<any> {
       return this.http.post(
         `${this.apiUrl}/prestamos/cambiar-estado`,
         { id, accion, motivo }, // 👈 incluimos el motivo en el body
