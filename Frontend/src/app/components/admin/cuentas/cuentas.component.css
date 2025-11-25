@@ -1,168 +1,158 @@
-/* 🔹 CONTENEDOR GENERAL */
+/* ============================================
+   CONTENEDOR PRINCIPAL – PROPORCIÓN 50/50 REAL
+============================================ */
 .cuentas-container {
-  display: flex;
-  gap: 25px;
-  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+  margin-top: 25px;
+  padding: 0 40px;
 }
 
-/* 🔹 LISTA IZQUIERDA */
+
+/* ============================================
+   PANEL IZQUIERDO (LISTA)
+============================================ */
 .lista {
-  width: 32%;
   background: #ffffff;
-  padding: 22px;
-  border-radius: 14px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
+  gap: 18px;
 }
 
-.titulo-lista {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 12px;
+/* Encabezado + botón Crear */
+.lista-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* 🔹 Botón Crear Cuenta */
-.btn-crear {
-  width: 100%;
-  background-color: #f49b5e;
-  color: #fff;
-  padding: 10px;
-  border-radius: 10px;
+.lista-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2b478b;
+}
+
+/* Botón Crear cuenta */
+.lista button {
+  background: #446ba9;
+  color: white;
+  padding: 9px 20px;
+  border-radius: 12px;
   border: none;
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 15px;
   cursor: pointer;
-  transition: 0.2s;
+  font-size: 0.9rem;
+  transition: 0.25s;
 }
 
-.btn-crear:hover {
-  background-color: #ff8a3d;
+.lista button:hover {
+  background: #365a8f;
+  transform: translateY(-2px);
 }
 
-/* 🔹 Buscador */
+
+/* Buscador */
 .buscador {
   width: 100%;
-  padding: 11px;
-  border-radius: 10px;
-  border: 1px solid #d0d0d0;
-  margin-bottom: 15px;
-  font-size: 14px;
-}
-
-/* 🔹 Items de la lista */
-.item {
   padding: 12px 14px;
   border-radius: 10px;
-  background: #fff;
-  border: 2px solid #ffd3b6;
-  margin-bottom: 10px;
+  border: 1px solid #cfd4dd;
+  background: #f9fbff;
+}
+
+/* Ítems de alumnos */
+.item {
+  background: #f8fafc;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid #e2e6ef;
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.25s;
 }
 
 .item:hover {
-  background: #fff6ef;
-}
-
-.item.activo {
+  background: #eef2ff;
   border-color: #446ba9;
-  background: #eef3ff;
 }
 
-.sin-alumnos {
-  margin-top: 20px;
-  color: #777;
-  text-align: center;
+.item strong {
+  font-size: 0.95rem;
+  color: #1f2a44;
 }
 
-/* 🔹 PANEL DETALLE */
+.item p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+
+/* ============================================
+   PANEL DERECHO (DETALLE DEL ALUMNO)
+============================================ */
 .detalle {
-  flex: 1;
-  background: #f7faff;
-  padding: 25px;
-  border-radius: 14px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-  animation: fadeIn 0.2s ease-in-out;
-}
-
-/* Animación sutil */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  background: #ffffff;
+  padding: 30px 35px;
+  border-radius: 18px;
+  border: 1px solid #e6e9f0;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
 .detalle h3 {
-  font-size: 20px;
-  margin-bottom: 15px;
-  color: #344f7a;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2b478b;
 }
 
-/* Inputs */
-.detalle label {
-  font-weight: 600;
-  color: #333;
-}
 
+/* GRID de datos */
 .detalle input {
   width: 100%;
-  padding: 9px;
-  border-radius: 8px;
-  border: 1px solid #c9c9c9;
-  margin-bottom: 12px;
-  font-size: 14px;
-  background: white;
-  transition: 0.2s;
 }
 
-.detalle input:focus {
-  outline: none;
-  border-color: #446ba9;
-  box-shadow: 0 0 4px rgba(68,107,169,0.35);
+/* Contenedor de inputs */
+.detalle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
 }
 
-/* 🔹 ACCIONES */
-.acciones {
-  margin-top: 18px;
-  display: flex;
-  gap: 12px;
+/* Inputs bonitos */
+.detalle input,
+.detalle p {
+  background: #f7f9ff;
+  border: 1px solid #d7ddee;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: #374151;
 }
 
-.btn-editar,
-.btn-guardar,
-.btn-cancelar {
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  transition: 0.2s;
-}
 
-/* Botón editar */
-.btn-editar {
+/* Botón Editar datos */
+.detalle button {
   background: #446ba9;
   color: white;
-}
-.btn-editar:hover {
-  background: #365689;
-}
-
-/* Botón guardar */
-.btn-guardar {
-  background: #6ed48f;
-  color: white;
-}
-.btn-guardar:hover {
-  background: #4dc475;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 12px;
+  width: 160px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: 0.25s;
+  font-weight: 600;
 }
 
-/* Botón cancelar */
-.btn-cancelar {
-  background: #c9c9c9;
-  color: #333;
-}
-.btn-cancelar:hover {
-  background: #b0b0b0;
+.detalle button:hover {
+  background: #365a8f;
+  transform: translateY(-3px);
 }

@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { NavbarAdminComponent } from "../navbar-admin/navbar-admin.component";
 
-// Tipo corregido para reflejar backend real (minúsculas)
 type AdminSolicitud = {
   id: number;
   estudiante: string;
@@ -30,6 +29,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
   solicitudSeleccionada: AdminSolicitud | null = null;
 
   filtroBusqueda = '';
+  filtroEstado: 'todos' | 'prestado' | 'devuelto' | 'rechazado' = 'todos';
   orden: 'recientes' | 'antiguas' = 'recientes';
 
   mostrarModal = false;
@@ -41,9 +41,9 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     this.cargarSolicitudes();
   }
 
-  // ============================================================
-  // CARGAR SOLO ESTADOS: prestado, devuelto, rechazado
-  // ============================================================
+  // ============================================
+  // CARGAR PRÉSTAMOS
+  // ============================================
   cargarSolicitudes(): void {
     this.api.getPrestamos().subscribe({
       next: (data: any[]) => {
@@ -65,27 +65,27 @@ export class SolicitudesFinalizadasComponent implements OnInit {
             }],
             observacion: p.observacion ?? 'Sin observación',
             fechaSolicitud: p.created_at ?? '',
-
-            // ESTADO SIN MAYÚSCULAS
-            estado: p.estado as 'prestado' | 'devuelto' | 'rechazado'
+            estado: p.estado
           }));
       },
       error: (err) => console.error('Error al cargar préstamos finalizados:', err)
     });
   }
 
-  // ============================================================
-  // FILTRAR Y ORDENAR
-  // ============================================================
+  // ============================================
+  // FILTRADO + ORDENAMIENTO
+  // ============================================
   get solicitudesFiltradas(): AdminSolicitud[] {
     const term = this.filtroBusqueda.toLowerCase().trim();
 
     let resultado = this.solicitudes.filter((s) => {
       const texto =
-        (s.estudiante ?? '').toLowerCase() + ' ' +
-        (s.observacion ?? '').toLowerCase() + ' ' +
-        (s.equiposDetallados.map(e => e.nombre).join(', ') || '').toLowerCase();
-      return texto.includes(term);
+        `${s.estudiante} ${s.observacion} ${s.equiposDetallados.map(e => e.nombre).join(', ')}`.toLowerCase();
+
+      const coincideBusqueda = texto.includes(term);
+      const coincideEstado = this.filtroEstado === 'todos' || s.estado === this.filtroEstado;
+
+      return coincideBusqueda && coincideEstado;
     });
 
     resultado.sort((a, b) => {
@@ -97,16 +97,16 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     return resultado;
   }
 
-  // ============================================================
+  // ============================================
   // SELECCIONAR SOLICITUD
-  // ============================================================
+  // ============================================
   seleccionarSolicitud(s: AdminSolicitud): void {
     this.solicitudSeleccionada = s;
   }
 
-  // ============================================================
-  // FINALIZAR PRÉSTAMO → estado "devuelto" (minúscula)
-  // ============================================================
+  // ============================================
+  // FINALIZAR → ESTADO devuelto
+  // ============================================
   abrirFinalizar(): void {
     this.mostrarModal = true;
   }
@@ -121,7 +121,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
 
     this.api.cambiarEstado(
       this.solicitudSeleccionada.id,
-      'devuelto',   // MINÚSCULA = EXACTAMENTE COMO TU BACKEND
+      'devuelto',
       this.motivoFinalizar
     ).subscribe({
       next: () => {

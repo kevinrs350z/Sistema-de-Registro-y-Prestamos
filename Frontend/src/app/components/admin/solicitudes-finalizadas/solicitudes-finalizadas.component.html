@@ -1,14 +1,19 @@
-
-
 <div class="admin-container">
 
   <!-- FILTROS -->
   <div class="filtros-bar">
-    <input
+    <input 
       type="text"
       placeholder="Buscar por nombre, equipo u observación..."
       [(ngModel)]="filtroBusqueda"
     />
+
+    <select [(ngModel)]="filtroEstado">
+      <option value="todos">Todos</option>
+      <option value="prestado">Prestados</option>
+      <option value="devuelto">Devueltos</option>
+      <option value="rechazado">Rechazados</option>
+    </select>
 
     <select [(ngModel)]="orden">
       <option value="recientes">Más recientes</option>
@@ -16,6 +21,10 @@
     </select>
   </div>
 
+
+  <!-- ===========================
+       CONTENIDO PRINCIPAL
+  ============================ -->
   <div class="solicitudes-wrapper">
 
     <!-- LISTA IZQUIERDA -->
@@ -27,21 +36,17 @@
         (click)="seleccionarSolicitud(s)"
         [class.activa]="s === solicitudSeleccionada"
       >
-
         <h4>{{ s.estudiante }}</h4>
 
         <p>
           <strong>Equipo:</strong>
-
-          <!-- ⭐ SOLUCIÓN: VARIABLE LOCAL -->
           <ng-container *ngIf="s.equiposDetallados as eqs">
-            {{ eqs.length > 0 ? eqs[0].nombre : '--' }}
+            {{ eqs[0]?.nombre || '—' }}
           </ng-container>
         </p>
 
         <p class="fecha">📅 {{ s.fechaSolicitud | date }}</p>
 
-        <!-- ETIQUETA DE ESTADO -->
         <span
           class="estado"
           [ngClass]="{
@@ -55,62 +60,93 @@
       </div>
 
       <p *ngIf="solicitudesFiltradas.length === 0" class="sin-solicitudes">
-        No hay solicitudes prestadas o devueltas.
+        No existen préstamos para los filtros aplicados.
       </p>
 
     </div>
 
-    <!-- DETALLE DERECHA -->
+
+    <!-- PANEL DERECHO (ESTILO GESTIÓN DE CUENTA) -->
     <div class="detalle-solicitud" *ngIf="solicitudSeleccionada as sel">
 
       <h3>Detalle del préstamo</h3>
 
-      <p><strong>Estudiante:</strong> {{ sel.estudiante }}</p>
-      <p><strong>Email:</strong> {{ sel.email }}</p>
-      <p><strong>Tipo:</strong> {{ sel.tipo }}</p>
-      <p><strong>Periodo:</strong> {{ sel.periodo }}</p>
+      <!-- GRID DE CAMPOS -->
+      <div class="detalle-grid">
 
-      <div>
-        <p><strong>Equipos:</strong></p>
+        <div class="detalle-item">
+          <label>Estudiante:</label>
+          <input class="detalle-input" [value]="sel.estudiante" readonly />
+        </div>
 
-        <ul>
-          <li *ngFor="let eq of sel.equiposDetallados">
-            {{ eq.nombre }} —
-            <small><strong>Código:</strong> {{ eq.codigoActivo }}</small>
-          </li>
-        </ul>
+        <div class="detalle-item">
+          <label>Email:</label>
+          <input class="detalle-input" [value]="sel.email" readonly />
+        </div>
+
+        <div class="detalle-item">
+          <label>Tipo:</label>
+          <input class="detalle-input" [value]="sel.tipo" readonly />
+        </div>
+
+        <div class="detalle-item">
+          <label>Periodo:</label>
+          <input class="detalle-input" [value]="sel.periodo" readonly />
+        </div>
+
       </div>
 
-      <p><strong>Observación:</strong> {{ sel.observacion }}</p>
 
-      <div class="acciones">
-        <button
-          class="btn-finalizar"
-          *ngIf="sel.estado === 'prestado'"
-          (click)="abrirFinalizar()"
-        >
-          Finalizar préstamo
-        </button>
+      <!-- EQUIPOS -->
+      <div class="equipos-box">
+        <h4>Equipos utilizados</h4>
+
+        <div class="equipo" *ngFor="let eq of sel.equiposDetallados">
+          <p class="nombre">{{ eq.nombre }}</p>
+          <p class="codigo">Código: {{ eq.codigoActivo }}</p>
+        </div>
+      </div>
+
+      <!-- OBSERVACIÓN -->
+      <div class="observacion-box">
+        <h4>Observación</h4>
+        <p>{{ sel.observacion || 'Sin observaciones' }}</p>
+      </div>
+
+      <!-- BOTÓN -->
+      <button
+        class="btn-finalizar"
+        *ngIf="sel.estado === 'prestado'"
+        (click)="abrirFinalizar()"
+      >
+        Finalizar préstamo
+      </button>
+
+    </div>
+
+
+    <!-- MODAL -->
+    <div class="modal" *ngIf="mostrarModal">
+      <div class="modal-content">
+        <h4>Motivo de finalización</h4>
+
+        <textarea
+          rows="3"
+          [(ngModel)]="motivoFinalizar"
+          placeholder="Ingrese el motivo..."
+        ></textarea>
+
+        <div class="modal-actions">
+          <button class="btn-confirmar" (click)="confirmarFinalizar()">
+            Confirmar
+          </button>
+          <button class="btn-cancelar" (click)="cerrarModal()">
+            Cancelar
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- MODAL -->
-  <div class="modal" *ngIf="mostrarModal">
-    <div class="modal-content">
-      <h4>Motivo de finalización</h4>
-
-      <textarea rows="3" [(ngModel)]="motivoFinalizar"></textarea>
-
-      <div class="modal-actions">
-        <button class="btn-confirmar" (click)="confirmarFinalizar()">
-          Confirmar
-        </button>
-        <button class="btn-cancelar" (click)="cerrarModal()">
-          Cancelar
-        </button>
-      </div>
-    </div>
   </div>
 
 </div>

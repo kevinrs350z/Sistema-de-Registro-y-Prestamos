@@ -1,10 +1,13 @@
 /* ================================
-   CONTENEDOR GENERAL
+   CONTENEDOR PRINCIPAL AJUSTADO
 ================================ */
-.admin-container {
-  padding: 30px 60px;
-  font-family: "Poppins", sans-serif;
-  color: #2a2a2a;
+.solicitudes-wrapper {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 40px;
+  padding: 0 40px;
+  height: calc(100vh - 230px);
+  align-items: flex-start;
 }
 
 /* ================================
@@ -26,29 +29,15 @@
 }
 
 /* ================================
-   LAYOUT PRINCIPAL
+   LISTA IZQUIERDA
 ================================ */
-.solicitudes-wrapper {
-  display: flex;
-  gap: 30px;
-}
-
 .lista-solicitudes {
-  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 10px;
 }
 
-/* Panel derecho */
-.detalle-solicitud {
-  flex: 1.2;
-  background: #f9fbff;
-  border-radius: 14px;
-  padding: 20px 25px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* ================================
-   CARDS DE SOLICITUD
-================================ */
 .solicitud-card {
   background: #ffffff;
   border: 2px solid #ffb084;
@@ -69,9 +58,7 @@
   box-shadow: 0 0 8px rgba(68, 107, 169, 0.4);
 }
 
-/* ================================
-   ESTADOS (prestado / devuelto / rechazado)
-================================ */
+/* ESTADOS */
 .estado {
   padding: 6px 12px;
   border-radius: 10px;
@@ -79,56 +66,111 @@
   font-weight: 600;
   text-transform: uppercase;
   color: white;
-  display: inline-block;
 }
 
-/* PRESTADO → naranja suave */
-.estado.prestado {
-  background-color: #ffb56b;
-  color: #8a4500;
-}
-
-/* DEVUELTO → verde suave */
-.estado.devuelto {
-  background-color: #b6ffc9;
-  color: #057d2d;
-}
-
-/* RECHAZADO → rojo */
-.estado.rechazado {
-  background-color: #ff6b6b;
-  color: #ffffff;
-}
+.estado.prestado { background-color: #ffb56b; color: #8a4500; }
+.estado.devuelto { background-color: #b6ffc9; color: #057d2d; }
+.estado.rechazado { background-color: #ff6b6b; color: #fff; }
 
 /* ================================
-   BOTONES
+   PANEL DERECHO - ESTILO "GESTIONAR CUENTA"
 ================================ */
-.acciones {
-  margin-top: 20px;
+.detalle-solicitud {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 30px 35px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
+  width: 100%;
+  height: auto;
+  animation: fadeIn .3s ease;
 }
 
+/* Título igual */
+.detalle-solicitud h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2b478b;
+  margin-bottom: 10px;
+}
+
+/* GRID igual al de gestionar cuenta */
+.detalle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* Input estilo tarjeta */
+.detalle-item {
+  background: #f7f9ff;
+  border: 1px solid #d7dcef;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: #374151;
+  width: 100%;
+}
+
+/* Lista de equipos igualita */
+.equipos-box {
+  background: #f7f9ff;
+  padding: 15px 18px;
+  border-radius: 14px;
+  border: 1px solid #d7dcef;
+  margin-bottom: 20px;
+}
+
+.equipos-box h4 {
+  color: #2b478b;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.equipos-box ul {
+  padding-left: 20px;
+}
+
+.equipos-box li {
+  margin-bottom: 5px;
+}
+
+/* Observación */
+.observacion-box {
+  background: #fff7f0;
+  border-left: 4px solid #f5a474;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.observacion-box h4 {
+  color: #b65f24;
+  margin-bottom: 8px;
+}
+
+/* BOTÓN EDITAR / FINALIZAR */
 .btn-finalizar {
   background: #446ba9;
   color: white;
-  padding: 10px 16px;
+  padding: 12px 20px;
   border-radius: 12px;
   border: none;
   cursor: pointer;
   font-weight: 600;
-  transition: 0.3s ease;
+  transition: 0.25s ease;
 }
 
 .btn-finalizar:hover {
-  background: #315487;
+  background: #365a8f;
+  transform: translateY(-2px);
 }
 
-/* ================================
-   MODAL
-================================ */
+/* MODAL */
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0,0,0,0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -139,44 +181,22 @@
   padding: 25px;
   border-radius: 14px;
   width: 420px;
-  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 18px rgba(0,0,0,0.2);
 }
 
-.modal-content textarea {
-  width: 100%;
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
+
+/* SEPARACIÓN ENTRE GRID Y LOS BLOQUES DE ABAJO */
+.detalle-grid {
+  margin-bottom: 25px;   /* ⭐ ESTA ES LA CLAVE */
 }
 
-.btn-confirmar {
-  background: #446ba9;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-confirmar:hover {
-  background: #35588f;
-}
-
-.btn-cancelar {
-  background: #ccc;
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-cancelar:hover {
-  background: #b6b6b6;
+/* También puedes fortalecer los bloques */
+.equipos-box,
+.observacion-box {
+  margin-top: 20px;
 }

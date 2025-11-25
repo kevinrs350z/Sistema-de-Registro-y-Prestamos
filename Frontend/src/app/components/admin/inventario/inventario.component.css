@@ -225,3 +225,16 @@
   color: white;
   cursor: pointer;
 }
+
+/* La columna izquierda tendrá scroll independiente */
+.scroll-columna {
+  max-height: calc(100vh - 200px); /* ajuste perfecto para tu diseño */
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Quitar movimiento del contenido del lado derecho */
+.columna-derecha {
+  position: sticky;
+  top: 120px; /* se queda fija al hacer scroll */
+}

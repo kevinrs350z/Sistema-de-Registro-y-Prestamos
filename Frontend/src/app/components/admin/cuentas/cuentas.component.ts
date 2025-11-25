@@ -35,7 +35,6 @@ export class CuentasComponent implements OnInit {
     email: '',
     rut: '',
     telefono: '',
-    carrera: '',
     password: ''
   };
 
@@ -52,7 +51,6 @@ export class CuentasComponent implements OnInit {
         email: "andrea.navia@alumnos.uta.cl",
         rut: "20.123.456-7",
         telefono: "+56 9 1234 5678",
-        carrera: "Diseño Multimedia"
       },
       {
         id: 2,
@@ -60,7 +58,6 @@ export class CuentasComponent implements OnInit {
         email: "pablo.salinas@alumnos.uta.cl",
         rut: "19.876.543-2",
         telefono: "+56 9 9876 5432",
-        carrera: "Ingeniería Informática"
       },
       {
         id: 3,
@@ -68,7 +65,6 @@ export class CuentasComponent implements OnInit {
         email: "kevin.lagos@alumnos.uta.cl",
         rut: "21.333.111-4",
         telefono: "+56 9 4567 8901",
-        carrera: "Diseño Multimedia"
       }
     ];
   }
@@ -102,7 +98,6 @@ export class CuentasComponent implements OnInit {
       email: '',
       rut: '',
       telefono: '',
-      carrera: '',
       password: ''
     };
   }

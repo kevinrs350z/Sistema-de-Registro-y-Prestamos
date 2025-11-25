@@ -1,14 +1,23 @@
 <app-navbar-admin></app-navbar-admin>
 
-<div class="cuentas-container">
+<h1 class="titulo-pagina">Gestión de Sanciones</h1>
+<p class="subtitulo-pagina">Visualizar y administrar sanciones registradas</p>
 
-  <!-- LISTA -->
+<div class="cuentas-container"
+     [class.form-activo]="formularioVisible || formularioAsignar">
+
+  <!-- LISTA IZQUIERDA -->
   <div class="lista">
-    <h3 class="titulo-lista">Sanciones</h3>
+    <div class="lista-header">
+      <h3>Sanciones</h3>
 
-    <input class="buscador"
-           type="text"
-           placeholder="Buscar..."
+      <div class="botones-header">
+        <button class="btn-crear" (click)="toggleRegistrar()">+ Registrar sanción</button>
+        <button class="btn-crear" (click)="toggleAsignar()">Asignar sanción</button>
+      </div>
+    </div>
+
+    <input class="buscador" type="text" placeholder="Buscar..."
            [(ngModel)]="filtro">
 
     <div *ngFor="let s of sancionesFiltradas"
@@ -18,29 +27,95 @@
 
       <p><strong>{{ s.usuario }}</strong></p>
       <p>{{ s.motivo }}</p>
+
       <p class="estado" [class.activa]="s.estado === 'ACTIVA'">
         {{ s.estado }}
       </p>
-
     </div>
   </div>
 
-  <!-- DETALLE -->
-  <div class="detalle" *ngIf="sancionSeleccionada">
+  <!-- DETALLE DERECHA -->
+  <div class="detalle"
+       *ngIf="sancionSeleccionada && !formularioVisible && !formularioAsignar">
 
     <h2>Detalle de Sanción</h2>
 
-    <p><strong>Usuario:</strong> {{ sancionSeleccionada.usuario }}</p>
-    <p><strong>Motivo:</strong> {{ sancionSeleccionada.motivo }}</p>
-    <p><strong>Inicio:</strong> {{ sancionSeleccionada.fecha_inicio }}</p>
-    <p><strong>Fin:</strong> {{ sancionSeleccionada.fecha_fin }}</p>
-    <p><strong>Estado:</strong> {{ sancionSeleccionada.estado }}</p>
-
-    <div class="acciones">
-      <button class="btn-ampliar" (click)="ampliarSancion()">Ampliar 7 días</button>
-      <button class="btn-quitar" (click)="quitarSancion()">Quitar sanción</button>
+    <div class="detalle-grid">
+      <div><label>Usuario</label><p>{{ sancionSeleccionada.usuario }}</p></div>
+      <div><label>Motivo</label><p>{{ sancionSeleccionada.motivo }}</p></div>
+      <div><label>Fecha inicio</label><p>{{ sancionSeleccionada.fecha_inicio }}</p></div>
+      <div><label>Fecha fin</label><p>{{ sancionSeleccionada.fecha_fin }}</p></div>
+      <div><label>Estado</label><p>{{ sancionSeleccionada.estado }}</p></div>
     </div>
 
+    <div class="acciones-detalle">
+      <button class="btn-azul" (click)="abrirModalAmpliar()">Ampliar 7 días</button>
+      <button class="btn-rojo" (click)="quitarSancion()">Quitar sanción</button>
+    </div>
   </div>
 
+  <!-- FORMULARIO REGISTRAR (CORREGIDO CON ESTILO PANEL) -->
+  <div class="detalle" *ngIf="formularioVisible">
+    <h2>Registrar Nueva Sanción</h2>
+
+    <div class="detalle-grid">
+      <div class="col-100">
+        <label>Nombre del tipo de sanción</label>
+        <input type="text" [(ngModel)]="nuevoTipo">
+      </div>
+    </div>
+
+    <button class="btn-azul" (click)="registrarTipo()">Registrar</button>
+  </div>
+
+  <!-- FORMULARIO ASIGNAR (CORREGIDO CON ESTILO PANEL) -->
+  <div class="detalle" *ngIf="formularioAsignar">
+
+    <h2>Asignar Sanción a Usuario</h2>
+
+    <div class="detalle-grid">
+
+      <div class="col-100">
+        <label>Usuario</label>
+        <input type="text" [(ngModel)]="asignarUsuario">
+      </div>
+
+      <div class="col-100">
+        <label>Tipo de sanción</label>
+        <select [(ngModel)]="asignarTipo">
+          <option *ngFor="let t of tiposSancion">{{ t }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Fecha inicio</label>
+        <input type="date" [(ngModel)]="asignarInicio">
+      </div>
+
+      <div>
+        <label>Fecha fin</label>
+        <input type="date" [(ngModel)]="asignarFin">
+      </div>
+
+    </div>
+
+    <button class="btn-azul" (click)="asignarSancion()">Asignar</button>
+  </div>
+
+</div>
+
+
+<!-- MODAL PARA AMPLIAR SANCIÓN -->
+<div class="modal-fondo" *ngIf="mostrarModalAmpliar">
+  <div class="modal">
+    <h3>Ampliar sanción</h3>
+
+    <label>Motivo de la ampliación</label>
+    <textarea [(ngModel)]="motivoAmpliacion"></textarea>
+
+    <div class="modal-acciones">
+      <button class="btn-azul" (click)="confirmarAmpliacion()">Confirmar</button>
+      <button class="btn-rojo" (click)="cancelarAmpliacion()">Cancelar</button>
+    </div>
+  </div>
 </div>

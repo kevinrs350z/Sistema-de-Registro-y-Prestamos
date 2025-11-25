@@ -20,6 +20,8 @@ export class NavbarAdminComponent {
 
   navegar(seccion: string) {
     this.menuAbierto = false;
+
+    // AVISA AL DASHBOARD PARA CAMBIAR LA PÁGINA INTERNA
     window.dispatchEvent(new CustomEvent('admin-navegacion', { detail: seccion }));
   }
 

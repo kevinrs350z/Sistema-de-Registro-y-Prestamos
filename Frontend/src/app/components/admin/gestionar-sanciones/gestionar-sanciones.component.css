@@ -1,54 +1,112 @@
+/* ========================
+   TITULOS
+========================= */
+.titulo-pagina {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2b478b;
+}
+
+.subtitulo-pagina {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #6b7280;
+}
+
+/* ========================
+   CONTENEDOR PRINCIPAL
+========================= */
 .cuentas-container {
-  display: flex;
-  gap: 25px;
-  padding: 20px;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 55px;
+  padding: 30px 120px;
+  margin-top: 20px;
 }
 
+.cuentas-container.form-activo {
+  grid-template-columns: 0.9fr 1fr;
+}
+
+/* ========================
+   LISTA IZQUIERDA
+========================= */
 .lista {
-  width: 35%;
   background: #ffffff;
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
 }
 
-.detalle {
-  flex: 1;
-  background: #f9fbff;
-  padding: 25px;
-  border-radius: 14px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+.lista-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.lista-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2b478b;
+}
+
+.btn-crear {
+  padding: 8px 16px;
+  background: #446ba9;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.25s;
+}
+
+.btn-crear:hover {
+  background: #365a8f;
+  transform: translateY(-2px);
 }
 
 .buscador {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border-radius: 10px;
-  margin-bottom: 15px;
   border: 1px solid #ccc;
+  margin-bottom: 16px;
 }
 
+/* ========================
+   ITEMS DE LISTA
+========================= */
 .item {
-  padding: 12px 14px;
-  background: #fff;
-  border: 2px solid #ffd3b6;
-  border-radius: 10px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e1e4eb;
   cursor: pointer;
+  transition: 0.25s;
   margin-bottom: 12px;
-  transition: 0.2s;
 }
 
 .item:hover {
-  background: #fff3e8;
+  background: #eef2ff;
+  border-color: #446ba9;
 }
 
 .item.activo {
-  background: #ffe1c7;
-  border-color: #ffb788;
+  border-color: #446ba9;
+  background: #e9efff;
 }
 
 .estado {
-  font-size: 14px;
+  font-size: 0.8rem;
+  margin-top: 4px;
   font-weight: bold;
 }
 
@@ -56,24 +114,132 @@
   color: #d9534f;
 }
 
-.acciones {
-  margin-top: 20px;
+/* ========================
+   TARJETA (DETALLE + FORMULARIOS)
+========================= */
+.detalle {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+}
+
+.detalle h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #2b478b;
+  margin-bottom: 20px;
+}
+
+/* GRID PARA DETALLE Y FORMULARIOS */
+.detalle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.col-100 {
+  grid-column: span 2;
+}
+
+.detalle-grid label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.detalle-grid input,
+.detalle-grid select,
+.detalle-grid textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  margin-top: 5px;
+  background: #f9fafb;
+}
+
+/* BOTONES */
+.btn-azul {
+  background: #446ba9;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.btn-azul:hover {
+  background: #365a8f;
+}
+
+.btn-rojo {
+  background: #e74c3c;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-rojo:hover {
+  background: #d33728;
+}
+
+/* ========================
+   MODAL
+========================= */
+.modal-fondo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  width: 400px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.modal textarea {
+  width: 100%;
+  height: 90px;
+  resize: none;
+  margin-top: 5px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.modal-acciones {
+  margin-top: 15px;
   display: flex;
   gap: 10px;
+  justify-content: flex-end;
 }
 
-.btn-ampliar {
-  padding: 10px 14px;
-  background: #007bff;
-  color: white;
-  border-radius: 8px;
-  border: none;
+
+app-navbar-admin {
+  position: relative;
+  z-index: 1000; /* Lo trae al frente */
 }
 
-.btn-quitar {
-  padding: 10px 14px;
-  background: #dc3545;
-  color: white;
-  border-radius: 8px;
-  border: none;
+.cuentas-container {
+  position: relative;
+  z-index: 1; /* Evita que tape al navbar */
 }

@@ -2,6 +2,8 @@
   padding: 30px 60px;
   font-family: 'Poppins', sans-serif;
   color: #2a2a2a;
+  height: calc(100vh - 140px); /* altura visible debajo del navbar */
+  overflow: hidden;            /* importante */
 }
 
 /* Filtros */
@@ -154,4 +156,18 @@
   border: none;
   padding: 10px 20px;
   border-radius: 12px;
+}
+
+/* Scroll SOLO en la lista izquierda */
+.scroll-columna {
+  height: calc(100vh - 260px); /* altura FIJA del área de scroll */
+  overflow-y: auto;
+  padding-right: 12px;
+}
+
+
+/* Mantener panel derecho fijo */
+.detalle-solicitud {
+  position: sticky;
+  top: 150px; /* alineado al navbar */
 }

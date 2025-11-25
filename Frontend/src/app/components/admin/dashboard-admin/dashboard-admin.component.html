@@ -56,7 +56,6 @@
         <p>Emitir y administrar sanciones a usuarios</p>
       </a>
 
-      <!-- ⭐ AQUÍ EL BOTÓN QUE NO TE APARECÍA -->
       <div class="action-card cuentas" (click)="seccionActiva = 'cuentas'">
         <div class="action-icon"><i class="bi bi-people-fill"></i></div>
         <h3>Gestionar Cuentas</h3>
@@ -72,77 +71,40 @@
   </div>
 </div>
 
-
-
 <!-- 🧩 SECCIÓN SOLICITUDES PENDIENTES -->
 <div class="admin-full-container" *ngIf="seccionActiva === 'solicitudes'">
-
   <div class="admin-header">
     <h1 class="admin-title">Solicitudes Pendientes</h1>
-
-    <!-- Botón para cambiar a finalizadas -->
-    <button class="btn-alt" (click)="seccionActiva = 'finalizadas'">
-      Ver solicitudes aceptadas / rechazadas
-    </button>
   </div>
 
   <app-solicitudes-pendientes></app-solicitudes-pendientes>
-
-  <div class="admin-footer">
-    <p class="footer-text"></p>
-  </div>
 </div>
-
-
 
 <!-- 🧩 SECCIÓN SOLICITUDES FINALIZADAS -->
 <div class="admin-full-container" *ngIf="seccionActiva === 'finalizadas'">
-
   <div class="admin-header">
     <h1 class="admin-title">Préstamos Finalizados</h1>
-
-    <button class="btn-alt" (click)="seccionActiva = 'solicitudes'">
-      Volver a solicitudes pendientes
-    </button>
   </div>
 
   <app-solicitudes-finalizadas></app-solicitudes-finalizadas>
-
-  <div class="admin-footer">
-    <p class="footer-text"></p>
-  </div>
 </div>
-
-
 
 <!-- 🧩 SECCIÓN INVENTARIO -->
 <div class="admin-full-container" *ngIf="seccionActiva === 'inventario'">
-
   <div class="admin-header">
     <h1 class="admin-title">Inventario de Equipos</h1>
     <p class="admin-subtitle">Gestiona todos los equipos del sistema</p>
   </div>
 
   <app-inventario></app-inventario>
-
-  <div class="admin-footer">
-    <p class="footer-text"></p>
-  </div>
 </div>
 
-
-
-<!-- 🧩 SECCIÓN GESTIONAR CUENTAS (NUEVA) -->
+<!-- 🧩 SECCIÓN GESTIONAR CUENTAS -->
 <div class="admin-full-container" *ngIf="seccionActiva === 'cuentas'">
-
   <div class="admin-header">
     <h1 class="admin-title">Gestión de Cuentas</h1>
     <p class="admin-subtitle">Ver y editar cuentas de alumnos registradas</p>
   </div>
 
   <app-cuentas></app-cuentas>
-
-  <div class="admin-footer">
-    <p class="footer-text"></p>
-  </div>
 </div>
