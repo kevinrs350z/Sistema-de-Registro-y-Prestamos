@@ -8,10 +8,9 @@ use Illuminate\Http\Request;
 
 class UserSancionController extends Controller
 {
-    // Solo admin puede ejecutar esto gracias al middleware
+    // -------- ASIGNAR SANCION A UN USUARIO (ADMIN) --------
     public function asignarSancion(Request $request)
     {
-        // Validación
         $request->validate([
             'idUser' => 'required|exists:users,idUser',
             'nivel' => 'required|string',
@@ -20,7 +19,7 @@ class UserSancionController extends Controller
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ]);
 
-        // Crear sanción nueva
+        // Crear sanción
         $sancion = Sancion::create([
             'nivel' => $request->nivel,
             'estado' => $request->estado,
@@ -29,15 +28,27 @@ class UserSancionController extends Controller
         ]);
 
         // Buscar usuario
-        $user = User::find($request->idUser);
+        $user = User::where('idUser', $request->idUser)->first();
 
-        // Asignar sanción en tabla pivote user_sancion
+        // Asignar sanción en tabla pivote
         $user->sanciones()->attach($sancion->idSancion);
 
         return response()->json([
-            'message' => 'Sanción creada y asignada correctamente',
+            'message' => 'Sanción creada y asignada correctamente.',
             'sancion' => $sancion,
-            'usuario' => $user->only(['idUser', 'name', 'email']),
+            'usuario' => $user->only(['idUser', 'Email']),
         ], 201);
+    }
+
+    // -------- MOSTRAR TODAS LAS SANCIONES DEL SISTEMA CON SUS USUARIOS --------
+    public function listarSanciones()
+    {
+        // Cargar sanciones + usuarios asociados
+        $sanciones = Sancion::with('users')->get();
+
+        return response()->json([
+            'message' => 'Listado completo de sanciones con sus usuarios.',
+            'sanciones' => $sanciones
+        ]);
     }
 }

@@ -76,6 +76,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/admin/prestamos', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
     Route::post('/admin/sanciones/asignar', [UserSancionController::class, 'asignarSancion']);
     Route::post('/admin/devolucion', [DevolucionAdminController::class, 'devolverEquipo']);
+    Route::get('/admin/sanciones', [UserSancionController::class, 'listarSanciones']);
 });
 
 Route::prefix('admin/prestamos')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
