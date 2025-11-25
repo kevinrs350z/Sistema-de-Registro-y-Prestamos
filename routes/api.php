@@ -17,6 +17,7 @@ use App\Http\Controllers\UserSancionController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EquipoRelacionadoController;
 use App\Http\Controllers\TipoEquipoController;
+use App\Http\Controllers\Prestamo\DevolucionAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,6 +75,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
     Route::get('/admin/prestamos', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
     Route::post('/admin/sanciones/asignar', [UserSancionController::class, 'asignarSancion']);
+    Route::post('/admin/devolucion', [DevolucionAdminController::class, 'devolverEquipo']);
 });
 
 Route::prefix('admin/prestamos')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
