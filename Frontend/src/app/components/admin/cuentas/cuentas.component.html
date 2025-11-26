@@ -104,5 +104,24 @@
     </div>
 
   </div>
+<div class="paginacion" style="margin-top: 20px; text-align:center;">
+  <button 
+    (click)="paginaAnterior()" 
+    [disabled]="currentPage === 1"
+    style="padding: 8px 12px; margin-right: 10px;">
+    ◀ Anterior
+  </button>
+
+  <span style="font-weight: bold;">
+    Página {{ currentPage }} de {{ lastPage }}
+  </span>
+
+  <button 
+    (click)="paginaSiguiente()" 
+    [disabled]="currentPage === lastPage"
+    style="padding: 8px 12px; margin-left: 10px;">
+    Siguiente ▶
+  </button>
+</div>
 
 </div>

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UsuariosService } from '../../../services/usuarios.service';
 
 interface Alumno {
   id: number;
@@ -9,8 +10,14 @@ interface Alumno {
   rut?: string;
   telefono?: string;
   carrera?: string;
-  password?: string; // ✔️ agregado
+  password?: string; 
 }
+interface UsuarioResponse {
+  data: any[];
+  current_page: number;
+  last_page: number;
+}
+
 
 @Component({
   selector: 'app-cuentas',
@@ -27,7 +34,7 @@ export class CuentasComponent implements OnInit {
   filtro: string = '';
   editMode = false;
 
-  // ✔️ Control de creación de cuentas
+  
   creando = false;
   nuevoAlumno: Alumno = {
     id: 0,
@@ -37,36 +44,37 @@ export class CuentasComponent implements OnInit {
     telefono: '',
     password: ''
   };
+  currentPage = 1;
+  lastPage = 1;
+  constructor(private usuariosService: UsuariosService) {}
 
   ngOnInit(): void {
     this.cargarAlumnos();
   }
 
-  // Datos simulados
-  cargarAlumnos() {
-    this.alumnos = [
-      {
-        id: 1,
-        nombre: "Andrea Navia",
-        email: "andrea.navia@alumnos.uta.cl",
-        rut: "20.123.456-7",
-        telefono: "+56 9 1234 5678",
+  
+  cargarAlumnos(page: number = 1) {
+    this.usuariosService.obtenerUsuarios(page).subscribe({
+      next: (res) => {
+        this.alumnos = res.data;
+        this.currentPage = res.current_page;
+        this.lastPage = res.last_page;
       },
-      {
-        id: 2,
-        nombre: "Pablo Salinas",
-        email: "pablo.salinas@alumnos.uta.cl",
-        rut: "19.876.543-2",
-        telefono: "+56 9 9876 5432",
-      },
-      {
-        id: 3,
-        nombre: "Kevin Lagos",
-        email: "kevin.lagos@alumnos.uta.cl",
-        rut: "21.333.111-4",
-        telefono: "+56 9 4567 8901",
-      }
-    ];
+      error: (err) => console.error('Error cargando alumnos:', err)
+    });
+  }
+
+  paginaSiguiente() {
+    if (this.currentPage < this.lastPage) {
+      this.currentPage++;
+      this.cargarAlumnos(this.currentPage);
+    }
+  }
+  paginaAnterior() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.cargarAlumnos(this.currentPage);
+    }
   }
 
   // ✔️ Filtrar sin pipes
@@ -101,10 +109,9 @@ export class CuentasComponent implements OnInit {
       password: ''
     };
   }
-
   // ✔️ Guardar edición
   guardar() {
-    alert("Cambios guardados (simulado)");
+    alert("Cambios guardados");
     this.editMode = false;
   }
 
@@ -115,13 +122,29 @@ export class CuentasComponent implements OnInit {
       return;
     }
 
-    this.nuevoAlumno.id = this.alumnos.length + 1;
-    this.alumnos.push({ ...this.nuevoAlumno });
+    const payload = {
+      nombre: this.nuevoAlumno.nombre,
+      apellido1: "Default",       
+      apellido2: "",
+      rut: this.nuevoAlumno.rut,
+      email: this.nuevoAlumno.email,
+      telefono: this.nuevoAlumno.telefono,
+      password: this.nuevoAlumno.password,
+      rol: "alumno"             
+    };
 
-    alert('Cuenta creada correctamente ✔️');
-    this.creando = false;
+    this.usuariosService.crearUsuario(payload).subscribe({
+      next: (res) => {
+        alert('Cuenta creada correctamente ✔️');
+        this.creando = false;
+        this.cargarAlumnos(); // recargar tabla
+      },
+      error: (err) => {
+        console.error(err);
+        alert("Error al crear usuario");
+      }
+    });
   }
-
   editar() {
     this.editMode = true;
   }
