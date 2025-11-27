@@ -61,5 +61,36 @@ class UsersTableSeeder extends Seeder
             ['idRol' => 2, 'idUser' => 4, 'created_at' => now(), 'updated_at' => now()],
             ['idRol' => 2, 'idUser' => 5, 'created_at' => now(), 'updated_at' => now()],
         ]);
+
+         $usersExtra = [];
+        $rolesExtra = [];
+
+        // El último user fue el ID = 5.
+        $nextUserId = 6;
+
+        for ($i = 6; $i <= 205; $i++) {
+
+            $usersExtra[] = [
+                'idPersona' => $i,
+                'estadoSancion' => 'Activo',
+                'Contrasena' => Hash::make('password123'),
+                'Email' => "persona{$i}@example.com",
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            // Cada user nuevo es alumno (rol 2)
+            $rolesExtra[] = [
+                'idRol' => 2,
+                'idUser' => $nextUserId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            $nextUserId++;
+        }
+
+        DB::table('users')->insert($usersExtra);
+        DB::table('rol_user')->insert($rolesExtra);
     }
 }

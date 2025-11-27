@@ -72,5 +72,22 @@ class PersonasTableSeeder extends Seeder
                 'updated_at' => now(),
             ],
         ]);
+                $personasExtra = [];
+
+        for ($i = 6; $i <= 205; $i++) {
+            $personasExtra[] = [
+                'Nombre' => 'Persona' . $i,
+                'apellido1' => 'Apellido' . $i,
+                'apellido2' => null,
+                'Rut' => rand(10, 29) . '.' . rand(100, 999) . '.' . rand(100, 999) . '-' . rand(0, 9),
+                'Email' => "persona{$i}@example.com",
+                'celular' => '569' . rand(40000000, 59999999),
+                'telefono' => '569' . rand(40000000, 59999999),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        DB::table('persona')->insert($personasExtra);
     }
 }

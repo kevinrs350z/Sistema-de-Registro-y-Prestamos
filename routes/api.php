@@ -17,6 +17,7 @@ use App\Http\Controllers\UserSancionController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EquipoRelacionadoController;
 use App\Http\Controllers\TipoEquipoController;
+use App\Http\Controllers\UsuarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +61,14 @@ Route::middleware('auth:sanctum')->group(function () {
     //mostrar equipos
     Route::get('/equipos', [EquipoController::class, 'index']);
     Route::get('/userr', [usuario::class, 'index']);
+
+    Route::get('/usuarios',      [UsuarioController::class, 'index']);
+    Route::post('/usuarios',     [UsuarioController::class, 'store']);
+    Route::get('/usuarios/{id}', [UsuarioController::class, 'show']);
+    Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
+    Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
+
+
     Route::get('/bloques', [BloqueController::class, 'index']);// muestra los bloques
     Route::get('/asignaturas', [AsignaturaController::class, 'index']);// mostramos las asignaturas
     //dashboard de admin

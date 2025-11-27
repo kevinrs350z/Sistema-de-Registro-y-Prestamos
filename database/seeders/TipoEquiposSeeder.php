@@ -57,6 +57,13 @@ class TipoEquiposSeeder extends Seeder
             'descripcion' => 'Tableta digitalizadora para diseño gráfico.'
         ]);
 
+        TipoEquipo::create([
+            'categoria_id' => 3,
+            'nombre' => 'Notebook HP ZBook',
+            'imagen' => null,
+            'descripcion' => 'Notebook HP ZBook del inventario institucional.'
+        ]);
+
         // Iluminación (idCategoria = 4)
         TipoEquipo::create([
             'categoria_id' => 4,
