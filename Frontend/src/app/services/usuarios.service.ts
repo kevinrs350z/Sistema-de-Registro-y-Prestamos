@@ -13,22 +13,24 @@ export interface UsuarioResponse {
 })
 export class UsuariosService {
 
-  private apiUrl = 'http://localhost:8000/api/usuarios';
+    //private apiUrl = 'http://localhost:8000/api/usuarios';
+  private apiUrl = 'http://192.168.1.83:8000/api';
 
   constructor(private http: HttpClient) { }
 
- 
+  // Crear usuario
   crearUsuario(data: any): Observable<any> {
-    return this.http.post(this.apiUrl, data);
+    return this.http.post(`${this.apiUrl}/usuarios`, data);
   }
 
- 
-    obtenerUsuarios(page: number = 1): Observable<UsuarioResponse> {
-    return this.http.get<UsuarioResponse>(`http://localhost:8000/api/usuarios?page=${page}`);
-    }
-    
-    actualizarUsuario(id: number, data: any) {
-    return this.http.put(`http://localhost:8000/api/usuarios/${id}`, data);
-    }
+  // Listar usuarios con paginación
+  obtenerUsuarios(page: number = 1): Observable<UsuarioResponse> {
+    return this.http.get<UsuarioResponse>(`${this.apiUrl}/usuarios?page=${page}`);
+  }
 
+  // Actualizar usuario
+  actualizarUsuario(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/usuarios/${id}`, data);
+
+  }
 }

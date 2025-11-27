@@ -26,6 +26,26 @@
     <p *ngIf="alumnos.length === 0" class="sin-alumnos">
       No hay alumnos registrados.
     </p>
+
+      <div class="paginacion" style="margin-top: 20px; text-align:center;">
+      <button 
+        (click)="paginaAnterior()" 
+        [disabled]="currentPage === 1"
+        style="padding: 8px 12px; margin-right: 10px;">
+        ◀ Anterior
+      </button>
+
+      <span style="font-weight: bold;">
+        Página {{ currentPage }} de {{ lastPage }}
+      </span>
+
+      <button 
+        (click)="paginaSiguiente()" 
+        [disabled]="currentPage === lastPage"
+        style="padding: 8px 12px; margin-left: 10px;">
+        Siguiente ▶
+      </button>
+    </div>
   </div>
 
   <!-- PANEL DERECHO -->
@@ -37,6 +57,14 @@
 
       <label>Nombre:</label>
       <input type="text" [(ngModel)]="nuevoAlumno.nombre" />
+
+      <!-- NUEVO -->
+      <label>Apellido 1:</label>
+      <input type="text" [(ngModel)]="nuevoAlumno.apellido1" />
+
+      <!-- NUEVO -->
+      <label>Apellido 2:</label>
+      <input type="text" [(ngModel)]="nuevoAlumno.apellido2" />
 
       <label>Email:</label>
       <input type="email" [(ngModel)]="nuevoAlumno.email" />
@@ -52,6 +80,13 @@
 
       <label>Confirmar contraseña:</label>
       <input type="password" />
+
+      <!-- NUEVO: selector de rol -->
+      <label>Rol:</label>
+      <select [(ngModel)]="nuevoAlumno.rol">
+        <option value="Alumno">Alumno</option>
+        <option value="Admin">Admin</option>
+      </select>
 
       <div class="acciones">
         <button class="btn-guardar" (click)="crearCuenta()">Crear cuenta</button>
@@ -69,6 +104,22 @@
       <input
         type="text"
         [(ngModel)]="alumnoSeleccionado.nombre"
+        [disabled]="!editMode"
+      />
+
+      
+      <label>Apellido 1:</label>
+      <input
+        type="text"
+        [(ngModel)]="alumnoSeleccionado.apellido1"
+        [disabled]="!editMode"
+      />
+
+      
+      <label>Apellido 2:</label>
+      <input
+        type="text"
+        [(ngModel)]="alumnoSeleccionado.apellido2"
         [disabled]="!editMode"
       />
 
@@ -93,8 +144,16 @@
         [disabled]="!editMode"
       />
 
+
+
       <label>Contraseña:</label>
       <input type="password" value="********" disabled />
+         
+      <label>Rol:</label>
+      <select [(ngModel)]="alumnoSeleccionado.rol" [disabled]="!editMode">
+        <option value="Alumno">Alumno</option>
+        <option value="Admin">Admin</option>
+      </select>
 
       <div class="acciones">
         <button class="btn-editar" *ngIf="!editMode" (click)="editar()">Editar datos</button>
@@ -104,24 +163,7 @@
     </div>
 
   </div>
-<div class="paginacion" style="margin-top: 20px; text-align:center;">
-  <button 
-    (click)="paginaAnterior()" 
-    [disabled]="currentPage === 1"
-    style="padding: 8px 12px; margin-right: 10px;">
-    ◀ Anterior
-  </button>
 
-  <span style="font-weight: bold;">
-    Página {{ currentPage }} de {{ lastPage }}
-  </span>
-
-  <button 
-    (click)="paginaSiguiente()" 
-    [disabled]="currentPage === lastPage"
-    style="padding: 8px 12px; margin-left: 10px;">
-    Siguiente ▶
-  </button>
-</div>
+  
 
 </div>

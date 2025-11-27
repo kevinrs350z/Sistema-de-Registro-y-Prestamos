@@ -6,11 +6,15 @@ import { UsuariosService } from '../../../services/usuarios.service';
 interface Alumno {
   id: number;
   nombre: string;
+  apellido1?: string;
+  apellido2?: string;
   email: string;
   rut?: string;
   telefono?: string;
+  celular: string;
   carrera?: string;
-  password?: string; 
+  password?: string;
+  rol?: string;
 }
 interface UsuarioResponse {
   data: any[];
@@ -39,11 +43,16 @@ export class CuentasComponent implements OnInit {
   nuevoAlumno: Alumno = {
     id: 0,
     nombre: '',
+    apellido1: '',
+    apellido2: '',
     email: '',
     rut: '',
     telefono: '',
-    password: ''
+    celular: '',
+    password: '',
+    rol: 'Alumno'
   };
+
   currentPage = 1;
   lastPage = 1;
   constructor(private usuariosService: UsuariosService) {}
@@ -77,7 +86,7 @@ export class CuentasComponent implements OnInit {
     }
   }
 
-  // ✔️ Filtrar sin pipes
+
   get alumnosFiltrados() {
     if (!this.filtro.trim()) return this.alumnos;
     const f = this.filtro.toLowerCase();
@@ -100,20 +109,55 @@ export class CuentasComponent implements OnInit {
     this.alumnoSeleccionado = null;
     this.editMode = false;
 
-    this.nuevoAlumno = {
-      id: 0,
-      nombre: '',
-      email: '',
-      rut: '',
-      telefono: '',
-      password: ''
-    };
+  this.nuevoAlumno = {
+    id: 0,
+    nombre: '',
+    apellido1: '',
+    apellido2: '',
+    email: '',
+    rut: '',
+    telefono: '',
+    celular: '',
+    password: '',
+    rol: 'Alumno'
+  };
+
+
   }
   // ✔️ Guardar edición
   guardar() {
-    alert("Cambios guardados");
-    this.editMode = false;
-  }
+    if (!this.alumnoSeleccionado) return;
+
+    const id = this.alumnoSeleccionado.id;
+
+    const payload = {
+      nombre: this.alumnoSeleccionado.nombre,
+      apellido1: this.alumnoSeleccionado.apellido1,  
+      apellido2: this.alumnoSeleccionado.apellido2,
+      rut: this.alumnoSeleccionado.rut,
+      email: this.alumnoSeleccionado.email,
+      telefono: this.alumnoSeleccionado.telefono,
+      celular: this.alumnoSeleccionado.celular,
+      password: null,
+      rol: this.alumnoSeleccionado.rol  
+    };
+
+  this.usuariosService.actualizarUsuario(id, payload)
+    .subscribe({
+      next: (res) => {
+        alert("Usuario actualizado correctamente ✔");
+        this.editMode = false;
+        this.cargarAlumnos(this.currentPage);
+      },
+    error: (err) => {
+      console.error("Error al actualizar usuario", err);
+      console.table(err.error.errors);   // 👈 MUY IMPORTANTE
+      alert("Error al actualizar usuario (422). Revisa consola.");
+    }
+
+    });
+}
+
 
   // ✔️ Crear cuenta
   crearCuenta() {
