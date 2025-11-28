@@ -9,7 +9,7 @@ return new class extends Migration {
         Schema::create('sancions', function (Blueprint $table) {
             $table->id('idSancion');
             $table->string('nivel')->nullable();
-            $table->enum('estado', ['activo', 'no activo'])->default('activo');
+            $table->enum('estado', ['ACTIVA', 'EXPIRADA'])->default('ACTIVA');
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_fin')->nullable();
             $table->timestamps();

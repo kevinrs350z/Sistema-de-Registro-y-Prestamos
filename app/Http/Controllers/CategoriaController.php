@@ -16,7 +16,8 @@ class CategoriaController extends Controller
      */
     public function index(CategoriaService $service)
     {
-        $a = $service->getAll();
+        $a = $service->getAll();    
+        
         return response()->json($a, 200);
     }
 

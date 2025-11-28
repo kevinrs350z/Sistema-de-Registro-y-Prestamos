@@ -18,6 +18,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EquipoRelacionadoController;
 use App\Http\Controllers\TipoEquipoController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\Prestamo\DevolucionAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,13 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    Route::post('/prestamos', [PrestamoController::class, 'store']);
+    Route::get('/prestamos', [PrestamoController::class, 'index']);
+    Route::get('/prestamos/{id}', [PrestamoController::class, 'show']);
+    Route::delete('/prestamos/{id}', [PrestamoController::class, 'destroy']);
+
+
+
     // Ruta para cerrar sesión (requiere que el usuario esté autenticado para invalidar su token)
     // Método: POST
     // URL: /api/logout
@@ -81,15 +89,23 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
-    Route::get('/admin/prestamos', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
+    Route::get('/admin/prestamos/pendientes', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
+
+    Route::get('/admin/sanciones', [UserSancionController::class, 'listarSanciones']);
+    Route::get('/admin/sanciones/activa', [UserSancionController::class, 'listarSancionesActivas']);
     Route::post('/admin/sanciones/asignar', [UserSancionController::class, 'asignarSancion']);
+    Route::patch('/admin/sanciones/{id}/ampliar', [UserSancionController::class, 'ampliarSancion']);
+    Route::patch('/admin/sanciones/{id}/quitar', [UserSancionController::class, 'quitarSancion']);
+    Route::post('/admin/devolucion', [DevolucionAdminController::class, 'devolverEquipo']);
+    
 });
 
-Route::prefix('admin/prestamos')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    Route::get('/pendientes', [PrestamoAdminController::class, 'pendientes']);
-    Route::get('/historial', [PrestamoAdminController::class, 'historial']);
-    Route::post('/aprobar/{id}', [PrestamoAdminController::class, 'aprobar']);
-    Route::post('/rechazar/{id}', [PrestamoAdminController::class, 'rechazar']);
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('admin/prestamos/pendientes', [PrestamoAdminController::class, 'pendientes']);
+    Route::get('admin/prestamos/historial', [PrestamoAdminController::class, 'historial']);
+
+    Route::post('admin/prestamos/aprobar/{id}', [PrestamoAdminController::class, 'aprobar']);
+    Route::post('admin/prestamos/rechazar/{id}', [PrestamoAdminController::class, 'rechazar']);
 });
 
 
@@ -102,10 +118,7 @@ Route::get('/categoria/{id}', [CategoriaController::class, 'show']);
 Route::put('/categoria/{id}', [CategoriaController::class, 'update']);
 Route::delete('/categoria/{id}', [CategoriaController::class, 'destroy']);
 
-Route::post('/prestamos', [PrestamoController::class, 'store']);
-Route::get('/prestamos', [PrestamoController::class, 'index']);
-Route::get('/prestamos/{id}', [PrestamoController::class, 'show']);
-Route::delete('/prestamos/{id}', [PrestamoController::class, 'destroy']);
+
 
 
 
@@ -119,6 +132,11 @@ Route::post('/tipoEquipo', [TipoEquipoController::class, 'store']);
 Route::get('/tipoEquipo/{id}', [TipoEquipoController::class, 'show']);
 Route::put('/tipoEquipo/{id}', [TipoEquipoController::class, 'update']);
 Route::delete('/tipoEquipo/{id}', [TipoEquipoController::class, 'destroy']);
+Route::get('/tipoEquipo/{id}/equipos-disponibles', [TipoEquipoController::class, 'equiposDisponibles']);
+
+Route::get('/catalogo-equipos', [TipoEquipoController::class, 'catalogo']);
+
+
 Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
 Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
 Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);

@@ -20,19 +20,32 @@ class TipoEquipoController extends Controller
     {
         $data = $request->validated();
 
-        try{
+        try {
+
+            // =====================================================
+            // GUARDAR IMAGEN (si viene)
+            // =====================================================
+            if ($request->hasFile('imagen')) {
+                $ruta = $request->file('imagen')->store('tipo_equipos', 'public');
+                $data['imagen'] = $ruta; // se guarda solo la ruta
+            }
+
             $tipoEquipo = $service->create($data);
+
             return response()->json([
-                'message' => 'tipo equipo creado correctamente.',
-                'tipoEquipo' => $tipoEquipo,
+                'message'     => 'Tipo de equipo creado correctamente.',
+                'tipoEquipo'  => $tipoEquipo,
             ], 201);
-        }catch(\Exception $e){
+
+        } catch (\Exception $e) {
+
             return response()->json([
-                'error' => 'error al crear el tipo del equipo.',
+                'error'   => 'Error al crear el tipo de equipo.',
                 'message' => $e->getMessage(),
-            ],500);
+            ], 500);
         }
     }
+
     public function show($id, TipoEquipoService $service)
     {
         $data = $service->getById($id);
@@ -58,5 +71,36 @@ class TipoEquipoController extends Controller
 
         return response()->json($resultado, 200);
     }
+    public function catalogo()
+    {
+        $tipos = TipoEquipo::select(
+                'tipo_equipos.id',
+                'tipo_equipos.nombre',
+                'tipo_equipos.descripcion',
+                'tipo_equipos.imagen',
+                'categorias.nombre as categoria'
+            )
+            ->leftJoin('categorias', 'categorias.id', '=', 'tipo_equipos.categoria_id')
+            ->withCount([
+                'equipos as stock' => function ($query) {
+                    $query->where('estado', 'disponible');
+                }
+            ])
+            ->get();
+
+        return response()->json($tipos, 200);
+    }
+
+
+    public function equiposDisponibles($id)
+    {
+        $equipos = \App\Models\Equipo::where('tipo_equipo_id', $id)
+            ->where('estado', 'disponible')
+            ->select('id', 'codigo', 'estado', 'tipo_equipo_id')
+            ->get();
+
+        return response()->json($equipos, 200);
+    }
+
 
 }

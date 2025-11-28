@@ -18,7 +18,7 @@ class StoreTipoEquipoRequest extends FormRequest
 
             'nombre'       => 'required|string|max:255|unique:tipo_equipos,nombre',
 
-            'imagen'       => 'nullable|string',
+            'imagen'       => 'nullable|image|max:2048',
 
             'descripcion'  => 'nullable|string'
         ];

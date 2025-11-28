@@ -94,6 +94,23 @@ class EquiposTableSeeder extends Seeder
         Equipo::create(['tipo_equipo_id' => 7, 'codigo' => '53071070-28', 'estado' => 'disponible']);
         Equipo::create(['tipo_equipo_id' => 7, 'codigo' => '53071070-29', 'estado' => 'disponible']);
         Equipo::create(['tipo_equipo_id' => 7, 'codigo' => '53071070-30', 'estado' => 'disponible']);
+        // TipoEquipo 7 – Notebook HP ZBook (10 unidades)
+        for ($i = 1; $i <= 10; $i++) {
+            Equipo::create([
+                'tipo_equipo_id' => 7,
+                'codigo' => 'ZBOOK-' . str_pad($i, 3, '0', STR_PAD_LEFT),
+                'estado' => 'disponible'
+            ]);
+        }
+
+        // TipoEquipo 8 – Luz LED Neewer 660 (5 unidades)
+        for ($i = 1; $i <= 5; $i++) {
+            Equipo::create([
+                'tipo_equipo_id' => 8,
+                'codigo' => 'NEEWER-' . str_pad($i, 3, '0', STR_PAD_LEFT),
+                'estado' => $i === 3 ? 'mantenimiento' : 'disponible'
+            ]);
+        }
 
     }
 }
