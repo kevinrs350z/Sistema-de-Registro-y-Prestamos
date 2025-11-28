@@ -13,8 +13,8 @@ export interface UsuarioResponse {
 })
 export class UsuariosService {
 
-    //private apiUrl = 'http://localhost:8000/api/usuarios';
-  private apiUrl = 'http://192.168.1.83:8000/api';
+  private apiUrl = 'http://localhost:8000/api';
+  //private apiUrl = 'http://192.168.1.83:8000/api';
 
   constructor(private http: HttpClient) { }
 

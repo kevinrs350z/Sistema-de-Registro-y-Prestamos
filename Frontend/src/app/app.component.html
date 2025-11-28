@@ -1,3 +1,5 @@
+
 <app-navbar *ngIf="!esRutaAuth()"></app-navbar>
+<app-navbar-admin *ngIf="esRutaAdmin"></app-navbar-admin>
 
 <router-outlet></router-outlet>

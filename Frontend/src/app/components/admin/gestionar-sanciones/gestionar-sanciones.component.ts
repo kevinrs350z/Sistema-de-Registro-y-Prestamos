@@ -1,16 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
+import { SancionesService } from '../../../services/sanciones.service';
 
 interface Sancion {
   id: number;
-  usuario: string;
-  motivo: string;        // tipo de sanción
+
+ 
+  usuario: string;  
+  correo: string;
+  rut: string;
+  nombre: string;
+  apellido: string;
+
+  motivo: string;
   fecha_inicio: string;
   fecha_fin: string;
-  estado: 'ACTIVA' | 'EXPIRADA';
+  estado: 'ACTIVA' | 'EXPIRADA';  
 }
+
 
 @Component({
   selector: 'app-gestionar-sanciones',
@@ -21,16 +31,20 @@ interface Sancion {
 })
 export class GestionarSancionesComponent implements OnInit {
 
+  constructor(
+    private router: Router,
+    private sancionesService: SancionesService
+  ) {}
+
   // ======================================
-  //  LISTA DE SANCIONES (ASIGNADAS A USUARIOS)
+  //  LISTA DE SANCIONES (REALES)
   // ======================================
   sanciones: Sancion[] = [];
   sancionSeleccionada: Sancion | null = null;
   filtro = '';
 
   // ======================================
-  //  TIPOS DE SANCIÓN DISPONIBLES
-  //  (PARA EL SELECT DE "ASIGNAR SANCIÓN")
+  //  TIPOS DE SANCIÓN
   // ======================================
   tiposSancion: string[] = [
     'Atraso en devolución',
@@ -40,68 +54,94 @@ export class GestionarSancionesComponent implements OnInit {
     'Uso prolongado de equipo sin reserva'
   ];
 
-  // ======================================
-  //  ESTADO DE LOS FORMULARIOS
-  // ======================================
-  formularioVisible = false;   // 👉 formulario "Registrar nueva sanción (tipo)"
-  formularioAsignar = false;   // 👉 formulario "Asignar sanción a usuario"
+  // Formularios
+  formularioVisible = false;
+  formularioAsignar = false;
 
-  // ======================================
-  //  CAMPOS FORMULARIO "REGISTRAR TIPO"
-  // ======================================
+  // Nuevo tipo
   nuevoTipo = '';
 
-  // ======================================
-  //  CAMPOS FORMULARIO "ASIGNAR SANCIÓN"
-  // ======================================
+  // Asignación
   asignarUsuario = '';
   asignarTipo = '';
   asignarInicio = '';
   asignarFin = '';
 
+  // Modal
+  mostrarModalAmpliar = false;
+  motivoAmpliacion = '';
+
   // ======================================
-  //  CICLO DE VIDA
+  //  INIT
   // ======================================
   ngOnInit(): void {
-    this.cargarDatosSimulados();
-    // valor por defecto del select
+    this.cargarDatosReales();
     this.asignarTipo = this.tiposSancion[0] || '';
-  }
 
-  // Datos simulados como los que tenías antes
-  cargarDatosSimulados(): void {
-    this.sanciones = [
-      {
-        id: 1,
-        usuario: 'Andrea Navia',
-        motivo: 'Atraso en devolución',
-        fecha_inicio: '2025-02-01',
-        fecha_fin: '2025-02-10',
-        estado: 'ACTIVA'
-      },
-      {
-        id: 2,
-        usuario: 'Juan Pérez',
-        motivo: 'Daño en equipo',
-        fecha_inicio: '2025-01-10',
-        fecha_fin: '2025-03-10',
-        estado: 'ACTIVA'
-      },
-      {
-        id: 3,
-        usuario: 'Carla Soto',
-        motivo: 'Uso indebido de sala',
-        fecha_inicio: '2024-12-01',
-        fecha_fin: '2024-12-15',
-        estado: 'EXPIRADA'
+    // Listener navbar admin
+    window.addEventListener('admin-navegacion', (e: any) => {
+      const destino = e.detail;
+
+      if (destino === 'gestionar') {
+        this.router.navigate(['/admin/dashboard']);
       }
-    ];
-    // por defecto mostramos la primera en el detalle
-    this.sancionSeleccionada = this.sanciones[0] || null;
+      if (destino === 'solicitudes') {
+        this.router.navigate(['/admin/solicitudes']);
+      }
+      if (destino === 'finalizadas') {
+        this.router.navigate(['/admin/solicitudes-finalizadas']);
+      }
+      if (destino === 'inventario') {
+        this.router.navigate(['/admin/dashboard']);
+      }
+      if (destino === 'cuentas') {
+        this.router.navigate(['/admin/dashboard']);
+      }
+    });
   }
 
   // ======================================
-  //  LISTA FILTRADA
+  //  CARGAR SANCIONES DESDE BACKEND
+  // ======================================
+  cargarDatosReales(): void {
+    this.sancionesService.getSanciones().subscribe({
+      next: (resp) => {
+        this.sanciones = resp.sanciones.map((s: any) => {
+          const u = s.users?.[0]; // primer usuario asociado
+          const persona = u?.persona;
+
+          const estadoUI: 'ACTIVA' | 'EXPIRADA' =
+            s.estado === 'ACTIVA' ? 'ACTIVA' : 'EXPIRADA';
+
+
+          const nombre = persona?.Nombre ?? '';
+          const apellido = persona?.Apellido1 ?? '';
+
+          return {
+            id: s.idSancion,
+            usuario: `${nombre} ${apellido}`.trim() || u?.Email || 'Sin usuario',
+            correo: u?.Email ?? '',
+            rut: persona?.Rut ?? '',
+            nombre,
+            apellido,
+            motivo: s.nivel,
+            fecha_inicio: s.fecha_inicio,
+            fecha_fin: s.fecha_fin,
+            estado: estadoUI
+          } as Sancion;
+        });
+
+      this.sancionSeleccionada = this.sanciones[0] || null;
+    },
+    error: (err) => {
+      console.error('Error cargando sanciones', err);
+    }
+  });
+}
+
+
+  // ======================================
+  //  FILTRO
   // ======================================
   get sancionesFiltradas(): Sancion[] {
     const f = this.filtro.toLowerCase();
@@ -113,7 +153,7 @@ export class GestionarSancionesComponent implements OnInit {
   }
 
   // ======================================
-  //  SELECCIÓN EN LA LISTA
+  //  SELECCIONAR SANCIÓN
   // ======================================
   seleccionar(s: Sancion): void {
     this.sancionSeleccionada = s;
@@ -122,7 +162,7 @@ export class GestionarSancionesComponent implements OnInit {
   }
 
   // ======================================
-  //  TOGGLE FORM REGISTRAR TIPO
+  //  TOGGLE FORMULARIOS
   // ======================================
   toggleRegistrar(): void {
     this.formularioVisible = !this.formularioVisible;
@@ -132,9 +172,6 @@ export class GestionarSancionesComponent implements OnInit {
     }
   }
 
-  // ======================================
-  //  TOGGLE FORM ASIGNAR SANCIÓN
-  // ======================================
   toggleAsignar(): void {
     this.formularioAsignar = !this.formularioAsignar;
     if (this.formularioAsignar) {
@@ -144,91 +181,8 @@ export class GestionarSancionesComponent implements OnInit {
   }
 
   // ======================================
-  //  ACCIONES SOBRE LA SANCIÓN SELECCIONADA
+  //  AMPLIAR SANCIÓN (FRONT)
   // ======================================
-  ampliarSancion(): void {
-    if (!this.sancionSeleccionada) return;
-
-    const fecha = new Date(this.sancionSeleccionada.fecha_fin);
-    fecha.setDate(fecha.getDate() + 7);
-    this.sancionSeleccionada.fecha_fin = fecha.toISOString().slice(0, 10);
-  }
-
-  quitarSancion(): void {
-    if (!this.sancionSeleccionada) return;
-
-    const id = this.sancionSeleccionada.id;
-    this.sanciones = this.sanciones.filter(s => s.id !== id);
-    this.sancionSeleccionada = null;
-  }
-
-  // ======================================
-  //  FORMULARIO: REGISTRAR NUEVO TIPO
-  // ======================================
-  registrarTipo(): void {
-    const tipo = this.nuevoTipo.trim();
-    if (!tipo) {
-      alert('Ingresa un nombre para el tipo de sanción.');
-      return;
-    }
-
-    // evitar duplicados
-    if (this.tiposSancion.some(t => t.toLowerCase() === tipo.toLowerCase())) {
-      alert('Ese tipo de sanción ya existe.');
-      return;
-    }
-
-    this.tiposSancion = [...this.tiposSancion, tipo];
-    this.nuevoTipo = '';
-    alert('Tipo de sanción registrado correctamente.');
-  }
-
-  // ======================================
-  //  FORMULARIO: ASIGNAR SANCIÓN A USUARIO
-  // ======================================
-  asignarSancion(): void {
-    if (!this.asignarUsuario.trim() ||
-      !this.asignarTipo ||
-      !this.asignarInicio ||
-      !this.asignarFin) {
-      alert('Completa todos los campos para asignar la sanción.');
-      return;
-    }
-
-    const nuevoId = this.sanciones.length
-      ? Math.max(...this.sanciones.map(s => s.id)) + 1
-      : 1;
-
-    const nueva: Sancion = {
-      id: nuevoId,
-      usuario: this.asignarUsuario.trim(),
-      motivo: this.asignarTipo,
-      fecha_inicio: this.asignarInicio,
-      fecha_fin: this.asignarFin,
-      estado: 'ACTIVA'
-    };
-
-    this.sanciones = [...this.sanciones, nueva];
-
-    // limpiar formulario
-    this.asignarUsuario = '';
-    this.asignarTipo = this.tiposSancion[0] || '';
-    this.asignarInicio = '';
-    this.asignarFin = '';
-
-    // cerrar formulario y mostrar detalle de la nueva
-    this.formularioAsignar = false;
-    this.sancionSeleccionada = nueva;
-  }
-
-
-
-  // ======================
-  //  MODAL AMPLIAR SANCIÓN
-  // ======================
-  mostrarModalAmpliar = false;
-  motivoAmpliacion = '';
-
   abrirModalAmpliar() {
     this.mostrarModalAmpliar = true;
   }
@@ -238,23 +192,108 @@ export class GestionarSancionesComponent implements OnInit {
     this.motivoAmpliacion = '';
   }
 
-  confirmarAmpliacion() {
-    if (!this.motivoAmpliacion.trim()) {
-      alert("Debes ingresar un motivo.");
+confirmarAmpliacion() {
+  if (!this.motivoAmpliacion.trim()) {
+    alert("Debes ingresar un motivo.");
+    return;
+  }
+
+  if (!this.sancionSeleccionada) return;
+
+  this.sancionesService
+    .ampliarSancion(this.sancionSeleccionada.id, this.motivoAmpliacion.trim())
+    .subscribe({
+      next: () => {
+        alert("Sanción ampliada correctamente.");
+        this.mostrarModalAmpliar = false;
+        this.motivoAmpliacion = '';
+        this.cargarDatosReales();
+      },
+      error: (err) => {
+        console.error(err);
+        alert("Error al ampliar la sanción.");
+      }
+    });
+}
+
+
+  // ======================================
+  //  REGISTRAR TIPO (LOCAL)
+  // ======================================
+  registrarTipo(): void {
+    const tipo = this.nuevoTipo.trim();
+
+    if (!tipo) {
+      alert('Ingresa un nombre para el tipo de sanción.');
       return;
     }
 
-    if (!this.sancionSeleccionada) return;
+    if (this.tiposSancion.some(t => t.toLowerCase() === tipo.toLowerCase())) {
+      alert('Ese tipo de sanción ya existe.');
+      return;
+    }
 
-    // ampliar 7 días
-    const nuevaFecha = new Date(this.sancionSeleccionada.fecha_fin);
-    nuevaFecha.setDate(nuevaFecha.getDate() + 7);
-    this.sancionSeleccionada.fecha_fin = nuevaFecha.toISOString().slice(0, 10);
-
-    alert("Sanción ampliada con motivo: " + this.motivoAmpliacion);
-
-    this.mostrarModalAmpliar = false;
-    this.motivoAmpliacion = '';
+    this.tiposSancion.push(tipo);
+    this.nuevoTipo = '';
+    alert('Tipo registrado correctamente.');
   }
+
+  // ======================================
+  //  ASIGNAR SANCIÓN (BACKEND)
+  // ======================================
+asignarSancion(): void {
+  if (!this.asignarUsuario.trim() ||
+      !this.asignarTipo ||
+      !this.asignarInicio ||
+      !this.asignarFin) {
+    alert('Completa todos los campos para asignar la sanción.');
+    return;
+  }
+
+  const payload = {
+    usuario: this.asignarUsuario.trim(), // id, correo o rut
+    nivel: this.asignarTipo,
+    fecha_inicio: this.asignarInicio,
+    fecha_fin: this.asignarFin,
+  };
+
+  this.sancionesService.asignarSancion(payload).subscribe({
+    next: () => {
+      alert('Sanción asignada correctamente.');
+      this.cargarDatosReales();
+      this.formularioAsignar = false;
+    },
+    error: (err) => {
+      console.error(err);
+      alert('Error asignando sanción.');
+    }
+  });
+}
+
+
+  // ======================================
+  //  QUITAR SANCIÓN (SOLO FRONT)
+  // ======================================
+quitarSancion(): void {
+  if (!this.sancionSeleccionada) return;
+
+  const confirmar = confirm('¿Estás seguro de quitar la sanción?');
+  if (!confirmar) return;
+
+  const motivo = prompt('Motivo (opcional) para quitar la sanción:') || undefined;
+
+  this.sancionesService.quitarSancion(this.sancionSeleccionada.id, motivo).subscribe({
+    next: () => {
+      alert('Sanción quitada correctamente.');
+      this.sancionSeleccionada = null;
+      this.cargarDatosReales();
+    },
+    error: (err) => {
+      console.error(err);
+      alert('Error al quitar la sanción.');
+    }
+  });
+}
+
 
 }

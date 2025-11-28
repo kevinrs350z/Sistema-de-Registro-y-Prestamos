@@ -1,54 +1,147 @@
 <div class="inventario-container fade-in">
 
   <!-- 🔹 FILTROS -->
-  <div class="filtros">
+  <div class="filtros d-flex gap-2 mb-3">
+
     <input
       type="text"
+      class="form-control"
       placeholder="Buscar equipo..."
       [(ngModel)]="busqueda"
       (input)="filtrar()"
     />
 
-    <select [(ngModel)]="filtroArea" (change)="filtrar()">
+    <select class="form-select" [(ngModel)]="filtroArea" (change)="filtrar()">
       <option value="">Área</option>
       <option *ngFor="let area of areas" [value]="area">{{ area }}</option>
     </select>
 
-    <select [(ngModel)]="filtroModelo" (change)="filtrar()">
+    <select class="form-select" [(ngModel)]="filtroModelo" (change)="filtrar()">
       <option value="">Modelo</option>
       <option *ngFor="let modelo of modelos" [value]="modelo">{{ modelo }}</option>
     </select>
+
+    <!-- BOTÓN CREAR -->
+    <button class="btn btn-dark"
+            (click)="abrirCrearEquipo()">
+      + Agregar Equipo
+    </button>
+
   </div>
 
 
-  <div class="contenido-inventario">
+  <div class="contenido-inventario d-flex">
 
     <!-- =======================================================
-          LISTA IZQUIERDA
+            PANEL → CREAR NUEVO EQUIPO
     ======================================================== -->
-    <div class="columna-izquierda fade-in scroll-columna">
+    <div class="columna-derecha fade-in" *ngIf="panelCrear">
+
+      <h2 class="titulo-equipo">Crear nuevo equipo</h2>
+
+      <!-- CATEGORÍA -->
+      <label class="form-label fw-bold mt-2">Categoría</label>
+      <select class="form-select"
+              [(ngModel)]="nuevoEquipo.categoria_id"
+              (change)="cargarModelosPorCategoria()">
+        <option value="">Seleccione...</option>
+        <option *ngFor="let c of categorias" [value]="c.id">
+          {{ c.nombre }}
+        </option>
+      </select>
+
+      <!-- CAMBIO DE MODO -->
+      <button class="btn btn-outline-dark w-100 mt-3" (click)="cambiarModo()">
+        {{ modo === 'existente' ? 'Crear nuevo modelo' : 'Seleccionar modelo existente' }}
+      </button>
+
+      <!-- MODELO EXISTENTE -->
+      <div class="mt-3" *ngIf="modo === 'existente'">
+        <label class="form-label fw-bold">Modelo</label>
+        <select class="form-select" [(ngModel)]="nuevoEquipo.tipo_equipo_id">
+          <option value="">Seleccione...</option>
+          <option *ngFor="let t of modelosDeCategoria" [value]="t.id">
+            {{ t.nombre }}
+          </option>
+        </select>
+      </div>
+
+      <!-- NUEVO MODELO -->
+      <div class="mt-3" *ngIf="modo === 'nuevo'">
+        <label class="form-label fw-bold">Nuevo modelo</label>
+        <input class="form-control"
+               type="text"
+               [(ngModel)]="nuevoEquipo.nuevoModelo"
+               placeholder="Ej: Sony A6400">
+
+        <!-- IMAGEN SOLO PARA NUEVO MODELO -->
+        <label class="form-label fw-bold mt-3">Imagen del modelo</label>
+        <input type="file" class="form-control" (change)="onFileSelected($event)">
+
+        <!-- PREVIEW -->
+        <img *ngIf="previewImagen"
+             [src]="previewImagen"
+             class="mt-3"
+             style="width: 130px; border-radius: 10px;">
+      </div>
+
+      <!-- CÓDIGO -->
+      <div class="mt-3">
+        <label class="form-label fw-bold">Código del equipo</label>
+        <input class="form-control"
+               type="text"
+               [(ngModel)]="nuevoEquipo.codigo"
+               placeholder="Ej: CAM-032">
+      </div>
+
+      <!-- ESTADO -->
+      <div class="mt-3">
+        <label class="form-label fw-bold">Estado</label>
+        <select class="form-select" [(ngModel)]="nuevoEquipo.estado">
+          <option value="disponible">Disponible</option>
+          <option value="ocupado">Ocupado</option>
+          <option value="mantenimiento">Mantenimiento</option>
+          <option value="fuera_servicio">Fuera de servicio</option>
+        </select>
+      </div>
+
+      <!-- BOTONES -->
+      <div class="d-flex gap-3 mt-4">
+        <button class="btn btn-secondary" (click)="cerrarCrear()">Cancelar</button>
+        <button class="btn btn-success" (click)="guardarNuevoEquipo()">Guardar</button>
+      </div>
+
+    </div>
+
+    <!-- =======================================================
+            LISTA IZQUIERDA
+    ======================================================== -->
+    <div class="columna-izquierda scroll-columna">
 
       <div class="grupo-modelo" *ngFor="let grupo of modelosAgrupados">
 
-        <div class="modelo-header">
+        <div class="modelo-header d-flex justify-content-between align-items-center">
           <h3>{{ grupo.modelo }}</h3>
 
-          <button class="btn-modern" (click)="editarModelo(grupo)">
+          <button class="btn btn-sm btn-outline-primary"
+                  (click)="editarModelo(grupo)">
             Modificar modelo
           </button>
         </div>
 
         <div class="equipos-lista">
 
-          <div class="equipo-item fade-in" *ngFor="let eq of grupo.equipos">
+          <div class="equipo-item" *ngFor="let eq of grupo.equipos">
 
-            <div class="equipo-codigo">{{ eq.codigo }}</div>
+            <div class="equipo-codigo fw-bold">{{ eq.codigo }}</div>
 
-            <span class="equipo-estado" [class.ocupado]="eq.estado !== 'disponible'">
+            <span class="badge"
+                  [class.bg-danger]="eq.estado !== 'disponible'"
+                  [class.bg-success]="eq.estado === 'disponible'">
               {{ eq.estado }}
             </span>
 
-            <button class="btn-outline" (click)="verDetalle(eq)">
+            <button class="btn btn-sm btn-outline-secondary" (click)="verDetalle(eq)">
               Ver detalle
             </button>
 
@@ -61,145 +154,67 @@
     </div>
 
 
-
     <!-- =======================================================
-          PANEL DERECHO → MODELO
+            PANEL DERECHO → MODELO
     ======================================================== -->
-    <div class="columna-derecha fade-in" *ngIf="modeloSeleccionado">
+    <div class="columna-derecha" *ngIf="modeloSeleccionado && !panelCrear">
 
-      <!-- Foto real del equipo (como en catálogo) -->
-      <img class="foto-equipo" [src]="getImagenEquipo(modeloSeleccionado)" alt="Foto modelo" />
+      <img class="foto-equipo" [src]="getImagenEquipo(modeloSeleccionado)" alt="Foto modelo">
 
-      <!-- NOMBRE -->
-      <h2 class="titulo-equipo" *ngIf="!editandoModelo">
-        {{ modeloSeleccionado.nombre }}
-      </h2>
+      <h2>{{ modeloSeleccionado.nombre }}</h2>
 
-      <div *ngIf="editandoModelo">
-        <label>Nombre del modelo:</label>
-        <input type="text" [(ngModel)]="modeloSeleccionado.nombre" />
-      </div>
+      <p><strong>Categoría:</strong> {{ modeloSeleccionado.categoria }}</p>
+      <p><strong>Cantidad:</strong> {{ modeloSeleccionado.equipos.length }}</p>
 
-      <!-- CATEGORÍA -->
-      <p *ngIf="!editandoModelo">
-        <strong>Categoría:</strong> {{ modeloSeleccionado.categoria }}
-      </p>
-
-      <div *ngIf="editandoModelo">
-        <label>Categoría:</label>
-        <input type="text" [(ngModel)]="modeloSeleccionado.categoria" />
-      </div>
-
-      <p><strong>Cantidad de equipos:</strong> {{ modeloSeleccionado.equipos.length }}</p>
-
-
-      <!-- EQUIPOS ASOCIADOS -->
-      <h3 class="subtitulo">Equipos asociados</h3>
+      <h3 class="subtitulo mt-3">Equipos asociados</h3>
 
       <ul class="lista-equipos-modelo">
 
-        <li *ngFor="let eq of modeloSeleccionado.equipos">
-
-          <!-- Vista normal -->
-          <div *ngIf="!editandoModelo">
-            <strong>{{ eq.codigo }}</strong> — {{ eq.estado }} — (ID: {{ eq.idEquipo }})
-          </div>
-
-          <!-- Vista editable -->
-          <div *ngIf="editandoModelo">
-
-            <label>Código:</label>
-            <input type="text" [(ngModel)]="eq.codigo" />
-
-            <label>Estado:</label>
-            <select [(ngModel)]="eq.estado">
-              <option value="disponible">Disponible</option>
-              <option value="ocupado">Ocupado</option>
-              <option value="mantenimiento">Mantenimiento</option>
-            </select>
-
-          </div>
-
-          <span class="meta-fecha">
-            Creado: {{ eq.created_at }} | Actualizado: {{ eq.updated_at }}
-          </span>
-
+        <li *ngFor="let eq of modeloSeleccionado.equipos" class="mb-2">
+          <strong>{{ eq.codigo }}</strong> — {{ eq.estado }}
         </li>
 
       </ul>
 
-      <!-- BOTONES -->
-      <div class="botones-edicion">
-
-        <button *ngIf="!editandoModelo" class="btn-guardar"
-                (click)="activarEdicionModelo()">
-          Editar
-        </button>
-
-        <button *ngIf="editandoModelo" class="btn-guardar"
-                (click)="guardarCambiosModelo()">
-          Guardar cambios
-        </button>
-
-        <button class="btn-cancelar" (click)="cerrarEdicionModelo()">
+      <div class="mt-3">
+        <button class="btn btn-secondary" (click)="cerrarEdicionModelo()">
           Cerrar
         </button>
-
       </div>
 
     </div>
 
 
-
     <!-- =======================================================
-          PANEL DERECHO → EQUIPO INDIVIDUAL
+            PANEL DERECHO → EQUIPO INDIVIDUAL
     ======================================================== -->
-    <div class="columna-derecha fade-in" *ngIf="equipoSeleccionado && !modeloSeleccionado">
+    <div class="columna-derecha"
+         *ngIf="equipoSeleccionado && !modeloSeleccionado && !panelCrear">
 
-      <h2 class="titulo-equipo">{{ equipoSeleccionado.nombre }}</h2>
+      <h2>{{ equipoSeleccionado.nombre }}</h2>
 
       <p><strong>ID:</strong> {{ equipoSeleccionado.idEquipo }}</p>
       <p><strong>Categoría:</strong> {{ equipoSeleccionado.categoria }}</p>
 
-      <!-- FOTO DEL EQUIPO -->
-      <img class="foto-equipo" [src]="getImagenEquipo(equipoSeleccionado)" alt="Foto equipo" />
+      <img class="foto-equipo" [src]="getImagenEquipo(equipoSeleccionado)" alt="Foto equipo">
 
-      <!-- 🟥 OCUPADO -->
-      <div *ngIf="equipoSeleccionado.estado === 'ocupado'" class="solicitud-activa-box fade-in">
-        
-        <h3>Equipo en préstamo</h3>
+      <div class="mt-3">
 
-        <p><strong>Estado:</strong> ocupado</p>
-        <p><strong>Última actualización:</strong> {{ equipoSeleccionado.updated_at }}</p>
+        <label class="form-label fw-bold">Código</label>
+        <input class="form-control" [(ngModel)]="equipoSeleccionado.codigo">
 
-        <button class="btn-modern" (click)="verSolicitud(equipoSeleccionado)">
-          Ver solicitud
-        </button>
-
-      </div>
-
-      <!-- 🟩 DISPONIBLE / MANTENIMIENTO -->
-      <div *ngIf="equipoSeleccionado.estado !== 'ocupado'" class="fade-in">
-
-        <label><strong>Código:</strong></label>
-        <input class="input-edit" type="text" [(ngModel)]="equipoSeleccionado.codigo" />
-
-        <label><strong>Estado:</strong></label>
-        <select class="input-edit" [(ngModel)]="equipoSeleccionado.estado">
+        <label class="form-label fw-bold mt-2">Estado</label>
+        <select class="form-select" [(ngModel)]="equipoSeleccionado.estado">
           <option value="disponible">Disponible</option>
           <option value="mantenimiento">Mantenimiento</option>
         </select>
 
-        <p class="meta-fecha">
-          Última actualización: {{ equipoSeleccionado.updated_at }}
-        </p>
-
-        <div class="botones-edicion">
-          <button class="btn-guardar" (click)="guardarCambiosEquipo()">
-            Guardar cambios
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-success" (click)="guardarCambiosEquipo()">
+            Guardar
           </button>
 
-          <button class="btn-cancelar" (click)="cerrarPanel()">
+          <button class="btn btn-secondary" (click)="cerrarPanel()">
             Cancelar
           </button>
         </div>
@@ -209,5 +224,4 @@
     </div>
 
   </div>
-
 </div>

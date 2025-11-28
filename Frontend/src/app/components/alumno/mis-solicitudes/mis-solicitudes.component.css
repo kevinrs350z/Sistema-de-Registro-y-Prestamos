@@ -6,6 +6,45 @@
   min-height: 100vh;
   font-family: "Poppins", sans-serif;
 }
+.lista-equipos {
+  list-style: none;
+  padding: 0;
+  margin-top: 5px;
+}
+
+.lista-equipos li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.img-equipo {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.lista-equipos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-equipos li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 14px;
+}
+
+.lista-equipos i {
+  font-size: 16px;
+  color: #ff8c56; /* mismo estilo de tu diseño */
+}
 
 /* ENCABEZADO */
 .header {
@@ -164,3 +203,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+.icono-equipo {
+  font-size: 20px;
+  color: #ff8c56;
+} 

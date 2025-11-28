@@ -24,16 +24,12 @@ import { Equipo, Pack } from '../../../shared/models';
   ],
 })
 export class MisSolicitudesComponent implements OnInit {
-  private reservas = inject(ReservasService);
   private api = inject(AuthService);
 
   solicitudes = signal<any[]>([]);
   estadoFiltro = signal('');
   orden = signal<'asc' | 'desc'>('desc');
   solicitudSeleccionada = signal<any | null>(null);
-
-  equipos = signal<Equipo[]>([]);
-  packs = signal<Pack[]>([]);
 
   bloques = [
     { id: 1, texto: 'Bloque 1 (08:15 – 09:45)' },
@@ -49,6 +45,7 @@ export class MisSolicitudesComponent implements OnInit {
     const orden = this.orden();
 
     if (filtro) lista = lista.filter(s => s.estado === filtro);
+
     lista = lista.sort((a, b) =>
       orden === 'asc'
         ? (a.fecha_inicio || '').localeCompare(b.fecha_inicio || '')
@@ -64,9 +61,11 @@ export class MisSolicitudesComponent implements OnInit {
 
   private cargarSolicitudes() {
     const token = localStorage.getItem('token') ?? '';
+
     this.api.getSolicitudesUsuario(token).subscribe({
-      next: (data) => {
-        const solicitudesMapeadas = data.map((s: any) => {
+      next: (data: any[]) => {
+        const solicitudesMapeadas = data.map((s) => {
+          // --- BLOQUES ---
           const bloqueTxt =
             s.bloque_prestamo?.length > 0
               ? s.bloque_prestamo
@@ -74,14 +73,28 @@ export class MisSolicitudesComponent implements OnInit {
                   .join(', ')
               : '—';
 
+          // --- EQUIPOS FÍSICOS ---
+          const equipos =
+            s.equipos?.length > 0
+              ? s.equipos.map((eq: any) => ({
+                  codigo: eq.codigo,
+                  nombre: eq.tipo?.nombre ?? 'Equipo',
+                  imagen: eq.tipo?.imagen
+                    ? `http://localhost:8000/storage/${eq.tipo.imagen}`
+                    : 'assets/equipos/default.jpg',
+                }))
+              : [];
+
           return {
             id: s.idPrestamo,
             tipo: s.tipo === 'DENTRO' ? 'Laboratorio' : 'Externo',
+
             fecha_inicio: s.fecha_inicio || null,
             fecha_fin: s.fecha_fin || null,
+
             bloqueTxt,
-            equipos: [s.equipo?.nombre || '—'],
-            observacion: s.Observacion ?? 'Sin observación',
+            equipos,
+            observacion: s.observacion ?? 'Sin observación',
             estado: s.estado?.toUpperCase() ?? 'PENDIENTE',
           };
         });
@@ -101,6 +114,7 @@ export class MisSolicitudesComponent implements OnInit {
     const value = (event.target as HTMLSelectElement).value as 'asc' | 'desc';
     this.orden.set(value);
   }
+  
 
   seleccionarSolicitud(s: any) {
     this.solicitudSeleccionada.set(s);

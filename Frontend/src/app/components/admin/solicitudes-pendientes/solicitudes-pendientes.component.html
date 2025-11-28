@@ -47,9 +47,11 @@
       <div>
         <p><strong>Equipos:</strong></p>
         <ul>
-          <li *ngFor="let eq of solicitudSeleccionada.equiposDetallados">
-            {{ eq.nombre }} — <small><strong>Código:</strong> {{ eq.codigoActivo }}</small>
-          </li>
+<li *ngFor="let eq of solicitudSeleccionada.equipos">
+  {{ eq.nombre }} — 
+  <small><strong>Código:</strong> {{ eq.codigo }}</small>
+</li>
+
         </ul>
       </div>
 

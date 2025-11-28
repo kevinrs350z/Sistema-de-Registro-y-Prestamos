@@ -20,8 +20,8 @@ interface LoginResponse {
 })
 export class AuthService {
   //private apiUrl = 'https://cofferlike-nonaseptic-stephen.ngrok-free.dev/api'; 
-  //private apiUrl = 'http://localhost:8000/api';
-  private apiUrl = 'http://192.168.1.83:8000/api';
+  private apiUrl = 'http://localhost:8000/api';
+  //private apiUrl = 'http://192.168.1.83:8000/api';
 
 
   constructor(private http: HttpClient) {}
@@ -110,6 +110,12 @@ export class AuthService {
     };
     return this.http.get<any>(`${this.apiUrl}/userr`, { headers });
   }
+  getSancionesActivas(token: string) {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/sanciones/activa`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+
 
   //**rutas asignaturas */
   getAsignaturas(token: string): Observable<any[]> {
@@ -127,6 +133,8 @@ export class AuthService {
     };
     return this.http.get<any[]>(`${this.apiUrl}/bloques`,{ headers });
   }
+
+  
 
   logout(): void {
     localStorage.removeItem('token');

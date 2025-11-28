@@ -32,34 +32,49 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private api = inject(AuthService);
 
-  // ⭐ AQUI DEFINITIVO
+
   seccionActiva: 'gestionar' | 'solicitudes' | 'finalizadas' | 'inventario' | 'cuentas' = 'gestionar';
 
   totalEquipos = 0;
+  totalSancionesActivas = 0;
+
 
   listener: any;
 
-  ngOnInit(): void {
-    this.cargarEquipos();
+ngOnInit(): void {
+  this.cargarEquipos();
+  this.cargarSancionesActivas();
 
-    this.listener = (e: any) => {
-      switch (e.detail) {
-        case 'gestionar': this.seccionActiva = 'gestionar'; break;
-        case 'solicitudes': this.seccionActiva = 'solicitudes'; break;
-        case 'finalizadas': this.seccionActiva = 'finalizadas'; break;
-        case 'inventario': this.seccionActiva = 'inventario'; break;
-        case 'cuentas': this.seccionActiva = 'cuentas'; break;
-      }
-    };
+  this.listener = (e: any) => {
+    switch (e.detail) {
+      case 'gestionar': this.seccionActiva = 'gestionar'; break;
+      case 'solicitudes': this.seccionActiva = 'solicitudes'; break;
+      case 'finalizadas': this.seccionActiva = 'finalizadas'; break;
+      case 'inventario': this.seccionActiva = 'inventario'; break;
+      case 'cuentas': this.seccionActiva = 'cuentas'; break;
+    }
+  };
 
-    window.addEventListener('admin-navegacion', this.listener);
-  }
+  window.addEventListener('admin-navegacion', this.listener);
+}
+
 
   ngOnDestroy(): void {
     if (this.listener) {
       window.removeEventListener('admin-navegacion', this.listener);
     }
   }
+
+  private cargarSancionesActivas(): void {
+  const token = localStorage.getItem('token') ?? '';
+
+  this.api.getSancionesActivas(token).subscribe({
+    next: (data) => this.totalSancionesActivas = data.length,
+    
+    error: (err) => console.error('Error al cargar sanciones activas:', err)
+  });
+}
+
 
   private cargarEquipos(): void {
     const token = localStorage.getItem('token') ?? '';

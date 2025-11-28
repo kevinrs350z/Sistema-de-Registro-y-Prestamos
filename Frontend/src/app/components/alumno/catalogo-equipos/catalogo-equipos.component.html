@@ -8,7 +8,6 @@
       </p>
     </div>
 
-    <!-- Botón de continuar (ahora al lado derecho del título) -->
     <div class="acciones">
       <button [disabled]="carrito().length === 0" (click)="continuarReserva()">
         Continuar con {{ carrito().length }} equipo(s) seleccionado(s) →
@@ -16,9 +15,8 @@
     </div>
   </div>
 
-  <!-- ======== BARRA SUPERIOR (categorías con íconos + búsqueda) ======== -->
+  <!-- ======== BARRA SUPERIOR ======== -->
   <div class="barra-categorias-expedia">
-    <!-- CATEGORÍAS ESTILO EXPEDIA -->
     <div class="categorias-expedia">
       <div
         *ngFor="let c of categorias()"
@@ -33,9 +31,8 @@
               'bi-grid-1x2': c === 'TODOS',
               'bi-camera-video': c === 'Audiovisual',
               'bi-camera': c === 'Fotografía',
-              'bi-laptop': c === 'Diseño',
-              'bi-mic-fill': c === 'Audio',
-              'bi-lightbulb': c === 'Iluminación'
+              'bi-laptop': c === 'Equipo Computacional',
+              'bi-lightbulb': c === 'Iluminación' || c === 'Iluminacion'
             }"
           ></i>
         </div>
@@ -43,7 +40,6 @@
       </div>
     </div>
 
-    <!-- BUSCADOR -->
     <div class="busqueda">
       <input
         type="text"
@@ -51,31 +47,24 @@
         [value]="busqueda()"
         (input)="filtrarPorBusqueda($event)"
       />
-      <button title="Buscar">
-        <i class="bi bi-search"></i>
-      </button>
+      <button title="Buscar"><i class="bi bi-search"></i></button>
     </div>
   </div>
 
-  <!-- ======== GRID DE EQUIPOS ======== -->
+  <!-- ======== GRID ======== -->
   <div class="grid-equipos">
     <div
-      *ngFor="let e of equiposFiltrados()"
+      *ngFor="let e of tiposFiltrados()"
       class="card-equipo"
-      [class.selected]="carrito().includes(e.idEquipo)"
+      [class.selected]="estaEnCarrito(e.id)"
     >
-      <!-- Imagen del equipo -->
-       
+      <!-- Imagen -->
       <img
-        [src]="getImagenEquipo(e)"
+        [src]="e.imagen ? urlImagen(e.imagen) : getImagenEquipo(e)"
         alt="Foto de {{ e.nombre }}"
         class="img-fluid mb-2"
         style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px;"
       />
-      
-
-      
-
 
       <!-- Contenido -->
       <div class="contenido-card">
@@ -83,13 +72,38 @@
         <p class="cat">{{ e.categoria }}</p>
       </div>
 
-      <!-- Botón de acción -->
-      <button (click)="toggleEquipo(e.idEquipo)">
-        {{
-          carrito().includes(e.idEquipo)
-            ? 'Quitar del carrito'
-            : 'Agregar al carrito'
-        }}
+      <!-- Modo de selección -->
+      <div class="modo-seleccion">
+        <select
+          [value]="getModo(e.id)"
+          (change)="cambiarModoDesdeEvento(e.id, $event)"
+        >
+          <option value="cualquiera">Cualquier unidad</option>
+          <option value="especifico">Elegir equipo físico</option>
+        </select>
+      </div>
+
+      <!-- Cantidad -->
+      <div class="cantidad-contenedor">
+        <button (click)="cambiarCantidad(e.id, -1)">-</button>
+        <span>{{ getCantidad(e.id) }}</span>
+        <button (click)="cambiarCantidad(e.id, 1)">+</button>
+      </div>
+
+      <p class="stock">Stock: {{ e.stock }}</p>
+
+      <!-- Botón para elegir equipos específicos -->
+      <button
+        *ngIf="getModo(e.id) === 'especifico'"
+        (click)="abrirModalEquipos(e.id)"
+        class="btn-especifico"
+      >
+        Seleccionar equipos específicos
+      </button>
+
+      <!-- Botón agregar/quitar -->
+      <button (click)="toggleProducto(e.id)">
+        {{ estaEnCarrito(e.id) ? 'Quitar del carrito' : 'Agregar al carrito' }}
       </button>
     </div>
   </div>

@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
 import { EquiposService } from '../../../services/equipos.service';
+import { CategoriaService } from '../../../services/categoria.service';
+import { TipoEquipoService } from '../../../services/tipoEquipo.service';
 
 @Component({
   selector: 'app-inventario',
@@ -12,49 +15,210 @@ import { EquiposService } from '../../../services/equipos.service';
 })
 export class InventarioComponent {
 
+  // ======================================================================================
+  // LISTAS PRINCIPALES
+  // ======================================================================================
+
   equipos: any[] = [];
   equiposFiltrados: any[] = [];
+
+  categorias: any[] = [];
+  todosTipos: any[] = [];
+  modelosDeCategoria: any[] = [];
 
   areas: string[] = [];
   modelos: string[] = [];
 
+  // ======================================================================================
+  // IMAGEN NUEVO MODELO
+  // ======================================================================================
+
+  archivoImagen: File | null = null;
+  previewImagen: string | null = null;
+
+  // ======================================================================================
+  // FILTROS + ESTADOS
+  // ======================================================================================
+
+  busqueda = '';
   filtroArea = '';
   filtroModelo = '';
-  busqueda = '';
 
+  modeloSeleccionado: any = null;
   equipoSeleccionado: any = null;
   solicitudActiva: any = null;
 
-  modeloSeleccionado: any = null;
   editandoModelo = false;
 
-  constructor(private equiposService: EquiposService) { }
+  // ======================================================================================
+  // MODAL CREAR EQUIPO
+  // ======================================================================================
+
+  modo: 'existente' | 'nuevo' = 'existente';
+
+  panelCrear = false;
+
+  nuevoEquipo: any = {
+    categoria_id: '',
+    tipo_equipo_id: '',
+    nuevoModelo: '',
+    codigo: '',
+    estado: 'disponible'
+  };
+
+  constructor(
+    private equiposService: EquiposService,
+    private categoriaService: CategoriaService,
+    private tipoEquipoService: TipoEquipoService
+  ) {}
 
   ngOnInit(): void {
+    this.cargarCategorias();
+    this.cargarTipos();
     this.cargarEquipos();
   }
 
-  // ============================================================
-  // CARGAR EQUIPOS
-  // ============================================================
-  cargarEquipos() {
-    this.equiposService.getEquipos().subscribe({
-      next: (data) => {
-        this.equipos = data;
+  // ======================================================================================
+  // CARGA DE DATOS
+  // ======================================================================================
 
-        // Llenar filtros
-        this.areas = [...new Set(data.map(e => e.categoria))];
-        this.modelos = [...new Set(data.map(e => e.nombre))];
-
-        this.filtrar();
-      },
-      error: err => console.error('Error cargando equipos:', err)
+  cargarCategorias() {
+    this.categoriaService.getCategorias().subscribe({
+      next: (data: any[]) => this.categorias = data,
+      error: (err: any) => console.error('Error cargando categorías', err)
     });
   }
 
-  // ============================================================
-  // FILTRAR
-  // ============================================================
+  cargarTipos() {
+    this.tipoEquipoService.getTipos().subscribe({
+      next: (data) => {
+        console.log("Tipos desde backend:", data);
+        this.todosTipos = data;
+      }
+    });
+  }
+
+  cargarEquipos() {
+    this.equiposService.getEquipos().subscribe({
+      next: (equipos: any[]) => {
+        this.equipos = equipos;
+
+        this.areas = [...new Set(equipos.map(e => e.categoria))];
+        this.modelos = [...new Set(equipos.map(e => e.nombre))];
+
+        this.filtrar();
+      },
+      error: (err: any) => console.error('Error cargando equipos:', err)
+    });
+  }
+
+  // ======================================================================================
+  // MODAL CREAR EQUIPO
+  // ======================================================================================
+
+  abrirCrearEquipo() {
+    this.panelCrear = true;
+    this.modeloSeleccionado = null;
+    this.equipoSeleccionado = null;
+  }
+
+  cerrarCrear() {
+    this.panelCrear = false;
+  }
+
+  cargarModelosPorCategoria() {
+    const categoriaId = this.nuevoEquipo.categoria_id;
+    this.modelosDeCategoria = this.todosTipos.filter(t => t.categoria_id == categoriaId);
+  }
+
+  cambiarModo() {
+    this.modo = this.modo === 'existente' ? 'nuevo' : 'existente';
+  }
+
+  // ---------- Cargar archivo imagen ----------
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.archivoImagen = file;
+
+    const reader = new FileReader();
+    reader.onload = () => this.previewImagen = reader.result as string;
+    reader.readAsDataURL(file);
+  }
+
+  guardarNuevoEquipo() {
+    if (!this.nuevoEquipo.categoria_id || !this.nuevoEquipo.codigo) {
+      alert('Complete los campos obligatorios');
+      return;
+    }
+
+    // ============================================================
+    // Nuevo modelo
+    // ============================================================
+    if (this.modo === 'nuevo') {
+      if (!this.nuevoEquipo.nuevoModelo) {
+        alert('Ingrese el nombre del nuevo modelo');
+        return;
+      }
+
+ this.tipoEquipoService.crearTipo(
+  {
+    nombre: this.nuevoEquipo.nuevoModelo,
+    categoria_id: this.nuevoEquipo.categoria_id
+  },
+  this.archivoImagen ?? undefined
+)
+.subscribe({
+        next: (res: any) => {
+          const tipoId = res.tipoEquipo.id;
+          this.crearEquipoFinal(tipoId);
+        },
+        error: (err: any) => console.error('Error creando tipo', err)
+      });
+
+    } else {
+      // ============================================================
+      // Usar modelo existente
+      // ============================================================
+      this.crearEquipoFinal(this.nuevoEquipo.tipo_equipo_id);
+    }
+  }
+
+  crearEquipoFinal(tipoId: number) {
+    this.equiposService.crearEquipo({
+      tipo_equipo_id: tipoId,
+      codigo: this.nuevoEquipo.codigo,
+      estado: this.nuevoEquipo.estado
+    }).subscribe({
+      next: () => {
+        alert('Equipo creado exitosamente');
+        this.cargarEquipos();
+        this.limpiarModal();
+      },
+      error: (err: any) => console.error('Error creando equipo', err)
+    });
+  }
+
+  limpiarModal() {
+    this.nuevoEquipo = {
+      categoria_id: '',
+      tipo_equipo_id: '',
+      nuevoModelo: '',
+      codigo: '',
+      estado: 'disponible'
+    };
+
+    this.archivoImagen = null;
+    this.previewImagen = null;
+
+    this.modo = 'existente';
+  }
+
+  // ======================================================================================
+  // FILTRAR + AGRUPAR
+  // ======================================================================================
+
   filtrar() {
     const texto = this.busqueda.toLowerCase();
 
@@ -65,9 +229,6 @@ export class InventarioComponent {
     );
   }
 
-  // ============================================================
-  // AGRUPAR POR MODELO
-  // ============================================================
   get modelosAgrupados() {
     const grupos: any = {};
 
@@ -76,25 +237,24 @@ export class InventarioComponent {
       grupos[e.nombre].push(e);
     });
 
-    return Object.keys(grupos).map(nombre => ({
-      modelo: nombre,
-      equipos: grupos[nombre]
+    return Object.keys(grupos).map(modelo => ({
+      modelo,
+      equipos: grupos[modelo]
     }));
   }
 
-  // ============================================================
-  // VER MODELO (Panel derecho)
-  // ============================================================
+  // ======================================================================================
+  // PANEL MODELO
+  // ======================================================================================
+
   editarModelo(grupo: any) {
-    const lista = grupo.equipos;
     this.editandoModelo = false;
 
     this.modeloSeleccionado = {
       nombre: grupo.modelo,
-      categoria: lista[0].categoria,
+      categoria: grupo.equipos[0].categoria,
       nombreOriginal: grupo.modelo,
-
-      equipos: lista.map((e: any) => ({
+      equipos: grupo.equipos.map((e: any) => ({
         idEquipo: e.idEquipo,
         codigo: e.codigo,
         estado: e.estado,
@@ -104,125 +264,29 @@ export class InventarioComponent {
     };
 
     this.equipoSeleccionado = null;
-    this.solicitudActiva = null;
-  }
-
-  cerrarEdicionModelo() {
-    this.modeloSeleccionado = null;
-    this.editandoModelo = false;
   }
 
   activarEdicionModelo() {
     this.editandoModelo = true;
   }
 
-  // ============================================================
-  // GUARDAR CAMBIOS DEL MODELO (solo visual)
-  // ============================================================
-  guardarCambiosModelo() {
-
-    if (!this.modeloSeleccionado) return;
-
-    const nombreNuevo = this.modeloSeleccionado.nombre;
-    const categoriaNueva = this.modeloSeleccionado.categoria;
-    const nombreOriginal = this.modeloSeleccionado.nombreOriginal;
-
-    // 1) Actualizar todos los equipos que están dentro del modelo
-    this.modeloSeleccionado.equipos.forEach((eq: any) => {
-
-      const index = this.equipos.findIndex(e => e.idEquipo === eq.idEquipo);
-
-      if (index !== -1) {
-        this.equipos[index] = {
-          ...this.equipos[index],
-          nombre: nombreNuevo,
-          categoria: categoriaNueva,
-          codigo: eq.codigo,
-          estado: eq.estado
-        };
-      }
-    });
-
-    // 2) Actualizar cualquier otro equipo que comparta el mismo modelo original
-    this.equipos = this.equipos.map(e => {
-      if (e.nombre === nombreOriginal) {
-        return { ...e, nombre: nombreNuevo, categoria: categoriaNueva };
-      }
-      return e;
-    });
-
-    alert('Cambios aplicados (solo visual)');
-
-    this.filtrar();
-
+  cerrarEdicionModelo() {
     this.editandoModelo = false;
     this.modeloSeleccionado = null;
   }
 
-  // ============================================================
-  // VER DETALLE DE EQUIPO INDIVIDUAL
-  // ============================================================
+  guardarCambiosModelo() {
+    alert('Cambios aplicados (solo visual)');
+    this.cerrarEdicionModelo();
+  }
+
+  // ======================================================================================
+  // PANEL EQUIPO INDIVIDUAL
+  // ======================================================================================
+
   verDetalle(eq: any) {
     this.equipoSeleccionado = { ...eq };
     this.modeloSeleccionado = null;
-
-    if (eq.estado !== 'disponible') {
-      // Simulación de solicitud activa
-      this.solicitudActiva = {
-        usuario: "Usuario desconocido",
-        fecha: eq.updated_at,
-        motivo: "Información no disponible",
-        id: eq.idEquipo
-      };
-    } else {
-      this.solicitudActiva = null;
-    }
-  }
-
-  // ============================================================
-  // GUARDAR CAMBIOS DE UN EQUIPO (SOLO VISUAL)
-  // ============================================================
-  guardarCambiosEquipo() {
-
-    if (!this.equipoSeleccionado) return;
-
-    const index = this.equipos.findIndex(e => e.idEquipo === this.equipoSeleccionado.idEquipo);
-
-    if (index !== -1) {
-
-      // 🔥 Actualiza la lista principal (solo visual)
-      this.equipos[index] = {
-        ...this.equipos[index],
-        codigo: this.equipoSeleccionado.codigo,
-        estado: this.equipoSeleccionado.estado
-      };
-
-      alert("Cambios guardados (solo visual, no en BD)");
-    }
-
-    this.cerrarPanel();
-    this.filtrar();
-  }
-
-
-  // ============================================================
-  // VER SOLICITUD (SIMULADO)
-  // ============================================================
-  verSolicitud(eq: any) {
-    alert("Vista de solicitud simulada. Se implementará después.");
-  }
-
-  // ============================================================
-  // TERMINAR PRÉSTAMO
-  // ============================================================
-  terminarPrestamo() {
-    if (!this.equipoSeleccionado) return;
-
-    this.equipoSeleccionado.estado = 'disponible';
-    this.solicitudActiva = null;
-
-    alert("Equipo marcado como disponible (solo visual)");
-    this.cargarEquipos();
   }
 
   cerrarPanel() {
@@ -230,22 +294,25 @@ export class InventarioComponent {
     this.solicitudActiva = null;
   }
 
+  guardarCambiosEquipo() {
+    alert('Cambios aplicados (solo visual)');
+    this.cerrarPanel();
+  }
 
+  // ======================================================================================
+  // IMAGENES
+  // ======================================================================================
 
-
-  // ==========================================
-  // OBTENER IMAGEN DEL EQUIPO (MISMA LÓGICA QUE CATÁLOGO)
-  // ==========================================
   getImagenEquipo(equipo: any): string {
-    const nombre = equipo.nombre?.toLowerCase() || '';
+    const n = equipo.nombre?.toLowerCase() || '';
 
-    if (nombre.includes('cámara') || nombre.includes('canon')) return 'assets/equipos/camara.jpg';
-    if (nombre.includes('micrófono') || nombre.includes('rode')) return 'assets/equipos/aro.jpg';
-    if (nombre.includes('tablet') || nombre.includes('wacom')) return 'assets/equipos/computador.jpg';
-    if (nombre.includes('proyector') || nombre.includes('epson')) return 'assets/equipos/proyector.jpg';
-    if (nombre.includes('grabadora') || nombre.includes('zoom')) return 'assets/equipos/luz.jpg';
+    if (n.includes('cámara') || n.includes('canon')) return 'assets/equipos/camara.jpg';
+    if (n.includes('micrófono') || n.includes('rode')) return 'assets/equipos/aro.jpg';
+    if (n.includes('tablet') || n.includes('wacom')) return 'assets/equipos/computador.jpg';
+    if (n.includes('proyector') || n.includes('epson')) return 'assets/equipos/proyector.jpg';
+    if (n.includes('grabadora') || n.includes('zoom')) return 'assets/equipos/luz.jpg';
 
     return 'assets/equipos/lampara.jpg';
   }
-
 }
+
