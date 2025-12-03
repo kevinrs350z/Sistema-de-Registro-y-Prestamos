@@ -36,16 +36,12 @@ export class GestionarSancionesComponent implements OnInit {
     private sancionesService: SancionesService
   ) {}
 
-  // ======================================
-  //  LISTA DE SANCIONES (REALES)
-  // ======================================
+
   sanciones: Sancion[] = [];
   sancionSeleccionada: Sancion | null = null;
   filtro = '';
 
-  // ======================================
-  //  TIPOS DE SANCIÓN
-  // ======================================
+
   tiposSancion: string[] = [
     'Atraso en devolución',
     'Daño en equipo',
@@ -67,13 +63,11 @@ export class GestionarSancionesComponent implements OnInit {
   asignarInicio = '';
   asignarFin = '';
 
-  // Modal
+
   mostrarModalAmpliar = false;
   motivoAmpliacion = '';
 
-  // ======================================
-  //  INIT
-  // ======================================
+
   ngOnInit(): void {
     this.cargarDatosReales();
     this.asignarTipo = this.tiposSancion[0] || '';
@@ -100,9 +94,7 @@ export class GestionarSancionesComponent implements OnInit {
     });
   }
 
-  // ======================================
-  //  CARGAR SANCIONES DESDE BACKEND
-  // ======================================
+
   cargarDatosReales(): void {
     this.sancionesService.getSanciones().subscribe({
       next: (resp) => {
@@ -140,9 +132,7 @@ export class GestionarSancionesComponent implements OnInit {
 }
 
 
-  // ======================================
-  //  FILTRO
-  // ======================================
+
   get sancionesFiltradas(): Sancion[] {
     const f = this.filtro.toLowerCase();
     if (!f) return this.sanciones;
@@ -152,18 +142,14 @@ export class GestionarSancionesComponent implements OnInit {
     );
   }
 
-  // ======================================
-  //  SELECCIONAR SANCIÓN
-  // ======================================
+ 
   seleccionar(s: Sancion): void {
     this.sancionSeleccionada = s;
     this.formularioVisible = false;
     this.formularioAsignar = false;
   }
 
-  // ======================================
-  //  TOGGLE FORMULARIOS
-  // ======================================
+
   toggleRegistrar(): void {
     this.formularioVisible = !this.formularioVisible;
     if (this.formularioVisible) {
@@ -180,9 +166,7 @@ export class GestionarSancionesComponent implements OnInit {
     }
   }
 
-  // ======================================
-  //  AMPLIAR SANCIÓN (FRONT)
-  // ======================================
+
   abrirModalAmpliar() {
     this.mostrarModalAmpliar = true;
   }
@@ -217,9 +201,7 @@ confirmarAmpliacion() {
 }
 
 
-  // ======================================
-  //  REGISTRAR TIPO (LOCAL)
-  // ======================================
+ 
   registrarTipo(): void {
     const tipo = this.nuevoTipo.trim();
 
@@ -238,9 +220,7 @@ confirmarAmpliacion() {
     alert('Tipo registrado correctamente.');
   }
 
-  // ======================================
-  //  ASIGNAR SANCIÓN (BACKEND)
-  // ======================================
+
 asignarSancion(): void {
   if (!this.asignarUsuario.trim() ||
       !this.asignarTipo ||
@@ -271,9 +251,7 @@ asignarSancion(): void {
 }
 
 
-  // ======================================
-  //  QUITAR SANCIÓN (SOLO FRONT)
-  // ======================================
+
 quitarSancion(): void {
   if (!this.sancionSeleccionada) return;
 

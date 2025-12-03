@@ -40,40 +40,26 @@ export class SolicitudesPendientesComponent implements OnInit {
     this.cargarSolicitudes();
   }
 
-  // =========================================================
-  // 🔹 CARGAR SOLICITUDES PENDIENTES
-  // =========================================================
   cargarSolicitudes() {
     this.prestamosAdmin.getPendientes().subscribe({
       next: (data) => {
         this.solicitudes = data.map((p: any) => {
           const esExterno = p.tipo === 'FUERA';
-          const periodo = esExterno
-            ? `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}`
-            : '—';
 
-          // --- EQUIPOS NORMALIZADOS ---
-          const equipos =
-            Array.isArray(p.equipos)
-              ? p.equipos.map((eq: any) => {
-                  // Si viene STRING → lo convertimos
-                  if (typeof eq === 'string') {
-                    return {
-                      codigo: '—',
-                      nombre: eq,
-                      imagen: 'assets/equipos/default.jpg'
-                    };
-                  }
-                  // Si viene OBJETO → normalizamos
-                  return {
-                    codigo: eq.codigo_activo ?? eq.codigo ?? '—',
-                    nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
-                    imagen: eq.imagen
-                      ? `http://localhost:8000/storage/${eq.imagen}`
-                      : 'assets/equipos/default.jpg'
-                  };
-                })
-              : [];
+          const equipos = Array.isArray(p.equipos)
+            ? p.equipos.map((eq: any) => {
+                if (typeof eq === 'string') {
+                  return { codigo: '—', nombre: eq, imagen: 'assets/equipos/default.jpg' };
+                }
+                return {
+                  codigo: eq.codigo_activo ?? eq.codigo ?? '—',
+                  nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
+                  imagen: eq.imagen
+                    ? `http://localhost:8000/storage/${eq.imagen}`
+                    : 'assets/equipos/default.jpg'
+                };
+              })
+            : [];
 
           return {
             id: p.idPrestamo,
@@ -86,7 +72,7 @@ export class SolicitudesPendientesComponent implements OnInit {
             fechaSolicitud: p.created_at,
             fechaInicio: p.fecha_inicio,
             fechaFin: p.fecha_fin,
-            periodo,
+            periodo: esExterno ? `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}` : '—',
             estado: p.estado?.toUpperCase()
           };
         });
@@ -95,110 +81,98 @@ export class SolicitudesPendientesComponent implements OnInit {
     });
   }
 
-  // =========================================================
-  // 🔹 FILTRO + ORDENAMIENTO
-  // =========================================================
   get solicitudesFiltradas(): AdminSolicitud[] {
     const texto = this.filtroBusqueda.toLowerCase().trim();
 
     let resultado = this.solicitudes.filter((s) => {
       if (s.estado !== 'PENDIENTE') return false;
 
-      const coincideEstudiante =
-        (s.estudiante ?? '').toLowerCase().includes(texto);
+      const coincideEst = (s.estudiante ?? '').toLowerCase().includes(texto);
 
-      const coincideEquipos =
+      const coincideEq =
         Array.isArray(s.equipos) &&
         s.equipos.some((eq: any) => {
-          // Si eq es STRING
-          if (typeof eq === 'string') {
-            return eq.toLowerCase().includes(texto);
-          }
-          // Si eq es OBJETO
+          if (typeof eq === 'string') return eq.toLowerCase().includes(texto);
           return (
             (eq.nombre ?? '').toLowerCase().includes(texto) ||
             (eq.codigo ?? '').toLowerCase().includes(texto)
           );
         });
 
-      const coincideObservacion =
-        (s.observacion ?? '').toLowerCase().includes(texto);
+      const coincideObs = (s.observacion ?? '').toLowerCase().includes(texto);
 
-      return coincideEstudiante || coincideEquipos || coincideObservacion;
+      return coincideEst || coincideEq || coincideObs;
     });
 
     resultado.sort((a, b) => {
-      const fechaA = new Date(a.fechaSolicitud!).getTime();
-      const fechaB = new Date(b.fechaSolicitud!).getTime();
-
-      return this.orden === 'antiguas' ? fechaA - fechaB : fechaB - fechaA;
+      const A = new Date(a.fechaSolicitud!).getTime();
+      const B = new Date(b.fechaSolicitud!).getTime();
+      return this.orden === 'antiguas' ? A - B : B - A;
     });
 
     return resultado;
   }
 
-  // =========================================================
-  // 🔹 SELECCIONAR SOLICITUD
-  // =========================================================
   seleccionarSolicitud(s: AdminSolicitud) {
     this.solicitudSeleccionada = s;
   }
 
-  // =========================================================
-  // 🔹 APROBAR
-  // =========================================================
   abrirAprobacion() {
     this.mostrarModalAprobacion = true;
   }
 
-  confirmarAprobacion() {
-    if (!this.solicitudSeleccionada) return;
-    if (this.motivoAprobacion.trim() === '') {
-      alert('Debes ingresar un motivo de aprobación.');
-      return;
-    }
-
-    this.prestamosAdmin
-      .aprobarPrestamo(this.solicitudSeleccionada.id!, this.motivoAprobacion)
-      .subscribe({
-        next: () => {
-          alert('Solicitud aprobada correctamente.');
-          this.cargarSolicitudes();
-          this.cerrarModal();
-        },
-        error: (err) => console.error('Error al aprobar:', err)
-      });
+confirmarAprobacion() {
+  if (!this.solicitudSeleccionada) return;
+  if (this.motivoAprobacion.trim() === '') {
+    alert('Debes ingresar un motivo de aprobación.');
+    return;
   }
 
-  // =========================================================
-  // 🔹 RECHAZAR
-  // =========================================================
+  this.prestamosAdmin
+    .aprobarPrestamo(
+      this.solicitudSeleccionada.id!,
+      this.motivoAprobacion,
+      'aceptar'
+    )
+    .subscribe({
+      next: () => {
+        alert('Solicitud aprobada correctamente.');
+        this.cargarSolicitudes();
+        this.cerrarModal();
+      },
+      error: (err) => console.error('Error al aprobar:', err)
+    });
+}
+
+
   abrirRechazo() {
     this.mostrarModal = true;
   }
 
-  confirmarRechazo() {
-    if (!this.solicitudSeleccionada) return;
-    if (this.motivoRechazo.trim() === '') {
-      alert('Debes ingresar un motivo.');
-      return;
-    }
-
-    this.prestamosAdmin
-      .rechazarPrestamo(this.solicitudSeleccionada.id!, this.motivoRechazo)
-      .subscribe({
-        next: () => {
-          alert('Solicitud rechazada correctamente.');
-          this.cargarSolicitudes();
-          this.cerrarModal();
-        },
-        error: (err) => console.error('Error al rechazar:', err)
-      });
+confirmarRechazo() {
+  if (!this.solicitudSeleccionada) return;
+  if (this.motivoRechazo.trim() === '') {
+    alert('Debes ingresar un motivo.');
+    return;
   }
 
-  // =========================================================
-  // 🔹 CERRAR MODALES
-  // =========================================================
+  this.prestamosAdmin
+    .rechazarPrestamo(
+      this.solicitudSeleccionada.id!,
+      this.motivoRechazo,
+      'rechazar'
+    )
+    .subscribe({
+      next: () => {
+        alert('Solicitud rechazada correctamente.');
+        this.cargarSolicitudes();
+        this.cerrarModal();
+      },
+      error: (err) => console.error('Error al rechazar:', err)
+    });
+}
+
+
   cerrarModal() {
     this.mostrarModal = false;
     this.mostrarModalAprobacion = false;
@@ -207,9 +181,6 @@ export class SolicitudesPendientesComponent implements OnInit {
     this.solicitudSeleccionada = null;
   }
 
-  // =========================================================
-  // 🔹 FORMATEAR FECHA
-  // =========================================================
   formatearFecha(f: string): string {
     if (!f) return '—';
     return new Date(f).toLocaleDateString('es-ES', {
@@ -219,3 +190,4 @@ export class SolicitudesPendientesComponent implements OnInit {
     });
   }
 }
+

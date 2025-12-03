@@ -69,6 +69,7 @@
 }
 
 .estado.prestado { background-color: #ffb56b; color: #8a4500; }
+.estado.aceptado  { background-color: #ffb56b; color: #8a4500; }
 .estado.devuelto { background-color: #b6ffc9; color: #057d2d; }
 .estado.rechazado { background-color: #ff6b6b; color: #fff; }
 

@@ -35,21 +35,31 @@ export class PrestamosAdminService {
     );
   }
 
-  // 🔹 3. Aprobar préstamo
-  aprobarPrestamo(id: number, motivo: string): Observable<any> {
-    return this.http.post(
-      `${this.apiUrl}/aprobar/${id}`,
-      { motivo },
-      { headers: this.getAuthHeaders() }
-    );
-  }
+aprobarPrestamo(id: number, motivo: string, accion: string) {
+  return this.http.post(`${this.apiUrl}/aprobar/${id}`, {
+    motivo,
+    accion
+  });
+}
+marcarDevuelto(id: number, motivo: string) {
+  return this.http.post(`http://localhost:8000/api/admin/prestamos/${id}/devolver`, {
+    motivo
+  });
+}
 
-  // 🔹 4. Rechazar préstamo
-  rechazarPrestamo(id: number, motivo: string): Observable<any> {
-    return this.http.post(
-      `${this.apiUrl}/rechazar/${id}`,
-      { motivo },
-      { headers: this.getAuthHeaders() }
-    );
-  }
+devolverEquipo(idPrestamo: number, idEquipo: number, motivo: string) {
+  return this.http.patch(`${this.apiUrl}/prestamos/${idPrestamo}/devolver-equipo/${idEquipo}`, {
+    motivo
+  });
+}
+
+
+
+rechazarPrestamo(id: number, motivo: string, accion: string) {
+  return this.http.post(`${this.apiUrl}/rechazar/${id}`, {
+    motivo,
+    accion
+  });
+}
+
 }

@@ -10,6 +10,7 @@
 
     <select [(ngModel)]="filtroEstado">
       <option value="todos">Todos</option>
+      <option value="aceptado">Aceptados</option>
       <option value="prestado">Prestados</option>
       <option value="devuelto">Devueltos</option>
       <option value="rechazado">Rechazados</option>
@@ -21,10 +22,7 @@
     </select>
   </div>
 
-
-  <!-- ===========================
-       CONTENIDO PRINCIPAL
-  ============================ -->
+  <!-- CONTENIDO -->
   <div class="solicitudes-wrapper">
 
     <!-- LISTA IZQUIERDA -->
@@ -50,12 +48,13 @@
         <span
           class="estado"
           [ngClass]="{
+            aceptado: s.estado === 'aceptado',
             prestado: s.estado === 'prestado',
             devuelto: s.estado === 'devuelto',
             rechazado: s.estado === 'rechazado'
           }"
         >
-          {{ s.estado }}
+          {{ s.estado | uppercase }}
         </span>
       </div>
 
@@ -65,13 +64,11 @@
 
     </div>
 
-
-    <!-- PANEL DERECHO (ESTILO GESTIÓN DE CUENTA) -->
+    <!-- PANEL DERECHO -->
     <div class="detalle-solicitud" *ngIf="solicitudSeleccionada as sel">
 
       <h3>Detalle del préstamo</h3>
 
-      <!-- GRID DE CAMPOS -->
       <div class="detalle-grid">
 
         <div class="detalle-item">
@@ -96,34 +93,41 @@
 
       </div>
 
-
       <!-- EQUIPOS -->
-      <div class="equipos-box">
-        <h4>Equipos utilizados</h4>
+<div class="equipos-box">
+  <h4>Equipos utilizados</h4>
 
-        <div class="equipo" *ngFor="let eq of sel.equiposDetallados">
-          <p class="nombre">{{ eq.nombre }}</p>
-          <p class="codigo">Código: {{ eq.codigoActivo }}</p>
-        </div>
-      </div>
+  <div class="equipo" *ngFor="let eq of sel.equiposDetallados">
+    <p class="nombre">{{ eq.nombre }}</p>
+    <p class="codigo">Código: {{ eq.codigoActivo }}</p>
 
-      <!-- OBSERVACIÓN -->
+    <!-- BOTÓN DEVOLVER EQUIPO -->
+    <button 
+      class="btn-devolver-equipo"
+      *ngIf="sel.estado === 'prestado'"
+      (click)="devolverEquipo(sel.id, eq.id)"
+    >
+      Devolver este equipo
+    </button>
+  </div>
+</div>
+
+
       <div class="observacion-box">
         <h4>Observación</h4>
         <p>{{ sel.observacion || 'Sin observaciones' }}</p>
       </div>
 
-      <!-- BOTÓN -->
+   
       <button
         class="btn-finalizar"
         *ngIf="sel.estado === 'prestado'"
         (click)="abrirFinalizar()"
       >
-        Finalizar préstamo
+        Devolver préstamo
       </button>
 
     </div>
-
 
     <!-- MODAL -->
     <div class="modal" *ngIf="mostrarModal">

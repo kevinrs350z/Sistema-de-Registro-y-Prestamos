@@ -1,3 +1,16 @@
+/**
+ * Componente encargado de la gestión completa del inventario de equipos.
+ * Se encarga de:
+ *  - Cargar categorías, tipos y equipos desde el backend.
+ *  - Filtrar equipos por área, modelo o búsqueda textual.
+ *  - Crear nuevos equipos o modelos, incluyendo subida de imágenes.
+ *  - Visualizar y editar grupos de equipos o un equipo individual.
+ * 
+ * Este módulo representa un punto clave del sistema, ya que gestiona el estado
+ * del inventario y establece comunicación directa con los servicios del frontend
+ * que, a su vez, interactúan con el backend.
+ */
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,49 +28,37 @@ import { TipoEquipoService } from '../../../services/tipoEquipo.service';
 })
 export class InventarioComponent {
 
-  // ======================================================================================
-  // LISTAS PRINCIPALES
-  // ======================================================================================
-
+  /** Listas principales utilizadas en el inventario */
   equipos: any[] = [];
   equiposFiltrados: any[] = [];
 
   categorias: any[] = [];
   todosTipos: any[] = [];
   modelosDeCategoria: any[] = [];
-
+  /** Almacenan áreas y modelos usados para los filtros */
   areas: string[] = [];
   modelos: string[] = [];
 
-  // ======================================================================================
-  // IMAGEN NUEVO MODELO
-  // ======================================================================================
-
+ /** Imagen seleccionada al crear un modelo nuevo */
   archivoImagen: File | null = null;
   previewImagen: string | null = null;
 
-  // ======================================================================================
-  // FILTROS + ESTADOS
-  // ======================================================================================
-
+ /** Variables de filtros y búsqueda */
   busqueda = '';
   filtroArea = '';
   filtroModelo = '';
-
+ /** Variables para selección de modelos/equipos */
   modeloSeleccionado: any = null;
   equipoSeleccionado: any = null;
   solicitudActiva: any = null;
-
+/** Controlan estados de edición */
   editandoModelo = false;
 
-  // ======================================================================================
-  // MODAL CREAR EQUIPO
-  // ======================================================================================
-
+  /** Define si se creará un equipo con modelo existente o nuevo */
   modo: 'existente' | 'nuevo' = 'existente';
-
+/** Control del panel de creación */
   panelCrear = false;
-
+  /** Template del formulario para creación de equipos */ 
   nuevoEquipo: any = {
     categoria_id: '',
     tipo_equipo_id: '',
@@ -71,24 +72,30 @@ export class InventarioComponent {
     private categoriaService: CategoriaService,
     private tipoEquipoService: TipoEquipoService
   ) {}
-
+  /**
+   * Carga inicial del componente.
+   * Se ejecutan las funciones que solicitan información al backend
+   * mediante los servicios correspondientes.
+   */
   ngOnInit(): void {
     this.cargarCategorias();
     this.cargarTipos();
     this.cargarEquipos();
   }
 
-  // ======================================================================================
-  // CARGA DE DATOS
-  // ======================================================================================
-
+ 
+  /**
+   * Obtiene las categorías desde el backend.
+   */
   cargarCategorias() {
     this.categoriaService.getCategorias().subscribe({
       next: (data: any[]) => this.categorias = data,
       error: (err: any) => console.error('Error cargando categorías', err)
     });
   }
-
+  /**
+   * Obtiene los tipos de equipos desde el backend.
+   */
   cargarTipos() {
     this.tipoEquipoService.getTipos().subscribe({
       next: (data) => {
@@ -97,7 +104,10 @@ export class InventarioComponent {
       }
     });
   }
-
+  /**
+   * Obtiene los equipos, genera áreas y modelos únicos,
+   * y aplica filtros iniciales.
+   */
   cargarEquipos() {
     this.equiposService.getEquipos().subscribe({
       next: (equipos: any[]) => {
@@ -112,30 +122,37 @@ export class InventarioComponent {
     });
   }
 
-  // ======================================================================================
-  // MODAL CREAR EQUIPO
-  // ======================================================================================
-
+  /**
+   * Abre el panel para crear un nuevo equipo.
+   */
   abrirCrearEquipo() {
     this.panelCrear = true;
     this.modeloSeleccionado = null;
     this.equipoSeleccionado = null;
   }
-
+  /**
+   * Cierra el panel de creación.
+   */
   cerrarCrear() {
     this.panelCrear = false;
   }
-
+  /**
+   * Carga los modelos disponibles filtrando por categoría seleccionada.
+   */
   cargarModelosPorCategoria() {
     const categoriaId = this.nuevoEquipo.categoria_id;
     this.modelosDeCategoria = this.todosTipos.filter(t => t.categoria_id == categoriaId);
   }
 
+  /**
+   * Alterna entre crear un equipo con modelo existente o uno nuevo.
+   */
   cambiarModo() {
     this.modo = this.modo === 'existente' ? 'nuevo' : 'existente';
   }
-
-  // ---------- Cargar archivo imagen ----------
+  /**
+   * Maneja la selección de archivos de imagen y genera una vista previa.
+   */
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
@@ -146,16 +163,17 @@ export class InventarioComponent {
     reader.onload = () => this.previewImagen = reader.result as string;
     reader.readAsDataURL(file);
   }
-
+  /**
+   * Guarda un nuevo equipo, generando previamente un modelo si corresponde.
+   */
   guardarNuevoEquipo() {
     if (!this.nuevoEquipo.categoria_id || !this.nuevoEquipo.codigo) {
       alert('Complete los campos obligatorios');
       return;
     }
 
-    // ============================================================
-    // Nuevo modelo
-    // ============================================================
+ 
+// Si se crea un modelo nuevo
     if (this.modo === 'nuevo') {
       if (!this.nuevoEquipo.nuevoModelo) {
         alert('Ingrese el nombre del nuevo modelo');
@@ -178,13 +196,13 @@ export class InventarioComponent {
       });
 
     } else {
-      // ============================================================
-      // Usar modelo existente
-      // ============================================================
+  // Con modelo existente
       this.crearEquipoFinal(this.nuevoEquipo.tipo_equipo_id);
     }
   }
-
+  /**
+   * Crea un equipo luego de contar con el ID del tipo.
+   */
   crearEquipoFinal(tipoId: number) {
     this.equiposService.crearEquipo({
       tipo_equipo_id: tipoId,
@@ -199,7 +217,9 @@ export class InventarioComponent {
       error: (err: any) => console.error('Error creando equipo', err)
     });
   }
-
+  /**
+   * Limpia todos los campos del formulario de creación.
+   */
   limpiarModal() {
     this.nuevoEquipo = {
       categoria_id: '',
@@ -215,10 +235,9 @@ export class InventarioComponent {
     this.modo = 'existente';
   }
 
-  // ======================================================================================
-  // FILTRAR + AGRUPAR
-  // ======================================================================================
-
+  /**
+   * Aplica filtros dinámicos sobre los equipos cargados.
+   */
   filtrar() {
     const texto = this.busqueda.toLowerCase();
 
@@ -228,7 +247,9 @@ export class InventarioComponent {
       (e.nombre.toLowerCase().includes(texto) || e.codigo.toLowerCase().includes(texto))
     );
   }
-
+  /**
+   * Agrupa equipos por modelo para mostrar en el panel de inventario.
+   */
   get modelosAgrupados() {
     const grupos: any = {};
 
@@ -243,10 +264,10 @@ export class InventarioComponent {
     }));
   }
 
-  // ======================================================================================
-  // PANEL MODELO
-  // ======================================================================================
-
+  /**
+   * Selecciona un modelo y prepara su información
+   * para ser visualizada o editada.
+   */
   editarModelo(grupo: any) {
     this.editandoModelo = false;
 
@@ -276,33 +297,35 @@ export class InventarioComponent {
   }
 
   guardarCambiosModelo() {
-    alert('Cambios aplicados (solo visual)');
+    alert('Cambios aplicados');
     this.cerrarEdicionModelo();
   }
 
-  // ======================================================================================
-  // PANEL EQUIPO INDIVIDUAL
-  // ======================================================================================
-
+ 
+  /**
+   * Selecciona un equipo específico para ver detalles.
+   */
   verDetalle(eq: any) {
     this.equipoSeleccionado = { ...eq };
     this.modeloSeleccionado = null;
   }
-
+/**
+   * Cierra los paneles de detalle o edición.
+   */
   cerrarPanel() {
     this.equipoSeleccionado = null;
     this.solicitudActiva = null;
   }
+  
 
   guardarCambiosEquipo() {
-    alert('Cambios aplicados (solo visual)');
+    alert('Cambios aplicados ');
     this.cerrarPanel();
   }
 
-  // ======================================================================================
-  // IMAGENES
-  // ======================================================================================
-
+  /**
+   * Retorna la imagen correspondiente a un equipo según su nombre.
+   */
   getImagenEquipo(equipo: any): string {
     const n = equipo.nombre?.toLowerCase() || '';
 

@@ -1,8 +1,18 @@
+/**
+ * Componente encargado de la gestión de cuentas de alumnos dentro del sistema.
+ * Permite listar, filtrar, paginar, crear y editar usuarios provenientes del backend.
+ * 
+ * Este componente funciona como módulo standalone y utiliza servicios para
+ * conectarse a la API vía UsuariosService.
+ */
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuariosService } from '../../../services/usuarios.service';
 
+/**
+ * Representa la estructura base de un Alumno/Usuario dentro del sistema.
+ */
 interface Alumno {
   id: number;
   nombre: string;
@@ -16,6 +26,9 @@ interface Alumno {
   password?: string;
   rol?: string;
 }
+/**
+ * Respuesta paginada enviada por el backend.
+ */
 interface UsuarioResponse {
   data: any[];
   current_page: number;
@@ -31,15 +44,23 @@ interface UsuarioResponse {
   styleUrls: ['./cuentas.component.css']
 })
 export class CuentasComponent implements OnInit {
-
+   /** Lista completa de alumnos obtenidos desde el backend */
   alumnos: Alumno[] = [];
+  /** Alumno seleccionado para visualizar o editar */
   alumnoSeleccionado: Alumno | null = null;
 
+   /** Valor utilizado para el campo de búsqueda */
   filtro: string = '';
+
+  /** Indica si el usuario se encuentra en estado de edición */
   editMode = false;
 
-  
+  /** Indica si el usuario está creando una nueva cuenta */
   creando = false;
+    /**
+   * Objeto utilizado para la creación de un nuevo alumno.
+   * Se inicializa vacío y se completa en el formulario.
+   */
   nuevoAlumno: Alumno = {
     id: 0,
     nombre: '',
@@ -52,16 +73,24 @@ export class CuentasComponent implements OnInit {
     password: '',
     rol: 'Alumno'
   };
-
+  /** Página actual de la tabla */
   currentPage = 1;
+    /** Última página disponible según el backend */
   lastPage = 1;
+    /**
+   * Hook de inicialización del componente.
+   * Carga automáticamente la primera página de alumnos.
+   */
   constructor(private usuariosService: UsuariosService) {}
 
   ngOnInit(): void {
     this.cargarAlumnos();
   }
 
-  
+    /**
+   * Carga la lista de alumnos desde el backend de acuerdo a la página indicada.
+   * @param page Número de página a cargar (por defecto 1)
+   */
   cargarAlumnos(page: number = 1) {
     this.usuariosService.obtenerUsuarios(page).subscribe({
       next: (res) => {
@@ -72,13 +101,18 @@ export class CuentasComponent implements OnInit {
       error: (err) => console.error('Error cargando alumnos:', err)
     });
   }
-
+    /**
+   * Avanza a la siguiente página, si existe.
+   */
   paginaSiguiente() {
     if (this.currentPage < this.lastPage) {
       this.currentPage++;
       this.cargarAlumnos(this.currentPage);
     }
   }
+    /**
+   * Retrocede a la página anterior, si es posible.
+   */
   paginaAnterior() {
     if (this.currentPage > 1) {
       this.currentPage--;
@@ -86,7 +120,10 @@ export class CuentasComponent implements OnInit {
     }
   }
 
-
+  /**
+   * Retorna el listado filtrado de alumnos según nombre o email.
+   * @returns Lista filtrada de alumnos
+   */
   get alumnosFiltrados() {
     if (!this.filtro.trim()) return this.alumnos;
     const f = this.filtro.toLowerCase();
@@ -96,14 +133,19 @@ export class CuentasComponent implements OnInit {
       a.email.toLowerCase().includes(f)
     );
   }
-
+  /**
+   * Selecciona un alumno para visualizar su información.
+   * @param a Alumno seleccionado
+   */
   seleccionar(a: Alumno) {
     this.alumnoSeleccionado = { ...a };
     this.editMode = false;
     this.creando = false;
   }
 
-  // ✔️ Comenzar creación
+  /**
+   * Habilita el modo creación y reinicia el formulario correspondiente.
+   */
   comenzarCrear() {
     this.creando = true;
     this.alumnoSeleccionado = null;
@@ -124,7 +166,9 @@ export class CuentasComponent implements OnInit {
 
 
   }
-  // ✔️ Guardar edición
+  /**
+   * Guarda los cambios realizados a un alumno existente enviando la actualización al backend.
+   */
   guardar() {
     if (!this.alumnoSeleccionado) return;
 
@@ -151,7 +195,7 @@ export class CuentasComponent implements OnInit {
       },
     error: (err) => {
       console.error("Error al actualizar usuario", err);
-      console.table(err.error.errors);   // 👈 MUY IMPORTANTE
+      console.table(err.error.errors);   
       alert("Error al actualizar usuario (422). Revisa consola.");
     }
 
@@ -159,7 +203,10 @@ export class CuentasComponent implements OnInit {
 }
 
 
-  // ✔️ Crear cuenta
+   /**
+   * Envía al backend los datos ingresados para crear un nuevo usuario.
+   * Verifica que los campos obligatorios estén completos.
+   */
   crearCuenta() {
     if (!this.nuevoAlumno.nombre || !this.nuevoAlumno.email || !this.nuevoAlumno.password) {
       alert('Completa los campos obligatorios.');
@@ -179,7 +226,7 @@ export class CuentasComponent implements OnInit {
 
     this.usuariosService.crearUsuario(payload).subscribe({
       next: (res) => {
-        alert('Cuenta creada correctamente ✔️');
+        alert('Cuenta creada correctamente ');
         this.creando = false;
         this.cargarAlumnos(); // recargar tabla
       },
@@ -189,6 +236,9 @@ export class CuentasComponent implements OnInit {
       }
     });
   }
+    /**
+   * Habilita el modo de edición para modificar los datos de un alumno.
+   */
   editar() {
     this.editMode = true;
   }
