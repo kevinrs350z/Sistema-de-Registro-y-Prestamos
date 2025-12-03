@@ -6,52 +6,97 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Prestamo;
 use App\Models\Observacion;
+use App\Mail\PrestamoAprobadoMail;
+use App\Mail\PrestamoRechazadoMail;
+use Illuminate\Support\Facades\Mail;
 
 class PrestamoAdminController extends Controller
 {
-    /* ============================================================
-       🔹 CAMBIAR ESTADO (APROBAR / RECHAZAR)
-    ============================================================ */
-    public function cambiarEstado(Request $request)
+    public function marcarDevuelto(Request $request, $id)
     {
         $user = auth()->user();
-
         if (!$user->isAdmin()) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        $idPrestamo = $request->input('id');
-        $accion     = strtolower($request->input('accion'));
-        $motivo     = trim($request->input('motivo'));
+        $motivo = trim($request->input('motivo'));
+        if ($motivo === '') {
+            return response()->json(['message' => 'Debe ingresar un motivo'], 422);
+        }
 
-        // ❗ Corrección del error: variable mal escrita ($AidPrestamo)
-        $prestamo = Prestamo::find($idPrestamo);
+        $prestamo = Prestamo::with(['user.persona', 'equipos'])->find($id);
 
         if (!$prestamo) {
             return response()->json(['message' => 'Préstamo no encontrado'], 404);
         }
 
-        if ($accion === 'aceptar') {
-            $prestamo->estado = 'aceptado';
-        } elseif ($accion === 'rechazar') {
-            $prestamo->estado = 'rechazado';
-        } else {
-            return response()->json(['message' => 'Acción inválida'], 400);
-        }
-
+        // Cambiar estado
+        $prestamo->estado = 'devuelto';
         $prestamo->save();
 
+        // Registrar observación
         Observacion::create([
-            'idPrestamo'  => $prestamo->idPrestamo,
-            'descripcion' => $motivo ?: 'Sin motivo especificado',
-            'estado'      => $accion === 'aceptar' ? 'aprobacion' : 'rechazo',
+            'idPrestamo' => $prestamo->idPrestamo,
+            'motivo' => $motivo,
+            'tipo' => 'devolucion'
         ]);
 
+        // Opcional: cambiar estado de los equipos a disponible
+        foreach ($prestamo->equipos as $e) {
+            $e->estado = 'disponible';
+            $e->save();
+        }
+
         return response()->json([
-            'message' => 'Estado del préstamo actualizado correctamente',
-            'prestamo' => $prestamo
+            'message' => 'Préstamo marcado como devuelto correctamente.'
         ]);
     }
+public function cambiarEstado(Request $request, $id)
+{
+    
+    $user = auth()->user();
+    if (!$user->isAdmin()) {
+        return response()->json(['message' => 'No autorizado'], 403);
+    }
+
+    $accion = strtolower($request->input('accion'));
+    $motivo = trim($request->input('motivo'));
+    $prestamo = Prestamo::with(['user.persona', 'equipos'])->find($id);
+
+    if (!$prestamo) return response()->json(['message' => 'Préstamo no encontrado'], 404);
+
+    // Cambiar estado
+    $prestamo->estado = $accion === 'aceptar' ? 'aceptado' : 'rechazado';
+    $prestamo->save();
+
+    // Obtener datos para el correo
+    $nombre = $prestamo->user->persona->Nombre;
+    $email  = $prestamo->user->Email;
+    $equipos = $prestamo->equipos->map(fn($e) => [
+        'nombre' => $e->tipo->nombre,
+        'codigo' => $e->codigo
+    ]);
+
+    // Enviar correo según acción
+    if ($accion === 'aceptar') {
+        Mail::to($email)->send(new PrestamoAprobadoMail(
+            $nombre,
+            $prestamo->idPrestamo,
+            $prestamo->created_at->format('d/m/Y H:i'),
+            $motivo,
+            $equipos
+        ));
+    } else {
+        Mail::to($email)->send(new PrestamoRechazadoMail(
+            $nombre,
+            $prestamo->idPrestamo,
+            $prestamo->created_at->format('d/m/Y H:i'),
+            $motivo
+        ));
+    }
+
+    return response()->json(['message' => 'Estado del préstamo actualizado y correo enviado.']);
+}
 
     /* ============================================================
        🔹 LISTAR PRÉSTAMOS PENDIENTES

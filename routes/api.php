@@ -104,8 +104,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('admin/prestamos/pendientes', [PrestamoAdminController::class, 'pendientes']);
     Route::get('admin/prestamos/historial', [PrestamoAdminController::class, 'historial']);
 
-    Route::post('admin/prestamos/aprobar/{id}', [PrestamoAdminController::class, 'aprobar']);
-    Route::post('admin/prestamos/rechazar/{id}', [PrestamoAdminController::class, 'rechazar']);
+Route::post('admin/prestamos/aprobar/{id}', [PrestamoAdminController::class, 'cambiarEstado']);
+Route::post('admin/prestamos/rechazar/{id}', [PrestamoAdminController::class, 'cambiarEstado']);
+Route::post('admin/prestamos/{id}/devolver', [PrestamoAdminController::class, 'marcarDevuelto']);
+
+
+
 });
 
 
@@ -141,5 +145,7 @@ Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
 Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
 Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
 
-
+// ---------------------------------------------------------------
+// Registro de ruta para la creación de equipos
+// ---------------------------------------------------------------
 Route::post('/equipos', [EquipoController::class, 'store']);

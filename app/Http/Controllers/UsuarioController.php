@@ -8,9 +8,17 @@ use App\Services\UsuarioService;
 
 class UsuarioController extends Controller
 {
-    // ============================================================
-    // LISTAR TODOS LOS USUARIOS
-    // ============================================================
+
+    /**
+ * Obtiene el listado completo de usuarios del sistema.
+ *
+ * Este método actúa como punto de entrada para la consulta de usuarios desde el controlador.
+ * Delegamos la lógica de negocio al UsuarioService, manteniendo el controlador liviano y
+ * aplicando el principio de responsabilidad única (SRP). 
+ *
+ * @param UsuarioService $service  Servicio encargado de la gestión de usuarios.
+ * @return \Illuminate\Http\JsonResponse  Respuesta JSON con los usuarios o un mensaje de error.
+ */
     public function index(UsuarioService $service)
     {
         try {
@@ -26,9 +34,7 @@ class UsuarioController extends Controller
         }
     }
 
-    // ============================================================
-    // CREAR USUARIO
-    // ============================================================
+    
     public function store(StoreUsuarioRequest $request, UsuarioService $service)
     {
         try {
@@ -48,9 +54,7 @@ class UsuarioController extends Controller
         }
     }
 
-    // ============================================================
-    // MOSTRAR UN USUARIO POR ID
-    // ============================================================
+  
     public function show($id, UsuarioService $service)
     {
         try {
@@ -66,9 +70,20 @@ class UsuarioController extends Controller
         }
     }
 
-    // ============================================================
-    // ACTUALIZAR USUARIO Y PERSONA
-    // ============================================================
+/**
+ * Actualiza los datos de un usuario específico.
+ *
+ * Este método recibe una solicitud validada a través de UpdateUsuarioRequest,
+ * delega la lógica de actualización al UsuarioService y retorna una respuesta
+ * JSON estandarizada. Utiliza manejo de excepciones para garantizar que
+ * cualquier error sea entregado de forma controlada y segura.
+ *
+ * @param UpdateUsuarioRequest $request   Solicitud validada con las reglas de actualización.
+ * @param int $id                         Identificador del usuario a actualizar.
+ * @param UsuarioService $service         Servicio encargado de la lógica de negocio.
+ *
+ * @return \Illuminate\Http\JsonResponse   Respuesta JSON con el resultado de la operación.
+ */
     public function update(UpdateUsuarioRequest $request, $id, UsuarioService $service)
     {
         try {
@@ -89,9 +104,7 @@ class UsuarioController extends Controller
         }
     }
 
-    // ============================================================
-    // ELIMINAR USUARIO Y PERSONA
-    // ============================================================
+
     public function destroy($id, UsuarioService $service)
     {
         try {

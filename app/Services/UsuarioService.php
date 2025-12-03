@@ -9,9 +9,23 @@ use Illuminate\Support\Facades\Hash;
 
 class UsuarioService
 {
-    // ============================================================
-    // LISTAR USUARIOS
-    // ============================================================
+
+/**
+ * Obtiene un listado paginado de usuarios con su información personal y rol asociado.
+ *
+ * Este método construye una consulta relacional que integra datos de las tablas:
+ * - users
+ * - persona
+ * - rol_user
+ * - rol
+ *
+ * Su objetivo es entregar un conjunto de información unificada, limpia y lista para
+ * ser consumida por el frontend, manteniendo una estructura coherente y respetando
+ * las convenciones del sistema (nombres, apellidos, contacto y roles).
+ *
+ * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+ *         Listado paginado de usuarios con 50 elementos por página.
+ */
     public function listarUsuarios()
     {
         return User::select(
@@ -33,9 +47,7 @@ class UsuarioService
     }
 
 
-    // ============================================================
-    // OBTENER USUARIO POR ID
-    // ============================================================
+  
     public function obtenerUsuario($id)
     {
         return User::select(
@@ -57,12 +69,10 @@ class UsuarioService
     }
 
 
-    // ============================================================
-    // CREAR USUARIO COMPLETO
-    // ============================================================
+    
     public function crearUsuario($data)
     {
-        // 1. Crear persona
+       
         $persona = Persona::create([
             'Nombre'     => $data['nombre'],
             'apellido1'  => $data['apellido1'],
@@ -73,17 +83,17 @@ class UsuarioService
             'celular'    => $data['celular'] ?? null
         ]);
 
-        // 2. Crear usuario
+     
         $usuario = User::create([
             'idPersona'  => $persona->idPersona,
             'Contrasena' => Hash::make($data['password']),
             'Email'      => $data['email'],
         ]);
 
-        // 3. Buscar rol
+       
         $rol = Rol::where('Nombre', $data['rol'])->firstOrFail();
 
-        // 4. Asignar rol
+        
         $usuario->roles()->attach($rol->idRol);
 
         return [
@@ -93,17 +103,13 @@ class UsuarioService
         ];
     }
 
-    // ============================================================
-    // ACTUALIZAR USUARIO + PERSONA
-    // ============================================================
+  
     public function actualizarUsuario($id, $data)
     {
         $usuario = User::findOrFail($id);
         $persona = Persona::findOrFail($usuario->idPersona);
 
-        // ============================
-        // 1. ACTUALIZAR PERSONA
-        // ============================
+    
         $persona->update([
             'Nombre'     => $data['nombre'],
             'apellido1'  => $data['apellido1'],
@@ -114,9 +120,7 @@ class UsuarioService
             'celular'    => $data['celular'] ?? null
         ]);
 
-        // ============================
-        // 2. ACTUALIZAR USER
-        // ============================
+   
         $usuario->Email = $data['email'];
 
         if (!empty($data['password'])) {
@@ -125,9 +129,7 @@ class UsuarioService
 
         $usuario->save();
 
-        // ============================
-        // 3. ACTUALIZAR ROL
-        // ============================
+   
         if (!empty($data['rol'])) {
 
             $nuevoRol = Rol::where('Nombre', $data['rol'])->firstOrFail();
@@ -144,9 +146,7 @@ class UsuarioService
     }
 
 
-    // ============================================================
-    // ELIMINAR USUARIO COMPLETO
-    // ============================================================
+
     public function eliminarUsuario($id)
     {
         $usuario = User::findOrFail($id);

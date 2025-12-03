@@ -67,7 +67,7 @@ class UserSancionController extends Controller
         ], 201);
     }
 
-    // -------- LISTAR TODAS LAS SANCIONES CON USUARIOS + PERSONAS --------
+
     public function listarSanciones()
     {
         $sanciones = Sancion::with(['users.persona'])->get();
@@ -81,7 +81,7 @@ class UserSancionController extends Controller
     public function listarSancionesActivas()
     {
         $sanciones = Sancion::with(['users.persona'])
-            ->where('estado', 'ACTIVA') // <-- filtra solo las activas
+            ->where('estado', 'ACTIVA') // filtra solo las activas
             ->get();
 
         return response()->json([
@@ -90,7 +90,7 @@ class UserSancionController extends Controller
         ]);
     }
 
-    // -------- AMPLIAR 7 DIAS UNA SANCION --------
+   
     public function ampliarSancion(Request $request, $idSancion)
     {
         $request->validate([
