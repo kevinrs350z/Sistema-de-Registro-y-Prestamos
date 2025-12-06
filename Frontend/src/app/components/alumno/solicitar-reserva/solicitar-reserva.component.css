@@ -66,11 +66,10 @@
 
 .card-datos h2 {
   font-size: 1.1rem;
-  color: #ff855c; /* mismo naranjo que las demás secciones */
+  color: #ff855c;
   font-weight: 600;
   margin-bottom: 0.7rem;
 }
-
 
 .card-datos label {
   font-weight: 500;
@@ -105,7 +104,7 @@ textarea:focus {
   outline: none;
 }
 
-/* === RADIO Y CHECKBOX === */
+/* === RADIO Y CHECKBOX (por defecto, ya no se usarán aquí) === */
 .radio {
   display: inline-flex;
   align-items: center;
@@ -248,6 +247,71 @@ button.ghost:hover {
   font-style: italic;
   font-size: 0.85rem;
 }
+
+/* =======================================================================
+   === BLOQUES HORARIOS — TARJETAS MINIMALISTAS PROFESIONALES ===
+   ======================================================================= */
+
+.bloques-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.bloque-card {
+  position: relative;
+  background: #ffffff;
+  border: 1.5px solid #ccd7ff;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 2px 6px rgba(0, 50, 200, 0.04);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: all 0.25s ease;
+}
+
+.bloque-card:hover {
+  border-color: #a5b9ff;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0, 50, 200, 0.10);
+}
+
+/* ocultamos el checkbox real */
+.bloque-card input {
+  display: none;
+}
+
+/* estilo cuando está seleccionado */
+.bloque-card input:checked + .bloque-info {
+  background: #f0f4ff;
+  border-radius: 8px;
+  padding: 0.2rem 0.4rem;
+  color: #3451b2;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 2px #5a79ff;
+  transition: all 0.25s ease;
+}
+
+.bloque-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.bloque-titulo {
+  font-weight: 600;
+  color: #2d2d2d;
+}
+
+.bloque-hora {
+  font-size: 0.82rem;
+  color: #6b7fc9;
+}
+
+/* ======================================================================= */
 
 /* === ANIMACIONES === */
 @keyframes fadeIn {

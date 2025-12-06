@@ -285,3 +285,301 @@
   position: sticky;
   top: 120px; /* se queda fija al hacer scroll */
 }
+/* =============================== */
+/*    PANEL FORMULARIO ESTÁNDAR   */
+/* =============================== */
+
+.panel-crear-estandar {
+  width: 50%;
+  animation: slideInLeft 0.4s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.formulario-card {
+  padding: 35px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+  border: 1px solid #e6e8f0;
+  box-shadow: 0 8px 32px rgba(44, 62, 145, 0.08);
+  transition: all 0.3s ease;
+}
+
+.formulario-card:hover {
+  box-shadow: 0 12px 48px rgba(44, 62, 145, 0.12);
+  transform: translateY(-2px);
+}
+
+.titulo-form {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e91;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.icono-form {
+  font-size: 32px;
+  color: #4f46e5;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+/* Etiquetas */
+.etiqueta {
+  font-weight: 600;
+  color: #4a4a4a;
+  margin-bottom: 8px;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+/* Campos del formulario */
+.campo {
+  border-radius: 10px !important;
+  padding: 14px 16px !important;
+  font-size: 15px !important;
+  border: 2px solid #e0e4f0 !important;
+  background: #ffffff !important;
+  transition: all 0.3s ease !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+.campo:focus {
+  border-color: #4f46e5 !important;
+  background: #fafbff !important;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important;
+  outline: none !important;
+}
+
+.campo:hover {
+  border-color: #d4d8e8 !important;
+}
+
+.campo::placeholder {
+  color: #b0b5c8;
+}
+
+/* Select mejorado */
+.form-select.campo {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234f46e5' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 20px !important;
+  padding-right: 40px !important;
+  appearance: none !important;
+}
+
+/* Imagen preview */
+.preview-img {
+  width: 140px;
+  height: 140px;
+  border-radius: 12px;
+  border: 2px solid #e0e4f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  object-fit: cover;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Botón secundario moderno */
+.boton-secundario {
+  background: linear-gradient(135deg, #f5f7fb 0%, #eef1f8 100%) !important;
+  border-radius: 10px;
+  border: 2px solid #dce1ec !important;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #4f46e5;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.boton-secundario:hover {
+  background: linear-gradient(135deg, #eef1f8 0%, #e8ecf5 100%) !important;
+  border-color: #4f46e5 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+}
+
+.boton-secundario:active {
+  transform: translateY(0);
+}
+
+/* Botones principales */
+.btn-primary {
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  border: none !important;
+  padding: 12px 24px !important;
+  font-weight: 600;
+  transition: all 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3) !important;
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Botón cancelar */
+.btn-outline-secondary {
+  border-radius: 10px !important;
+  border: 2px solid #e0e4f0 !important;
+  color: #666 !important;
+  font-weight: 600;
+  transition: all 0.3s ease !important;
+  padding: 12px 24px !important;
+}
+
+.btn-outline-secondary:hover {
+  border-color: #4f46e5 !important;
+  color: #4f46e5 !important;
+  background: rgba(79, 70, 229, 0.05) !important;
+  transform: translateY(-2px);
+}
+
+/* Form group */
+.form-group {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.form-group:nth-child(1) { animation-delay: 0.05s; }
+.form-group:nth-child(2) { animation-delay: 0.1s; }
+.form-group:nth-child(3) { animation-delay: 0.15s; }
+.form-group:nth-child(4) { animation-delay: 0.2s; }
+.form-group:nth-child(5) { animation-delay: 0.25s; }
+.form-group:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Separador visual */
+.form-group::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e0e4f0, transparent);
+  margin-top: 24px;
+  margin-bottom: 0;
+}
+
+.form-group:last-of-type::after {
+  display: none;
+}
+
+/* Sección de botones */
+.d-flex.gap-3.mt-4 {
+  animation: fadeInUp 0.5s ease-out 0.35s backwards;
+  padding-top: 16px;
+  border-top: 1px solid #e0e4f0;
+}
+
+/* Input de archivo */
+.form-control[type="file"] {
+  cursor: pointer;
+  padding: 16px !important;
+}
+
+.form-control[type="file"]::file-selector-button {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-right: 12px;
+}
+
+.form-control[type="file"]::file-selector-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+/* Etiqueta de título con ícono */
+.d-flex.align-items-center.mb-4 {
+  gap: 12px;
+  animation: fadeInDown 0.4s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .panel-crear-estandar {
+    width: 100%;
+    margin-bottom: 30px;
+  }
+
+  .formulario-card {
+    padding: 25px;
+  }
+
+  .titulo-form {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .formulario-card {
+    padding: 20px;
+  }
+
+  .d-flex.gap-3.mt-4 {
+    flex-direction: column;
+  }
+
+  .d-flex.gap-3.mt-4 > button {
+    width: 100% !important;
+  }
+
+  .preview-img {
+    width: 100px;
+    height: 100px;
+  }
+}

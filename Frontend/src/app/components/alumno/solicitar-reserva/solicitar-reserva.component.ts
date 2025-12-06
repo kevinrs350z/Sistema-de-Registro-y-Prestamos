@@ -109,8 +109,23 @@ export class SolicitarReservaComponent {
   /** 🔥 VOLVIÓ: requerido por el template */
   asignaturaSeleccionada = computed(() => {
     const id = this.form.get('asignatura')?.value;
-    return this.asignaturas.find(a => a.idAsignatura == id)?.nombre || '—';
+
+    if (!id) return '—';
+    if (id === 'OTROS') return 'OTROS';
+
+    const idNum = Number(id);
+        console.log("Valor asignatura:", this.form.get('asignatura')?.value);
+console.log("Asignaturas:", this.asignaturas);
+
+    return (
+      this.asignaturas.find(a => Number(a.idAsignatura) === idNum)?.nombre || '—'
+    );
+
+
   });
+
+
+
 
   /** Resumen usado en el template */
   resumen = computed(() => {
@@ -190,7 +205,14 @@ export class SolicitarReservaComponent {
 
     this.api.getAsignaturas(token).subscribe({
       next: (data) => {
-        this.asignaturas = [...data, { idAsignatura: 'OTROS', nombre: 'OTROS' }];
+        this.asignaturas = [
+        ...data.map(a => ({
+          idAsignatura: a.id,   
+          nombre: a.nombre
+        })),
+        { idAsignatura: 'OTROS', nombre: 'OTROS' }
+      ];
+
       }
     });
 
@@ -213,6 +235,7 @@ export class SolicitarReservaComponent {
     });
   }
 
+  
   // ============================
   // MANEJADORES
   // ============================

@@ -14,6 +14,7 @@ import { SolicitarReservaComponent } from './components/alumno/solicitar-reserva
 import { DashboardAdminComponent } from './components/admin/dashboard-admin/dashboard-admin.component';
 import { NotificacionesComponent } from './components/admin/notificaciones/notificaciones.component';
 import { SolicitudesPendientesComponent } from './components/admin/solicitudes-pendientes/solicitudes-pendientes.component';
+import { ReportesEquiposComponent } from './components/admin/reportes-equipos/reportes-equipos.component';
 
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
@@ -46,6 +47,7 @@ export const routes: Routes = [
   { path: 'admin/notificaciones', component: NotificacionesComponent },
 
   { path: 'admin/solicitudes', component: SolicitudesPendientesComponent },
+  { path: 'reportes/equipos', component: ReportesEquiposComponent },
 
   {
     path: 'admin/solicitudes-finalizadas',
