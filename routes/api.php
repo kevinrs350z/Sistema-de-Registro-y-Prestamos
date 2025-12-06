@@ -19,6 +19,8 @@ use App\Http\Controllers\EquipoRelacionadoController;
 use App\Http\Controllers\TipoEquipoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\Prestamo\DevolucionAdminController;
+use App\Http\Controllers\ReportesController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -149,3 +151,4 @@ Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class,
 // Registro de ruta para la creación de equipos
 // ---------------------------------------------------------------
 Route::post('/equipos', [EquipoController::class, 'store']);
+Route::get('/reportes/equipos-mas-solicitados', [ReportesController::class, 'equiposMasSolicitados']);

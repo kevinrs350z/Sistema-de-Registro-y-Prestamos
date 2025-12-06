@@ -3,27 +3,43 @@ namespace App\Services;
 
 use App\Models\Equipo;
 
+/**
+ * Servicio encargado de gestionar las operaciones de negocio relacionadas con Equipos.
+ *
+ * Esta clase centraliza toda la lógica asociada a la consulta, creación, actualización
+ * y eliminación de equipos, manteniendo una arquitectura desacoplada en la cual
+ * el controlador se limita únicamente a coordinar solicitudes y delegar trabajo.
+ *
+ * Principios aplicados:
+ * - SRP (Single Responsibility Principle): el servicio contiene la lógica del dominio.
+ * - Consulta relacional optimizada mediante joins explícitos.
+ * - Uso estandarizado de excepciones controladas.
+ *
+ * @package App\Services
+ */
+
 class EquipoService
 {
 
-/**
- * Obtiene el listado completo de equipos registrados en el sistema.
- *
- * Este método construye una consulta relacional que une las tablas
- * `equipos`, `tipo_equipos` y `categorias` para retornar información
- * enriquecida que incluye:
- *  - Identificador del equipo.
- *  - Código y estado actual.
- *  - Fecha de creación y actualización.
- *  - Nombre del modelo (tipo de equipo).
- *  - Categoría a la que pertenece el equipo.
- *
- * Esta estructura está diseñada para proporcionar al frontend
- * (incluyendo versiones anteriores) todos los datos necesarios
- * para visualizar el inventario sin requerir consultas adicionales.
- *
- * @return \Illuminate\Support\Collection  Colección de equipos con información asociada.
- */
+    /**
+     * Obtiene el listado completo de equipos registrados en el sistema.
+     *
+     * Este método ejecuta una consulta relacional que une las tablas
+     * `equipos`, `tipo_equipos` y `categorias` para construir un objeto
+     * enriquecido que incluye información estructurada del equipo:
+     *
+     *  - ID del equipo (`idEquipo`)
+     *  - Código del activo
+     *  - Estado actual
+     *  - Timestamps de creación y actualización
+     *  - Nombre del modelo asociado
+     *  - Categoría correspondiente
+     *
+     * Esta consulta está optimizada para entregar al frontend (nuevo y legado)
+     * un dataset completo sin requerir consultas adicionales.
+     *
+     * @return Collection  Colección de equipos con información relacional.
+     */
     public function getAll()
     {
         return Equipo::select(
@@ -40,9 +56,18 @@ class EquipoService
         ->get();
     }
 
-    // ============================================================
-    // OBTENER UN SOLO EQUIPO (mismo formato)
-    // ============================================================
+    /**
+     * Obtiene un equipo específico por su identificador.
+     *
+     * La estructura del retorno es idéntica al formato proporcionado por `getAll`,
+     * asegurando consistencia en la API. Si el equipo no existe, se genera una
+     * excepción `ModelNotFoundException` que es manejada por el controlador.
+     *
+     * @param  int  $id  Identificador del equipo a consultar.
+     * @return object    Objeto con la información del equipo solicitado.
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
     public function getById($id)
     {
         return Equipo::select(
@@ -60,24 +85,35 @@ class EquipoService
         ->firstOrFail();
     }
 
-/**
- * Crea un nuevo registro de equipo en la base de datos.
- *
- * Este método recibe los datos previamente validados desde el controlador
- * y utiliza Eloquent para generar un nuevo registro en la tabla `equipos`.
- * Su responsabilidad es ejecutar la operación de persistencia sin aplicar
- * lógica adicional, manteniendo la separación de responsabilidades dentro
- * de la arquitectura (el controlador valida, el servicio orquesta, y el
- * modelo almacena).
- *
- * @param array $data Datos validados necesarios para crear el equipo.
- * @return \App\Models\Equipo Nuevo registro creado en la base de datos.
- */
+
+    /**
+     * Crea un nuevo registro de equipo en la base de datos.
+     *
+     * Este método recibe datos previamente validados desde el controlador o desde
+     * un Form Request. La creación se delega al modelo Eloquent, manteniendo la
+     * separación de responsabilidades y permitiendo pruebas unitarias más limpias.
+     *
+     * @param  array  $data  Datos validados necesarios para crear un equipo.
+     * @return Equipo         Instancia del nuevo registro creado.
+     */
     public function create($data)
     {
         return Equipo::create($data);
     }
 
+    /**
+     * Actualiza los datos de un equipo existente.
+     *
+     * El método recupera el equipo mediante `findOrFail`, aplica los cambios
+     * mediante `fill()` y persiste la actualización llamando a `save()`.
+     * Se retorna el modelo actualizado para mantener trazabilidad.
+     *
+     * @param  int    $id    Identificador del equipo.
+     * @param  array  $data  Datos validados a actualizar.
+     * @return Equipo         Equipo actualizado.
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
     public function update($id, $data)
     {  
         $equipo = Equipo::findOrFail($id);
@@ -87,6 +123,19 @@ class EquipoService
         return $equipo;
     }
 
+    
+    /**
+     * Elimina un equipo del sistema.
+     *
+     * Dependiendo de la implementación del modelo Equipo, esta operación puede
+     * corresponder a un borrado lógico (`softDelete`) o físico. El método retorna
+     * el registro eliminado para fines de auditoría o visualización en el frontend.
+     *
+     * @param  int  $id  Identificador del equipo a eliminar.
+     * @return Equipo     Registro eliminado.
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
     public function delete($id)
     {
         $equipo = Equipo::findOrFail($id);

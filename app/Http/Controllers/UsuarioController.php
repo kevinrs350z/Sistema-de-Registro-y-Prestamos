@@ -6,19 +6,26 @@ use App\Http\Requests\Usuario\StoreUsuarioRequest;
 use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Services\UsuarioService;
 
+/**
+ * Controlador responsable de gestionar las operaciones CRUD relacionadas con usuarios.
+ *
+ * Este controlador actúa como intermediario entre las solicitudes HTTP y la lógica
+ * de negocio encapsulada en UsuarioService. Se aplica el principio de responsabilidad
+ * única (SRP), manteniendo el controlador delgado y delegando la lógica compleja al servicio.
+ *
+ * @package App\Http\Controllers
+ */
 class UsuarioController extends Controller
 {
-
     /**
- * Obtiene el listado completo de usuarios del sistema.
- *
- * Este método actúa como punto de entrada para la consulta de usuarios desde el controlador.
- * Delegamos la lógica de negocio al UsuarioService, manteniendo el controlador liviano y
- * aplicando el principio de responsabilidad única (SRP). 
- *
- * @param UsuarioService $service  Servicio encargado de la gestión de usuarios.
- * @return \Illuminate\Http\JsonResponse  Respuesta JSON con los usuarios o un mensaje de error.
- */
+     * Obtiene el listado completo de usuarios del sistema.
+     *
+     * Este método sirve como punto de entrada para consultar todos los usuarios registrados.
+     * Se delega la lógica al UsuarioService para mantener cohesión y separación de responsabilidades.
+     *
+     * @param  UsuarioService  $service  Servicio encargado de la gestión de usuarios.
+     * @return \Illuminate\Http\JsonResponse   Respuesta JSON con el listado de usuarios.
+     */
     public function index(UsuarioService $service)
     {
         try {
@@ -34,7 +41,16 @@ class UsuarioController extends Controller
         }
     }
 
-    
+    /**
+     * Registra un nuevo usuario en el sistema.
+     *
+     * Este método recibe una solicitud validada mediante StoreUsuarioRequest,
+     * delega la creación al UsuarioService y retorna una respuesta estructurada.
+     *
+     * @param  StoreUsuarioRequest  $request  Datos validados del nuevo usuario.
+     * @param  UsuarioService       $service  Servicio responsable de la creación.
+     * @return \Illuminate\Http\JsonResponse  Respuesta JSON con el usuario creado.
+     */    
     public function store(StoreUsuarioRequest $request, UsuarioService $service)
     {
         try {
@@ -54,7 +70,17 @@ class UsuarioController extends Controller
         }
     }
 
-  
+
+    /**
+     * Muestra la información de un usuario específico.
+     *
+     * Este método permite obtener un usuario por su ID. Si el usuario no existe,
+     * se captura la excepción y se retorna una respuesta adecuada.
+     *
+     * @param  int             $id       Identificador del usuario a consultar.
+     * @param  UsuarioService  $service   Servicio encargado de la obtención.
+     * @return \Illuminate\Http\JsonResponse Respuesta JSON con los datos del usuario.
+     */  
     public function show($id, UsuarioService $service)
     {
         try {
@@ -70,20 +96,19 @@ class UsuarioController extends Controller
         }
     }
 
-/**
- * Actualiza los datos de un usuario específico.
- *
- * Este método recibe una solicitud validada a través de UpdateUsuarioRequest,
- * delega la lógica de actualización al UsuarioService y retorna una respuesta
- * JSON estandarizada. Utiliza manejo de excepciones para garantizar que
- * cualquier error sea entregado de forma controlada y segura.
- *
- * @param UpdateUsuarioRequest $request   Solicitud validada con las reglas de actualización.
- * @param int $id                         Identificador del usuario a actualizar.
- * @param UsuarioService $service         Servicio encargado de la lógica de negocio.
- *
- * @return \Illuminate\Http\JsonResponse   Respuesta JSON con el resultado de la operación.
- */
+    /**
+     * Actualiza los datos de un usuario específico.
+     *
+     * Este método recibe una solicitud validada mediante UpdateUsuarioRequest,
+     * delega la actualización al UsuarioService y retorna un mensaje estandarizado
+     * según el resultado de la operación.
+     *
+     * @param  UpdateUsuarioRequest $request   Solicitud validada con reglas de actualización.
+     * @param  int                  $id        Identificador del usuario a actualizar.
+     * @param  UsuarioService       $service   Servicio que gestiona la modificación.
+     *
+     * @return \Illuminate\Http\JsonResponse    Respuesta JSON con el usuario actualizado.
+     */
     public function update(UpdateUsuarioRequest $request, $id, UsuarioService $service)
     {
         try {
@@ -104,7 +129,17 @@ class UsuarioController extends Controller
         }
     }
 
-
+    /**
+     * Elimina un usuario del sistema.
+     *
+     * Este método solicita al UsuarioService la eliminación del usuario especificado.
+     * En caso de error, retorna una respuesta controlada para mantener consistencia
+     * en las respuestas de la API.
+     *
+     * @param  int             $id       Identificador del usuario a eliminar.
+     * @param  UsuarioService  $service  Servicio encargado de la eliminación.
+     * @return \Illuminate\Http\JsonResponse  Respuesta JSON confirmando la operación.
+     */
     public function destroy($id, UsuarioService $service)
     {
         try {

@@ -77,7 +77,7 @@ public function cambiarEstado(Request $request, $id)
         'codigo' => $e->codigo
     ]);
 
-    // Enviar correo según acción
+    // Enviar correo según acción   
     if ($accion === 'aceptar') {
         Mail::to($email)->send(new PrestamoAprobadoMail(
             $nombre,
@@ -99,7 +99,7 @@ public function cambiarEstado(Request $request, $id)
 }
 
     /* ============================================================
-       🔹 LISTAR PRÉSTAMOS PENDIENTES
+       LISTAR PRÉSTAMOS PENDIENTES
     ============================================================ */
     public function pendientes()
     {
@@ -152,7 +152,7 @@ public function cambiarEstado(Request $request, $id)
     }
 
     /* ============================================================
-       🔹 LISTAR HISTORIAL (NO PENDIENTES)
+        LISTAR HISTORIAL (NO PENDIENTES)
     ============================================================ */
     public function historial()
     {
