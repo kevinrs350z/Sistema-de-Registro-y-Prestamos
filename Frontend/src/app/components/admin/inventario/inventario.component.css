@@ -291,13 +291,94 @@
 
 .panel-crear-estandar {
   width: 50%;
-  animation: slideInLeft 0.4s ease-out;
 }
 
-@keyframes slideInLeft {
+.formulario-card {
+  padding: 35px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e6e8f0;
+}
+
+.titulo-form {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c3e91;
+  margin: 0;
+}
+
+.icono-form {
+  font-size: 32px;
+  color: #2c3e91;
+}
+
+/* Etiquetas */
+.etiqueta {
+  font-weight: 600;
+  color: #4a4a4a;
+  margin-bottom: 6px;
+}
+
+/* Campos del formulario */
+.campo {
+  border-radius: 10px !important;
+  padding: 12px !important;
+  font-size: 15px !important;
+  border: 1px solid #cfd4e2 !important;
+  background: #fafbff;
+}
+
+/* Imagen preview */
+.preview-img {
+  width: 140px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Botón secundario moderno */
+.boton-secundario {
+  background: #f5f7fb !important;
+  border-radius: 10px;
+  border: 1px solid #dce1ec !important;
+  padding: 10px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.boton-secundario:hover {
+  background: #eef1f8 !important;
+}
+
+/* Botones principales */
+.btn-primary {
+  border-radius: 10px !important;
+  background: #2c3e91 !important;
+  border: none !important;
+}
+
+.btn-primary:hover {
+  background: #243677 !important;
+}
+
+/* =================================================================
+   ANIMACIONES GENERALES
+================================================================= */
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateX(-30px);
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
   }
   to {
     opacity: 1;
@@ -305,281 +386,441 @@
   }
 }
 
-.formulario-card {
-  padding: 35px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
-  border: 1px solid #e6e8f0;
-  box-shadow: 0 8px 32px rgba(44, 62, 145, 0.08);
-  transition: all 0.3s ease;
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.formulario-card:hover {
-  box-shadow: 0 12px 48px rgba(44, 62, 145, 0.12);
-  transform: translateY(-2px);
-}
-
-.titulo-form {
-  font-size: 24px;
-  font-weight: 700;
-  color: #2c3e91;
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.icono-form {
-  font-size: 32px;
-  color: #4f46e5;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  border-radius: 12px;
-  color: white;
-}
-
-/* Etiquetas */
-.etiqueta {
-  font-weight: 600;
-  color: #4a4a4a;
-  margin-bottom: 8px;
-  font-size: 14px;
-  letter-spacing: 0.3px;
-}
-
-/* Campos del formulario */
-.campo {
-  border-radius: 10px !important;
-  padding: 14px 16px !important;
-  font-size: 15px !important;
-  border: 2px solid #e0e4f0 !important;
-  background: #ffffff !important;
-  transition: all 0.3s ease !important;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-}
-
-.campo:focus {
-  border-color: #4f46e5 !important;
-  background: #fafbff !important;
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important;
-  outline: none !important;
-}
-
-.campo:hover {
-  border-color: #d4d8e8 !important;
-}
-
-.campo::placeholder {
-  color: #b0b5c8;
-}
-
-/* Select mejorado */
-.form-select.campo {
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234f46e5' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 12px center !important;
-  background-size: 20px !important;
-  padding-right: 40px !important;
-  appearance: none !important;
-}
-
-/* Imagen preview */
-.preview-img {
-  width: 140px;
-  height: 140px;
-  border-radius: 12px;
-  border: 2px solid #e0e4f0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  object-fit: cover;
+.fade-in {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Botón secundario moderno */
-.boton-secundario {
-  background: linear-gradient(135deg, #f5f7fb 0%, #eef1f8 100%) !important;
-  border-radius: 10px;
-  border: 2px solid #dce1ec !important;
-  padding: 12px 16px;
+/* =================================================================
+   BOTÓN CREAR EQUIPO (EN FILTROS)
+================================================================= */
+.btn-crear-equipo {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
   font-weight: 600;
-  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  white-space: nowrap;
+}
+
+.btn-crear-equipo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.btn-crear-equipo i {
+  font-size: 18px;
+}
+
+/* =================================================================
+   MODAL OVERLAY
+================================================================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  z-index: 999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* =================================================================
+   PANEL CREAR MODAL
+================================================================= */
+.panel-crear-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 1000;
+  animation: scaleIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar personalizada */
+.panel-crear-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.panel-crear-modal::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.panel-crear-modal::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 10px;
+}
+
+.panel-crear-modal::-webkit-scrollbar-thumb:hover {
+  background: #764ba2;
+}
+
+/* =================================================================
+   HEADER MODAL
+================================================================= */
+.modal-header-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 24px;
+  border-bottom: 2px solid #f0f0f0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.header-titulo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-titulo i {
+  font-size: 28px;
+  color: #667eea;
+}
+
+.header-titulo h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 24px;
   cursor: pointer;
+  color: #999;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.boton-secundario:hover {
-  background: linear-gradient(135deg, #eef1f8 0%, #e8ecf5 100%) !important;
-  border-color: #4f46e5 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+.btn-close-modal:hover {
+  color: #333;
+  background: rgba(0, 0, 0, 0.05);
 }
 
-.boton-secundario:active {
-  transform: translateY(0);
+/* =================================================================
+   BODY MODAL
+================================================================= */
+.modal-body-custom {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
 }
 
-/* Botones principales */
-.btn-primary {
-  border-radius: 10px !important;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-  border: none !important;
-  padding: 12px 24px !important;
-  font-weight: 600;
-  transition: all 0.3s ease !important;
-  position: relative;
-  overflow: hidden;
+.form-section {
+  margin-bottom: 24px;
+  animation: fadeIn 0.4s ease-out;
 }
 
-.btn-primary:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3) !important;
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-/* Botón cancelar */
-.btn-outline-secondary {
-  border-radius: 10px !important;
-  border: 2px solid #e0e4f0 !important;
-  color: #666 !important;
-  font-weight: 600;
-  transition: all 0.3s ease !important;
-  padding: 12px 24px !important;
-}
-
-.btn-outline-secondary:hover {
-  border-color: #4f46e5 !important;
-  color: #4f46e5 !important;
-  background: rgba(79, 70, 229, 0.05) !important;
-  transform: translateY(-2px);
-}
-
-/* Form group */
-.form-group {
-  animation: fadeInUp 0.4s ease-out;
-}
-
-.form-group:nth-child(1) { animation-delay: 0.05s; }
-.form-group:nth-child(2) { animation-delay: 0.1s; }
-.form-group:nth-child(3) { animation-delay: 0.15s; }
-.form-group:nth-child(4) { animation-delay: 0.2s; }
-.form-group:nth-child(5) { animation-delay: 0.25s; }
-.form-group:nth-child(6) { animation-delay: 0.3s; }
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Separador visual */
-.form-group::after {
-  content: '';
-  display: block;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #e0e4f0, transparent);
-  margin-top: 24px;
+.form-section:last-child {
   margin-bottom: 0;
 }
 
-.form-group:last-of-type::after {
+/* =================================================================
+   LABELS Y PASOS
+================================================================= */
+.form-label-custom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.paso-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* =================================================================
+   INPUTS Y SELECTS
+================================================================= */
+.form-input-custom,
+.form-select-custom {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-input-custom:focus,
+.form-select-custom:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.form-input-custom::placeholder {
+  color: #999;
+}
+
+.form-select-custom {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+  padding-right: 40px;
+  color: #333;
+}
+
+/* =================================================================
+   BOTONES MODE (EXISTENTE / NUEVO)
+================================================================= */
+.btn-group-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-mode {
+  padding: 14px 16px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: #666;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-mode i {
+  font-size: 20px;
+}
+
+.btn-mode:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.btn-mode.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* =================================================================
+   UPLOAD AREA
+================================================================= */
+.upload-area {
+  border: 2px dashed #e0e0e0;
+  border-radius: 10px;
+  padding: 32px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+.upload-area:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.upload-area.has-image {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.file-input {
   display: none;
 }
 
-/* Sección de botones */
-.d-flex.gap-3.mt-4 {
-  animation: fadeInUp 0.5s ease-out 0.35s backwards;
-  padding-top: 16px;
-  border-top: 1px solid #e0e4f0;
+.upload-content {
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Input de archivo */
-.form-control[type="file"] {
-  cursor: pointer;
-  padding: 16px !important;
+.upload-content i {
+  font-size: 32px;
+  color: #667eea;
 }
 
-.form-control[type="file"]::file-selector-button {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  margin-right: 12px;
+.upload-content p {
+  margin: 0;
+  color: #666;
+  font-weight: 500;
+  font-size: 13px;
 }
 
-.form-control[type="file"]::file-selector-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+.preview-img-custom {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  border-radius: 10px;
+  border: 2px solid #e0e0e0;
+  display: block;
 }
 
-/* Etiqueta de título con ícono */
-.d-flex.align-items-center.mb-4 {
+/* =================================================================
+   FOOTER MODAL
+================================================================= */
+.modal-footer-custom {
+  display: flex;
   gap: 12px;
-  animation: fadeInDown 0.4s ease-out;
+  padding: 20px 24px;
+  border-top: 2px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 0 0 16px 16px;
 }
 
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.btn-cancelar-custom,
+.btn-guardar-custom {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .panel-crear-estandar {
-    width: 100%;
-    margin-bottom: 30px;
-  }
-
-  .formulario-card {
-    padding: 25px;
-  }
-
-  .titulo-form {
-    font-size: 20px;
-  }
+.btn-cancelar-custom {
+  background: white;
+  color: #666;
+  border: 2px solid #e0e0e0;
 }
 
+.btn-cancelar-custom:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+  color: #333;
+}
+
+.btn-guardar-custom {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-guardar-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-guardar-custom:active {
+  transform: translateY(0);
+}
+
+.btn-cancelar-custom i,
+.btn-guardar-custom i {
+  font-size: 16px;
+}
+
+/* =================================================================
+   RESPONSIVE
+================================================================= */
 @media (max-width: 768px) {
-  .formulario-card {
-    padding: 20px;
+  .panel-crear-modal {
+    width: 95%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    top: auto;
+    bottom: 0;
+    transform: translate(0, 0);
+    max-height: 85vh;
   }
 
-  .d-flex.gap-3.mt-4 {
+  .modal-header-custom {
+    padding: 20px 16px;
+  }
+
+  .modal-body-custom {
+    padding: 16px;
+  }
+
+  .modal-footer-custom {
+    padding: 16px;
+  }
+
+  .btn-group-mode {
+    grid-template-columns: 1fr;
+  }
+
+  .header-titulo h2 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header-custom {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 
-  .d-flex.gap-3.mt-4 > button {
-    width: 100% !important;
-  }
-
-  .preview-img {
-    width: 100px;
-    height: 100px;
+  .btn-close-modal {
+    position: absolute;
+    top: 12px;
+    right: 12px;
   }
 }

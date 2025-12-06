@@ -2,7 +2,6 @@
 
   <!-- 🔹 FILTROS -->
   <div class="filtros d-flex gap-2 mb-3">
-
     <input
       type="text"
       class="form-control"
@@ -22,137 +21,155 @@
     </select>
 
     <!-- BOTÓN CREAR -->
-    <button class="btn btn-dark"
+    <button class="btn btn-crear-equipo"
             (click)="abrirCrearEquipo()">
-      + Agregar Equipo
+      <i class="bi bi-plus-circle"></i>
+      <span>Agregar Equipo</span>
     </button>
-
   </div>
-
 
   <div class="contenido-inventario d-flex">
 
-    <!-- =======================================================
-            PANEL → CREAR NUEVO EQUIPO
+    <!-- =====================================================
+            MODAL OVERLAY → CREAR NUEVO EQUIPO
     ======================================================== -->
-  <div class="panel-crear-estandar fade-in" *ngIf="panelCrear">
+    <div class="modal-overlay" *ngIf="panelCrear" (click)="cerrarCrear()"></div>
 
-    <div class="card formulario-card shadow-sm">
+    <div class="panel-crear-modal fade-in" *ngIf="panelCrear" (click)="$event.stopPropagation()">
 
-      <!-- HEADER -->
-      <div class="d-flex align-items-center mb-4">
-        <div class="icono-form">
-          <i class="bi bi-clipboard-plus"></i>
+      <!-- HEADER MODAL -->
+      <div class="modal-header-custom">
+        <div class="header-titulo">
+          <i class="bi bi-boxes"></i>
+          <h2>Crear Nuevo Equipo</h2>
         </div>
-        <div>
-          <h3 class="titulo-form">Crear Nuevo Equipo</h3>
-          <small style="color: #9ca3af; font-weight: 400;">Completa los datos del nuevo equipo</small>
-        </div>
-      </div>
-
-      <!-- CATEGORÍA -->
-      <div class="form-group mb-4">
-        <label class="form-label etiqueta">
-          <i class="bi bi-collection" style="color: #4f46e5; margin-right: 6px;"></i>
-          Categoría
-        </label>
-        <select class="form-select campo"
-                [(ngModel)]="nuevoEquipo.categoria_id"
-                (change)="cargarModelosPorCategoria()">
-          <option value="">Seleccione una categoría...</option>
-          <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
-        </select>
-      </div>
-
-      <!-- BOTÓN CAMBIAR MODO -->
-      <div class="mb-4">
-        <button class="btn btn-light boton-secundario w-100"
-                (click)="cambiarModo()">
-          <i class="bi" [ngClass]="modo === 'existente' ? 'bi-plus-circle' : 'bi-check-circle'" style="margin-right: 8px;"></i>
-          {{ modo === 'existente' ? 'Crear nuevo modelo' : 'Seleccionar modelo existente' }}
+        <button class="btn-close-modal" (click)="cerrarCrear()">
+          <i class="bi bi-x-lg"></i>
         </button>
       </div>
 
-      <!-- MODELO EXISTENTE -->
-      <div *ngIf="modo === 'existente'" class="form-group mb-4">
-        <label class="form-label etiqueta">
-          <i class="bi bi-boxes" style="color: #4f46e5; margin-right: 6px;"></i>
-          Modelo
-        </label>
-        <select class="form-select campo"
-                [(ngModel)]="nuevoEquipo.tipo_equipo_id">
-          <option value="">Seleccione un modelo...</option>
-          <option *ngFor="let t of modelosDeCategoria" [value]="t.id">{{ t.nombre }}</option>
-        </select>
-      </div>
+      <!-- CONTENIDO MODAL -->
+      <div class="modal-body-custom">
 
-      <!-- NUEVO MODELO -->
-      <div *ngIf="modo === 'nuevo'">
-        <div class="form-group mb-4">
-          <label class="form-label etiqueta">
-            <i class="bi bi-plus-lg" style="color: #4f46e5; margin-right: 6px;"></i>
-            Nombre del nuevo modelo
+        <!-- PASO 1: CATEGORÍA -->
+        <div class="form-section">
+          <label class="form-label-custom">
+            <span class="paso-numero">1</span>
+            Selecciona una Categoría
           </label>
-          <input type="text" class="form-control campo"
-                 [(ngModel)]="nuevoEquipo.nuevoModelo"
-                 placeholder="Ej: Sony A6400, Canon EOS R5...">
+          <select class="form-select-custom"
+                  [(ngModel)]="nuevoEquipo.categoria_id"
+                  (change)="cargarModelosPorCategoria()">
+            <option value="">Elige una categoría...</option>
+            <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
+          </select>
         </div>
 
-        <div class="form-group mb-4">
-          <label class="form-label etiqueta">
-            <i class="bi bi-image" style="color: #4f46e5; margin-right: 6px;"></i>
-            Imagen del modelo
+        <!-- PASO 2: MODO DE CREACIÓN -->
+        <div class="form-section">
+          <label class="form-label-custom">
+            <span class="paso-numero">2</span>
+            Tipo de Modelo
           </label>
-          <input type="file" class="form-control campo"
-                 (change)="onFileSelected($event)"
-                 accept="image/*">
+          <div class="btn-group-mode">
+            <button class="btn-mode"
+                    [class.active]="modo === 'existente'"
+                    (click)="modo = 'existente'">
+              <i class="bi bi-arrow-repeat"></i>
+              <span>Modelo Existente</span>
+            </button>
+            <button class="btn-mode"
+                    [class.active]="modo === 'nuevo'"
+                    (click)="modo = 'nuevo'">
+              <i class="bi bi-plus"></i>
+              <span>Crear Nuevo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 3A: MODELO EXISTENTE -->
+        <div *ngIf="modo === 'existente'" class="form-section fade-in">
+          <label class="form-label-custom">
+            <span class="paso-numero">3</span>
+            Selecciona el Modelo
+          </label>
+          <select class="form-select-custom"
+                  [(ngModel)]="nuevoEquipo.tipo_equipo_id">
+            <option value="">Elige un modelo...</option>
+            <option *ngFor="let t of modelosDeCategoria" [value]="t.id">{{ t.nombre }}</option>
+          </select>
+        </div>
+
+        <!-- PASO 3B: NUEVO MODELO -->
+        <div *ngIf="modo === 'nuevo'" class="form-section fade-in">
+          <label class="form-label-custom">
+            <span class="paso-numero">3</span>
+            Nombre del Nuevo Modelo
+          </label>
+          <input type="text" class="form-input-custom"
+                 [(ngModel)]="nuevoEquipo.nuevoModelo"
+                 placeholder="Ej: Sony A6400">
+
+          <label class="form-label-custom mt-4">
+            <span class="paso-numero">4</span>
+            Imagen del Modelo (Opcional)
+          </label>
+          <div class="upload-area"
+               [class.has-image]="previewImagen">
+            <input type="file" class="file-input"
+                   (change)="onFileSelected($event)"
+                   accept="image/*">
+            <div class="upload-content">
+              <i class="bi bi-cloud-arrow-up"></i>
+              <p>Arrastra o haz clic para subir</p>
+            </div>
+          </div>
 
           <img *ngIf="previewImagen"
                [src]="previewImagen"
-               class="preview-img mt-3">
+               class="preview-img-custom mt-3">
         </div>
+
+        <!-- PASO FINAL: CÓDIGO Y ESTADO -->
+        <div class="form-section">
+          <label class="form-label-custom">
+            <span class="paso-numero">{{ modo === 'nuevo' ? '5' : '4' }}</span>
+            Código del Equipo
+          </label>
+          <input type="text" class="form-input-custom"
+                 [(ngModel)]="nuevoEquipo.codigo"
+                 placeholder="Ej: CAM-032">
+        </div>
+
+        <div class="form-section">
+          <label class="form-label-custom">
+            <span class="paso-numero">{{ modo === 'nuevo' ? '6' : '5' }}</span>
+            Estado Inicial
+          </label>
+          <select class="form-select-custom"
+                  [(ngModel)]="nuevoEquipo.estado">
+            <option value="disponible">✓ Disponible</option>
+            <option value="ocupado">⟳ Ocupado</option>
+            <option value="mantenimiento">🔧 Mantenimiento</option>
+            <option value="fuera_servicio">✕ Fuera de servicio</option>
+          </select>
+        </div>
+
       </div>
 
-      <!-- CÓDIGO -->
-      <div class="form-group mb-4">
-        <label class="form-label etiqueta">
-          <i class="bi bi-hash" style="color: #4f46e5; margin-right: 6px;"></i>
-          Código del equipo
-        </label>
-        <input type="text" class="form-control campo"
-               [(ngModel)]="nuevoEquipo.codigo"
-               placeholder="Ej: CAM-032, LED-015...">
-      </div>
-
-      <!-- ESTADO -->
-      <div class="form-group mb-4">
-        <label class="form-label etiqueta">
-          <i class="bi bi-circle-fill" style="color: #4f46e5; margin-right: 6px; font-size: 10px;"></i>
-          Estado
-        </label>
-        <select class="form-select campo"
-                [(ngModel)]="nuevoEquipo.estado">
-          <option value="disponible">✓ Disponible</option>
-          <option value="ocupado">⊘ Ocupado</option>
-          <option value="mantenimiento">⚙ Mantenimiento</option>
-          <option value="fuera_servicio">✗ Fuera de servicio</option>
-        </select>
-      </div>
-
-      <!-- BOTONES -->
-      <div class="d-flex gap-3 mt-4">
-        <button class="btn btn-outline-secondary w-50 py-2" (click)="cerrarCrear()">
-          <i class="bi bi-x-lg" style="margin-right: 6px;"></i>
-          Cancelar
+      <!-- FOOTER MODAL -->
+      <div class="modal-footer-custom">
+        <button class="btn btn-cancelar-custom" (click)="cerrarCrear()">
+          <i class="bi bi-x-circle"></i>
+          <span>Cancelar</span>
         </button>
-        <button class="btn btn-primary w-50 py-2" (click)="guardarNuevoEquipo()">
-          <i class="bi bi-check-lg" style="margin-right: 6px;"></i>
-          Guardar Equipo
+        <button class="btn btn-guardar-custom" (click)="guardarNuevoEquipo()">
+          <i class="bi bi-check-circle"></i>
+          <span>Crear Equipo</span>
         </button>
       </div>
 
     </div>
-  </div>
 
 
     <!-- =======================================================
