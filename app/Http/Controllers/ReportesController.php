@@ -28,4 +28,52 @@ class ReportesController extends Controller
 
         return response()->json($data);
     }
+
+    public function usoInternoExterno()
+    {
+        $data = DB::table('prestamos')
+            ->select(
+                'tipo',
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('tipo')
+            ->get();
+
+        return response()->json($data);
+    }
+
+    public function sancionesYRechazos()
+    {
+        $sanciones = DB::table('user_sancion')->count();
+
+        $rechazos = DB::table('prestamos')
+            ->where('estado', 'rechazado')
+            ->count();
+
+        return response()->json([
+            "total_sanciones" => $sanciones,
+            "total_rechazos" => $rechazos
+        ]);
+    }
+
+    public function equiposDadoDeBaja()
+    {
+        $data = DB::table('equipos as e')
+            ->join('tipo_equipos as t', 'e.tipo_equipo_id', '=', 't.id')
+            ->select(
+                'e.id',
+                'e.codigo',
+                'e.estado',
+                'e.created_at',
+                't.nombre as tipo',
+                't.descripcion as descripcion_tipo'
+            )
+            ->where('e.estado', 'baja')
+            ->orderBy('e.created_at', 'desc') 
+            ->get();
+
+        return response()->json($data);
+    }
+
+
 }

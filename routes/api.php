@@ -152,3 +152,6 @@ Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class,
 // ---------------------------------------------------------------
 Route::post('/equipos', [EquipoController::class, 'store']);
 Route::get('/reportes/equipos-mas-solicitados', [ReportesController::class, 'equiposMasSolicitados']);
+Route::get('/reportes/uso-interno-externo', [ReportesController::class, 'usoInternoExterno']);
+Route::get('/reportes/sanciones-rechazos', [ReportesController::class, 'sancionesYRechazos']);
+Route::get('/reportes/equipos-baja', [ReportesController::class, 'equiposDadoDeBaja']);

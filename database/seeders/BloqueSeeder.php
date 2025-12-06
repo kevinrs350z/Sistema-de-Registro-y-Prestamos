@@ -17,11 +17,7 @@ class BloqueSeeder extends Seeder
             ['nombre' => 'Bloque 5', 'hora_inicio' => '14:45:00', 'hora_fin' => '16:10:00'],
             ['nombre' => 'Bloque 6', 'hora_inicio' => '16:20:00', 'hora_fin' => '17:50:00'],
             ['nombre' => 'Bloque 7', 'hora_inicio' => '17:55:00', 'hora_fin' => '19:30:00'],
-            ['nombre' => 'Bloque 8', 'hora_inicio' => '09:45:00', 'hora_fin' => '11:15:00'],
-            ['nombre' => 'Bloque 9', 'hora_inicio' => '11:30:00', 'hora_fin' => '13:00:00'],
-            ['nombre' => 'Bloque 10', 'hora_inicio' => '08:00:00', 'hora_fin' => '09:30:00'],
-            ['nombre' => 'Bloque 11', 'hora_inicio' => '09:45:00', 'hora_fin' => '11:15:00'],
-            ['nombre' => 'Bloque 12', 'hora_inicio' => '11:30:00', 'hora_fin' => '13:00:00'],
+            ['nombre' => 'Bloque 8', 'hora_inicio' => '19:40:00', 'hora_fin' => '21:10:00'],
         ]);
     }
 }
