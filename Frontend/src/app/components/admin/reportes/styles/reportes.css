@@ -1,0 +1,94 @@
+/* =======================
+   PALETA GLOBAL REPORTES
+======================= */
+:root {
+  --r-primary: #0d6efd;
+  --r-primary-light: #83b4ff;
+  --r-danger: #e74c3c;
+  --r-warning: #f1c40f;
+
+  --r-bg: #ffffff;
+  --r-surface: #f8f9fa;
+  --r-border: #d7d7d7;
+  --r-text: #1f2937;
+  --r-muted: #6b7280;
+
+  --r-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --r-radius: 12px;
+}
+
+/* =======================
+   CARDS
+======================= */
+.r-card, .card {
+  background: var(--r-bg);
+  border-radius: var(--r-radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--r-shadow);
+}
+
+/* =======================
+   TITULOS
+======================= */
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--r-text);
+}
+
+.card-subtitle {
+  font-size: 0.9rem;
+  color: var(--r-muted);
+  margin-bottom: 12px;
+}
+
+/* =======================
+   TABLAS
+======================= */
+.styled-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.styled-table thead th {
+  background: #f3f4f6;
+  padding: 10px 12px;
+}
+
+.styled-table tbody td {
+  background: #ffffff;
+  padding: 8px 12px;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.badge-danger {
+  background: var(--r-danger);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+/* =======================
+   GRAFICOS
+======================= */
+.chart-area { height: 330px; }
+.chart-area-sm { height: 230px; }
+
+/* =======================
+   LAYOUT 2 COLUMNAS
+======================= */
+.two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .two-cols {
+    grid-template-columns: 1fr;
+  }
+}

@@ -10,21 +10,27 @@ import { filter } from 'rxjs/operators';
   standalone: true,
   imports: [RouterOutlet, NavbarComponent, NavbarAdminComponent, NgIf],
   template: `
-    <!-- ✅ Solo mostrar el navbar general si NO estamos en rutas de autenticación NI de admin -->
+    <!-- 🔹 Navbar público -->
     <app-navbar *ngIf="!esRutaAuth && !esRutaAdmin"></app-navbar>
+
+    <!-- 🔹 Navbar administrativo -->
+    <app-navbar-admin *ngIf="esRutaAdmin"></app-navbar-admin>
+
+    <!-- 🔹 Contenido -->
     <router-outlet></router-outlet>
   `
 })
 export class AppComponent {
+
   esRutaAuth = false;
   esRutaAdmin = false;
 
   constructor(private router: Router) {
-    // 🔹 Detectar cambios de ruta en tiempo real
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
-      .subscribe((event) => {
+      .subscribe(event => {
         const url = event.urlAfterRedirects;
+
         this.esRutaAuth = url.startsWith('/auth');
         this.esRutaAdmin = url.startsWith('/admin');
       });

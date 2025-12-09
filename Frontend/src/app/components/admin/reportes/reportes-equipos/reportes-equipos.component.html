@@ -1,0 +1,111 @@
+<div class="reportes-wrapper container py-4">
+
+  <!-- Mensaje flotante -->
+  <div *ngIf="mensaje" class="msg-box">{{ mensaje }}</div>
+
+  <!-- Título general -->
+  <div class="text-center mb-4">
+    <h2 class="fw-bold text-primary">Reportes de Equipos</h2>
+    <p class="text-muted">Estadísticas del Sistema de Préstamos de Equipos</p>
+  </div>
+
+  <!-- Botones de exportación -->
+  <app-export-buttons 
+    [onExportPDF]="exportarPDF.bind(this)" 
+    [onExportExcel]="exportExcel.bind(this)">
+  </app-export-buttons>
+
+  <!-- CONTENIDO EXPORTABLE A PDF -->
+  <div id="contenidoPDF" class="page-wrapper">
+
+    <!-- ENCABEZADO INSTITUCIONAL (solo PDF) -->
+    <div id="logoPDF" class="pdf-header solo-pdf fade-in">
+      <img src="assets/logo-uta.png" class="uta-logo" alt="Logo UTA" />
+
+      <div class="pdf-header-text">
+        <h1 class="pdf-title">Universidad de Tarapacá</h1>
+        <p class="pdf-subtitle">Departamento de Diseño Multimedia / Sistema de Préstamos</p>
+        <p class="pdf-date">Fecha de reporte: {{ today | date:'dd/MM/yyyy' }}</p>
+        <p class="pdf-section">Sección: {{ tituloActual }}</p>
+      </div>
+    </div>
+
+    <hr class="pdf-divider fade-in" />
+
+    <!-- GRAFICO: Equipos más solicitados -->
+    <div class="card fade-in">
+      <h2 class="card-title">Equipos más solicitados</h2>
+      <p class="card-subtitle">Cantidad total de solicitudes por tipo de equipo</p>
+
+      <div class="chart-area">
+        <canvas id="graficoEquipos"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAFICOS EN DOS COLUMNAS -->
+    <div class="two-cols">
+
+      <!-- Uso interno / externo -->
+      <div class="card fade-in">
+        <h2 class="card-title">Uso interno vs externo</h2>
+        <p class="card-subtitle">Distribución según tipo de préstamo</p>
+
+        <div class="chart-area-sm">
+          <canvas id="graficoUso"></canvas>
+        </div>
+      </div>
+
+      <!-- Sanciones / Rechazos -->
+      <div class="card fade-in">
+        <h2 class="card-title">Sanciones y rechazos</h2>
+        <p class="card-subtitle">Indicadores disciplinarios asociados a los préstamos</p>
+
+        <div class="kpi-wrapper">
+          <div class="kpi-item">
+            <h3>{{ sanciones }}</h3>
+            <span>Sanciones</span>
+          </div>
+          <div class="kpi-item">
+            <h3>{{ rechazos }}</h3>
+            <span>Rechazos</span>
+          </div>
+        </div>
+
+        <div class="chart-area-sm">
+          <canvas id="graficoSanciones"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TABLA: Equipos dados de baja -->
+    <div class="card fade-in">
+      <h2 class="card-title">Equipos dados de baja</h2>
+      <p class="card-subtitle">Equipos fuera de operación</p>
+
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Código</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Fecha Baja</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let eq of equiposBaja">
+            <td>{{ eq.id }}</td>
+            <td>{{ eq.codigo }}</td>
+            <td>{{ eq.tipo }}</td>
+            <td><span class="badge badge-danger">{{ eq.estado }}</span></td>
+            <td>{{ eq.created_at | date:'dd/MM/yyyy' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div> <!-- FIN contenidoPDF -->
+
+</div>

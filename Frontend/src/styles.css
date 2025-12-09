@@ -1,6 +1,6 @@
 /* ===== Global base (tipografía + paleta naranja-azul pastel) ===== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
+@import url('../src/app/components/admin/reportes/styles/reportes.css');
 :root {
   --bg: #ffffff;          /* fondo general */
   --bg-elev: #dbe8fa;     /* navbar y secciones elevadas */
@@ -92,4 +92,10 @@ nav a:hover {
   font-weight: 600;
   font-size: 0.92rem;
   margin-top: 8px;
+}
+
+
+.admin-container {
+  margin-top: 230px !important;
+  padding: 40px 20px 20px !important;
 }

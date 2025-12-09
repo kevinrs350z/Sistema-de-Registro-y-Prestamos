@@ -1,5 +1,6 @@
-
-<app-navbar *ngIf="!esRutaAuth()"></app-navbar>
+<app-navbar *ngIf="!esRutaAuth && !esRutaAdmin"></app-navbar>
 <app-navbar-admin *ngIf="esRutaAdmin"></app-navbar-admin>
 
-<router-outlet></router-outlet>
+<div [class.admin-container]="esRutaAdmin">
+  <router-outlet></router-outlet>
+</div>

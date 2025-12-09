@@ -1,0 +1,35 @@
+.reportes-nav {
+  justify-content: center;
+}
+
+.nav-btn {
+  background: #f8f9fa;
+  border: 1px solid #d7d7d7;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: #333;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.nav-btn:hover {
+  background: #e9ecef;
+}
+
+.nav-btn.active {
+  background: #0d6efd;
+  color: #fff !important;
+  border-color: #0d6efd;
+}
+.reportes-wrapper {
+  margin-top: 25px;
+}
+
+.reportes-nav {
+  margin-bottom: 15px;
+}
+
+.reporte-tab-btn {
+  margin-bottom: 12px;
+}

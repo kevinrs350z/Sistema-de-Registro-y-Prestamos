@@ -9,7 +9,7 @@ import { SolicitudEquipo } from '../../../shared/models'; // ✅ Usa tu archivo 
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './notificaciones.component.html',
-  styleUrls: ['./notificaciones.component.css'] // ⚠️ cambia a .css si tu hoja no es .scss
+  styleUrls: ['./notificaciones.component.css'] 
 })
 export class NotificacionesComponent implements OnInit {
   

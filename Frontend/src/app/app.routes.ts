@@ -14,7 +14,16 @@ import { SolicitarReservaComponent } from './components/alumno/solicitar-reserva
 import { DashboardAdminComponent } from './components/admin/dashboard-admin/dashboard-admin.component';
 import { NotificacionesComponent } from './components/admin/notificaciones/notificaciones.component';
 import { SolicitudesPendientesComponent } from './components/admin/solicitudes-pendientes/solicitudes-pendientes.component';
-import { ReportesEquiposComponent } from './components/admin/reportes-equipos/reportes-equipos.component';
+import { ReportesComponent } from './components/admin/reportes/reportes/reportes.component';
+import { ReportesTendenciasComponent } from './components/admin/reportes/reportes-tendencias/reportes-tendencias.component';
+import { ReportesDashboardComponent } from './components/admin/reportes/reportes-dashboard/reportes-dashboard.component';
+import { ReportesAlumnosComponent } from './components/admin/reportes/reportes-alumnos/reportes-alumnos.component';
+import { ReportesProfesoresComponent } from './components/admin/reportes/reportes-profesores/reportes-profesores.component';
+import { ReportesAsignaturasComponent } from './components/admin/reportes/reportes-asignaturas/reportes-asignaturas.component';
+import { ReportesInventarioComponent } from './components/admin/reportes/reportes-inventario/reportes-inventario.component';
+import { ReportesSancionesComponent } from './components/admin/reportes/reportes-sanciones/reportes-sanciones.component';
+import { ReportesMantenimientosComponent } from './components/admin/reportes/reportes-mantenimientos/reportes-mantenimientos.component';
+import { ReportesEquiposComponent } from './components/admin/reportes/reportes-equipos/reportes-equipos.component';
 
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
@@ -47,7 +56,24 @@ export const routes: Routes = [
   { path: 'admin/notificaciones', component: NotificacionesComponent },
 
   { path: 'admin/solicitudes', component: SolicitudesPendientesComponent },
-  { path: 'reportes/equipos', component: ReportesEquiposComponent },
+  {
+    path: 'admin/reportes',
+    component: ReportesComponent,
+    children: [
+      { path: 'dashboard', component: ReportesDashboardComponent },
+      { path: 'equipos', component: ReportesEquiposComponent },
+      { path: 'alumnos', component: ReportesAlumnosComponent },
+      { path: 'profesores', component: ReportesProfesoresComponent },
+      { path: 'asignaturas', component: ReportesAsignaturasComponent },
+      { path: 'inventario', component: ReportesInventarioComponent },
+      { path: 'sanciones', component: ReportesSancionesComponent },
+      { path: 'mantenimientos', component: ReportesMantenimientosComponent },
+      { path: 'tendencias', component: ReportesTendenciasComponent },
+
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+    ]
+  },
+
 
   {
     path: 'admin/solicitudes-finalizadas',
