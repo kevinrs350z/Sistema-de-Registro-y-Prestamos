@@ -13,9 +13,11 @@
 
     <div class="menu-dropdown" *ngIf="menuAbierto">
       <button (click)="navegar('gestionar')">Gestionar</button>
-      <button (click)="navegar('solicitudes')">Solicitudes pendientes</button>
-      <button (click)="navegar('finalizadas')">Solicitudes finalizadas</button>
+      <button (click)="navegar('admin/solicitudes')">Solicitudes pendientes</button>
+      <button (click)="navegar('admin/solicitudes-finalizadas')">Solicitudes finalizadas</button>
+      <button (click)="navegar(['admin','reportes'])">Estadísticas</button>
     </div>
+    
 
   </div>
 

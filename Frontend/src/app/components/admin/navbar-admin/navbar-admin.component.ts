@@ -18,12 +18,11 @@ export class NavbarAdminComponent {
     this.menuAbierto = !this.menuAbierto;
   }
 
-  navegar(seccion: string) {
+  navegar(seccion: string | string[]) {
     this.menuAbierto = false;
-
-    // AVISA AL DASHBOARD PARA CAMBIAR LA PÁGINA INTERNA
-    window.dispatchEvent(new CustomEvent('admin-navegacion', { detail: seccion }));
+    this.router.navigate(Array.isArray(seccion) ? seccion : [seccion]);
   }
+  
 
   cerrarSesion() {
     if (confirm('¿Deseas cerrar sesión?')) {
