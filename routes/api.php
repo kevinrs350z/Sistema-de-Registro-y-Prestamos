@@ -20,6 +20,7 @@ use App\Http\Controllers\TipoEquipoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\Prestamo\DevolucionAdminController;
 use App\Http\Controllers\ReportesController;
+use App\Http\Controllers\reportes\Dashboard\DashboardReportesController;
 
 
 /*
@@ -155,3 +156,13 @@ Route::get('/reportes/equipos-mas-solicitados', [ReportesController::class, 'equ
 Route::get('/reportes/uso-interno-externo', [ReportesController::class, 'usoInternoExterno']);
 Route::get('/reportes/sanciones-rechazos', [ReportesController::class, 'sancionesYRechazos']);
 Route::get('/reportes/equipos-baja', [ReportesController::class, 'equiposDadoDeBaja']);
+
+
+Route::prefix('reportes/dashboard')->group(function () {
+    Route::get('/kpis', [DashboardReportesController::class, 'getKPIs']);
+    Route::get('/solicitudes-dia', [DashboardReportesController::class, 'getSolicitudesPorDia']);
+    Route::get('/uso-interno-externo', [DashboardReportesController::class, 'getUsoInternoExterno']);
+    Route::get('/top-categorias', [DashboardReportesController::class, 'getTopCategorias']);
+    Route::get('/sanciones-rechazos', [DashboardReportesController::class, 'getSancionesYRechazos']);
+    Route::get('/top-alumnos', [DashboardReportesController::class, 'getTopAlumnos']);
+});
