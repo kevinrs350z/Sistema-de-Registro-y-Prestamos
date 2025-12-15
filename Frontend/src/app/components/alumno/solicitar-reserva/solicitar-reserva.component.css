@@ -1,3 +1,17 @@
+/* === THEME (NO CAMBIAR COLORES/FUENTE, SOLO ORGANIZAR) === */
+:host {
+  --azul: #3451b2;
+  --azul-2: #5a79ff;
+  --naranja: #ff855c;
+  --naranja-soft: #ffb58c;
+  --borde: #ccd7ff;
+  --fondo: #f9faff;
+  --sombra: 0 8px 24px rgba(90, 121, 255, 0.08);
+  --radio-1: 14px;
+  --radio-2: 20px;
+  font-family: "Poppins", sans-serif;
+}
+
 /* === LAYOUT GENERAL === */
 .wrap {
   display: flex;
@@ -6,129 +20,115 @@
   gap: 3.5rem;
   width: 100%;
   padding: 2rem 4rem;
-  background: linear-gradient(180deg, #f9faff 0%, #ffffff 100%);
+  background: linear-gradient(180deg, var(--fondo) 0%, #ffffff 100%);
   box-sizing: border-box;
   min-height: 100vh;
-  font-family: "Poppins", sans-serif;
 }
 
 /* === FORMULARIO === */
 .formulario {
   flex: 0 0 68%;
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: var(--radio-2);
   padding: 2rem 2.8rem;
-  box-shadow: 0 8px 24px rgba(90, 121, 255, 0.08);
-  transition: all 0.3s ease-in-out;
+  box-shadow: var(--sombra);
   animation: fadeIn 0.5s ease;
-  margin-top: 0;
-}
-
-.formulario:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(90, 121, 255, 0.12);
 }
 
 .formulario h1 {
   font-size: 1.9rem;
   font-weight: 700;
-  color: #3451b2;
+  color: var(--azul);
   margin-bottom: 1.4rem;
 }
 
-/* === TARJETAS / SECCIONES === */
-.card {
+/* === HEADER === */
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.2rem;
+}
+
+.page-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(52, 81, 178, 0.75);
+}
+
+.chip-resumen {
+  display: none; /* se activa solo en móvil */
+  align-self: flex-start;
+  border: 1.5px solid var(--borde);
   background: #ffffff;
-  border: 1.5px solid #ccd7ff;
-  border-radius: 14px;
+  color: var(--azul);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* === TARJETAS === */
+.card,
+.card-datos {
+  background: #ffffff;
+  border: 1.5px solid var(--borde);
+  border-radius: var(--radio-1);
   padding: 1.4rem 1.6rem;
   margin-bottom: 1.8rem;
   box-shadow: 0 3px 6px rgba(0, 40, 150, 0.04);
-  transition: all 0.25s ease;
   animation: slideUp 0.6s ease both;
 }
 
-.card:hover {
-  border-color: #a5b9ff;
-  box-shadow: 0 4px 10px rgba(0, 50, 200, 0.06);
-}
-
-/* === BLOQUE DE DATOS DEL ALUMNO === */
-.card-datos {
-  background: #ffffff;
-  border: 1.5px solid #ccd7ff;
-  border-radius: 14px;
-  padding: 1.4rem 1.6rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 3px 6px rgba(0, 40, 150, 0.04);
-  animation: slideUp 0.6s ease both;
-}
-
+.card h2,
 .card-datos h2 {
   font-size: 1.1rem;
-  color: #ff855c;
+  color: var(--naranja);
   font-weight: 600;
   margin-bottom: 0.7rem;
 }
 
-.card-datos label {
-  font-weight: 500;
-  color: #2c2c2c;
-  font-size: 0.9rem;
-}
-
+/* === GRID === */
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.2rem 1.4rem;
 }
 
-/* === CAMPOS === */
+/* === INPUTS (FIX EMAIL MOBILE) === */
 input,
 select,
 textarea {
   width: 100%;
-  padding: 0.6rem 0.75rem;
+  min-height: 44px;
+  padding: 0.65rem 0.8rem;
   border: 1px solid #c5cbe8;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 16px; /* evita zoom iOS */
+  line-height: 1.4;
   background-color: #fdfdff;
-  transition: all 0.25s ease;
+  box-sizing: border-box;
+  word-break: break-word;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #5a79ff;
-  box-shadow: 0 0 6px rgba(90, 121, 255, 0.2);
-  outline: none;
+input[disabled] {
+  color: #444;
+  opacity: 1;
+  background: #f5f7ff;
 }
 
-/* === RADIO Y CHECKBOX (por defecto, ya no se usarán aquí) === */
+/* === RADIO === */
 .radio {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   margin-right: 1.2rem;
-  color: #333;
-  cursor: pointer;
   font-size: 0.92rem;
 }
 
-.radio input[type='checkbox'],
-.radio input[type='radio'] {
-  accent-color: #5a79ff;
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-/* === TÍTULOS DE SECCIONES === */
-.card h2 {
-  font-size: 1.1rem;
-  color: #ff855c;
-  font-weight: 600;
-  margin-bottom: 0.7rem;
+.radio input {
+  accent-color: var(--azul-2);
 }
 
 /* === ERRORES === */
@@ -143,42 +143,34 @@ textarea:focus {
   display: flex;
   justify-content: flex-end;
   gap: 1.2rem;
-  margin-top: 2.8rem;
+  margin-top: 2.4rem;
+}
+
+.actions-desktop {
+  display: flex;
 }
 
 button {
   border: none;
   border-radius: 10px;
-  padding: 0.7rem 1.5rem;
+  padding: 0.75rem 1.6rem;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s ease;
 }
 
-button[type='submit'] {
-  background-color: #ffb58c;
+button[type="submit"] {
+  background-color: var(--naranja-soft);
   color: #fff;
-  box-shadow: 0 3px 10px rgba(255, 133, 92, 0.3);
-}
-
-button[type='submit']:hover {
-  background-color: #ff8b58;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 133, 92, 0.35);
 }
 
 button.ghost {
   background-color: #f2f4ff;
-  color: #5a79ff;
+  color: var(--azul-2);
   border: 1.5px solid #b3c1ff;
 }
 
-button.ghost:hover {
-  background-color: #e8ecff;
-}
-
-/* === RESUMEN === */
+/* === RESUMEN DESKTOP === */
 .resumen {
   flex: 0 0 30%;
   background: #f9fbff;
@@ -186,171 +178,201 @@ button.ghost:hover {
   border-radius: 20px;
   padding: 1.8rem 1.6rem;
   box-shadow: 0 6px 14px rgba(80, 110, 255, 0.08);
-  animation: fadeIn 0.6s ease;
-  position: relative;
-  top: 0;
-  margin-top: 0.4rem;
-  margin-right: 3rem;
 }
 
 .resumen h3 {
   color: #2e3f8a;
   font-weight: 700;
-  margin-bottom: 0.3rem;
-}
-
-.resumen-sub {
-  color: #6b7fc9;
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
-}
-
-.resumen .detalle p {
-  font-size: 0.9rem;
-  color: #333;
-  margin: 0.3rem 0;
 }
 
 .resumen hr {
   margin: 1.3rem 0;
-  border: none;
   height: 1px;
   background: #d9e1ff;
+  border: none;
 }
 
-.equipos-resumen h4 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #2f4abf;
-  margin-bottom: 0.5rem;
-}
-
-.equipos-resumen ul {
-  padding-left: 1rem;
-}
-
-.equipos-resumen li {
-  list-style: none;
-  margin: 0.4rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: #555;
-}
-
-.equipos-resumen i {
-  color: #5a79ff;
-}
-
-.vacio {
-  color: #a4a4a4;
-  font-style: italic;
-  font-size: 0.85rem;
-}
-
-/* =======================================================================
-   === BLOQUES HORARIOS — TARJETAS MINIMALISTAS PROFESIONALES ===
-   ======================================================================= */
-
+/* === BLOQUES HORARIOS === */
 .bloques-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1rem;
-  margin-top: 1rem;
 }
 
 .bloque-card {
-  position: relative;
-  background: #ffffff;
   border: 1.5px solid #ccd7ff;
   border-radius: 12px;
-  padding: 0.9rem 1rem;
-  box-shadow: 0 2px 6px rgba(0, 50, 200, 0.04);
+  padding: 0.9rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  transition: all 0.25s ease;
 }
 
-.bloque-card:hover {
-  border-color: #a5b9ff;
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0, 50, 200, 0.10);
-}
-
-/* ocultamos el checkbox real */
 .bloque-card input {
   display: none;
 }
 
-/* estilo cuando está seleccionado */
 .bloque-card input:checked + .bloque-info {
   background: #f0f4ff;
   border-radius: 8px;
-  padding: 0.2rem 0.4rem;
-  color: #3451b2;
-  font-weight: 600;
-  box-shadow: inset 0 0 0 2px #5a79ff;
-  transition: all 0.25s ease;
+  padding: 0.3rem 0.4rem;
+  box-shadow: inset 0 0 0 2px var(--azul-2);
 }
 
-.bloque-info {
+/* === ACCIONES MÓVIL (BARRA FIJA) === */
+.mobile-actions {
+  display: none;
+}
+
+.mobile-actions .primary {
+  background: var(--naranja-soft);
+  color: #fff;
+}
+
+.mobile-actions button {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+}
+
+/* === OVERLAY (RESUMEN MÓVIL) - EXTRA UI === */
+.overlay-head {
   display: flex;
-  flex-direction: column;
-  line-height: 1.2;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
 }
 
-.bloque-titulo {
-  font-weight: 600;
-  color: #2d2d2d;
+.overlay-close {
+  background: #f2f4ff;
+  color: var(--azul);
+  border: 1px solid var(--borde);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  padding: 0;
 }
 
-.bloque-hora {
-  font-size: 0.82rem;
-  color: #6b7fc9;
+/* === OVERLAY (RESUMEN MÓVIL) === */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 40, 80, 0.35);
+  display: flex;
+  align-items: flex-end;
+  z-index: 999;
 }
 
-/* ======================================================================= */
-
-/* === ANIMACIONES === */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.overlay-card {
+  width: 100%;
+  max-height: 85vh;
+  background: #ffffff;
+  border-radius: 18px 18px 0 0;
+  padding: 1.4rem;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
 }
 
 /* === RESPONSIVE === */
 @media (max-width: 1024px) {
   .wrap {
     flex-direction: column;
-    gap: 2rem;
     padding: 2rem;
   }
 
-  .formulario {
-    width: 100%;
-  }
-
+  .formulario,
   .resumen {
     width: 100%;
-    margin-top: 0.5rem;
-    position: static;
   }
+}
+
+@media (max-width: 768px) {
+  .wrap {
+    padding: 1.2rem;
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .formulario {
+    padding: 1.1rem 1rem;
+    border-radius: 16px;
+  }
+
+  .page-head h1 {
+    font-size: 1.35rem;
+    margin: 0;
+    line-height: 1.15;
+  }
+
+  .page-sub {
+    font-size: 0.9rem;
+  }
+
+  .chip-resumen {
+    display: inline-flex;
+  }
+
+  .card,
+  .card-datos {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .card h2,
+  .card-datos h2 {
+    font-size: 1rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Ocultamos acciones desktop y activamos barra fija */
+  .actions-desktop {
+    display: none;
+  }
+
+  .mobile-actions {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom));
+    gap: 0.7rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(199, 211, 255, 0.9);
+    z-index: 50;
+  }
+
+  .mobile-actions button {
+    flex: 1;
+    height: 52px;
+  }
+
+  /* Bloques: más "tap-friendly" */
+  .bloques-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bloque-card {
+    padding: 0.85rem 0.95rem;
+    border-radius: 14px;
+  }
+
+  /* 🔥 OCULTAMOS RESUMEN DESKTOP */
+  .resumen {
+    display: none;
+  }
+}
+
+/* === ANIMACIONES === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); }
+  to { transform: translateY(0); }
 }

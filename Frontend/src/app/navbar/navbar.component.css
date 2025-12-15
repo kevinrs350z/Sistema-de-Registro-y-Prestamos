@@ -1,206 +1,175 @@
-/* ======== NAVBAR PRINCIPAL ======== */
+/* ======================================================
+   NAVBAR BASE (mobile-first)
+====================================================== */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 50;
   width: 100%;
-  height: 130px;
-  background-color: #446ba9; /* Azul institucional */
+  background: linear-gradient(135deg, #446ba9, #3b5f98);
   box-shadow: 0 6px 20px rgba(2, 6, 23, 0.25);
   border-bottom: 2px solid rgba(145, 181, 232, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 60px;
+  padding: 10px 12px;
   box-sizing: border-box;
 }
 
+/* ======================================================
+   LOGO
+====================================================== */
+.nav-top {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
 .logo {
+  display: block;
   font-weight: 800;
-  font-size: 26px;
-  letter-spacing: 0.5px;
+  font-size: 17px;
   color: #ffffff;
-  text-transform: capitalize;
-  white-space: nowrap;
+  line-height: 1.2;
 }
 
-/* ======== BOTONES (usuarios normales) ======== */
-ul {
-  list-style: none;
+.logo small {
+  display: block;
+  font-weight: 500;
+  font-size: 12px;
+  opacity: 0.9;
+  color: #ffffff;
+}
+
+/* ======================================================
+   ACCIONES
+====================================================== */
+.nav-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+/* ======================================================
+   BOTONES
+====================================================== */
+.nav-btn {
   display: flex;
-  align-items: center;
-  gap: 26px;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  right: 60px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-a {
-  background-color: #f5a474;
-  color: #ffffff;
-  text-decoration: none;
-  font-weight: 700;
-  padding: 16px 32px;
-  border-radius: 14px;
-  font-size: 18px;
-  transition: all 0.25s ease;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 180px;
-  white-space: nowrap;
-}
+  gap: 5px;
 
-a:hover {
-  background-color: #91b5e8;
-  transform: translateY(-3px);
-  box-shadow: 0 5px 16px rgba(145, 181, 232, 0.6);
-}
-
-a.active,
-a[routerLinkActive="active"] {
-  background-color: #91b5e8;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(145, 181, 232, 0.5);
-}
-
-/* ======== MENU ADMIN ======== */
-.admin-menu {
-  position: absolute;
-  right: 60px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.dropdown-btn {
   background-color: #f5a474;
+  color: #ffffff !important;               /* 🔥 FIX */
+  text-decoration: none;
   border: none;
-  color: #fff;
+
   font-weight: 700;
-  padding: 14px 28px;
-  border-radius: 14px;
-  font-size: 18px;
+  font-size: 12.5px;
+  padding: 9px 8px;
+  border-radius: 11px;
+
   cursor: pointer;
   transition: all 0.25s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.dropdown-btn:hover {
-  background-color: #91b5e8;
+.nav-btn i {
+  font-size: 15px;
+  color: #ffffff;                          /* 🔥 FIX */
+}
+
+/* ======================================================
+   HOVER / ACTIVE / ROUTER ACTIVE
+====================================================== */
+/* ======================================================
+   HOVER / ACTIVE / ROUTER ACTIVE (MEJORADO)
+====================================================== */
+.nav-btn:hover {
+  background-color: #5f8fd6;        /* azul más fuerte */
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
   transform: translateY(-2px);
 }
 
-/* Menú desplegable */
-.dropdown-menu {
-  display: none;
-  flex-direction: column;
-  position: absolute;
-  right: 0;
-  top: 70px;
-  background-color: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  min-width: 220px;
-  padding: 10px 0;
-  overflow: hidden;
-  animation: fadeIn 0.2s ease;
-  z-index: 100;
+
+/* 🔥 BOTÓN ACTIVO REAL */
+.nav-btn.active,
+.nav-btn[routerLinkActive="active"] {
+  background-color: #5f8fd6;              /* MÁS OSCURO */
+  border: 2px solid #ffffff;              /* BORDE BLANCO */
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.25),
+              0 6px 14px rgba(0,0,0,0.25); /* GLOW + PROFUNDIDAD */
+  transform: translateY(-2px);
 }
 
-.dropdown-menu.show {
-  display: flex;
+/* ======================================================
+   BOTÓN CERRAR SESIÓN
+====================================================== */
+.nav-btn.logout {
+  grid-column: span 2;
+  background-color: #e94f64;
+  color: #ffffff !important;
 }
 
-.dropdown-menu a {
-  color: #446ba9;
-  font-weight: 600;
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  text-align: left;
-  text-decoration: none;
-  transition: background 0.2s ease;
-  box-shadow: none;
-  border-radius: 0;
-  min-width: 100%;
+.nav-btn.logout i {
+  color: #ffffff;
 }
 
-.dropdown-menu a:hover {
-  background-color: #f5f8ff;
+.nav-btn.logout:hover {
+  background-color: #f07183;
+  color: #ffffff !important;
 }
 
-.dropdown-menu hr {
-  margin: 8px 0;
-  border: 0;
-  border-top: 1px solid #e5e9f2;
-}
-
-.dropdown-menu a.cerrar {
-  color: #e94f64;
-}
-
-.dropdown-menu a.cerrar:hover {
-  background-color: #fff3f3;
-}
-
-/* Animación suave */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ======== RESPONSIVE ======== */
-@media (max-width: 1024px) {
+/* ======================================================
+   TABLET
+====================================================== */
+@media (min-width: 768px) {
   .navbar {
-    height: auto;
-    padding: 20px;
-    justify-content: center;
+    padding: 14px 32px;
   }
 
   .logo {
-    text-align: center;
-    margin-bottom: 12px;
+    font-size: 20px;
   }
 
-  ul {
-    position: static;
-    transform: none;
-    justify-content: center;
-    flex-direction: column;
-    gap: 15px;
+  .logo small {
+    font-size: 13px;
   }
 
-  a,
-  .dropdown-btn {
-    width: 100%;
-    text-align: center;
+  .nav-actions {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .nav-btn {
+    font-size: 13.5px;
+    padding: 10px 9px;
+  }
+
+  .nav-btn i {
     font-size: 16px;
-    padding: 14px 20px;
   }
 
-  .admin-menu {
-    position: static;
-    transform: none;
-    margin-top: 12px;
+  .nav-btn.logout {
+    grid-column: auto;
+  }
+}
+
+/* ======================================================
+   DESKTOP GRANDE
+====================================================== */
+@media (min-width: 1200px) {
+  .navbar {
+    padding: 18px 60px;
   }
 
-  .dropdown-menu {
-    top: auto;
-    right: 0;
-    left: 0;
-    width: 100%;
+  .logo {
+    font-size: 22px;
+  }
+
+  .nav-btn {
+    font-size: 14px;
+    padding: 11px 10px;
+  }
+
+  .nav-btn i {
+    font-size: 17px;
   }
 }

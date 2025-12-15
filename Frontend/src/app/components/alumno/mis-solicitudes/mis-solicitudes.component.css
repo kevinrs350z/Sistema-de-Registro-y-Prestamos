@@ -6,27 +6,10 @@
   min-height: 100vh;
   font-family: "Poppins", sans-serif;
 }
-.lista-equipos {
-  list-style: none;
-  padding: 0;
-  margin-top: 5px;
-}
 
-.lista-equipos li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.img-equipo {
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-}
-
+/* =============================
+   LISTA DE EQUIPOS
+============================= */
 .lista-equipos {
   list-style: none;
   margin: 0;
@@ -43,25 +26,38 @@
 
 .lista-equipos i {
   font-size: 16px;
-  color: #ff8c56; /* mismo estilo de tu diseño */
+  color: #ff8c56;
 }
 
-/* ENCABEZADO */
+.img-equipo {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+/* =============================
+   ENCABEZADO
+============================= */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
+
 .header h1 {
   color: #d47a35;
   font-weight: 700;
   font-size: 1.6rem;
 }
+
 .header p {
   color: #5a5a5a;
   font-size: 0.9rem;
 }
+
 .filtros select {
   padding: 0.5rem 1rem;
   border: 1.5px solid #ccd7ff;
@@ -71,25 +67,32 @@
   font-size: 0.9rem;
   transition: all 0.2s ease;
 }
+
 .filtros select:hover {
   border-color: #a5b9ff;
 }
 
-/* CONTENIDO PRINCIPAL */
+/* =============================
+   CONTENIDO PRINCIPAL
+============================= */
 .main-content {
   display: grid;
   grid-template-columns: 60% 38%;
   gap: 2%;
 }
 
-/* LISTA IZQUIERDA */
+/* =============================
+   LISTA IZQUIERDA
+============================= */
 .lista-solicitudes {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
 }
 
-/* TARJETAS DE SOLICITUD */
+/* =============================
+   TARJETAS DE SOLICITUD
+============================= */
 .solicitud-card {
   background: #fff;
   border: 1.5px solid #ccd7ff;
@@ -113,7 +116,9 @@
   box-shadow: 0 0 12px rgba(255, 133, 92, 0.25);
 }
 
-/* CABECERA DE TARJETA */
+/* =============================
+   CABECERA DE TARJETA
+============================= */
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -126,7 +131,9 @@
   color: #2f2f2f;
 }
 
-/* ETIQUETAS DE ESTADO */
+/* =============================
+   ESTADOS
+============================= */
 .estado {
   padding: 0.45rem 0.9rem;
   border-radius: 10px;
@@ -138,27 +145,15 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.estado.pendiente {
-  background-color: #ffb58c;
-}
+.estado.pendiente { background-color: #ffb58c; }
+.estado.aprobada  { background-color: #6cd38a; }
+.estado.rechazada { background-color: #e05b5b; }
+.estado.devuelto  { background-color: #15ff00; }
+.estado.aceptado  { background-color: #23439c; }
 
-.estado.aprobada {
-  background-color: #6cd38a;
-}
-
-.estado.rechazada {
-  background-color: #e05b5b;
-}
-.estado.devuelto {
-  background-color: #15ff00;
-}
-
-.estado.aceptado{
-  background-color: #23439c;
-}
-
-
-/* CUERPO DE TARJETA */
+/* =============================
+   CUERPO
+============================= */
 .card-body {
   margin-top: 0.8rem;
 }
@@ -172,7 +167,9 @@
   gap: 0.4rem;
 }
 
-/* PANEL DERECHO */
+/* =============================
+   DETALLE DESKTOP
+============================= */
 .detalle-solicitud {
   background: #fff;
   border: 1.5px solid #ccd7ff;
@@ -180,16 +177,19 @@
   padding: 1.8rem;
   box-shadow: 0 8px 24px rgba(90, 121, 255, 0.1);
 }
+
 .detalle-solicitud h2 {
   font-size: 1.2rem;
   color: #3451b2;
   margin-bottom: 1rem;
 }
+
 .detalle p {
   margin: 0.5rem 0;
   color: #333;
   font-size: 0.9rem;
 }
+
 .vacio {
   text-align: center;
   color: #999;
@@ -197,14 +197,94 @@
   font-style: italic;
 }
 
-/* RESPONSIVE */
+.icono-equipo {
+  font-size: 20px;
+  color: #ff8c56;
+}
+
+/* =============================
+   TABLET / MOBILE GENERAL
+============================= */
 @media (max-width: 1024px) {
   .main-content {
     grid-template-columns: 1fr;
   }
 }
 
-.icono-equipo {
-  font-size: 20px;
-  color: #ff8c56;
-} 
+/* =============================
+   🔥 FIX CLAVE – DESKTOP
+   Oculta el detalle móvil
+============================= */
+@media (min-width: 769px) {
+  .detalle-movil {
+    display: none !important;
+  }
+}
+
+/* =============================
+   MÓVIL – MIS SOLICITUDES
+============================= */
+@media (max-width: 768px) {
+
+  .detalle-solicitud {
+    display: none;
+  }
+
+  .solicitud-card {
+    padding: 1rem;
+  }
+
+  .card-header h3 {
+    font-size: 0.95rem;
+  }
+
+  .estado {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  /* ===== DETALLE MÓVIL ===== */
+  .detalle-movil {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 999;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .detalle-movil-card {
+    background: #fff;
+    width: 100%;
+    max-height: 90%;
+    border-radius: 18px 18px 0 0;
+    padding: 1.2rem;
+    overflow-y: auto;
+    animation: subir 0.25s ease-out;
+  }
+
+  @keyframes subir {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .detalle-movil-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .detalle-movil-header h3 {
+    font-size: 1.1rem;
+    color: #3451b2;
+  }
+
+  .detalle-movil-header button {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: #ff855c;
+  }
+}

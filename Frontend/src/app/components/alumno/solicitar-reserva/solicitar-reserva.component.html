@@ -1,45 +1,50 @@
 <div class="wrap">
-  <!-- 🔹 FORMULARIO (70%) -->
+  <!-- ================= FORMULARIO ================= -->
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="formulario">
-    <h1>Solicitar reserva de equipo</h1>
-    <p class="sub"></p>
+
+    <!-- Header -->
+    <header class="page-head">
+      <h1>Solicitar reserva de equipo</h1>
+      <p class="page-sub">Completa los datos y confirma tu solicitud.</p>
+
+      <!-- Chip resumen móvil -->
+      <button type="button" class="chip-resumen" (click)="abrirResumenMobile()">
+        Ver resumen · {{ resumen().cantidadEquipos }} equipos
+      </button>
+    </header>
 
     <!-- 1) Datos del alumno -->
-    <!--  BLOQUE DE DATOS DEL ALUMNO -->
     <div class="card-datos">
-      <h2>Datos del alumno</h2>
+      <h2>Datos del estudiante</h2>
       <div class="grid-2">
         <div>
           <label>Nombre</label>
-          <input type="text" formControlName="nombre" [disabled]="true" />
+          <input type="text" formControlName="nombre" />
         </div>
         <div>
           <label>RUT</label>
-          <input type="text" formControlName="rut" [disabled]="true" />
+          <input type="text" formControlName="rut" />
         </div>
         <div>
           <label>Teléfono</label>
-          <input type="text" formControlName="telefono" [disabled]="true" />
+          <input type="text" formControlName="telefono" />
         </div>
         <div>
           <label>Email</label>
-          <input type="text" formControlName="email" [disabled]="true" />
+          <input type="text" formControlName="email" />
         </div>
       </div>
     </div>
-
-
-
 
     <!-- 2) Tipo de solicitud -->
     <div class="card">
       <h2>Tipo de solicitud</h2>
       <label class="radio">
-        <input type="radio" [value]="'DENTRO'" formControlName="tipo_solicitud" />
+        <input type="radio" value="DENTRO" formControlName="tipo_solicitud" />
         Dentro de la universidad
       </label>
       <label class="radio">
-        <input type="radio" [value]="'FUERA'" formControlName="tipo_solicitud" />
+        <input type="radio" value="FUERA" formControlName="tipo_solicitud" />
         Fuera de la universidad
       </label>
     </div>
@@ -47,42 +52,44 @@
     <!-- 3) Asignatura o motivo -->
     <div class="card">
       <h2>Asignatura o motivo</h2>
-      <p class="sub">
-        Selecciona una asignatura relacionada con el uso del equipo o especifica otro motivo.
-      </p>
       <div class="grid-2">
         <div>
           <label>Asignatura</label>
-            <select formControlName="asignatura" (change)="onAsignaturaChange($event)">
-              <option value="">Seleccionar...</option>
-                <option *ngFor="let a of asignaturas" [value]="a.idAsignatura">
-                  {{ a.nombre }}
-                </option>
-            </select>
-
+          <select formControlName="asignatura">
+            <option value="">Seleccionar...</option>
+            <option *ngFor="let a of asignaturas" [value]="a.idAsignatura">
+              {{ a.nombre }}
+            </option>
+          </select>
         </div>
 
         <div *ngIf="mostrarMotivo">
           <label>Especificar motivo</label>
-          <textarea formControlName="motivo" rows="3" placeholder="Describe brevemente el motivo..."></textarea>
+          <textarea formControlName="motivo" rows="3"></textarea>
         </div>
       </div>
     </div>
 
-    <!-- 4) Equipos seleccionados -->
+    <!-- 4) Equipos -->
     <div class="card">
       <h2>Equipos seleccionados</h2>
-      <ul>
-        <li *ngFor="let e of equiposSeleccionados()">
-          {{ e.nombre }} — {{ e.categoria }} ({{ e.codigo }})
-        </li>
-      </ul>
-      <div class="err" *ngIf="equiposSeleccionados().length === 0">
-        No hay equipos seleccionados. Vuelve al catálogo.
-      </div>
+
+      <ng-container *ngIf="equiposSeleccionados().length > 0; else sinEquipos">
+        <ul>
+          <li *ngFor="let e of equiposSeleccionados()">
+            {{ e.nombre }} — {{ e.categoria }} ({{ e.codigo }})
+          </li>
+        </ul>
+      </ng-container>
+
+      <ng-template #sinEquipos>
+        <div class="err">
+          No hay equipos seleccionados. Vuelve al catálogo.
+        </div>
+      </ng-template>
     </div>
 
-    <!-- 5) Periodo (solo fuera de la universidad) -->
+    <!-- 5) Periodo -->
     <div class="card" *ngIf="esFuera()">
       <h2>Periodo</h2>
       <div class="grid-2">
@@ -95,70 +102,63 @@
           <input type="date" formControlName="fecha_fin" [min]="minFechaInicio" />
         </div>
       </div>
-      <div class="err" *ngIf="form.errors?.['rangoInvalido']">
-        La fecha fin debe ser posterior a la fecha inicio.
-      </div>
     </div>
 
-    <!-- 6) Bloques horarios (solo dentro) -->
+    <!-- 6) Bloques horarios (🔥 FIX DEFINITIVO) -->
     <div class="card" *ngIf="esDentro()">
       <h2>Bloques horarios</h2>
-
       <div class="bloques-grid">
         <label class="bloque-card" *ngFor="let b of bloques">
-          <input 
+          <input
             type="checkbox"
             [checked]="form.get('bloques')?.value?.includes(b.id)"
             (change)="onBloqueChange($event, b.id)"
           />
           <div class="bloque-info">
-            <span class="bloque-titulo">{{ b.texto.split('(')[0] }}</span>
-            <span class="bloque-hora">{{ b.texto.split('(')[1].replace(')', '') }}</span>
+            {{ b.texto }}
           </div>
         </label>
       </div>
     </div>
 
-
     <!-- 7) Observación -->
     <div class="card">
-      <h2>Observación (opcional)</h2>
-      <textarea rows="3" formControlName="observacion" placeholder="Uso previsto..."></textarea>
+      <h2>Observación</h2>
+      <textarea rows="3" formControlName="observacion"></textarea>
     </div>
 
-    <!-- Botones -->
-    <div class="actions">
+    <!-- Acciones desktop -->
+    <div class="actions actions-desktop">
       <button type="submit">Solicitar</button>
       <button type="button" class="ghost" (click)="limpiar()">Limpiar</button>
     </div>
+
+    <!-- Acciones móvil -->
+    <div class="mobile-actions">
+      <button type="button" class="ghost" (click)="abrirResumenMobile()">
+        Resumen
+      </button>
+      <button type="submit" class="primary">
+        Solicitar
+      </button>
+    </div>
   </form>
 
-  <!--  RESUMEN (30%) -->
+  <!-- ================= RESUMEN DESKTOP ================= -->
   <aside class="resumen">
     <h3>Resumen de solicitud</h3>
-    <p class="resumen-sub"></p>
 
-    <!--  DETALLES PRINCIPALES -->
     <div class="detalle">
-      <p><b>Alumno:</b> {{ resumen().usuario }}</p>
+      <p><b>Estudiante:</b> {{ resumen().usuario }}</p>
       <p><b>Tipo:</b> {{ resumen().tipo }}</p>
       <p><b>Asignatura:</b> {{ asignaturaSeleccionada() }}</p>
 
-
-      <p>DEBUG valor asignatura: {{ form.get('asignatura')?.value }}</p>
-
-
-    
-      
-
-
-      <!-- Mostrar dinámicamente según tipo -->
-      <ng-container *ngIf="resumen().tipo === 'FUERA'; else dentroBlock">
+      <ng-container *ngIf="resumen().tipo === 'FUERA'; else dentro">
         <p><b>Periodo:</b> {{ resumen().periodo }}</p>
         <p><b>Bloques:</b> —</p>
       </ng-container>
 
-      <ng-template #dentroBlock>
+      <ng-template #dentro>
         <p><b>Periodo:</b> —</p>
         <p><b>Bloques:</b> {{ resumen().bloquesTxt || '—' }}</p>
       </ng-template>
@@ -168,19 +168,68 @@
 
     <hr />
 
-    <!-- ✅ EQUIPOS -->
     <div class="equipos-resumen">
       <h4>Equipos seleccionados ({{ resumen().cantidadEquipos }})</h4>
 
-      <ul *ngIf="equiposSeleccionados().length > 0; else sinEquipos">
-        <li *ngFor="let e of equiposSeleccionados()">
-          <i class="bi bi-box"></i> {{ e.nombre }} — {{ e.categoria }} ({{ e.codigo }})
-        </li>
-      </ul>
+      <ng-container *ngIf="equiposSeleccionados().length > 0; else sinEquiposDesk">
+        <ul>
+          <li *ngFor="let e of equiposSeleccionados()">
+            {{ e.nombre }} — {{ e.codigo }}
+          </li>
+        </ul>
+      </ng-container>
 
-      <ng-template #sinEquipos>
+      <ng-template #sinEquiposDesk>
         <p class="vacio">Ningún equipo seleccionado.</p>
       </ng-template>
     </div>
   </aside>
+
+  <!-- ================= RESUMEN MÓVIL ================= -->
+  <div class="overlay" *ngIf="mostrarResumenMobile()" (click)="cerrarResumenMobile()">
+    <div class="overlay-card" (click)="$event.stopPropagation()">
+
+      <div class="overlay-head">
+        <h3>Resumen</h3>
+        <button type="button" class="overlay-close" (click)="cerrarResumenMobile()">✕</button>
+      </div>
+
+      <div class="detalle">
+        <p><b>Estudiante:</b> {{ resumen().usuario }}</p>
+        <p><b>Tipo:</b> {{ resumen().tipo }}</p>
+        <p><b>Asignatura:</b> {{ asignaturaSeleccionada() }}</p>
+
+        <ng-container *ngIf="resumen().tipo === 'FUERA'; else dentroMobile">
+          <p><b>Periodo:</b> {{ resumen().periodo }}</p>
+          <p><b>Bloques:</b> —</p>
+        </ng-container>
+
+        <ng-template #dentroMobile>
+          <p><b>Periodo:</b> —</p>
+          <p><b>Bloques:</b> {{ resumen().bloquesTxt || '—' }}</p>
+        </ng-template>
+
+        <p><b>Observación:</b> {{ form.get('observacion')?.value || '—' }}</p>
+      </div>
+
+      <hr />
+
+      <div class="equipos-resumen">
+        <h4>Equipos ({{ resumen().cantidadEquipos }})</h4>
+
+        <ng-container *ngIf="equiposSeleccionados().length > 0; else sinEquiposMobile">
+          <ul>
+            <li *ngFor="let e of equiposSeleccionados()">
+              {{ e.nombre }} — {{ e.codigo }}
+            </li>
+          </ul>
+        </ng-container>
+
+        <ng-template #sinEquiposMobile>
+          <p class="vacio">Ningún equipo seleccionado.</p>
+        </ng-template>
+      </div>
+
+    </div>
+  </div>
 </div>

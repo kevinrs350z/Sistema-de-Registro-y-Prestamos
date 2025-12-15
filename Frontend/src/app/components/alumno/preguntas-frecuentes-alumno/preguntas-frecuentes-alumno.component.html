@@ -1,0 +1,15 @@
+<div class="faq-wrapper">
+
+  <header class="faq-header">
+    <h1>Preguntas frecuentes</h1>
+    <p>Resuelve tus dudas sobre el sistema de préstamos.</p>
+  </header>
+
+  <div class="faq-lista">
+    <div class="faq-card" *ngFor="let p of preguntas">
+      <h3 class="faq-pregunta">{{ p.pregunta }}</h3>
+      <p class="faq-respuesta">{{ p.respuesta }}</p>
+    </div>
+  </div>
+
+</div>

@@ -16,7 +16,11 @@ export class CatalogoEquiposComponent {
   private api = inject(TipoEquipoService);
   private router = inject(Router);
 
+  // ===========================
+  // ESTADOS
+  // ===========================
   tipos = signal<TipoEquipo[]>([]);
+  packs = signal<Pack[]>([]);
   equiposFisicos = signal<EquipoFisico[]>([]);
 
   categoriaSeleccionada = signal<string>('TODOS');
@@ -24,8 +28,11 @@ export class CatalogoEquiposComponent {
 
   carrito = signal<CarritoItem[]>([]);
 
-  ngOnInit() {
-    const token = localStorage.getItem('token') ?? '';
+  // ===========================
+  // INIT
+  // ===========================
+  ngOnInit(): void {
+    const token: string = localStorage.getItem('token') ?? '';
     if (!token) {
       alert('⚠️ Debes iniciar sesión para ver los equipos.');
       this.router.navigate(['/auth/login']);
@@ -33,42 +40,45 @@ export class CatalogoEquiposComponent {
     }
 
     this.api.getCatalogo().subscribe({
-      next: (data: TipoEquipo[]) => {
-        this.tipos.set(data);
-      },
-      error: (err: any) => {
-        console.error('❌ Error al obtener catálogo:', err);
-      },
+      next: (data: TipoEquipo[]) => this.tipos.set(data),
+      error: (err: any) => console.error('❌ Error catálogo:', err)
+    });
+
+    this.api.getPacks().subscribe({
+      next: (data: Pack[]) => this.packs.set(data),
+      error: (err: any) => console.error('❌ Error packs:', err)
     });
   }
 
-  // ====================
+  // ===========================
   // CATEGORÍAS
-  // ====================
-  categorias = computed(() => {
-    const todas = this.tipos().map(t => t.categoria ?? 'Otros');
-    return ['TODOS', ...Array.from(new Set(todas))];
+  // ===========================
+  categorias = computed((): string[] => {
+    const cats = this.tipos().map(t => t.categoria ?? 'Otros');
+    return ['TODOS', 'PACKS', ...Array.from(new Set(cats))];
   });
 
-  tiposFiltrados = computed(() => {
+  esVistaPacks = computed((): boolean =>
+    this.categoriaSeleccionada() === 'PACKS'
+  );
+
+  // ===========================
+  // FILTRO EQUIPOS
+  // ===========================
+  tiposFiltrados = computed((): TipoEquipo[] => {
     const texto = this.busqueda().toLowerCase();
     const categoria = this.categoriaSeleccionada();
 
-    return this.tipos().filter(t => {
-      const coincideCategoria =
-        categoria === 'TODOS' || (t.categoria ?? '') === categoria;
-
-      const coincideTexto =
-        t.nombre.toLowerCase().includes(texto) ||
-        (t.descripcion ?? '').toLowerCase().includes(texto);
-
-      return coincideCategoria && coincideTexto;
-    });
+    return this.tipos().filter(t =>
+      (categoria === 'TODOS' || t.categoria === categoria) &&
+      (t.nombre.toLowerCase().includes(texto) ||
+        (t.descripcion ?? '').toLowerCase().includes(texto))
+    );
   });
 
-  filtrarPorBusqueda(event: Event) {
+  filtrarPorBusqueda(event: Event): void {
     this.busqueda.set((event.target as HTMLInputElement).value);
-    }
+  }
 
   // ===========================
   // IMÁGENES
@@ -78,109 +88,114 @@ export class CatalogoEquiposComponent {
   }
 
   getImagenEquipo(e: TipoEquipo): string {
-    const nombre = e.nombre?.toLowerCase() || '';
-
-    if (nombre.includes('cámara') || nombre.includes('canon')) return 'assets/equipos/camara.jpg';
-    if (nombre.includes('micrófono') || nombre.includes('rode')) return 'assets/equipos/aro.jpg';
-    if (nombre.includes('tablet') || nombre.includes('wacom')) return 'assets/equipos/computador.jpg';
-    if (nombre.includes('proyector') || nombre.includes('epson')) return 'assets/equipos/proyector.jpg';
-    if (nombre.includes('grabadora') || nombre.includes('zoom')) return 'assets/equipos/luz.jpg';
-
+    const n = e.nombre.toLowerCase();
+    if (n.includes('cámara')) return 'assets/equipos/camara.jpg';
+    if (n.includes('micrófono')) return 'assets/equipos/aro.jpg';
+    if (n.includes('tablet')) return 'assets/equipos/computador.jpg';
+    if (n.includes('proyector')) return 'assets/equipos/proyector.jpg';
     return 'assets/equipos/lampara.jpg';
   }
 
   // ===========================
-  // CARRITO
+  // CARRITO – EQUIPOS
   // ===========================
   estaEnCarrito(idTipo: number): boolean {
-    return this.carrito().some(c => c.idTipoEquipo === idTipo);
+    return this.carrito().some(
+      c => c.tipo === 'equipo' && c.idTipoEquipo === idTipo
+    );
   }
 
   getCantidad(idTipo: number): number {
-    return this.carrito().find(c => c.idTipoEquipo === idTipo)?.cantidad ?? 0;
+    return this.carrito().find(
+      c => c.tipo === 'equipo' && c.idTipoEquipo === idTipo
+    )?.cantidad ?? 0;
   }
 
   getModo(idTipo: number): 'cualquiera' | 'especifico' {
-    return this.carrito().find(c => c.idTipoEquipo === idTipo)?.modo ?? 'cualquiera';
+    return this.carrito().find(
+      c => c.idTipoEquipo === idTipo
+    )?.modo ?? 'cualquiera';
   }
 
-  cambiarModoDesdeEvento(idTipo: number, event: Event) {
-    const value = (event.target as HTMLSelectElement).value;
-    this.cambiarModo(idTipo, value);
-  }
+  // ===========================
+  // 🔥 FIX DEFINITIVO AQUÍ
+  // ===========================
+  cambiarCantidad(idTipo: number, delta: number): void {
 
-  private agregarSiNoExiste(idTipo: number) {
-    if (!this.estaEnCarrito(idTipo)) {
-      this.carrito.set([
-        ...this.carrito(),
+    // CASO 1: no existe y quieren sumar → agregar en 1 y salir
+    if (!this.estaEnCarrito(idTipo) && delta > 0) {
+      this.carrito.update(items => [
+        ...items,
         {
+          tipo: 'equipo',
           idTipoEquipo: idTipo,
           cantidad: 1,
           modo: 'cualquiera',
           equiposSeleccionados: []
         }
       ]);
-    }
-  }
-
-  cambiarCantidad(idTipo: number, delta: number) {
-    if (!this.estaEnCarrito(idTipo) && delta > 0) {
-      this.agregarSiNoExiste(idTipo);
+      return; // 👈 CLAVE: evita el +1 extra
     }
 
+    // CASO 2: ya existe → modificar cantidad
     this.carrito.update(items =>
-      items.map(item => {
-        if (item.idTipoEquipo === idTipo) {
-          let nueva = item.cantidad + delta;
-          if (nueva < 1) nueva = 1;
+      items.map(i => {
+        if (i.tipo === 'equipo' && i.idTipoEquipo === idTipo) {
 
-          const stock = this.tipos().find(t => t.id === idTipo)?.stock ?? 0;
+          const stock =
+            this.tipos().find(t => t.id === idTipo)?.stock ?? 0;
+
+          let nueva = i.cantidad + delta;
+
+          if (nueva < 1) nueva = 1;
           if (nueva > stock) nueva = stock;
 
-          return { ...item, cantidad: nueva };
+          return { ...i, cantidad: nueva };
         }
-        return item;
+        return i;
       })
     );
   }
 
-  cambiarModo(idTipo: number, valor: string) {
-    const modo = valor === 'especifico' ? 'especifico' : 'cualquiera';
-
-    this.carrito.update(items =>
-      items.map(item =>
-        item.idTipoEquipo === idTipo
-          ? { ...item, modo, equiposSeleccionados: [] }
-          : item
-      )
-    );
+  toggleProducto(idTipo: number): void {
+    this.estaEnCarrito(idTipo)
+      ? this.carrito.set(
+          this.carrito().filter(c => c.idTipoEquipo !== idTipo)
+        )
+      : this.carrito.update(items => [
+          ...items,
+          {
+            tipo: 'equipo',
+            idTipoEquipo: idTipo,
+            cantidad: 1,
+            modo: 'cualquiera',
+            equiposSeleccionados: []
+          }
+        ]);
   }
 
-  toggleProducto(idTipo: number) {
-    if (this.estaEnCarrito(idTipo)) {
-      this.carrito.set(this.carrito().filter(c => c.idTipoEquipo !== idTipo));
-    } else {
-      this.agregarSiNoExiste(idTipo);
-    }
+  // ===========================
+  // CARRITO – PACKS
+  // ===========================
+  agregarPackAlCarrito(pack: Pack): void {
+    this.carrito.update(items => [
+      ...items,
+      {
+        tipo: 'pack',
+        idPack: pack.id,
+        cantidad: 1,
+        modo: 'cualquiera',
+        equiposSeleccionados: []
+      }
+    ]);
   }
 
-  toggleEquipo(idTipo: number) {
-    this.toggleProducto(idTipo);
-  }
-
-  abrirModalEquipos(idTipo: number) {
-    this.api.getEquiposPorTipo(idTipo).subscribe({
-      next: (resp: EquipoFisico[]) => {
-        this.equiposFisicos.set(resp);
-        console.log('Equipos físicos disponibles:', resp);
-      },
-      error: (err: any) => console.error('Error al cargar equipos físicos', err)
-    });
-  }
-
-  continuarReserva() {
+  // ===========================
+  // CONTINUAR
+  // ===========================
+  continuarReserva(): void {
     if (this.carrito().length === 0) {
-      alert('⚠️ Debes seleccionar al menos un equipo antes de continuar.');
+      alert('⚠️ Debes seleccionar al menos un equipo o pack.');
       return;
     }
 
@@ -209,8 +224,18 @@ interface EquipoFisico {
   tipo_equipo_id: number;
 }
 
+interface Pack {
+  id: number;
+  nombre: string;
+  categoria: string;
+  cantidad: number;
+  equipos: { nombre: string }[];
+}
+
 interface CarritoItem {
-  idTipoEquipo: number;
+  tipo: 'equipo' | 'pack';
+  idTipoEquipo?: number;
+  idPack?: number;
   cantidad: number;
   modo: 'cualquiera' | 'especifico';
   equiposSeleccionados: number[];

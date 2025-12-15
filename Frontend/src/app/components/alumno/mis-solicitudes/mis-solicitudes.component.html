@@ -24,15 +24,54 @@
   </div>
 
   <div class="main-content">
-    
+
+    <!-- ================= DETALLE MÓVIL ================= -->
+    <div class="detalle-movil" *ngIf="solicitudSeleccionada()" (click)="solicitudSeleccionada.set(null)">
+      <div class="detalle-movil-card" (click)="$event.stopPropagation()">
+
+        <div class="detalle-movil-header">
+          <h3>Detalle de solicitud</h3>
+          <button (click)="solicitudSeleccionada.set(null)">✕</button>
+        </div>
+
+        <div class="detalle">
+          <p><b>Tipo:</b> {{ solicitudSeleccionada().tipo }}</p>
+
+          <p>
+            <b>Periodo:</b>
+            {{
+            solicitudSeleccionada().fecha_fin &&
+            solicitudSeleccionada().fecha_inicio !== solicitudSeleccionada().fecha_fin
+            ? (solicitudSeleccionada().fecha_inicio | date : 'dd/MM') +
+            ' - ' +
+            (solicitudSeleccionada().fecha_fin | date : 'dd/MM')
+            : (solicitudSeleccionada().fecha_inicio | date : 'dd/MM')
+            }}
+          </p>
+
+          <p><b>Bloque:</b> {{ solicitudSeleccionada().bloqueTxt }}</p>
+
+          <p><b>Equipos:</b></p>
+
+          <ul class="lista-equipos" *ngIf="solicitudSeleccionada().equipos.length > 0">
+            <li *ngFor="let eq of solicitudSeleccionada().equipos">
+              <i class="bi bi-box-seam icono-equipo"></i>
+              {{ eq.codigo }} — {{ eq.nombre }}
+            </li>
+          </ul>
+
+          <p><b>Observación:</b> {{ solicitudSeleccionada().observacion }}</p>
+          <p><b>Estado:</b> {{ solicitudSeleccionada().estado }}</p>
+        </div>
+
+      </div>
+    </div>
+
+
     <!-- ======== LISTA ======== -->
     <div class="lista-solicitudes">
-      <div
-        class="solicitud-card"
-        *ngFor="let s of solicitudesFiltradas()"
-        [class.active]="solicitudSeleccionada() === s"
-        (click)="seleccionarSolicitud(s)"
-      >
+      <div class="solicitud-card" *ngFor="let s of solicitudesFiltradas()"
+        [class.active]="solicitudSeleccionada() === s" (click)="seleccionarSolicitud(s)">
         <div class="card-header">
           <h3>Solicitud #{{ s.id }} — {{ s.tipo }}</h3>
           <span class="estado" [ngClass]="s.estado.toLowerCase()">{{ s.estado }}</span>
@@ -42,9 +81,9 @@
           <p class="fecha">
             📅
             {{
-              s.fecha_fin && s.fecha_inicio !== s.fecha_fin
-                ? (s.fecha_inicio | date : 'dd/MM') + ' - ' + (s.fecha_fin | date : 'dd/MM')
-                : (s.fecha_inicio | date : 'dd/MM')
+            s.fecha_fin && s.fecha_inicio !== s.fecha_fin
+            ? (s.fecha_inicio | date : 'dd/MM') + ' - ' + (s.fecha_fin | date : 'dd/MM')
+            : (s.fecha_inicio | date : 'dd/MM')
             }}
           </p>
         </div>
@@ -56,11 +95,7 @@
     </div>
 
     <!-- ======== DETALLE ======== -->
-    <div
-      class="detalle-solicitud"
-      *ngIf="solicitudSeleccionada()"
-      [@slideInRight]
-    >
+    <div class="detalle-solicitud" *ngIf="solicitudSeleccionada()" [@slideInRight]>
       <h2>Detalle de la solicitud</h2>
 
       <div class="detalle">
@@ -69,12 +104,12 @@
         <p>
           <b>Periodo:</b>
           {{
-            solicitudSeleccionada().fecha_fin &&
-            solicitudSeleccionada().fecha_inicio !== solicitudSeleccionada().fecha_fin
-              ? (solicitudSeleccionada().fecha_inicio | date : 'dd/MM') +
-                ' - ' +
-                (solicitudSeleccionada().fecha_fin | date : 'dd/MM')
-              : (solicitudSeleccionada().fecha_inicio | date : 'dd/MM')
+          solicitudSeleccionada().fecha_fin &&
+          solicitudSeleccionada().fecha_inicio !== solicitudSeleccionada().fecha_fin
+          ? (solicitudSeleccionada().fecha_inicio | date : 'dd/MM') +
+          ' - ' +
+          (solicitudSeleccionada().fecha_fin | date : 'dd/MM')
+          : (solicitudSeleccionada().fecha_inicio | date : 'dd/MM')
           }}
         </p>
 

@@ -1,3 +1,4 @@
+
 <!-- 🧩 SECCIÓN GESTIONAR -->
 <div class="admin-full-container" *ngIf="seccionActiva === 'gestionar'">
 
@@ -24,9 +25,8 @@
 
     <div class="stat-card">
       <div class="stat-info">
-      <h3>{{ totalSancionesActivas }}</h3>
-      <p>Sanciones Activas</p>
-
+        <h3>{{ totalSancionesActivas }}</h3>
+        <p>Sanciones Activas</p>
       </div>
     </div>
   </div>
@@ -37,29 +37,40 @@
 
     <div class="action-grid">
 
+      <!-- Gestión Equipos -->
       <div class="action-card equipos" (click)="seccionActiva = 'inventario'">
         <div class="action-icon"><i class="bi bi-hdd-stack"></i></div>
         <h3>Gestionar Equipos</h3>
         <p>Crear, editar y eliminar equipos del sistema</p>
       </div>
 
+      <!-- Gestión Packs -->
       <a routerLink="/admin/packs" class="action-card packs">
         <div class="action-icon"><i class="bi bi-box-seam"></i></div>
         <h3>Gestionar Packs</h3>
         <p>Crear y administrar paquetes de equipos</p>
       </a>
 
+      <!-- Gestión Sanciones -->
       <a routerLink="/admin/sanciones" class="action-card sanciones">
         <div class="action-icon"><i class="bi bi-exclamation-triangle"></i></div>
         <h3>Gestionar Sanciones</h3>
         <p>Emitir y administrar sanciones a usuarios</p>
       </a>
 
+      <!-- Gestión Cuentas -->
       <div class="action-card cuentas" (click)="seccionActiva = 'cuentas'">
         <div class="action-icon"><i class="bi bi-people-fill"></i></div>
         <h3>Gestionar Cuentas</h3>
         <p>Ver y editar cuentas de alumnos registradas</p>
       </div>
+
+      <!-- 🆕 NUEVA OPCIÓN – GESTIONAR ASIGNATURAS/EVENTOS -->
+      <a routerLink="/admin/asignaturas" class="action-card asignaturas">
+        <div class="action-icon"><i class="bi bi-calendar-event"></i></div>
+        <h3>Gestionar Asignaturas / Eventos</h3>
+        <p>Definir restricciones de equipos para clases o eventos</p>
+      </a>
 
     </div>
 

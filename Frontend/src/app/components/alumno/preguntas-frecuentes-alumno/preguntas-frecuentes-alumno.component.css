@@ -1,0 +1,101 @@
+/* =============================
+   CONTENEDOR GENERAL
+============================= */
+.faq-wrapper {
+  padding: 2rem 3rem;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f9faff, #ffffff);
+  font-family: "Poppins", sans-serif;
+}
+
+/* =============================
+   ENCABEZADO
+============================= */
+.faq-header {
+  margin-bottom: 1.8rem;
+}
+
+.faq-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #d47a35;
+  margin-bottom: 0.4rem;
+}
+
+.faq-header p {
+  font-size: 0.95rem;
+  color: #5a5a5a;
+}
+
+/* =============================
+   LISTA DE FAQ
+============================= */
+.faq-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* =============================
+   TARJETA FAQ
+============================= */
+.faq-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  border: 1.5px solid #ccd7ff;
+  box-shadow: 0 4px 10px rgba(0, 40, 150, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faq-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(90, 121, 255, 0.1);
+}
+
+/* =============================
+   TEXTO
+============================= */
+.faq-pregunta {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #3451b2;
+  margin-bottom: 0.4rem;
+}
+
+.faq-respuesta {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.5;
+}
+
+/* =============================
+   MÓVIL – COMPACTO REAL
+============================= */
+@media (max-width: 768px) {
+
+  .faq-wrapper {
+    padding: 1.2rem;
+  }
+
+  .faq-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .faq-header p {
+    font-size: 0.85rem;
+  }
+
+  .faq-card {
+    padding: 1rem 1.1rem;
+    border-radius: 12px;
+  }
+
+  .faq-pregunta {
+    font-size: 0.95rem;
+  }
+
+  .faq-respuesta {
+    font-size: 0.85rem;
+  }
+}

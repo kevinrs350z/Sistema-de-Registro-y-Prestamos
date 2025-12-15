@@ -1,23 +1,50 @@
-<nav class="navbar">
-  <div class="nav-inner">
-    <span class="logo">Registro y Préstamo. Diseño Multimedia</span>
+<nav class="navbar navbar-mobile">
+  <!-- LOGO -->
+  <div class="nav-top">
+    <span class="logo">
+      Registro y Préstamo
+      <small>Diseño Multimedia</small>
+    </span>
+  </div>
 
-    <!--  Botones regulares (solo usuarios normales) -->
-    <ul *ngIf="!esAdmin">
-      <li>
-        <a routerLink="/equipos/catalogo" routerLinkActive="active">
-          Solicitar equipo
-        </a>
-      </li>
-      <li>
-        <a routerLink="/mis-solicitudes" routerLinkActive="active">
-          Mis solicitudes
-        </a>
-      </li>
-      <li>
-        <a (click)="cerrarSesion()">
-          Cerrar sesión
-        </a>
-      </li>
+  <!-- BOTONES USUARIO NORMAL -->
+  <div class="nav-actions" *ngIf="!esAdmin">
 
-    </ul>
+    <a
+      routerLink="/equipos/catalogo"
+      routerLinkActive="active"
+      class="nav-btn"
+    >
+      <i class="bi bi-box-seam"></i>
+      <span>Solicitar</span>
+    </a>
+
+    <a
+      routerLink="/mis-solicitudes"
+      routerLinkActive="active"
+      class="nav-btn"
+    >
+      <i class="bi bi-clock-history"></i>
+      <span>Mis solicitudes</span>
+    </a>
+
+    <a
+      routerLink="/preguntas-frecuentes"
+      routerLinkActive="active"
+      class="nav-btn"
+    >
+      <i class="bi bi-question-circle"></i>
+      <span>Ayuda</span>
+    </a>
+
+    <button
+      type="button"
+      class="nav-btn logout"
+      (click)="cerrarSesion()"
+    >
+      <i class="bi bi-box-arrow-right"></i>
+      <span>Salir</span>
+    </button>
+
+  </div>
+</nav>
