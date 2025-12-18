@@ -1,4 +1,3 @@
-
 <!-- 🧩 SECCIÓN GESTIONAR -->
 <div class="admin-full-container" *ngIf="seccionActiva === 'gestionar'">
 
@@ -72,6 +71,15 @@
         <p>Definir restricciones de equipos para clases o eventos</p>
       </a>
 
+      <!-- 📊 Visualizar Reportes -->
+      <div class="action-card reportes" (click)="irReportes()">
+        <div class="action-icon">
+          <i class="bi bi-bar-chart-line-fill"></i>
+        </div>
+        <h3>Visualizar Reportes</h3>
+        <p>Consultar estadísticas y reportes del sistema</p>
+      </div>
+
     </div>
 
   </div>
@@ -115,6 +123,5 @@
     <h1 class="admin-title">Gestión de Cuentas</h1>
     <p class="admin-subtitle">Ver y editar cuentas de alumnos registradas</p>
   </div>
-
   <app-cuentas></app-cuentas>
 </div>

@@ -156,3 +156,11 @@
   background: #365a8f;
   transform: translateY(-3px);
 }
+
+
+.error {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  display: block;
+}

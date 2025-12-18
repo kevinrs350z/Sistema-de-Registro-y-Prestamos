@@ -129,4 +129,10 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   irGestionarAsignaturas() {
     this.router.navigate(['/admin/asignaturas']);
   }
+
+  /** 📊 Ir a Reportes */
+  irReportes() {
+    this.router.navigate(['/admin/reportes']);
+  }
+
 }

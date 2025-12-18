@@ -1,18 +1,8 @@
-/**
- * Componente encargado de la gestión de cuentas de alumnos dentro del sistema.
- * Permite listar, filtrar, paginar, crear y editar usuarios provenientes del backend.
- * 
- * Este componente funciona como módulo standalone y utiliza servicios para
- * conectarse a la API vía UsuariosService.
- */
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuariosService } from '../../../services/usuarios.service';
 
-/**
- * Representa la estructura base de un Alumno/Usuario dentro del sistema.
- */
 interface Alumno {
   id: number;
   nombre: string;
@@ -21,20 +11,11 @@ interface Alumno {
   email: string;
   rut?: string;
   telefono?: string;
-  celular: string;
-  carrera?: string;
+  celular?: string;
   password?: string;
+  confirmPassword?: string;
   rol?: string;
 }
-/**
- * Respuesta paginada enviada por el backend.
- */
-interface UsuarioResponse {
-  data: any[];
-  current_page: number;
-  last_page: number;
-}
-
 
 @Component({
   selector: 'app-cuentas',
@@ -44,202 +25,253 @@ interface UsuarioResponse {
   styleUrls: ['./cuentas.component.css']
 })
 export class CuentasComponent implements OnInit {
-   /** Lista completa de alumnos obtenidos desde el backend */
+
   alumnos: Alumno[] = [];
-  /** Alumno seleccionado para visualizar o editar */
   alumnoSeleccionado: Alumno | null = null;
 
-   /** Valor utilizado para el campo de búsqueda */
-  filtro: string = '';
-
-  /** Indica si el usuario se encuentra en estado de edición */
+  filtro = '';
   editMode = false;
-
-  /** Indica si el usuario está creando una nueva cuenta */
   creando = false;
-    /**
-   * Objeto utilizado para la creación de un nuevo alumno.
-   * Se inicializa vacío y se completa en el formulario.
-   */
-  nuevoAlumno: Alumno = {
-    id: 0,
-    nombre: '',
-    apellido1: '',
-    apellido2: '',
-    email: '',
-    rut: '',
-    telefono: '',
-    celular: '',
-    password: '',
-    rol: 'Alumno'
-  };
-  /** Página actual de la tabla */
+
+  nuevoAlumno: Alumno = this.resetNuevoAlumno();
+
   currentPage = 1;
-    /** Última página disponible según el backend */
   lastPage = 1;
-    /**
-   * Hook de inicialización del componente.
-   * Carga automáticamente la primera página de alumnos.
-   */
+
+  // ✅ Regex PÚBLICAS porque el HTML las usa
+  public soloLetrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+  public emailValidoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // ✅ RUT: números + puntos + guion
+  public rutRegex = /^[0-9.\-]+$/;
+
+  // ✅ Teléfono: números + espacios (ej: "569 23859228")
+  public telefonoRegex = /^[0-9\s]+$/;
+
   constructor(private usuariosService: UsuariosService) {}
 
   ngOnInit(): void {
     this.cargarAlumnos();
   }
 
-    /**
-   * Carga la lista de alumnos desde el backend de acuerdo a la página indicada.
-   * @param page Número de página a cargar (por defecto 1)
-   */
+  /* =========================
+     CARGA Y PAGINACIÓN
+  ========================= */
   cargarAlumnos(page: number = 1) {
     this.usuariosService.obtenerUsuarios(page).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.alumnos = res.data;
         this.currentPage = res.current_page;
         this.lastPage = res.last_page;
       },
-      error: (err) => console.error('Error cargando alumnos:', err)
+      error: err => console.error('Error cargando alumnos:', err)
     });
   }
-    /**
-   * Avanza a la siguiente página, si existe.
-   */
+
   paginaSiguiente() {
     if (this.currentPage < this.lastPage) {
-      this.currentPage++;
-      this.cargarAlumnos(this.currentPage);
-    }
-  }
-    /**
-   * Retrocede a la página anterior, si es posible.
-   */
-  paginaAnterior() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.cargarAlumnos(this.currentPage);
+      this.cargarAlumnos(++this.currentPage);
     }
   }
 
-  /**
-   * Retorna el listado filtrado de alumnos según nombre o email.
-   * @returns Lista filtrada de alumnos
-   */
+  paginaAnterior() {
+    if (this.currentPage > 1) {
+      this.cargarAlumnos(--this.currentPage);
+    }
+  }
+
   get alumnosFiltrados() {
     if (!this.filtro.trim()) return this.alumnos;
     const f = this.filtro.toLowerCase();
-
     return this.alumnos.filter(a =>
-      a.nombre.toLowerCase().includes(f) ||
-      a.email.toLowerCase().includes(f)
+      (a.nombre || '').toLowerCase().includes(f) ||
+      (a.email || '').toLowerCase().includes(f)
     );
   }
-  /**
-   * Selecciona un alumno para visualizar su información.
-   * @param a Alumno seleccionado
-   */
+
+  /* =========================
+     SELECCIÓN / MODOS
+  ========================= */
   seleccionar(a: Alumno) {
-    this.alumnoSeleccionado = { ...a };
+    // ⚠️ No existe password real desde backend (por seguridad)
+    // pero para UX: mostramos ******** cuando no se edita
+    // y dejamos input editable vacío cuando se edita.
+    this.alumnoSeleccionado = { ...a, password: '' };
     this.editMode = false;
     this.creando = false;
   }
 
-  /**
-   * Habilita el modo creación y reinicia el formulario correspondiente.
-   */
   comenzarCrear() {
     this.creando = true;
-    this.alumnoSeleccionado = null;
     this.editMode = false;
-
-  this.nuevoAlumno = {
-    id: 0,
-    nombre: '',
-    apellido1: '',
-    apellido2: '',
-    email: '',
-    rut: '',
-    telefono: '',
-    celular: '',
-    password: '',
-    rol: 'Alumno'
-  };
-
-
+    this.alumnoSeleccionado = null;
+    this.nuevoAlumno = this.resetNuevoAlumno();
   }
-  /**
-   * Guarda los cambios realizados a un alumno existente enviando la actualización al backend.
-   */
+
+  editar() {
+    this.editMode = true;
+    // dejamos password vacío para que si no escribe, no se envía
+    if (this.alumnoSeleccionado) {
+      this.alumnoSeleccionado.password = '';
+    }
+  }
+
+  /* =========================
+     VALIDADORES PARA HTML
+  ========================= */
+  soloLetras(valor?: string): boolean {
+    if (!valor) return true;
+    return this.soloLetrasRegex.test(valor);
+  }
+
+  emailValido(valor?: string): boolean {
+    if (!valor) return true;
+    return this.emailValidoRegex.test(valor);
+  }
+
+  rutValido(valor?: string): boolean {
+    if (!valor) return true;
+    return this.rutRegex.test(valor);
+  }
+
+  telefonoValido(valor?: string): boolean {
+    if (!valor) return true;
+    return this.telefonoRegex.test(valor);
+  }
+
+  /* =========================
+     VALIDACIONES DE ENVÍO
+  ========================= */
+  esEdicionValida(): boolean {
+    const a = this.alumnoSeleccionado;
+    if (!a) return false;
+
+    if (!this.soloLetras(a.nombre)) return false;
+    if (!this.soloLetras(a.apellido1 || '')) return false;
+    if (a.apellido2 && !this.soloLetras(a.apellido2)) return false;
+
+    if (!this.emailValido(a.email)) return false;
+    if (a.rut && !this.rutValido(a.rut)) return false;
+
+    if (a.telefono && !this.telefonoValido(a.telefono)) return false;
+
+    // password solo si se escribe
+    if (a.password && a.password.length < 6) return false;
+
+    return true;
+  }
+
+  esCreacionValida(): boolean {
+    const n = this.nuevoAlumno;
+
+    if (!this.soloLetras(n.nombre)) return false;
+    if (!this.soloLetras(n.apellido1 || '')) return false;
+    if (n.apellido2 && !this.soloLetras(n.apellido2)) return false;
+
+    if (!this.emailValido(n.email)) return false;
+    if (n.rut && !this.rutValido(n.rut)) return false;
+
+    if (n.telefono && !this.telefonoValido(n.telefono)) return false;
+
+    if (!n.password || n.password.length < 6) return false;
+    if (n.password !== n.confirmPassword) return false;
+
+    return true;
+  }
+
+  /* =========================
+     GUARDAR EDICIÓN
+  ========================= */
   guardar() {
     if (!this.alumnoSeleccionado) return;
 
-    const id = this.alumnoSeleccionado.id;
-
-    const payload = {
-      nombre: this.alumnoSeleccionado.nombre,
-      apellido1: this.alumnoSeleccionado.apellido1,  
-      apellido2: this.alumnoSeleccionado.apellido2,
-      rut: this.alumnoSeleccionado.rut,
-      email: this.alumnoSeleccionado.email,
-      telefono: this.alumnoSeleccionado.telefono,
-      celular: this.alumnoSeleccionado.celular,
-      password: null,
-      rol: this.alumnoSeleccionado.rol  
-    };
-
-  this.usuariosService.actualizarUsuario(id, payload)
-    .subscribe({
-      next: (res) => {
-        alert("Usuario actualizado correctamente ✔");
-        this.editMode = false;
-        this.cargarAlumnos(this.currentPage);
-      },
-    error: (err) => {
-      console.error("Error al actualizar usuario", err);
-      console.table(err.error.errors);   
-      alert("Error al actualizar usuario (422). Revisa consola.");
-    }
-
-    });
-}
-
-
-   /**
-   * Envía al backend los datos ingresados para crear un nuevo usuario.
-   * Verifica que los campos obligatorios estén completos.
-   */
-  crearCuenta() {
-    if (!this.nuevoAlumno.nombre || !this.nuevoAlumno.email || !this.nuevoAlumno.password) {
-      alert('Completa los campos obligatorios.');
+    if (!this.esEdicionValida()) {
+      alert('Corrige los errores antes de guardar');
       return;
     }
 
-    const payload = {
-      nombre: this.nuevoAlumno.nombre,
-      apellido1: "Default",       
-      apellido2: "",
-      rut: this.nuevoAlumno.rut,
-      email: this.nuevoAlumno.email,
-      telefono: this.nuevoAlumno.telefono,
-      password: this.nuevoAlumno.password,
-      rol: "alumno"             
+    const a = this.alumnoSeleccionado;
+
+    const payload: any = {
+      nombre: a.nombre,
+      apellido1: a.apellido1,
+      apellido2: a.apellido2,
+      rut: a.rut,
+      email: a.email,
+      telefono: a.telefono,
+      celular: a.celular,
+      rol: a.rol
     };
 
-    this.usuariosService.crearUsuario(payload).subscribe({
-      next: (res) => {
-        alert('Cuenta creada correctamente ');
-        this.creando = false;
-        this.cargarAlumnos(); // recargar tabla
+    // ✅ Solo enviar password si el usuario escribió algo
+    if (a.password && a.password.trim().length > 0) {
+      payload.password = a.password.trim();
+    }
+
+    this.usuariosService.actualizarUsuario(a.id, payload).subscribe({
+      next: () => {
+        alert('Usuario actualizado correctamente ✔');
+        this.editMode = false;
+        this.cargarAlumnos(this.currentPage);
       },
-      error: (err) => {
+      error: err => {
         console.error(err);
-        alert("Error al crear usuario");
+        alert('Error al actualizar usuario');
       }
     });
   }
-    /**
-   * Habilita el modo de edición para modificar los datos de un alumno.
-   */
-  editar() {
-    this.editMode = true;
+
+  /* =========================
+     CREAR CUENTA
+  ========================= */
+  crearCuenta() {
+    if (!this.esCreacionValida()) {
+      alert('Revisa los datos ingresados');
+      return;
+    }
+
+    const n = this.nuevoAlumno;
+
+    const payload: any = {
+      nombre: n.nombre,
+      apellido1: n.apellido1,
+      apellido2: n.apellido2,
+      rut: n.rut,
+      email: n.email,
+      telefono: n.telefono,
+      password: n.password,
+      rol: n.rol
+    };
+
+    this.usuariosService.crearUsuario(payload).subscribe({
+      next: () => {
+        alert('Cuenta creada correctamente ✔');
+        this.creando = false;
+        this.cargarAlumnos();
+      },
+      error: err => {
+        console.error(err);
+        alert('Error al crear usuario');
+      }
+    });
+  }
+
+  /* =========================
+     HELPERS
+  ========================= */
+  private resetNuevoAlumno(): Alumno {
+    return {
+      id: 0,
+      nombre: '',
+      apellido1: '',
+      apellido2: '',
+      email: '',
+      rut: '',
+      telefono: '',
+      celular: '',
+      password: '',
+      confirmPassword: '',
+      rol: 'Alumno'
+    };
   }
 }

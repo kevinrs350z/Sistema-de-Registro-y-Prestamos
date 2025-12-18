@@ -2,13 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 import { AsignaturasService } from '../../../services/asignaturas.service';
 
 @Component({
   selector: 'app-gestionar-asignaturas',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarAdminComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './gestionar-asignaturas.component.html',
   styleUrls: ['./gestionar-asignaturas.component.css']
 })
@@ -29,6 +28,7 @@ export class GestionarAsignaturasComponent implements OnInit {
       tipo: 'asignatura',
       asignatura_id: 1,
       profesor: 'Marcelo Ortega',
+      ubicacion: 'Sala A-203',
       bloques: ['08:00 – 09:30'],
       equipos: [],
       observacion: '',
@@ -48,6 +48,7 @@ export class GestionarAsignaturasComponent implements OnInit {
     asignatura_id: '',
     evento_nombre: '',
     profesor: '',
+    ubicacion: '', // 👈 NUEVO
     bloques: [] as string[],
     equipos: [] as any[],
     observacion: ''
@@ -72,6 +73,11 @@ export class GestionarAsignaturasComponent implements OnInit {
     { nombre: 'Bloque 7', texto: '17:55 – 19:30' },
     { nombre: 'Bloque 8', texto: '19:40 – 21:10' }
   ];
+
+  /* ======================================
+              REGEX
+  ======================================= */
+  private soloLetrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
   constructor(private asignaturasService: AsignaturasService) {}
 
@@ -102,6 +108,7 @@ export class GestionarAsignaturasComponent implements OnInit {
       asignatura_id: '',
       evento_nombre: '',
       profesor: '',
+      ubicacion: '',
       bloques: [],
       equipos: [],
       observacion: ''
@@ -135,14 +142,9 @@ export class GestionarAsignaturasComponent implements OnInit {
     if (!this.equipoSeleccionado || this.cantidadSeleccionada < 1) return;
 
     const eq = this.equipoSeleccionado;
-
-    // backend usa idEquipo
     const idEquipo = eq.idEquipo ?? eq.id;
 
-    if (!idEquipo) {
-      console.warn("Equipo sin id válido:", eq);
-      return;
-    }
+    if (!idEquipo) return;
 
     const existente = this.form.equipos.find((e: any) => e.id === idEquipo);
 
@@ -165,6 +167,14 @@ export class GestionarAsignaturasComponent implements OnInit {
   }
 
   /* ======================================
+              VALIDADOR PARA HTML
+  ======================================= */
+  soloLetras(valor?: string): boolean {
+    if (!valor) return true;
+    return this.soloLetrasRegex.test(valor);
+  }
+
+  /* ======================================
               GET DE NOMBRE MOSTRADO
   ======================================= */
   getNombreAsignaturaEvento(): string {
@@ -183,6 +193,17 @@ export class GestionarAsignaturasComponent implements OnInit {
               GUARDAR RESERVA
   ======================================= */
   guardar() {
+
+    if (!this.form.profesor || !this.soloLetras(this.form.profesor)) {
+      alert('El nombre del profesor solo debe contener letras');
+      return;
+    }
+
+    if (!this.form.ubicacion || this.form.ubicacion.trim() === '') {
+      alert('Debe indicar una ubicación');
+      return;
+    }
+
     const nueva = {
       ...this.form,
       id: this.reservas.length + 1,
@@ -199,7 +220,7 @@ export class GestionarAsignaturasComponent implements OnInit {
     };
 
     this.reservas.push(nueva);
-    alert("Reserva creada con éxito.");
+    alert('Reserva creada con éxito.');
     this.mostrarFormulario = false;
   }
 
@@ -210,11 +231,9 @@ export class GestionarAsignaturasComponent implements OnInit {
     if (!this.reservaSeleccionada) return;
 
     const id = this.reservaSeleccionada.id;
-
     this.reservas = this.reservas.filter(r => r.id !== id);
-
     this.reservaSeleccionada = null;
 
-    alert("La reserva ha sido cancelada correctamente.");
+    alert('La reserva ha sido cancelada correctamente.');
   }
 }

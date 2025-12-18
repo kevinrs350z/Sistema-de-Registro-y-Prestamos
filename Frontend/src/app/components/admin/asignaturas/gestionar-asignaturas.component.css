@@ -1,10 +1,11 @@
 /* ============================================
    CONTENEDOR GENERAL
+   (AJUSTADO PARA NAVBAR GLOBAL)
 ============================================ */
 .admin-container {
-  padding: 30px 60px;
+  padding: 20px 60px;           /* ⬅️ antes era 30px */
   font-family: 'Poppins', sans-serif;
-  min-height: calc(100vh - 140px);
+  min-height: calc(100vh - 80px); /* ⬅️ navbar ya ocupa espacio */
   overflow: hidden;
 }
 
@@ -22,7 +23,7 @@
   grid-template-columns: 1fr 1.2fr 0.9fr; 
   gap: 35px;
   width: 100%;
-  margin-top: 20px;
+  margin-top: 10px; /* ⬅️ reducido */
 }
 
 /* ============================================
@@ -86,7 +87,7 @@
 
 /* Scroll */
 .scroll-columna {
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 180px); /* ⬅️ ajustado */
   overflow-y: auto;
   padding-right: 10px;
 }
@@ -100,7 +101,7 @@
   border-radius: 16px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.1);
   overflow-y: auto;
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 180px); /* ⬅️ ajustado */
 }
 
 .titulo-form {
@@ -277,7 +278,7 @@ textarea {
 }
 
 /* ============================================
-   DETALLE DE RESERVA SELECCIONADA
+   DETALLE DE RESERVA
 ============================================ */
 .detalle-reserva-box {
   background: #fdfdff;
@@ -298,7 +299,7 @@ textarea {
 }
 
 /* ============================================
-   BOTÓN CANCELAR RESERVA
+   BOTÓN CANCELAR
 ============================================ */
 .btn-cancelar {
   margin-top: 20px;

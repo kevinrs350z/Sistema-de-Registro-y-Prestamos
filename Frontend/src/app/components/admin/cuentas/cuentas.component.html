@@ -1,15 +1,15 @@
 <div class="cuentas-container">
 
-  <!-- LISTA IZQUIERDA -->
+  <!-- ================= LISTA IZQUIERDA ================= -->
   <div class="lista">
-    <h3 class="titulo-lista">Alumnos Registrados</h3>
+    <h3 class="titulo-lista">Estudiantes Registrados</h3>
 
     <button class="btn-crear" (click)="comenzarCrear()">+ Crear cuenta</button>
 
     <input
       type="text"
       class="buscador"
-      placeholder="Buscar alumno..."
+      placeholder="Buscar estudiante..."
       [(ngModel)]="filtro"
     />
 
@@ -24,14 +24,11 @@
     </div>
 
     <p *ngIf="alumnos.length === 0" class="sin-alumnos">
-      No hay alumnos registrados.
+      No hay estudiantes registrados.
     </p>
 
-      <div class="paginacion" style="margin-top: 20px; text-align:center;">
-      <button 
-        (click)="paginaAnterior()" 
-        [disabled]="currentPage === 1"
-        style="padding: 8px 12px; margin-right: 10px;">
+    <div class="paginacion" style="margin-top: 20px; text-align:center;">
+      <button (click)="paginaAnterior()" [disabled]="currentPage === 1">
         ◀ Anterior
       </button>
 
@@ -39,49 +36,68 @@
         Página {{ currentPage }} de {{ lastPage }}
       </span>
 
-      <button 
-        (click)="paginaSiguiente()" 
-        [disabled]="currentPage === lastPage"
-        style="padding: 8px 12px; margin-left: 10px;">
+      <button (click)="paginaSiguiente()" [disabled]="currentPage === lastPage">
         Siguiente ▶
       </button>
     </div>
   </div>
 
-  <!-- PANEL DERECHO -->
+  <!-- ================= PANEL DERECHO ================= -->
   <div class="detalle" *ngIf="alumnoSeleccionado || creando">
 
-    <!-- PANEL DE CREACIÓN -->
+    <!-- ================= CREAR CUENTA ================= -->
     <div *ngIf="creando">
       <h3>Crear Nueva Cuenta</h3>
 
       <label>Nombre:</label>
       <input type="text" [(ngModel)]="nuevoAlumno.nombre" />
+      <small class="error" *ngIf="nuevoAlumno.nombre && !soloLetras(nuevoAlumno.nombre)">
+        Solo letras
+      </small>
 
-      <!-- NUEVO -->
       <label>Apellido 1:</label>
       <input type="text" [(ngModel)]="nuevoAlumno.apellido1" />
+      <small class="error" *ngIf="nuevoAlumno.apellido1 && !soloLetras(nuevoAlumno.apellido1)">
+        Solo letras
+      </small>
 
-      <!-- NUEVO -->
       <label>Apellido 2:</label>
       <input type="text" [(ngModel)]="nuevoAlumno.apellido2" />
+      <small class="error" *ngIf="nuevoAlumno.apellido2 && !soloLetras(nuevoAlumno.apellido2)">
+        Solo letras
+      </small>
 
       <label>Email:</label>
       <input type="email" [(ngModel)]="nuevoAlumno.email" />
+      <small class="error" *ngIf="nuevoAlumno.email && !emailValido(nuevoAlumno.email)">
+        Email inválido
+      </small>
 
       <label>RUT:</label>
       <input type="text" [(ngModel)]="nuevoAlumno.rut" />
+      <small class="error" *ngIf="nuevoAlumno.rut && !rutRegex.test(nuevoAlumno.rut)">
+        Solo números, puntos y guión
+      </small>
 
       <label>Teléfono:</label>
       <input type="text" [(ngModel)]="nuevoAlumno.telefono" />
+      <small class="error" *ngIf="nuevoAlumno.telefono && !telefonoRegex.test(nuevoAlumno.telefono)">
+        Solo números y espacios
+      </small>
 
       <label>Contraseña:</label>
       <input type="password" [(ngModel)]="nuevoAlumno.password" />
+      <small class="error" *ngIf="nuevoAlumno.password && nuevoAlumno.password.length < 6">
+        Mínimo 6 caracteres
+      </small>
 
       <label>Confirmar contraseña:</label>
-      <input type="password" />
+      <input type="password" [(ngModel)]="nuevoAlumno.confirmPassword" />
+      <small class="error"
+        *ngIf="nuevoAlumno.confirmPassword && nuevoAlumno.password !== nuevoAlumno.confirmPassword">
+        Las contraseñas no coinciden
+      </small>
 
-      <!-- NUEVO: selector de rol -->
       <label>Rol:</label>
       <select [(ngModel)]="nuevoAlumno.rol">
         <option value="Alumno">Alumno</option>
@@ -90,65 +106,80 @@
 
       <div class="acciones">
         <button class="btn-guardar" (click)="crearCuenta()">Crear cuenta</button>
-        <button class="btn-cancelar" (click)="creando=false">Cancelar</button>
+        <button class="btn-cancelar" (click)="creando = false">Cancelar</button>
       </div>
     </div>
 
-
-
-    <!-- PANEL DE EDICIÓN -->
+    <!-- ================= EDITAR USUARIO ================= -->
     <div *ngIf="alumnoSeleccionado && !creando">
-      <h3>Datos del Alumno</h3>
+      <h3>Datos del Usuario</h3>
 
       <label>Nombre:</label>
-      <input
-        type="text"
-        [(ngModel)]="alumnoSeleccionado.nombre"
-        [disabled]="!editMode"
-      />
+      <input type="text" [(ngModel)]="alumnoSeleccionado.nombre" [disabled]="!editMode" />
+      <small class="error"
+        *ngIf="editMode && alumnoSeleccionado.nombre && !soloLetras(alumnoSeleccionado.nombre)">
+        Solo letras
+      </small>
 
-      
       <label>Apellido 1:</label>
-      <input
-        type="text"
-        [(ngModel)]="alumnoSeleccionado.apellido1"
-        [disabled]="!editMode"
-      />
+      <input type="text" [(ngModel)]="alumnoSeleccionado.apellido1" [disabled]="!editMode" />
+      <small class="error"
+        *ngIf="editMode && alumnoSeleccionado.apellido1 && !soloLetras(alumnoSeleccionado.apellido1)">
+        Solo letras
+      </small>
 
-      
       <label>Apellido 2:</label>
-      <input
-        type="text"
-        [(ngModel)]="alumnoSeleccionado.apellido2"
-        [disabled]="!editMode"
-      />
+      <input type="text" [(ngModel)]="alumnoSeleccionado.apellido2" [disabled]="!editMode" />
+      <small class="error"
+        *ngIf="editMode && alumnoSeleccionado.apellido2 && !soloLetras(alumnoSeleccionado.apellido2)">
+        Solo letras
+      </small>
 
       <label>Email:</label>
-      <input
-        type="email"
-        [(ngModel)]="alumnoSeleccionado.email"
-        [disabled]="!editMode"
-      />
+      <input type="email" [(ngModel)]="alumnoSeleccionado.email" [disabled]="!editMode" />
+      <small class="error"
+        *ngIf="editMode && alumnoSeleccionado.email && !emailValido(alumnoSeleccionado.email)">
+        Email inválido
+      </small>
 
       <label>RUT:</label>
-      <input
-        type="text"
-        [(ngModel)]="alumnoSeleccionado.rut"
-        [disabled]="!editMode"
-      />
+      <input type="text" [(ngModel)]="alumnoSeleccionado.rut" [disabled]="!editMode" />
+      <small class="error"
+        *ngIf="editMode && alumnoSeleccionado.rut && !rutRegex.test(alumnoSeleccionado.rut)">
+        Solo números, puntos y guión
+      </small>
 
       <label>Teléfono:</label>
+      <input type="text" [(ngModel)]="alumnoSeleccionado.telefono" [disabled]="!editMode" />
+      <small class="error"
+        *ngIf="editMode && alumnoSeleccionado.telefono && !telefonoRegex.test(alumnoSeleccionado.telefono)">
+        Solo números y espacios
+      </small>
+
+      <!-- 🔐 CONTRASEÑA -->
+      <label>Contraseña:</label>
+
+      <!-- Vista bloqueada -->
       <input
-        type="text"
-        [(ngModel)]="alumnoSeleccionado.telefono"
-        [disabled]="!editMode"
+        *ngIf="!editMode"
+        type="password"
+        value="********"
+        disabled
       />
 
+      <!-- Edición -->
+      <input
+        *ngIf="editMode"
+        type="password"
+        [(ngModel)]="alumnoSeleccionado.password"
+        placeholder="Nueva contraseña"
+      />
 
+      <small class="error"
+        *ngIf="editMode && alumnoSeleccionado.password && alumnoSeleccionado.password.length < 6">
+        Mínimo 6 caracteres
+      </small>
 
-      <label>Contraseña:</label>
-      <input type="password" value="********" disabled />
-         
       <label>Rol:</label>
       <select [(ngModel)]="alumnoSeleccionado.rol" [disabled]="!editMode">
         <option value="Alumno">Alumno</option>
@@ -156,14 +187,19 @@
       </select>
 
       <div class="acciones">
-        <button class="btn-editar" *ngIf="!editMode" (click)="editar()">Editar datos</button>
-        <button class="btn-guardar" *ngIf="editMode" (click)="guardar()">Guardar</button>
-        <button class="btn-cancelar" *ngIf="editMode" (click)="editMode=false">Cancelar</button>
+        <button class="btn-editar" *ngIf="!editMode" (click)="editar()">
+          Editar datos
+        </button>
+
+        <button class="btn-guardar" *ngIf="editMode" (click)="guardar()">
+          Guardar
+        </button>
+
+        <button class="btn-cancelar" *ngIf="editMode" (click)="editMode = false">
+          Cancelar
+        </button>
       </div>
     </div>
 
   </div>
-
-  
-
 </div>

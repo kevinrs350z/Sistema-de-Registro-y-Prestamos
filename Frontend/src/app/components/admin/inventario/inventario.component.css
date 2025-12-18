@@ -824,3 +824,439 @@
     right: 12px;
   }
 }
+
+
+/* =========================================================
+   🔥 MEJORAS VISUALES 2025 (SIN ROMPER ESTRUCTURA)
+   SOLO OVERRIDES – SE PEGA AL FINAL
+========================================================= */
+
+/* =========================
+   ANIMACIONES SUAVES
+========================= */
+@keyframes softFloat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
+@keyframes fadeSoft {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================
+   TARJETAS MODELO (NO CAMBIA TAMAÑO)
+========================= */
+.grupo-modelo {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.grupo-modelo:hover {
+  box-shadow: 0 20px 45px rgba(44,62,145,0.15);
+  transform: translateY(-4px);
+}
+
+/* =========================
+   ITEMS DE EQUIPO
+========================= */
+.equipo-item {
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.equipo-item:hover {
+  background: linear-gradient(135deg, #f7f9ff, #ffffff);
+  transform: translateX(6px);
+}
+
+/* =========================
+   ESTADOS (CON ICONO)
+========================= */
+.equipo-estado {
+  position: relative;
+  padding-left: 34px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.equipo-estado::before {
+  content: "✔";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+}
+
+.equipo-estado.ocupado::before {
+  content: "⏳";
+}
+
+/* =========================
+   BOTÓN MODIFICAR MODELO
+========================= */
+.modelo-header button,
+.modelo-header input[type="button"] {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+}
+
+.modelo-header button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(37,99,235,0.45);
+}
+
+/* =========================
+   BOTÓN VER DETALLE
+========================= */
+.equipo-item button,
+.equipo-item input[type="button"] {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(102,126,234,0.3);
+}
+
+.equipo-item button:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 10px 32px rgba(102,126,234,0.45);
+}
+
+/* =========================
+   COLUMNA DERECHA (DETALLE)
+========================= */
+.columna-derecha {
+  animation: fadeSoft 0.4s ease;
+}
+
+/* =========================
+   INPUTS MÁS PRO
+========================= */
+.columna-derecha input,
+.columna-derecha select {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.columna-derecha input:focus,
+.columna-derecha select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
+}
+
+/* =========================
+   BOTONES GUARDAR / CANCELAR
+========================= */
+.btn-guardar {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 8px 26px rgba(34,197,94,0.45);
+  transition: all 0.3s ease;
+}
+
+.btn-guardar:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 45px rgba(34,197,94,0.55);
+}
+
+.btn-cancelar {
+  background: #f3f4f6;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+  transition: all 0.25s ease;
+}
+
+.btn-cancelar:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   🔥 OVERRIDE VER DETALLE – ESTILO MODERNO 2025
+   SOLO PARA PANEL DERECHO (NO ROMPE ESTRUCTURA)
+========================================================= */
+
+/* =========================
+   PANEL DETALLE
+========================= */
+.columna-derecha {
+  animation: fadeSoft 0.35s ease;
+}
+
+/* =========================
+   INPUT CÓDIGO
+========================= */
+.columna-derecha input[type="text"],
+.columna-derecha input[type="number"] {
+  border-radius: 10px;
+  padding: 8px 12px;
+  border: 2px solid #e5e7eb;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  background: #ffffff;
+}
+
+.columna-derecha input[type="text"]:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
+}
+
+/* =========================
+   SELECT ESTADO
+========================= */
+.columna-derecha select {
+  border-radius: 10px;
+  padding: 8px 14px;
+  border: 2px solid #e5e7eb;
+  font-size: 14px;
+  font-weight: 600;
+  background: white;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.columna-derecha select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
+}
+
+/* =========================
+   CONTENEDOR BOTONES
+========================= */
+.columna-derecha .botones-edicion {
+  margin-top: 14px;
+}
+
+/* =========================
+   BOTÓN GUARDAR (MODERNO)
+========================= */
+.columna-derecha .btn-guardar {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 30px rgba(34,197,94,0.45);
+  transition: all 0.3s ease;
+}
+
+.columna-derecha .btn-guardar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 45px rgba(34,197,94,0.55);
+}
+
+/* =========================
+   BOTÓN CANCELAR (MODERNO)
+========================= */
+.columna-derecha .btn-cancelar {
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid #e5e7eb;
+  transition: all 0.25s ease;
+}
+
+.columna-derecha .btn-cancelar:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   ETIQUETAS INLINE (Código / Estado)
+========================= */
+.columna-derecha label,
+.columna-derecha span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+/* =========================
+   IMAGEN EQUIPO (SUTIL)
+========================= */
+.columna-derecha img {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.columna-derecha img:hover {
+  transform: scale(1.03);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.25);
+}
+
+
+/* =========================================================
+   🔥 BOTÓN "VER DETALLE" – FIX DEFINITIVO (SIN HTML)
+========================================================= */
+
+/* Botón Ver detalle cuando es <button> */
+.equipo-item button {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #ffffff;
+  border: none;
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 6px 22px rgba(102,126,234,0.35);
+  transition: all 0.25s ease;
+}
+
+/* Botón Ver detalle cuando es <input type="button"> */
+.equipo-item input[type="button"] {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #ffffff;
+  border: none;
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 6px 22px rgba(102,126,234,0.35);
+  transition: all 0.25s ease;
+}
+
+/* Hover 2025 */
+.equipo-item button:hover,
+.equipo-item input[type="button"]:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 36px rgba(102,126,234,0.5);
+}
+
+/* Click */
+.equipo-item button:active,
+.equipo-item input[type="button"]:active {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   🔥 OVERRIDE TOTAL BOOTSTRAP – BOTONES DETALLE
+   (SIN TOCAR HTML)
+========================================================= */
+
+.columna-derecha .btn.btn-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 8px 22px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px;
+  box-shadow: 0 10px 35px rgba(34,197,94,0.45);
+  transition: all 0.3s ease;
+}
+
+.columna-derecha .btn.btn-success:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 18px 55px rgba(34,197,94,0.6);
+}
+
+/* --------------------------------------------- */
+
+.columna-derecha .btn.btn-secondary {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 999px !important;
+  padding: 8px 22px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  transition: all 0.25s ease;
+}
+
+.columna-derecha .btn.btn-secondary:hover {
+  background: #e5e7eb !important;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   🔥 OVERRIDE TOTAL BOOTSTRAP – BOTONES DETALLE
+   (SIN TOCAR HTML)
+========================================================= */
+
+.columna-derecha .btn.btn-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 8px 22px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px;
+  box-shadow: 0 10px 35px rgba(34,197,94,0.45);
+  transition: all 0.3s ease;
+}
+
+.columna-derecha .btn.btn-success:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 18px 55px rgba(34,197,94,0.6);
+}
+
+/* --------------------------------------------- */
+
+.columna-derecha .btn.btn-secondary {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 999px !important;
+  padding: 8px 22px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  transition: all 0.25s ease;
+}
+
+.columna-derecha .btn.btn-secondary:hover {
+  background: #e5e7eb !important;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   🔥 OVERRIDE BOOTSTRAP BADGE → ESTADO MODERNO
+========================================================= */
+
+.badge {
+  padding: 6px 16px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.4px;
+  text-transform: capitalize;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 95px;
+}
+
+/* DISPONIBLE */
+.estado-disponible {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  color: white !important;
+}
+
+/* PRESTADO */
+.estado-prestado {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+}
