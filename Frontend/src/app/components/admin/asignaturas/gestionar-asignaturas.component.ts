@@ -3,6 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { AsignaturasService } from '../../../services/asignaturas.service';
+interface BloqueHorario {
+  idBloque: number;
+  nombre: string;
+  texto: string;
+}
+
 
 @Component({
   selector: 'app-gestionar-asignaturas',
@@ -43,16 +49,26 @@ export class GestionarAsignaturasComponent implements OnInit {
   /* ======================================
               FORMULARIO PRINCIPAL
   ======================================= */
-  form: any = {
-    tipo: 'asignatura',
-    asignatura_id: '',
-    evento_nombre: '',
-    profesor: '',
-    ubicacion: '', // 👈 NUEVO
-    bloques: [] as string[],
-    equipos: [] as any[],
-    observacion: ''
-  };
+form: {
+  tipo: string;
+  asignatura_id: number | '';
+  evento_nombre: string;
+  profesor: string;
+  ubicacion: string;
+  bloques: string[];
+  equipos: any[];
+  observacion: string;
+} = {
+  tipo: 'asignatura',
+  asignatura_id: '',
+  evento_nombre: '',
+  profesor: '',
+  ubicacion: '',
+  bloques: [],
+  equipos: [],
+  observacion: ''
+};
+
 
   /* ======================================
                CAMPOS TEMPORALES
@@ -63,16 +79,17 @@ export class GestionarAsignaturasComponent implements OnInit {
   /* ======================================
               BLOQUES HORARIOS
   ======================================= */
-  bloques = [
-    { nombre: 'Bloque 1', texto: '08:00 – 09:30' },
-    { nombre: 'Bloque 2', texto: '09:40 – 11:10' },
-    { nombre: 'Bloque 3', texto: '11:20 – 12:50' },
-    { nombre: 'Bloque 4', texto: '12:50 – 14:40' },
-    { nombre: 'Bloque 5', texto: '14:45 – 16:10' },
-    { nombre: 'Bloque 6', texto: '16:20 – 17:50' },
-    { nombre: 'Bloque 7', texto: '17:55 – 19:30' },
-    { nombre: 'Bloque 8', texto: '19:40 – 21:10' }
-  ];
+bloques: BloqueHorario[] = [
+  { idBloque: 1, nombre: 'Bloque 1', texto: '08:00 – 09:30' },
+  { idBloque: 2, nombre: 'Bloque 2', texto: '09:40 – 11:10' },
+  { idBloque: 3, nombre: 'Bloque 3', texto: '11:20 – 12:50' },
+  { idBloque: 4, nombre: 'Bloque 4', texto: '12:50 – 14:40' },
+  { idBloque: 5, nombre: 'Bloque 5', texto: '14:45 – 16:10' },
+  { idBloque: 6, nombre: 'Bloque 6', texto: '16:20 – 17:50' },
+  { idBloque: 7, nombre: 'Bloque 7', texto: '17:55 – 19:30' },
+  { idBloque: 8, nombre: 'Bloque 8', texto: '19:40 – 21:10' }
+];
+
 
   /* ======================================
               REGEX
@@ -192,41 +209,48 @@ export class GestionarAsignaturasComponent implements OnInit {
   /* ======================================
               GUARDAR RESERVA
   ======================================= */
-  guardar() {
+guardar() {
 
-    if (!this.form.profesor || !this.soloLetras(this.form.profesor)) {
-      alert('El nombre del profesor solo debe contener letras');
-      return;
-    }
-
-    if (!this.form.ubicacion || this.form.ubicacion.trim() === '') {
-      alert('Debe indicar una ubicación');
-      return;
-    }
-
-    const nueva = {
-      ...this.form,
-      id: this.reservas.length + 1,
-
-      asignaturaNombre:
-        this.form.tipo === 'asignatura'
-          ? this.asignaturas.find(a => a.id == this.form.asignatura_id)?.nombre
-          : null,
-
-      eventoNombre:
-        this.form.tipo === 'evento'
-          ? (this.form.evento_nombre.trim() || null)
-          : null
-    };
-
-    this.reservas.push(nueva);
-    alert('Reserva creada con éxito.');
-    this.mostrarFormulario = false;
+  if (!this.form.ubicacion) {
+    alert('Debe indicar una ubicación');
+    return;
   }
 
-  /* ======================================
-              CANCELAR RESERVA
-  ======================================= */
+const payload = {
+  idUserAlumno: 1, //  temporal (admin seleccionará alumno después)
+
+  tipo: 'DENTRO',
+  asignatura: this.form.asignatura_id || null,
+  observacion: this.form.observacion,
+
+  fecha_inicio: new Date().toISOString().slice(0, 10),
+  fecha_fin: new Date().toISOString().slice(0, 10),
+
+  bloques: this.form.bloques
+    .map(b => this.bloques.find(x => x.texto === b)?.idBloque)
+    .filter((b): b is number => b !== undefined),
+
+  equipos: this.form.equipos.map((e: any) => ({
+    idTipoEquipo: e.idTipoEquipo,
+    cantidad: e.cantidad,
+    modo: 'cualquiera'
+  }))
+};
+
+  this.asignaturasService.crearPrestamoAdmin(payload)
+    .subscribe({
+      next: () => {
+        alert('Préstamo registrado correctamente');
+        this.mostrarFormulario = false;
+      },
+      error: err => {
+        console.error(err);
+        alert(err.error?.error || 'Error al crear préstamo');
+      }
+    });
+}
+
+
   cancelarReserva() {
     if (!this.reservaSeleccionada) return;
 

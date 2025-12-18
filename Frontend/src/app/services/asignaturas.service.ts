@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -7,25 +7,41 @@ import { Observable } from 'rxjs';
 })
 export class AsignaturasService {
 
-  private api = 'http://localhost:8000/api'; // TU BACKEND LARAVEL
+  private api = 'http://localhost:8000/api';
 
   constructor(private http: HttpClient) {}
+
+  /* ===========================
+        HEADERS CON TOKEN
+  ============================ */
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token'); // o sessionStorage
+    return new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  }
 
   /* ===========================
         EQUIPOS / ASIGNATURAS
   ============================ */
 
   getEquipos(): Observable<any> {
-    return this.http.get(`${this.api}/equipos`);
+    return this.http.get(
+      `${this.api}/equipos`,
+      { headers: this.getHeaders() }
+    );
   }
 
   getAsignaturas(): Observable<any> {
-    return this.http.get(`${this.api}/asignaturas`);
+    return this.http.get(
+      `${this.api}/asignaturas`,
+      { headers: this.getHeaders() }
+    );
   }
 
   /* ===========================
-        EVENTOS (NO EXISTEN EN BACKEND)
-        → SE SIMULAN AQUÍ
+        EVENTOS (SIMULADOS)
   ============================ */
   getEventos(): Observable<any> {
     return new Observable(sub => {
@@ -39,21 +55,44 @@ export class AsignaturasService {
   }
 
   /* ===========================
-        CRUD de Restricciones (NO USADO AHORA)
+        RESTRICCIONES (FUTURO)
   ============================ */
+
   getRestricciones(): Observable<any> {
-    return this.http.get(`${this.api}/restricciones`);
+    return this.http.get(
+      `${this.api}/restricciones`,
+      { headers: this.getHeaders() }
+    );
   }
 
   crearRestriccion(data: any): Observable<any> {
-    return this.http.post(`${this.api}/restricciones`, data);
+    return this.http.post(
+      `${this.api}/restricciones`,
+      data,
+      { headers: this.getHeaders() }
+    );
   }
 
   actualizarRestriccion(data: any): Observable<any> {
-    return this.http.put(`${this.api}/restricciones/${data.id}`, data);
+    return this.http.put(
+      `${this.api}/restricciones/${data.id}`,
+      data,
+      { headers: this.getHeaders() }
+    );
   }
 
   eliminarRestriccion(id: number): Observable<any> {
-    return this.http.delete(`${this.api}/restricciones/${id}`);
+    return this.http.delete(
+      `${this.api}/restricciones/${id}`,
+      { headers: this.getHeaders() }
+    );
   }
+  crearPrestamoAdmin(data: any) {
+    return this.http.post(
+      `${this.api}/admin/prestamos`,
+      data,
+      { headers: this.getHeaders() }
+    );
+  }
+
 }

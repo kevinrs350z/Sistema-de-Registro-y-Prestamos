@@ -1,17 +1,4 @@
-/**
- * Componente encargado de la gestión completa del inventario de equipos.
- * Se encarga de:
- *  - Cargar categorías, tipos y equipos desde el backend.
- *  - Filtrar equipos por área, modelo o búsqueda textual.
- *  - Crear nuevos equipos o modelos, incluyendo subida de imágenes.
- *  - Visualizar y editar grupos de equipos o un equipo individual.
- * 
- * Este módulo representa un punto clave del sistema, ya que gestiona el estado
- * del inventario y establece comunicación directa con los servicios del frontend
- * que, a su vez, interactúan con el backend.
- */
-
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -26,39 +13,34 @@ import { TipoEquipoService } from '../../../services/tipoEquipo.service';
   templateUrl: './inventario.component.html',
   styleUrls: ['./inventario.component.css']
 })
-export class InventarioComponent {
+export class InventarioComponent implements OnInit {
 
-  /** Listas principales utilizadas en el inventario */
   equipos: any[] = [];
   equiposFiltrados: any[] = [];
 
   categorias: any[] = [];
   todosTipos: any[] = [];
   modelosDeCategoria: any[] = [];
-  /** Almacenan áreas y modelos usados para los filtros */
+
   areas: string[] = [];
   modelos: string[] = [];
 
- /** Imagen seleccionada al crear un modelo nuevo */
   archivoImagen: File | null = null;
   previewImagen: string | null = null;
 
- /** Variables de filtros y búsqueda */
   busqueda = '';
   filtroArea = '';
   filtroModelo = '';
- /** Variables para selección de modelos/equipos */
+
   modeloSeleccionado: any = null;
   equipoSeleccionado: any = null;
-  solicitudActiva: any = null;
-/** Controlan estados de edición */
-  editandoModelo = false;
 
-  /** Define si se creará un equipo con modelo existente o nuevo */
-  modo: 'existente' | 'nuevo' = 'existente';
-/** Control del panel de creación */
+  editandoModelo = false;
   panelCrear = false;
-  /** Template del formulario para creación de equipos */ 
+  guardando = false;
+
+  modo: 'existente' | 'nuevo' = 'existente';
+
   nuevoEquipo: any = {
     categoria_id: '',
     tipo_equipo_id: '',
@@ -72,137 +54,94 @@ export class InventarioComponent {
     private categoriaService: CategoriaService,
     private tipoEquipoService: TipoEquipoService
   ) {}
-  /**
-   * Carga inicial del componente.
-   * Se ejecutan las funciones que solicitan información al backend
-   * mediante los servicios correspondientes.
-   */
+
   ngOnInit(): void {
     this.cargarCategorias();
     this.cargarTipos();
     this.cargarEquipos();
   }
 
- 
-  /**
-   * Obtiene las categorías desde el backend.
-   */
   cargarCategorias() {
     this.categoriaService.getCategorias().subscribe({
-      next: (data: any[]) => this.categorias = data,
-      error: (err: any) => console.error('Error cargando categorías', err)
+      next: data => this.categorias = data,
+      error: err => console.error('Error cargando categorías', err)
     });
   }
-  /**
-   * Obtiene los tipos de equipos desde el backend.
-   */
+
   cargarTipos() {
     this.tipoEquipoService.getTipos().subscribe({
-      next: (data) => {
-        console.log("Tipos desde backend:", data);
-        this.todosTipos = data;
-      }
+      next: data => this.todosTipos = data,
+      error: err => console.error('Error cargando tipos', err)
     });
   }
-  /**
-   * Obtiene los equipos, genera áreas y modelos únicos,
-   * y aplica filtros iniciales.
-   */
+
   cargarEquipos() {
     this.equiposService.getEquipos().subscribe({
       next: (equipos: any[]) => {
-        this.equipos = equipos;
+        this.equipos = equipos.filter(e => e.estado !== 'ELIMINADO');
 
-        this.areas = [...new Set(equipos.map(e => e.categoria))];
-        this.modelos = [...new Set(equipos.map(e => e.nombre))];
+        this.areas = [...new Set(this.equipos.map(e => e.categoria))];
+        this.modelos = [...new Set(this.equipos.map(e => e.nombre))];
 
         this.filtrar();
       },
-      error: (err: any) => console.error('Error cargando equipos:', err)
+      error: err => console.error('Error cargando equipos', err)
     });
   }
 
-  /**
-   * Abre el panel para crear un nuevo equipo.
-   */
   abrirCrearEquipo() {
     this.panelCrear = true;
     this.modeloSeleccionado = null;
     this.equipoSeleccionado = null;
   }
-  /**
-   * Cierra el panel de creación.
-   */
+
   cerrarCrear() {
     this.panelCrear = false;
   }
-  /**
-   * Carga los modelos disponibles filtrando por categoría seleccionada.
-   */
+
   cargarModelosPorCategoria() {
-    const categoriaId = this.nuevoEquipo.categoria_id;
-    this.modelosDeCategoria = this.todosTipos.filter(t => t.categoria_id == categoriaId);
+    this.modelosDeCategoria = this.todosTipos
+      .filter(t => t.categoria_id == this.nuevoEquipo.categoria_id);
   }
 
-  /**
-   * Alterna entre crear un equipo con modelo existente o uno nuevo.
-   */
-  cambiarModo() {
-    this.modo = this.modo === 'existente' ? 'nuevo' : 'existente';
-  }
-  /**
-   * Maneja la selección de archivos de imagen y genera una vista previa.
-   */
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
 
     this.archivoImagen = file;
-
     const reader = new FileReader();
     reader.onload = () => this.previewImagen = reader.result as string;
     reader.readAsDataURL(file);
   }
-  /**
-   * Guarda un nuevo equipo, generando previamente un modelo si corresponde.
-   */
+
   guardarNuevoEquipo() {
     if (!this.nuevoEquipo.categoria_id || !this.nuevoEquipo.codigo) {
       alert('Complete los campos obligatorios');
       return;
     }
 
- 
-// Si se crea un modelo nuevo
     if (this.modo === 'nuevo') {
       if (!this.nuevoEquipo.nuevoModelo) {
         alert('Ingrese el nombre del nuevo modelo');
         return;
       }
 
- this.tipoEquipoService.crearTipo(
-  {
-    nombre: this.nuevoEquipo.nuevoModelo,
-    categoria_id: this.nuevoEquipo.categoria_id
-  },
-  this.archivoImagen ?? undefined
-)
-.subscribe({
-        next: (res: any) => {
-          const tipoId = res.tipoEquipo.id;
-          this.crearEquipoFinal(tipoId);
+      this.tipoEquipoService.crearTipo(
+        {
+          nombre: this.nuevoEquipo.nuevoModelo,
+          categoria_id: this.nuevoEquipo.categoria_id
         },
-        error: (err: any) => console.error('Error creando tipo', err)
+        this.archivoImagen ?? undefined
+      ).subscribe({
+        next: res => this.crearEquipoFinal(res.tipoEquipo.id),
+        error: err => console.error('Error creando tipo', err)
       });
 
     } else {
-  // Con modelo existente
       this.crearEquipoFinal(this.nuevoEquipo.tipo_equipo_id);
     }
   }
-  /**
-   * Crea un equipo luego de contar con el ID del tipo.
-   */
+
   crearEquipoFinal(tipoId: number) {
     this.equiposService.crearEquipo({
       tipo_equipo_id: tipoId,
@@ -214,12 +153,10 @@ export class InventarioComponent {
         this.cargarEquipos();
         this.limpiarModal();
       },
-      error: (err: any) => console.error('Error creando equipo', err)
+      error: err => console.error('Error creando equipo', err)
     });
   }
-  /**
-   * Limpia todos los campos del formulario de creación.
-   */
+
   limpiarModal() {
     this.nuevoEquipo = {
       categoria_id: '',
@@ -228,31 +165,24 @@ export class InventarioComponent {
       codigo: '',
       estado: 'DISPONIBLE'
     };
-
     this.archivoImagen = null;
     this.previewImagen = null;
-
     this.modo = 'existente';
   }
 
-  /**
-   * Aplica filtros dinámicos sobre los equipos cargados.
-   */
   filtrar() {
     const texto = this.busqueda.toLowerCase();
 
     this.equiposFiltrados = this.equipos.filter(e =>
       (this.filtroArea === '' || e.categoria === this.filtroArea) &&
       (this.filtroModelo === '' || e.nombre === this.filtroModelo) &&
-      (e.nombre.toLowerCase().includes(texto) || e.codigo.toLowerCase().includes(texto))
+      (e.nombre.toLowerCase().includes(texto) ||
+       e.codigo.toLowerCase().includes(texto))
     );
   }
-  /**
-   * Agrupa equipos por modelo para mostrar en el panel de inventario.
-   */
+
   get modelosAgrupados() {
     const grupos: any = {};
-
     this.equiposFiltrados.forEach(e => {
       if (!grupos[e.nombre]) grupos[e.nombre] = [];
       grupos[e.nombre].push(e);
@@ -264,99 +194,75 @@ export class InventarioComponent {
     }));
   }
 
-  /**
-   * Selecciona un modelo y prepara su información
-   * para ser visualizada o editada.
-   */
   editarModelo(grupo: any) {
-    this.editandoModelo = false;
-
     this.modeloSeleccionado = {
       nombre: grupo.modelo,
       categoria: grupo.equipos[0].categoria,
-      nombreOriginal: grupo.modelo,
-      equipos: grupo.equipos.map((e: any) => ({
-        idEquipo: e.idEquipo,
-        codigo: e.codigo,
-        estado: e.estado,
-        created_at: e.created_at,
-        updated_at: e.updated_at
-      }))
+      equipos: grupo.equipos
     };
-
     this.equipoSeleccionado = null;
   }
 
-  activarEdicionModelo() {
-    this.editandoModelo = true;
-  }
-
-  cerrarEdicionModelo() {
-    this.editandoModelo = false;
-    this.modeloSeleccionado = null;
-  }
-
-  guardarCambiosModelo() {
-    alert('Cambios aplicados');
-    this.cerrarEdicionModelo();
-  }
-
- 
-  /**
-   * Selecciona un equipo específico para ver detalles.
-   */
   verDetalle(eq: any) {
     this.equipoSeleccionado = { ...eq };
     this.modeloSeleccionado = null;
   }
-/**
-   * Cierra los paneles de detalle o edición.
-   */
+
   cerrarPanel() {
     this.equipoSeleccionado = null;
-    this.solicitudActiva = null;
   }
-  
 
-  guardarCambiosEquipo() {
-    if (!this.equipoSeleccionado?.idEquipo) {
-      console.error('Equipo no válido');
-      return;
-    }
+guardarCambiosEquipo() {
+  if (this.guardando || !this.equipoSeleccionado?.idEquipo) return;
 
-    const payload = {
-      estado: this.equipoSeleccionado.estado
-    };
+  this.guardando = true;
 
-    this.equiposService
-      .actualizarEquipo(this.equipoSeleccionado.idEquipo, payload)
+  //  SI ELIGE ELIMINAR → DELETE
+  if (this.equipoSeleccionado.estado === 'ELIMINAR') {
+    this.equiposService.eliminarEquipo(this.equipoSeleccionado.idEquipo)
       .subscribe({
         next: () => {
-          alert('Estado del equipo actualizado correctamente');
+          alert('Equipo eliminado correctamente');
           this.cargarEquipos();
           this.cerrarPanel();
+          this.guardando = false;
         },
-        error: (err: any) => {
-          console.error('Error actualizando equipo', err);
-          alert('No se pudo actualizar el estado del equipo');
+        error: err => {
+          console.error(err);
+          alert('Error al eliminar equipo');
+          this.guardando = false;
         }
       });
+    return;
   }
 
+  // 🟢 UPDATE NORMAL
+  this.equiposService.actualizarEquipo(
+    this.equipoSeleccionado.idEquipo,
+    { codigo: this.equipoSeleccionado.codigo, estado: this.equipoSeleccionado.estado }
+  ).subscribe({
+    next: () => {
+      alert('Estado actualizado correctamente');
+      this.cargarEquipos();
+      this.cerrarPanel();
+      this.guardando = false;
+    },
+    error: err => {
+      console.error(err);
+      alert('Error al actualizar estado');
+      this.guardando = false;
+    }
+  });
+}
 
-  /**
-   * Retorna la imagen correspondiente a un equipo según su nombre.
-   */
+
   getImagenEquipo(equipo: any): string {
     const n = equipo.nombre?.toLowerCase() || '';
-
     if (n.includes('cámara') || n.includes('canon')) return 'assets/equipos/camara.jpg';
     if (n.includes('micrófono') || n.includes('rode')) return 'assets/equipos/aro.jpg';
     if (n.includes('tablet') || n.includes('wacom')) return 'assets/equipos/computador.jpg';
     if (n.includes('proyector') || n.includes('epson')) return 'assets/equipos/proyector.jpg';
     if (n.includes('grabadora') || n.includes('zoom')) return 'assets/equipos/luz.jpg';
-
     return 'assets/equipos/lampara.jpg';
   }
 }
-

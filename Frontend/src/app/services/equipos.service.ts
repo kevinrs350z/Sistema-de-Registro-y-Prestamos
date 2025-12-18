@@ -81,11 +81,15 @@ export class EquiposService {
   }
 
   // Actualizar equipo
-  actualizarEquipo(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/equipos/${id}`, data, {
-      headers: this.getHeaders()
-    });
-  }
+actualizarEquipo(id: number, data: any) {
+  return this.http.put(
+    `${this.apiUrl}/equipos/${id}`,
+    data,
+    { headers: this.getHeaders() }
+  );
+}
+
+
 
   // Eliminar equipo
   eliminarEquipo(id: number): Observable<any> {

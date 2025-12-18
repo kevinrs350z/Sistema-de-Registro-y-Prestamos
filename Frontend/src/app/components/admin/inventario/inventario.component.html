@@ -148,10 +148,10 @@
           </label>
           <select class="form-select-custom"
                   [(ngModel)]="nuevoEquipo.estado">
-            <option value="disponible">✓ Disponible</option>
-            <option value="ocupado">⟳ Ocupado</option>
-            <option value="mantenimiento">🔧 Mantenimiento</option>
-            <option value="fuera_servicio">✕ Fuera de servicio</option>
+            <option value="DISPONIBLE">✓ Disponible</option>
+            <option value="OCUPADO">⟳ Ocupado</option>
+            <option value="MANTENIMIENTO">🔧 Mantenimiento</option>
+            <option value="FUERA_SERVICIO">✕ Fuera de servicio</option>
           </select>
         </div>
 
@@ -194,11 +194,12 @@
 
             <div class="equipo-codigo fw-bold">{{ eq.codigo }}</div>
 
-            <span class="badge"
-                  [class.bg-danger]="eq.estado !== 'disponible'"
-                  [class.bg-success]="eq.estado === 'disponible'">
-              {{ eq.estado }}
-            </span>
+          <span class="badge"
+                [class.bg-success]="eq.estado === 'DISPONIBLE'"
+                [class.bg-warning]="eq.estado === 'MANTENIMIENTO'"
+                [class.bg-secondary]="eq.estado === 'ELIMINADO'">
+            {{ eq.estado }}
+          </span>
 
             <button class="btn btn-sm btn-outline-secondary" (click)="verDetalle(eq)">
               Ver detalle
@@ -236,7 +237,7 @@
       </ul>
 
       <div class="mt-3">
-        <button class="btn btn-secondary" (click)="cerrarEdicionModelo()">
+        <button class="btn btn-secondary" (click)="cerrarPanel()">
           Cerrar
         </button>
       </div>
@@ -264,8 +265,10 @@
 
         <label class="form-label fw-bold mt-2">Estado</label>
         <select class="form-select" [(ngModel)]="equipoSeleccionado.estado">
-          <option value="disponible">Disponible</option>
-          <option value="mantenimiento">Mantenimiento</option>
+        <option value="DISPONIBLE">Disponible</option>
+        <option value="MANTENIMIENTO">Mantenimiento</option>
+        <option value="ELIMINAR">Eliminar</option>
+
         </select>
 
         <div class="d-flex gap-2 mt-3">
