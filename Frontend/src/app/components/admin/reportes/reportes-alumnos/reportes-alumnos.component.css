@@ -1,0 +1,29 @@
+/* Reutilizamos el look & feel global de reportes */
+.reportes-wrapper {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Un poquito de espacio desde el navbar admin */
+.reportes-wrapper.container {
+  margin-top: 40px;
+}
+
+/* Ajuste pequeño para este reporte en particular (opcional) */
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 24px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #0d6efd, #6c5ce7);
+}
+
+.styled-table {
+  margin-bottom: 0;
+}

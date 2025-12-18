@@ -1,0 +1,33 @@
+<div class="reportes-wrapper container py-4">
+
+  <!-- ========= NAV SUPERSET STYLE ========= -->
+  <nav class="reportes-nav d-flex flex-wrap gap-2 justify-content-center mb-4">
+    <button
+      *ngFor="let item of menu"
+      class="nav-btn"
+      [class.active]="active === item.key"
+      (click)="cambiarReporte(item.key)"
+    >
+      {{ item.label }}
+    </button>
+  </nav>
+
+  <!-- ========= TITULO ========= -->
+  <h2 class="titulo-reporte text-center mb-4">{{ config.title }}</h2>
+
+  <!-- ========= GRAFICOS ========= -->
+  <div class="charts-grid">
+
+    <canvas id="chart1"></canvas>
+    <canvas id="chart2"></canvas>
+    <canvas id="chart3"></canvas>
+
+  </div>
+
+  <!-- ========= EXPORT ========= -->
+  <div class="export-buttons d-flex justify-content-end mt-4 gap-2">
+    <button class="btn btn-outline-primary" (click)="exportPDF()">Exportar PDF</button>
+    <button class="btn btn-outline-success" (click)="exportExcel()">Exportar Excel</button>
+  </div>
+
+</div>

@@ -1,1 +1,172 @@
-<p>reportes-alumnos works!</p>
+<div class="reportes-wrapper container py-4">
+
+  <!-- Mensaje flotante -->
+  <div *ngIf="mensaje" class="msg-box">{{ mensaje }}</div>
+
+  <!-- Título general -->
+  <div class="text-center mb-4">
+    <h2 class="fw-bold text-primary">Reportes de alumnos</h2>
+    <p class="text-muted">
+      Análisis del comportamiento de los estudiantes en el sistema de préstamos.
+    </p>
+    <p class="text-muted small">
+      Fecha de reporte: {{ today | date: 'dd/MM/yyyy' }}
+    </p>
+  </div>
+
+  <!-- Botones de exportación -->
+  <app-export-buttons
+    [onExportPDF]="exportarPDF.bind(this)"
+    [onExportExcel]="exportarExcel.bind(this)">
+  </app-export-buttons>
+
+  <!-- CONTENIDO EXPORTABLE A PDF -->
+  <div id="contenidoPDFAlumnos" class="page-wrapper">
+
+    <!-- Encabezado institucional solo PDF -->
+    <div class="pdf-header fade-in solo-pdf">
+      <img src="assets/logo-uta.png" class="uta-logo" alt="Logo UTA" />
+
+      <div class="pdf-header-text">
+        <h1 class="pdf-title">Universidad de Tarapacá</h1>
+        <p class="pdf-subtitle">Sistema de Préstamos de Equipos</p>
+        <p class="pdf-date">
+          Fecha de reporte: {{ today | date: 'dd/MM/yyyy' }}
+        </p>
+        <p class="pdf-section">
+          Sección: Reportes de Alumnos
+        </p>
+      </div>
+    </div>
+
+    <hr class="pdf-divider fade-in" />
+
+    <!-- ============== Fila KPIs ================= -->
+    <div class="row g-3 mb-4 fade-in">
+      <div class="col-6 col-md-3" *ngFor="let k of kpis">
+        <div class="card kpi-summary-card shadow-sm">
+          <div class="card-body text-center">
+            <h6 class="text-muted mb-1">{{ k.label }}</h6>
+            <h2 class="fw-bold text-primary mb-0">{{ k.value }}</h2>
+            <small class="text-muted" *ngIf="k.detail">
+              {{ k.detail }}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== Fila 1: préstamos x carrera / evolución ============== -->
+    <div class="two-cols mb-4">
+      <!-- Préstamos por carrera -->
+      <div class="card fade-in">
+        <h2 class="card-title">Préstamos por carrera</h2>
+        <p class="card-subtitle">
+          Distribución de préstamos según la carrera del estudiante.
+        </p>
+        <div class="chart-area">
+          <canvas id="chartPrestamosCarrera"></canvas>
+        </div>
+      </div>
+
+      <!-- Evolución de préstamos (línea) -->
+      <div class="card fade-in">
+        <h2 class="card-title">Evolución de préstamos</h2>
+        <p class="card-subtitle">
+          Tendencia temporal de los préstamos realizados por alumnos.
+        </p>
+        <div class="chart-area">
+          <canvas id="chartEvolucionPrestamos"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== Fila 2: sanciones x nivel / resumen ============== -->
+    <div class="two-cols mb-4">
+      <!-- Gráfico sanciones por nivel -->
+      <div class="card fade-in">
+        <h2 class="card-title">Sanciones por nivel</h2>
+        <p class="card-subtitle">
+          Distribución de sanciones leves, medias y graves.
+        </p>
+        <div class="chart-area-sm">
+          <canvas id="chartSancionesNivel"></canvas>
+        </div>
+      </div>
+
+      <!-- KPIs sanciones -->
+      <div class="card fade-in">
+        <h2 class="card-title">Resumen de sanciones</h2>
+        <p class="card-subtitle">
+          Vista rápida de la carga disciplinaria sobre los alumnos.
+        </p>
+
+        <div class="kpi-wrapper">
+          <div class="kpi-item">
+            <h3>{{ resumenSanciones.total }}</h3>
+            <span>Total de sanciones</span>
+          </div>
+          <div class="kpi-item">
+            <h3>{{ resumenSanciones.leves }}</h3>
+            <span>Leves</span>
+          </div>
+          <div class="kpi-item">
+            <h3>{{ resumenSanciones.medias }}</h3>
+            <span>Medias</span>
+          </div>
+          <div class="kpi-item">
+            <h3>{{ resumenSanciones.graves }}</h3>
+            <span>Graves</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== Fila 3: ranking alumnos ============== -->
+    <div class="card fade-in">
+      <h2 class="card-title">Ranking de alumnos</h2>
+      <p class="card-subtitle">
+        Estudiantes con mayor número de préstamos registrados en el sistema.
+      </p>
+
+      <!-- Gráfico -->
+      <div class="chart-area-sm mb-3">
+        <canvas id="chartTopAlumnosAl"></canvas>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-responsive">
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Carrera</th>
+              <th>Email</th>
+              <th>Préstamos</th>
+              <th>Sanciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of topAlumnos; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ a.nombre }}</td>
+              <td>{{ a.carrera || '-' }}</td>
+              <td>{{ a.email }}</td>
+              <td>{{ a.total_prestamos }}</td>
+              <td>{{ a.sanciones ?? 0 }}</td>
+            </tr>
+
+            <tr *ngIf="topAlumnos.length === 0">
+              <td colspan="6" class="text-center text-muted">
+                No hay datos disponibles para el ranking de alumnos.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div> <!-- /contenidoPDFAlumnos -->
+
+</div>

@@ -64,7 +64,7 @@ export class InventarioComponent {
     tipo_equipo_id: '',
     nuevoModelo: '',
     codigo: '',
-    estado: 'disponible'
+    estado: 'DISPONIBLE'
   };
 
   constructor(
@@ -226,7 +226,7 @@ export class InventarioComponent {
       tipo_equipo_id: '',
       nuevoModelo: '',
       codigo: '',
-      estado: 'disponible'
+      estado: 'DISPONIBLE'
     };
 
     this.archivoImagen = null;
@@ -319,9 +319,30 @@ export class InventarioComponent {
   
 
   guardarCambiosEquipo() {
-    alert('Cambios aplicados ');
-    this.cerrarPanel();
+    if (!this.equipoSeleccionado?.idEquipo) {
+      console.error('Equipo no válido');
+      return;
+    }
+
+    const payload = {
+      estado: this.equipoSeleccionado.estado
+    };
+
+    this.equiposService
+      .actualizarEquipo(this.equipoSeleccionado.idEquipo, payload)
+      .subscribe({
+        next: () => {
+          alert('Estado del equipo actualizado correctamente');
+          this.cargarEquipos();
+          this.cerrarPanel();
+        },
+        error: (err: any) => {
+          console.error('Error actualizando equipo', err);
+          alert('No se pudo actualizar el estado del equipo');
+        }
+      });
   }
+
 
   /**
    * Retorna la imagen correspondiente a un equipo según su nombre.
