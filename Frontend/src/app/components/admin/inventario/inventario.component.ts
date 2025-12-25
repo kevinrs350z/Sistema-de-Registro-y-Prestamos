@@ -213,13 +213,13 @@ export class InventarioComponent implements OnInit {
   }
 
 guardarCambiosEquipo() {
-  if (this.guardando || !this.equipoSeleccionado?.idEquipo) return;
+  if (this.guardando || !this.equipoSeleccionado?.id) return;
 
   this.guardando = true;
 
-  //  SI ELIGE ELIMINAR → DELETE
+  // 🔴 ELIMINAR
   if (this.equipoSeleccionado.estado === 'ELIMINAR') {
-    this.equiposService.eliminarEquipo(this.equipoSeleccionado.idEquipo)
+    this.equiposService.eliminarEquipo(this.equipoSeleccionado.id)
       .subscribe({
         next: () => {
           alert('Equipo eliminado correctamente');
@@ -236,24 +236,28 @@ guardarCambiosEquipo() {
     return;
   }
 
-  // 🟢 UPDATE NORMAL
+  // 🟢 UPDATE
   this.equiposService.actualizarEquipo(
-    this.equipoSeleccionado.idEquipo,
-    { codigo: this.equipoSeleccionado.codigo, estado: this.equipoSeleccionado.estado }
+    this.equipoSeleccionado.id,
+    {
+      codigo: this.equipoSeleccionado.codigo,
+      estado: this.equipoSeleccionado.estado
+    }
   ).subscribe({
     next: () => {
-      alert('Estado actualizado correctamente');
+      alert('Equipo actualizado correctamente');
       this.cargarEquipos();
       this.cerrarPanel();
       this.guardando = false;
     },
     error: err => {
       console.error(err);
-      alert('Error al actualizar estado');
+      alert('Error al actualizar equipo');
       this.guardando = false;
     }
   });
 }
+
 
 
   getImagenEquipo(equipo: any): string {

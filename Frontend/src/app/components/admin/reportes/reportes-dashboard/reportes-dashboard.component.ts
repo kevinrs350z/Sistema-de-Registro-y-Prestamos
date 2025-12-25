@@ -24,8 +24,7 @@ export class ReportesDashboardComponent implements OnInit, OnDestroy {
   kpis = [
     { label: 'Préstamos del mes', value: 0, detail: '' },
     { label: 'Equipos disponibles', value: 0 },
-    { label: 'Usuarios activos', value: 0 },
-    { label: 'Sanciones activas', value: 0 }
+   
   ];
 
   resumenUso = { interno: 0, externo: 0 };
