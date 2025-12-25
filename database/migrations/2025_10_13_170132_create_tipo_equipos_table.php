@@ -20,6 +20,9 @@ class CreateTipoEquiposTable extends Migration
             $table->index('categoria_id');
 
             $table->string('nombre');
+            
+            $table->string('marca')->nullable();
+            $table->string('modelo')->nullable();
             $table->string('imagen')->nullable();
             $table->text('descripcion')->nullable();
             $table->foreign('categoria_id')->references('id')->on('categorias')->onDelete('restrict')->onUpdate('cascade');

@@ -78,22 +78,22 @@ public function cambiarEstado(Request $request, $id)
     ]);
 
     // Enviar correo según acción   
-    if ($accion === 'aceptar') {
-        Mail::to($email)->send(new PrestamoAprobadoMail(
-            $nombre,
-            $prestamo->idPrestamo,
-            $prestamo->created_at->format('d/m/Y H:i'),
-            $motivo,
-            $equipos
-        ));
-    } else {
-        Mail::to($email)->send(new PrestamoRechazadoMail(
-            $nombre,
-            $prestamo->idPrestamo,
-            $prestamo->created_at->format('d/m/Y H:i'),
-            $motivo
-        ));
-    }
+    //if ($accion === 'aceptar') {
+      //  Mail::to($email)->send(new PrestamoAprobadoMail(
+        //    $nombre,
+          //  $prestamo->idPrestamo,
+           // $prestamo->created_at->format('d/m/Y H:i'),
+           // $motivo,
+           // $equipos
+       // ));
+    //} else {
+      //  Mail::to($email)->send(new PrestamoRechazadoMail(
+        //    $nombre,
+          //  $prestamo->idPrestamo,
+            //$prestamo->created_at->format('d/m/Y H:i'),
+           // $motivo
+       // ));
+   // }
 
     return response()->json(['message' => 'Estado del préstamo actualizado y correo enviado.']);
 }

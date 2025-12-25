@@ -10,8 +10,8 @@ class RolesTableSeeder extends Seeder
     public function run(): void
     {
         DB::table('rol')->insert([
-            ['Nombre' => 'Admin', 'Descripcion' => 'Administrador del sistema', 'created_at' => now(), 'updated_at' => now()],
-            ['Nombre' => 'Alumno', 'Descripcion' => 'Usuario del sistema', 'created_at' => now(), 'updated_at' => now()],
+            ['Nombre' => 'ADMIN', 'Descripcion' => 'Administrador del sistema', 'created_at' => now(), 'updated_at' => now()],
+            ['Nombre' => 'ALUMNO', 'Descripcion' => 'Usuario del sistema', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

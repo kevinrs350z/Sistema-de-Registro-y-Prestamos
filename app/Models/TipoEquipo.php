@@ -14,6 +14,8 @@ class TipoEquipo extends Model
     protected $fillable = [
         'categoria_id',
         'nombre',
+        'marca',
+        'modelo',
         'imagen',
         'descripcion'
     ];

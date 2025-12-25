@@ -43,7 +43,7 @@ class EquipoService
     public function getAll()
     {
         return Equipo::select(
-            'equipos.id as idEquipo',
+            'equipos.id',
             'equipos.codigo',
             'equipos.estado',
             'equipos.created_at',
@@ -71,7 +71,7 @@ class EquipoService
     public function getById($id)
     {
         return Equipo::select(
-            'equipos.id as idEquipo',
+            'equipos.id',
             'equipos.codigo',
             'equipos.estado',
             'equipos.created_at',

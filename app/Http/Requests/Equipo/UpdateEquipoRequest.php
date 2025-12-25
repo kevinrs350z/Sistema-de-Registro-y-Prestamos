@@ -1,6 +1,6 @@
-    <?php
+<?php
 
-    namespace App\Http\Requests\Equipo;
+namespace App\Http\Requests\Equipo;
 
     use Illuminate\Foundation\Http\FormRequest;
 

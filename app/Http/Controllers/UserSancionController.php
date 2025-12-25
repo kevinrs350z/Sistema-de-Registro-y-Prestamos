@@ -50,9 +50,9 @@ class UserSancionController extends Controller
         $user->sanciones()->attach($sancion->idSancion);
 
         // Enviar correo
-        Mail::to($user->Email)->send(
-            new SancionNotificacion('asignada', $user, $sancion)
-        );
+       // Mail::to($user->Email)->send(
+          //  new SancionNotificacion('asignada', $user, $sancion)
+       // );
 
         return response()->json([
             'message' => 'Sanción creada y asignada correctamente.',
@@ -108,11 +108,11 @@ class UserSancionController extends Controller
         // tomamos el primer usuario asociado (puedes adaptar a más)
         $user = $sancion->users->first();
 
-        if ($user) {
-            Mail::to($user->Email)->send(
-                new SancionNotificacion('ampliada', $user, $sancion, $request->motivo)
-            );
-        }
+        //if ($user) {
+          //  Mail::to($user->Email)->send(
+            //    new SancionNotificacion('ampliada', $user, $sancion, $request->motivo)
+            //);
+       // }
 
         return response()->json([
             'message' => 'Sanción ampliada 7 días correctamente.',
@@ -135,11 +135,11 @@ class UserSancionController extends Controller
 
         $user = $sancion->users->first();
 
-        if ($user) {
-            Mail::to($user->Email)->send(
-                new SancionNotificacion('quitada', $user, $sancion, $request->motivo)
-            );
-        }
+        //if ($user) {
+          //  Mail::to($user->Email)->send(
+            //    new SancionNotificacion('quitada', $user, $sancion, $request->motivo)
+           // );
+       // }
 
         return response()->json([
             'message' => 'Sanción desactivada correctamente.',

@@ -21,7 +21,8 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\Prestamo\DevolucionAdminController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\reportes\Dashboard\DashboardReportesController;
-
+use App\Http\Controllers\Prestamo\AdminPrestamoController;
+use App\Http\Controllers\Reportes\ReporteProfesorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -148,6 +149,12 @@ Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
 Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
 Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
 
+/*
+|--------------------------------------------------------------------------
+| RUTAS ADMINISTRATIVAS
+|--------------------------------------------------------------------------
+*/
+
 // ---------------------------------------------------------------
 // Registro de ruta para la creación de equipos
 // ---------------------------------------------------------------
@@ -166,3 +173,23 @@ Route::prefix('reportes/dashboard')->group(function () {
     Route::get('/sanciones-rechazos', [DashboardReportesController::class, 'getSancionesYRechazos']);
     Route::get('/top-alumnos', [DashboardReportesController::class, 'getTopAlumnos']);
 });
+
+Route::middleware(['auth:sanctum', 'role:admin'])
+    ->prefix('admin')
+    ->group(function () {
+
+        // Registrar préstamo directamente (ADMIN)
+        Route::post('/prestamos', [AdminPrestamoController::class, 'store']);
+
+    });
+
+    Route::middleware(['auth:sanctum'])
+    ->prefix('reportes/profesores')
+    ->group(function () {
+
+        Route::get('/equipos', [ReporteProfesorController::class, 'equipos']);
+        Route::get('/prestamos', [ReporteProfesorController::class, 'prestamos']);
+        Route::get('/tendencia', [ReporteProfesorController::class, 'tendencia']);
+
+    });
+    Route::put('/equipos/{id}', [EquipoController::class, 'update']);

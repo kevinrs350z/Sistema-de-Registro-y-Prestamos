@@ -37,8 +37,12 @@ class Equipo extends Model
     protected $fillable = [
         'tipo_equipo_id',
         'codigo',
-        'estado'
+        'estado',
+        'estado_fisico',
+        'ubicacion',
+        'observacion'
     ];
+    protected $dates = ['deleted_at'];
 
     /**
      * Relación: un equipo pertenece a un tipo de equipo.

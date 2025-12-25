@@ -22,7 +22,12 @@ class CreateEquiposTable extends Migration
             $table->string('codigo')->unique();
 
             // Estado de la unidad física
-            $table->string('estado')->default('disponible');
+            $table->string('estado')->default('DISPONIBLE');
+            $table->string('estado_fisico')->nullable();
+            $table->string('ubicacion')->nullable();
+            $table->text('observacion')->nullable();
+            $table->softDeletes(); 
+
 
             $table->timestamps();
 

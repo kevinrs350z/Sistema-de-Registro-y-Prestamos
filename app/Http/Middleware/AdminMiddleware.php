@@ -10,12 +10,14 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        $user = Auth::user();
-
-        if ($user && $user->isAdmin()) {
-            return $next($request);
+        if (!Auth::check()) {
+            return response()->json(['message' => 'No autenticado'], 401);
         }
 
-        return response()->json(['message' => 'No autorizado'], 403);
+        if (!Auth::user()->isAdmin()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        return $next($request);
     }
 }
