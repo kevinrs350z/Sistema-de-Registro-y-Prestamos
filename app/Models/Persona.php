@@ -9,6 +9,7 @@ class Persona extends Model
 {
 protected $primaryKey = 'idPersona';
     protected $table = 'persona';
+    public $incrementing = true;
     
     protected $fillable = [
         'Nombre', 'apellido1', 'apellido2', 'Rut', 'Email'

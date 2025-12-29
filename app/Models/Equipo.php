@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Pack;
+
 /**
  * Modelo que representa un equipo físico disponible para préstamo.
  *
@@ -25,6 +28,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Equipo extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'equipos';
     protected $primaryKey = 'id';
     public $timestamps = true;
@@ -84,5 +89,14 @@ class Equipo extends Model
             'equipo_id'
         )->withPivot('tipo_relacion')
          ->withTimestamps();
+    }
+        public function packs()
+    {
+        return $this->belongsToMany(
+            Pack::class,
+            'pack_equipo',
+            'equipo_id',
+            'pack_id'
+        )->withTimestamps();
     }
 }

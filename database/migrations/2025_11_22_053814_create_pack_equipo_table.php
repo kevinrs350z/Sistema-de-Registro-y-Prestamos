@@ -8,23 +8,32 @@ class CreatePackEquipoTable extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('pack_equipo', function (Blueprint $table) {
             $table->id();
+
+            // Relaciones
+            $table->foreignId('pack_id')
+                  ->constrained('packs')
+                  ->cascadeOnDelete();
+
+            $table->foreignId('equipo_id')
+                  ->constrained('equipos')
+                  ->cascadeOnDelete();
+
             $table->timestamps();
+
+            // Evita duplicados pack-equipo
+            $table->unique(['pack_id', 'equipo_id']);
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('pack_equipo');
     }

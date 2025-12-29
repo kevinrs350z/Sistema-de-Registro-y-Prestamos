@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AsignaturaController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\GoogleTokenController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController; 
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\reportes\Dashboard\DashboardReportesController;
 use App\Http\Controllers\Prestamo\AdminPrestamoController;
 use App\Http\Controllers\Reportes\ReporteProfesorController;
+use App\Http\Controllers\PackController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,8 +45,9 @@ Route::get('/password/validate-token/{token}', [ResetPasswordController::class, 
 // Ruta para iniciar sesión
 // URL: /api/login
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('auth/google', [GoogleController::class, 'redirectToGoogle']);
-Route::post('/auth/google', [AuthController::class, 'googleLogin']);
+
+
+Route::post('/auth/google', [GoogleTokenController::class, 'login']);
 
 
 // Ruta para registrar un nuevo usuario
@@ -82,7 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('/bloques', [BloqueController::class, 'index']);// muestra los bloques
-    Route::get('/asignaturas', [AsignaturaController::class, 'index']);// mostramos las asignaturas
+    //Route::get('/asignaturas', [AsignaturaController::class, 'index']);// mostramos las asignaturas
     //dashboard de admin
     // Prestamos
     Route::get('/prestamos', [PrestamoController::class, 'index']);
@@ -92,9 +95,11 @@ Route::middleware('auth:sanctum')->group(function () {
     //Route::get('/admin/dashboard', [AdminDashboardController::class, 'getDashboardData']);
 });
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
+   # Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
+    Route::post('/admin/prestamos/aprobar/{id}',[PrestamoAdminController::class, 'aprobar']);
+    Route::post('/admin/prestamos/rechazar/{id}',[PrestamoAdminController::class, 'rechazar']);
     Route::get('/admin/prestamos/pendientes', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
-
+    Route::patch('/admin/prestamos/{idPrestamo}/equipos/{idEquipo}/devolver',[PrestamoAdminController::class, 'devolverEquipo']);
     Route::get('/admin/sanciones', [UserSancionController::class, 'listarSanciones']);
     Route::get('/admin/sanciones/activa', [UserSancionController::class, 'listarSancionesActivas']);
     Route::post('/admin/sanciones/asignar', [UserSancionController::class, 'asignarSancion']);
@@ -108,8 +113,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('admin/prestamos/pendientes', [PrestamoAdminController::class, 'pendientes']);
     Route::get('admin/prestamos/historial', [PrestamoAdminController::class, 'historial']);
 
-Route::post('admin/prestamos/aprobar/{id}', [PrestamoAdminController::class, 'cambiarEstado']);
-Route::post('admin/prestamos/rechazar/{id}', [PrestamoAdminController::class, 'cambiarEstado']);
+
 Route::post('admin/prestamos/{id}/devolver', [PrestamoAdminController::class, 'marcarDevuelto']);
 
 
@@ -129,7 +133,7 @@ Route::delete('/categoria/{id}', [CategoriaController::class, 'destroy']);
 
 
 
-
+Route::get('/asignaturas', [AsignaturaController::class, 'index']);
 Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
 Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
 Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
@@ -193,3 +197,12 @@ Route::middleware(['auth:sanctum', 'role:admin'])
 
     });
     Route::put('/equipos/{id}', [EquipoController::class, 'update']);
+
+
+    Route::prefix('packs')->group(function () {
+        Route::get('/', [PackController::class, 'index']);
+        Route::post('/', [PackController::class, 'store']);
+        Route::delete('/{pack}', [PackController::class, 'destroy']);
+        Route::put('/{pack}', [PackController::class, 'update']);
+
+    });

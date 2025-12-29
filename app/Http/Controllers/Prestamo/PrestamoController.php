@@ -47,45 +47,52 @@ class PrestamoController extends Controller
     // =========================================================
     // CREAR NUEVO PRÉSTAMO (CON CARRITO)
     // =========================================================
-public function store(StorePrestamoAlumnoRequest $request, PrestamoService $service)
-{
-    DB::beginTransaction();
+    public function store(StorePrestamoAlumnoRequest $request, PrestamoService $service)
+    {
+        DB::beginTransaction();
 
-    try {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        $prestamo = $service->crearPrestamo([
-            'idUser'       => $user->idUser,
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin'    => $request->fecha_fin,
-            'otra_motivo'  => $request->motivo,
-            'tipo'         => $request->tipo,
-            'estado'       => 'PENDIENTE',
-            'observacion'  => $request->observacion,
-        ]);
+            $prestamo = $service->crearPrestamo([
+                'idUser'       => $user->idUser,
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin'    => $request->fecha_fin,
+                'otra_motivo'  => $request->motivo,
+                'tipo'         => $request->tipo,
+                'estado'       => 'PENDIENTE',
+                'observacion'  => $request->observacion,
+            ]);
 
-        if ($request->tipo === 'DENTRO') {
-            $service->asignarBloques(
-                $prestamo->idPrestamo,
-                $request->bloques,
-                $request->asignatura
-            );
+            if ($request->tipo === 'DENTRO') {
+                $service->asignarBloques(
+                    $prestamo->idPrestamo,
+                    $request->bloques,
+                    $request->asignatura
+                );
+            }
+
+            // 🔥 AQUÍ ESTABA EL ERROR
+            if ($request->has('equipos')) {
+                $service->procesarEquipos(
+                    $prestamo->idPrestamo,
+                    $request->equipos
+                );
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message'    => 'Solicitud enviada correctamente',
+                'idPrestamo' => $prestamo->idPrestamo
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 400);
         }
-
-      
-
-        DB::commit();
-
-        return response()->json([
-            'message'    => 'Solicitud enviada correctamente',
-            'idPrestamo' => $prestamo->idPrestamo
-        ], 201);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json(['error' => $e->getMessage()], 400);
     }
-}
+
 
 
 }
