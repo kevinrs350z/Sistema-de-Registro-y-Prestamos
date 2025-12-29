@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service'; // ajusta la ruta
+import { AuthService } from '../services/auth.service'; 
 import { CommonModule } from '@angular/common';
 
 @Component({

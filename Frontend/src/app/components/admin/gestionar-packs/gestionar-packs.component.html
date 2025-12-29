@@ -1,12 +1,22 @@
-
 <div class="admin-container">
-  
+
   <h2 class="titulo-pagina">Gestionar Packs</h2>
+
+  <!-- =========================
+       ESTADOS
+  ========================== -->
+  <div class="estado-bar" *ngIf="cargando">
+    Cargando datos...
+  </div>
+
+  <div class="estado-error" *ngIf="error">
+    {{ error }}
+  </div>
 
   <div class="reservas-layout">
 
     <!-- ==========================================================
-         COLUMNA IZQUIERDA — LISTA DE PACKS
+         COLUMNA IZQUIERDA — LISTA DE PACKS + PAGINACIÓN
     ========================================================== -->
     <div class="columna-lista scroll-columna">
 
@@ -15,38 +25,111 @@
         <button class="btn-crear" (click)="nuevoPack()">+ Crear nuevo pack</button>
       </div>
 
-      <p *ngIf="packs.length === 0" class="sin-reservas">
+      <p *ngIf="packs.length === 0 && !cargando" class="sin-reservas">
         No hay packs creados.
       </p>
 
+      <!-- LISTA DE PACKS -->
       <div
         class="reserva-card"
-        *ngFor="let p of packs"
+        *ngFor="let p of packs; trackBy: trackById"
         (click)="seleccionarPack(p)"
         [class.activa]="p === packSeleccionado"
       >
-        <h4>{{ p.nombre }}</h4>
+        <div class="pack-mini">
+          <img
+            *ngIf="p.imagen_url"
+            [src]="p.imagen_url"
+            class="pack-mini-img"
+            alt="Pack"
+          />
+          <div>
+            <h4>{{ p.nombre }}</h4>
+            <p class="sub-info">
+              Equipos incluidos: {{ p.equipos.length }}
+            </p>
+          </div>
+        </div>
+      </div>
 
-        <p class="sub-info">
-          Equipos incluidos: {{ p.equipos.length }}
-        </p>
+      <!-- PAGINACIÓN -->
+      <div class="paginacion" *ngIf="lastPage > 1">
+
+        <button
+          (click)="irAPagina(currentPage - 1)"
+          [disabled]="currentPage === 1"
+        >
+          ◀
+        </button>
+
+        <button
+          *ngFor="let p of paginas"
+          (click)="irAPagina(p)"
+          [class.activa]="p === currentPage"
+        >
+          {{ p }}
+        </button>
+
+        <button
+          (click)="irAPagina(currentPage + 1)"
+          [disabled]="currentPage === lastPage"
+        >
+          ▶
+        </button>
 
       </div>
 
     </div>
 
     <!-- ==========================================================
-         COLUMNA CENTRAL — FORMULARIO DE NUEVO PACK
+         COLUMNA CENTRAL — FORMULARIO (CREAR / EDITAR)
     ========================================================== -->
     <div class="columna-form" *ngIf="creandoPack">
 
       <div class="formulario-reserva">
-        <h3 class="titulo-form">Crear Nuevo Pack</h3>
+        <h3 class="titulo-form">
+          {{ editandoPack ? 'Editar Pack' : 'Crear Nuevo Pack' }}
+        </h3>
 
         <!-- Nombre -->
         <div class="form-grupo">
           <label>Nombre del Pack</label>
-          <input type="text" [(ngModel)]="form.nombre" placeholder="Nombre del pack...">
+          <input
+            type="text"
+            [(ngModel)]="form.nombre"
+            placeholder="Nombre del pack..."
+          />
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-grupo">
+          <label>Descripción (opcional)</label>
+          <textarea
+            rows="3"
+            [(ngModel)]="form.descripcion"
+            placeholder="Descripción breve..."
+          ></textarea>
+        </div>
+
+        <!-- Imagen -->
+        <div class="form-grupo">
+          <label>Imagen del Pack (opcional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onImagenSeleccionada($event)"
+          />
+
+          <div *ngIf="previewImagen" class="preview-pack">
+            <img [src]="previewImagen" alt="Preview Pack" />
+            <button
+              class="btn-ghost"
+              type="button"
+              (click)="limpiarImagen()"
+            >
+              Quitar imagen
+            </button>
+          </div>
         </div>
 
         <!-- Agregar equipos -->
@@ -56,58 +139,136 @@
           <div class="equipo-flex">
             <select [(ngModel)]="equipoSeleccionado">
               <option [ngValue]="null">Seleccionar equipo...</option>
-              <option *ngFor="let eq of equipos" [ngValue]="eq">
+              <option
+                *ngFor="let eq of equipos; trackBy: trackById"
+                [ngValue]="eq"
+              >
                 {{ eq.nombre }}
               </option>
             </select>
 
-            <button class="btn-agregar" (click)="agregarEquipo()">Agregar</button>
+            <button
+              class="btn-agregar"
+              type="button"
+              (click)="agregarEquipo()"
+            >
+              Agregar
+            </button>
           </div>
 
-          <!-- Lista equipos agregados -->
+          <!-- Lista equipos -->
           <div class="lista-equipos" *ngIf="form.equipos.length > 0">
-            <div class="item-equipo" *ngFor="let e of form.equipos; let i = index">
+            <div
+              class="item-equipo"
+              *ngFor="let e of form.equipos; let i = index; trackBy: trackById"
+            >
               <span>{{ e.nombre }}</span>
-              <button class="btn-eliminar" (click)="eliminarEquipo(i)">✕</button>
+              <button
+                class="btn-eliminar"
+                type="button"
+                (click)="eliminarEquipo(i, $event)"
+              >
+                ✕
+              </button>
             </div>
           </div>
         </div>
 
-        <button class="btn-guardar" (click)="crearPack()">Crear Pack</button>
+        <!-- ACCIONES -->
+        <div class="acciones-form">
+
+          <button
+            class="btn-guardar"
+            type="button"
+            (click)="guardarPack()"
+            [disabled]="guardando"
+          >
+            {{ guardando
+                ? 'Guardando...'
+                : (editandoPack ? '💾 Guardar cambios' : '➕ Crear Pack') }}
+          </button>
+
+          <button
+            class="btn-cancelar-sec"
+            type="button"
+            (click)="cancelarEdicion()"
+            [disabled]="guardando"
+          >
+            Cancelar
+          </button>
+
+        </div>
 
       </div>
-
     </div>
 
     <!-- ==========================================================
-         COLUMNA CENTRAL — DETALLE PACK SELECCIONADO
+         COLUMNA CENTRAL — DETALLE PACK
     ========================================================== -->
     <div class="columna-form" *ngIf="packSeleccionado && !creandoPack">
 
       <div class="detalle-reserva-box">
         <h3>Detalle del Pack</h3>
 
+        <div *ngIf="packSeleccionado.imagen_url" class="pack-detalle-img">
+          <img [src]="packSeleccionado.imagen_url" alt="Pack" />
+        </div>
+
         <p><strong>Nombre:</strong> {{ packSeleccionado.nombre }}</p>
 
-        <p><strong>Equipos incluidos ({{ packSeleccionado.equipos.length }}):</strong></p>
+        <p *ngIf="packSeleccionado.descripcion">
+          <strong>Descripción:</strong> {{ packSeleccionado.descripcion }}
+        </p>
 
-        <ul class="lista-resumen-equipos" *ngIf="packSeleccionado.equipos.length > 0">
-          <li *ngFor="let e of packSeleccionado.equipos">
+        <p>
+          <strong>
+            Equipos incluidos ({{ packSeleccionado.equipos.length }}):
+          </strong>
+        </p>
+
+        <ul
+          class="lista-resumen-equipos"
+          *ngIf="packSeleccionado.equipos.length > 0"
+        >
+          <li *ngFor="let e of packSeleccionado.equipos; trackBy: trackById">
             • {{ e.nombre }}
           </li>
         </ul>
 
-        <p *ngIf="packSeleccionado.equipos.length === 0" class="texto-vacio">
+        <p
+          *ngIf="packSeleccionado.equipos.length === 0"
+          class="texto-vacio"
+        >
           Ningún equipo incluido.
         </p>
 
-        <button class="btn-cancelar" (click)="eliminarPack(packSeleccionado.id)">Eliminar Pack</button>
-      </div>
+        <!-- ACCIONES DETALLE -->
+        <div class="acciones-form">
 
+          <button
+            class="btn-guardar"
+            type="button"
+            (click)="editarPack()"
+          >
+            ✏️ Editar Pack
+          </button>
+
+          <button
+            class="btn-eliminar-pack"
+            type="button"
+            (click)="eliminarPack(packSeleccionado.id)"
+            [disabled]="eliminando"
+          >
+            {{ eliminando ? 'Eliminando...' : '🗑 Eliminar Pack' }}
+          </button>
+
+        </div>
+
+      </div>
     </div>
 
     <!-- ==========================================================
-         COLUMNA DERECHA — RESUMEN DEL PACK
+         COLUMNA DERECHA — RESUMEN (CREACIÓN / EDICIÓN)
     ========================================================== -->
     <div class="columna-resumen" *ngIf="creandoPack">
 
@@ -115,20 +276,33 @@
         <h3>Resumen del Pack</h3>
 
         <p><strong>Nombre:</strong> {{ form.nombre || '—' }}</p>
+        <p><strong>Descripción:</strong> {{ form.descripcion || '—' }}</p>
 
-        <p><strong>Equipos incluidos ({{ form.equipos.length }})</strong></p>
+        <div *ngIf="previewImagen" class="resumen-imagen">
+          <p><strong>Imagen:</strong></p>
+          <img [src]="previewImagen" alt="Preview" />
+        </div>
 
-        <ul class="lista-resumen-equipos" *ngIf="form.equipos.length > 0">
-          <li *ngFor="let eq of form.equipos">
+        <p>
+          <strong>Equipos incluidos ({{ form.equipos.length }})</strong>
+        </p>
+
+        <ul
+          class="lista-resumen-equipos"
+          *ngIf="form.equipos.length > 0"
+        >
+          <li *ngFor="let eq of form.equipos; trackBy: trackById">
             • {{ eq.nombre }}
           </li>
         </ul>
 
-        <p *ngIf="form.equipos.length === 0" class="texto-vacio">
+        <p
+          *ngIf="form.equipos.length === 0"
+          class="texto-vacio"
+        >
           Ningún equipo seleccionado.
         </p>
       </div>
-
     </div>
 
   </div>

@@ -1,14 +1,23 @@
-
 <div class="admin-container">
+
+  <!-- FILTROS -->
   <div class="filtros-bar">
-    <input type="text" placeholder="Buscar por nombre, equipo u observación..." [(ngModel)]="filtroBusqueda" />
+    <input
+      type="text"
+      placeholder="Buscar por nombre, equipo u observación..."
+      [(ngModel)]="filtroBusqueda"
+    />
+
     <select [(ngModel)]="orden">
       <option value="recientes">Más recientes</option>
       <option value="antiguas">Más antiguas</option>
     </select>
   </div>
 
+  <!-- CONTENIDO -->
   <div class="solicitudes-wrapper">
+
+    <!-- LISTA IZQUIERDA -->
     <div class="lista-solicitudes scroll-columna">
 
       <div
@@ -18,7 +27,6 @@
         [class.activa]="s === solicitudSeleccionada"
       >
         <h4>{{ s.estudiante }}</h4>
-        <p></p>
         <p class="fecha">📅 {{ formatearFecha(s.fechaSolicitud) }}</p>
         <span class="estado pendiente">PENDIENTE</span>
       </div>
@@ -26,42 +34,87 @@
       <p *ngIf="solicitudesFiltradas.length === 0" class="sin-solicitudes">
         No hay solicitudes pendientes.
       </p>
+
     </div>
 
-    <!-- DETALLE -->
-    <div class="detalle-solicitud" *ngIf="solicitudSeleccionada">
+    <!-- PANEL DERECHO -->
+    <div class="detalle-solicitud" *ngIf="solicitudSeleccionada as sel">
+
       <h3>Detalle de la solicitud</h3>
 
-      <p><strong>Estudiante:</strong> {{ solicitudSeleccionada.estudiante }}</p>
-      <p><strong>Email:</strong> {{ solicitudSeleccionada.email }}</p>
-      <p><strong>Tipo:</strong> {{ solicitudSeleccionada.tipo || '—' }}</p>
+      <!-- ====== CUADRADO BONITO (MISMO DISEÑO QUE FINALIZADAS) ====== -->
+      <div class="detalle-grid">
 
-      <ng-container *ngIf="solicitudSeleccionada.tipo === 'DENTRO'">
-        <p><strong>Bloque:</strong> {{ solicitudSeleccionada.bloque || '—' }}</p>
-      </ng-container>
+        <!-- ESTUDIANTE DESTACADO -->
+        <div class="detalle-item usuario">
+          <div class="avatar">
+            {{ sel.estudiante.charAt(0) }}
+          </div>
 
-      <ng-container *ngIf="solicitudSeleccionada.tipo === 'FUERA'">
-        <p><strong>Periodo:</strong> {{ solicitudSeleccionada.periodo || '—' }}</p>
-      </ng-container>
+          <div class="usuario-info">
+            <span class="nombre">{{ sel.estudiante }}</span>
+            <span class="email">{{ sel.email }}</span>
+          </div>
+        </div>
 
-      <div>
-        <p><strong>Equipos:</strong></p>
-        <ul>
-<li *ngFor="let eq of solicitudSeleccionada.equipos">
-  {{ eq.nombre }} — 
-  <small><strong>Código:</strong> {{ eq.codigo }}</small>
-</li>
+        <!-- TIPO -->
+        <div class="detalle-item meta">
+          <span class="label">Tipo</span>
+          <span class="valor tipo">{{ sel.tipo || '—' }}</span>
+        </div>
 
-        </ul>
+        <!-- BLOQUE (DENTRO) -->
+        <ng-container *ngIf="sel.tipo === 'DENTRO'">
+          <div class="detalle-item meta">
+            <span class="label">Bloque</span>
+            <span class="valor">{{ sel.bloque || '—' }}</span>
+          </div>
+        </ng-container>
+
+        <!-- PERIODO (FUERA) -->
+        <ng-container *ngIf="sel.tipo === 'FUERA'">
+          <div class="detalle-item meta">
+            <span class="label">Periodo</span>
+            <span class="valor">{{ sel.periodo || '—' }}</span>
+          </div>
+        </ng-container>
+
       </div>
+      <!-- ====== FIN CUADRADO BONITO ====== -->
+
+<!-- ================================
+     EQUIPOS – MINI CARDS
+================================ -->
+<div class="equipos-box">
+  <h4>Equipos solicitados</h4>
+
+  <div class="equipo" *ngFor="let eq of sel.equipos">
+    <div class="equipo-info">
+      <p class="nombre">{{ eq.nombre }}</p>
+      <p class="codigo">Código: {{ eq.codigo }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================================
+     OBSERVACIÓN
+================================ -->
+<div class="observacion-box">
+  <h4>Observación</h4>
+  <p>{{ sel.observacion || 'Sin observación' }}</p>
+</div>
 
 
-      <p><strong>Observación:</strong> {{ solicitudSeleccionada.observacion || 'Sin observación' }}</p>
-
+      <!-- ACCIONES -->
       <div class="acciones">
-        <button class="btn-aceptar" (click)="abrirAprobacion()">Aprobar</button>
-        <button class="btn-rechazar" (click)="abrirRechazo()">Rechazar</button>
+        <button class="btn-aceptar" (click)="abrirAprobacion()">
+          Aprobar
+        </button>
+        <button class="btn-rechazar" (click)="abrirRechazo()">
+          Rechazar
+        </button>
       </div>
+
     </div>
   </div>
 
@@ -69,10 +122,20 @@
   <div class="modal" *ngIf="mostrarModalAprobacion">
     <div class="modal-content modal-aprobacion">
       <h4>Motivo de la aprobación</h4>
-      <textarea [(ngModel)]="motivoAprobacion" rows="3" placeholder="Ingrese el motivo..."></textarea>
+
+      <textarea
+        [(ngModel)]="motivoAprobacion"
+        rows="3"
+        placeholder="Ingrese el motivo..."
+      ></textarea>
+
       <div class="modal-actions">
-        <button class="btn-confirmar" (click)="confirmarAprobacion()">Confirmar</button>
-        <button class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-confirmar" (click)="confirmarAprobacion()">
+          Confirmar
+        </button>
+        <button class="btn-cancelar" (click)="cerrarModal()">
+          Cancelar
+        </button>
       </div>
     </div>
   </div>
@@ -81,11 +144,22 @@
   <div class="modal" *ngIf="mostrarModal">
     <div class="modal-content modal-rechazo">
       <h4>Motivo del rechazo</h4>
-      <textarea [(ngModel)]="motivoRechazo" rows="3" placeholder="Ingrese el motivo..."></textarea>
+
+      <textarea
+        [(ngModel)]="motivoRechazo"
+        rows="3"
+        placeholder="Ingrese el motivo..."
+      ></textarea>
+
       <div class="modal-actions">
-        <button class="btn-confirmar" (click)="confirmarRechazo()">Confirmar</button>
-        <button class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-confirmar" (click)="confirmarRechazo()">
+          Confirmar
+        </button>
+        <button class="btn-cancelar" (click)="cerrarModal()">
+          Cancelar
+        </button>
       </div>
     </div>
   </div>
+
 </div>

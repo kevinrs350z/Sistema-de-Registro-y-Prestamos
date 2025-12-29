@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
+import { CarritoService } from '../../../services/carrito.service';
 
 @Component({
   selector: 'app-catalogo-equipos',
@@ -15,6 +17,7 @@ export class CatalogoEquiposComponent {
 
   private api = inject(TipoEquipoService);
   private router = inject(Router);
+  private carritoSrv = inject(CarritoService);
 
   // ===========================
   // ESTADOS
@@ -26,7 +29,8 @@ export class CatalogoEquiposComponent {
   categoriaSeleccionada = signal<string>('TODOS');
   busqueda = signal<string>('');
 
-  carrito = signal<CarritoItem[]>([]);
+  // ✅ carrito se lee desde el servicio (fuente única)
+  carrito = computed(() => this.carritoSrv.getCarrito());
 
   // ===========================
   // INIT
@@ -118,80 +122,96 @@ export class CatalogoEquiposComponent {
   }
 
   // ===========================
-  // 🔥 FIX DEFINITIVO AQUÍ
+  // CAMBIAR CANTIDAD (✅ ahora modifica el servicio)
   // ===========================
   cambiarCantidad(idTipo: number, delta: number): void {
 
-    // CASO 1: no existe y quieren sumar → agregar en 1 y salir
+    const e = this.tipos().find(t => t.id === idTipo);
+    if (!e) return;
+
+    const actual = this.carritoSrv.getCarrito();
+
+    // CASO 1: no existe y quieren sumar
     if (!this.estaEnCarrito(idTipo) && delta > 0) {
-      this.carrito.update(items => [
-        ...items,
-        {
-          tipo: 'equipo',
-          idTipoEquipo: idTipo,
-          cantidad: 1,
-          modo: 'cualquiera',
-          equiposSeleccionados: []
-        }
-      ]);
-      return; // 👈 CLAVE: evita el +1 extra
-    }
-
-    // CASO 2: ya existe → modificar cantidad
-    this.carrito.update(items =>
-      items.map(i => {
-        if (i.tipo === 'equipo' && i.idTipoEquipo === idTipo) {
-
-          const stock =
-            this.tipos().find(t => t.id === idTipo)?.stock ?? 0;
-
-          let nueva = i.cantidad + delta;
-
-          if (nueva < 1) nueva = 1;
-          if (nueva > stock) nueva = stock;
-
-          return { ...i, cantidad: nueva };
-        }
-        return i;
-      })
-    );
-  }
-
-  toggleProducto(idTipo: number): void {
-    this.estaEnCarrito(idTipo)
-      ? this.carrito.set(
-          this.carrito().filter(c => c.idTipoEquipo !== idTipo)
-        )
-      : this.carrito.update(items => [
-          ...items,
-          {
-            tipo: 'equipo',
-            idTipoEquipo: idTipo,
-            cantidad: 1,
-            modo: 'cualquiera',
-            equiposSeleccionados: []
-          }
-        ]);
-  }
-
-  // ===========================
-  // CARRITO – PACKS
-  // ===========================
-  agregarPackAlCarrito(pack: Pack): void {
-    this.carrito.update(items => [
-      ...items,
-      {
-        tipo: 'pack',
-        idPack: pack.id,
+      const nuevo: CarritoItem = {
+        tipo: 'equipo',
+        idTipoEquipo: idTipo,
+        nombre: e.nombre,
+        categoria: e.categoria,
         cantidad: 1,
         modo: 'cualquiera',
         equiposSeleccionados: []
+      };
+      this.carritoSrv.setCarrito([...actual, nuevo]);
+      return;
+    }
+
+    // CASO 2: ya existe → modificar cantidad
+    const actualizado = actual.map(i => {
+      if (i.tipo === 'equipo' && i.idTipoEquipo === idTipo) {
+
+        let nueva = (i.cantidad ?? 0) + delta;
+
+        if (nueva < 1) nueva = 1;
+        if (nueva > e.stock) nueva = e.stock;
+
+        return { ...i, cantidad: nueva };
       }
-    ]);
+      return i;
+    });
+
+    this.carritoSrv.setCarrito(actualizado);
   }
 
   // ===========================
-  // CONTINUAR
+  // TOGGLE (✅ ahora modifica el servicio)
+  // ===========================
+  toggleProducto(idTipo: number): void {
+
+    const e = this.tipos().find(t => t.id === idTipo);
+    if (!e) return;
+
+    const actual = this.carritoSrv.getCarrito();
+
+    if (this.estaEnCarrito(idTipo)) {
+      this.carritoSrv.setCarrito(
+        actual.filter(c => c.idTipoEquipo !== idTipo)
+      );
+      return;
+    }
+
+    const nuevo: CarritoItem = {
+      tipo: 'equipo',
+      idTipoEquipo: idTipo,
+      nombre: e.nombre,
+      categoria: e.categoria,
+      cantidad: 1,
+      modo: 'cualquiera',
+      equiposSeleccionados: []
+    };
+
+    this.carritoSrv.setCarrito([...actual, nuevo]);
+  }
+
+  // ===========================
+  // CARRITO – PACKS (✅ ahora modifica el servicio)
+  // ===========================
+  agregarPackAlCarrito(pack: Pack): void {
+    const actual = this.carritoSrv.getCarrito();
+
+    const nuevo: CarritoItem = {
+      tipo: 'pack',
+      idPack: pack.id,
+      cantidad: 1,
+      modo: 'cualquiera',
+      equiposSeleccionados: []
+    };
+
+    this.carritoSrv.setCarrito([...actual, nuevo]);
+  }
+
+  // ===========================
+  // CONTINUAR (✅ ya NO uses history.state)
   // ===========================
   continuarReserva(): void {
     if (this.carrito().length === 0) {
@@ -199,9 +219,8 @@ export class CatalogoEquiposComponent {
       return;
     }
 
-    this.router.navigate(['/reservas/solicitar'], {
-      state: { carrito: this.carrito() }
-    });
+    // El carrito ya está en el servicio
+    this.router.navigate(['/reservas/solicitar']);
   }
 }
 
@@ -230,13 +249,4 @@ interface Pack {
   categoria: string;
   cantidad: number;
   equipos: { nombre: string }[];
-}
-
-interface CarritoItem {
-  tipo: 'equipo' | 'pack';
-  idTipoEquipo?: number;
-  idPack?: number;
-  cantidad: number;
-  modo: 'cualquiera' | 'especifico';
-  equiposSeleccionados: number[];
 }

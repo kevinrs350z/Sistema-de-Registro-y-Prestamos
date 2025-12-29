@@ -55,21 +55,25 @@ export class LoginComponent {
 
 
   sendTokenToApi(token: string) {
+    console.log('TOKEN QUE ENVÍO AL BACKEND:', token);
     this.authService.loginWithGoogle(token).subscribe({
       next: (res: any) => {
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
         localStorage.setItem('rol', res.user.rol.nombre);
 
-        const rol = res.user.rol.nombre.toLowerCase();
-        if (rol === 'admin') this.router.navigate(['/admin/dashboard']);
-        else this.router.navigate(['/equipos/catalogo']);
+        if (res.user.rol.nombre.toLowerCase() === 'admin') {
+          this.router.navigate(['/admin/dashboard']);
+        } else {
+          this.router.navigate(['/equipos/catalogo']);
+        }
       },
       error: () => {
-        this.errorMessage = 'Error al iniciar sesión con Google.';
+        this.errorMessage = 'Error al iniciar sesión con Google';
       }
     });
   }
+
 
   submit() {
     if (this.form.invalid) return;

@@ -1,9 +1,7 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, style, transition, animate } from '@angular/animations';
-import { ReservasService } from '../solicitar-reserva/reservas.service';
 import { AuthService } from '../../../services/auth.service';
-import { Equipo, Pack } from '../../../shared/models';
 
 @Component({
   selector: 'app-mis-solicitudes',
@@ -24,6 +22,7 @@ import { Equipo, Pack } from '../../../shared/models';
   ],
 })
 export class MisSolicitudesComponent implements OnInit {
+
   private api = inject(AuthService);
 
   solicitudes = signal<any[]>([]);
@@ -39,14 +38,19 @@ export class MisSolicitudesComponent implements OnInit {
     { id: 5, texto: 'Bloque 5 (16:10 – 17:40)' },
   ];
 
+  /* =============================
+     COMPUTED: FILTRO + ORDEN
+  ============================= */
   solicitudesFiltradas = computed(() => {
-    let lista = this.solicitudes();
+    let lista = [...this.solicitudes()];
     const filtro = this.estadoFiltro();
     const orden = this.orden();
 
-    if (filtro) lista = lista.filter(s => s.estado === filtro);
+    if (filtro) {
+      lista = lista.filter(s => s.estado === filtro);
+    }
 
-    lista = lista.sort((a, b) =>
+    lista.sort((a, b) =>
       orden === 'asc'
         ? (a.fecha_inicio || '').localeCompare(b.fecha_inicio || '')
         : (b.fecha_inicio || '').localeCompare(a.fecha_inicio || '')
@@ -59,13 +63,16 @@ export class MisSolicitudesComponent implements OnInit {
     this.cargarSolicitudes();
   }
 
+  /* =============================
+     CARGA DE SOLICITUDES
+  ============================= */
   private cargarSolicitudes() {
     const token = localStorage.getItem('token') ?? '';
 
     this.api.getSolicitudesUsuario(token).subscribe({
       next: (data: any[]) => {
         const solicitudesMapeadas = data.map((s) => {
-          // --- BLOQUES ---
+
           const bloqueTxt =
             s.bloque_prestamo?.length > 0
               ? s.bloque_prestamo
@@ -73,7 +80,6 @@ export class MisSolicitudesComponent implements OnInit {
                   .join(', ')
               : '—';
 
-          // --- EQUIPOS FÍSICOS ---
           const equipos =
             s.equipos?.length > 0
               ? s.equipos.map((eq: any) => ({
@@ -88,14 +94,14 @@ export class MisSolicitudesComponent implements OnInit {
           return {
             id: s.idPrestamo,
             tipo: s.tipo === 'DENTRO' ? 'Laboratorio' : 'Externo',
-
             fecha_inicio: s.fecha_inicio || null,
             fecha_fin: s.fecha_fin || null,
-
             bloqueTxt,
             equipos,
             observacion: s.observacion ?? 'Sin observación',
-            estado: s.estado?.toUpperCase() ?? 'PENDIENTE',
+
+            // 🔥 NORMALIZACIÓN CLAVE
+            estado: (s.estado ?? 'PENDIENTE').toUpperCase(),
           };
         });
 
@@ -105,6 +111,30 @@ export class MisSolicitudesComponent implements OnInit {
     });
   }
 
+  /* =============================
+     CLASE CSS PARA ESTADO
+     (conecta directo con tu CSS)
+  ============================= */
+  getEstadoClass(estado: string): string {
+    switch (estado?.toUpperCase()) {
+      case 'PENDIENTE':
+        return 'pendiente';
+      case 'APROBADA':
+        return 'aprobada';
+      case 'ACEPTADA':
+        return 'aceptado';
+      case 'RECHAZADA':
+        return 'rechazada';
+      case 'DEVUELTO':
+        return 'devuelto';
+      default:
+        return '';
+    }
+  }
+
+  /* =============================
+     EVENTOS UI
+  ============================= */
   filtrarEstado(event: Event) {
     const value = (event.target as HTMLSelectElement).value;
     this.estadoFiltro.set(value);
@@ -114,7 +144,6 @@ export class MisSolicitudesComponent implements OnInit {
     const value = (event.target as HTMLSelectElement).value as 'asc' | 'desc';
     this.orden.set(value);
   }
-  
 
   seleccionarSolicitud(s: any) {
     this.solicitudSeleccionada.set(s);

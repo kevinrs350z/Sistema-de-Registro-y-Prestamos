@@ -217,7 +217,7 @@ guardarCambiosEquipo() {
 
   this.guardando = true;
 
-  // 🔴 ELIMINAR
+  // ELIMINAR
   if (this.equipoSeleccionado.estado === 'ELIMINAR') {
     this.equiposService.eliminarEquipo(this.equipoSeleccionado.id)
       .subscribe({

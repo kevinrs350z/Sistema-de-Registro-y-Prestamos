@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { startWith } from 'rxjs/operators';
+import { startWith, map } from 'rxjs/operators';
+import { NotificationService } from '../../../services/notification.service';
+import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
+import { CarritoService } from '../../../services/carrito.service';
 
 /* =========================
    HELPERS
@@ -46,8 +49,10 @@ function cortarHora(hora: string): string {
 })
 export class SolicitarReservaComponent {
 
+  private notify = inject(NotificationService);
   private fb = inject(FormBuilder);
   private api = inject(AuthService);
+  private carritoSrv = inject(CarritoService);
   private cdr = inject(ChangeDetectorRef);
 
   usuarioActivo: any = null;
@@ -55,7 +60,7 @@ export class SolicitarReservaComponent {
   equipos = signal<Equipo[]>([]);
   carrito: CarritoItem[] = [];
 
-  asignaturas: any[] = [];
+  asignaturas = signal<{ idAsignatura: number; nombre: string }[]>([]);
   bloques: { id: number; texto: string }[] = [];
 
   tipoSolicitud = signal<'DENTRO' | 'FUERA'>('DENTRO');
@@ -87,7 +92,10 @@ export class SolicitarReservaComponent {
       email: [{ value: '', disabled: true }],
 
       tipo_solicitud: ['DENTRO', Validators.required],
-      asignatura: ['', Validators.required],
+
+      // ✅ ahora es number | null
+      asignatura: [null as number | null, Validators.required],
+
       motivo: [''],
 
       observacion: [''],
@@ -121,16 +129,23 @@ export class SolicitarReservaComponent {
   esDentro = () => this.tipoSolicitud() === 'DENTRO';
   esFuera = () => this.tipoSolicitud() === 'FUERA';
 
+  // ✅ señal reactiva del formulario
   formValueSig = toSignal(
-    this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
-    { initialValue: this.form.getRawValue() }
+    this.form.valueChanges.pipe(
+      startWith(this.form.getRawValue()),
+      map(v => ({ ...v }))
+    ),
+    { initialValue: { ...this.form.getRawValue() } }
   );
 
+  // ✅ ya no existe "OTROS" string. OTROS será null desde el select.
   asignaturaSeleccionada = computed(() => {
-    const id = this.form.get('asignatura')?.value;
-    if (!id) return '—';
-    if (id === 'OTROS') return 'OTROS';
-    return this.asignaturas.find(a => Number(a.idAsignatura) === Number(id))?.nombre || '—';
+    const id = this.formValueSig().asignatura;
+
+    if (id === null) return 'OTROS';
+    if (id === undefined) return '—';
+
+    return this.asignaturas().find(a => a.idAsignatura === id)?.nombre ?? '—';
   });
 
   equiposSeleccionados = computed(() => {
@@ -155,16 +170,30 @@ export class SolicitarReservaComponent {
     return lista;
   });
 
+  equiposResumen = computed(() => {
+    return this.carrito.map(item => ({
+      nombre: item.nombre ?? 'Equipo',
+      categoria: item.categoria ?? '',
+      cantidad: item.cantidad
+    }));
+  });
+
+  totalUnidades = computed(() =>
+    this.equiposResumen().reduce((acc, e) => acc + e.cantidad, 0)
+  );
+
   resumen = computed(() => {
     const v = this.formValueSig();
     return {
       usuario: this.usuarioActivo?.persona?.Nombre ?? '—',
       tipo: v.tipo_solicitud ?? '—',
-      cantidadEquipos: this.equiposSeleccionados().length,
+      cantidadEquipos: this.equiposResumen().length,
+
       periodo:
         v.tipo_solicitud === 'FUERA' && v.fecha_inicio && v.fecha_fin
           ? `${v.fecha_inicio} → ${v.fecha_fin}`
           : '—',
+
       bloquesTxt:
         v.tipo_solicitud === 'DENTRO'
           ? this.bloques
@@ -177,6 +206,14 @@ export class SolicitarReservaComponent {
 
   ngOnInit() {
     const token = localStorage.getItem('token') ?? '';
+    this.carrito = this.carritoSrv.getCarrito();
+    console.log('🛒 carrito desde servicio:', this.carrito);
+
+    // ✅ debug para confirmar que el select cambia de verdad
+    this.form.get('asignatura')!.valueChanges.subscribe(v => {
+      console.log('🎓 asignatura REAL:', v, typeof v);
+      this.onAsignaturaChange(v);
+    });
 
     this.api.getUsuario(token).subscribe(data => {
       this.usuarioActivo = data;
@@ -191,42 +228,45 @@ export class SolicitarReservaComponent {
 
     this.api.getEquipos(token).subscribe(data => {
       this.equipos.set(data);
-      const state = history.state as { carrito?: CarritoItem[] };
-      if (state?.carrito) this.carrito = state.carrito;
       this.cdr.detectChanges();
     });
 
     this.api.getAsignaturas(token).subscribe(data => {
-      this.asignaturas = [
-        ...data.map(a => ({ idAsignatura: a.id, nombre: a.nombre })),
-        { idAsignatura: 'OTROS', nombre: 'OTROS' }
-      ];
+      // ✅ OJO: tu backend devuelve {idAsignatura, nombre}
+      // por eso tomamos idAsignatura, NO "id"
+      const normalizadas = (data ?? []).map((a: any) => ({
+        idAsignatura: Number(a.idAsignatura),
+        nombre: a.nombre
+      }));
+      this.asignaturas.set(normalizadas);
     });
 
     this.api.getBloques(token).subscribe(data => {
       this.bloques = data
-        .filter(b => b.idBloque <= 5)
-        .map(b => ({
+        .filter((b: any) => b.idBloque <= 5)
+        .map((b: any) => ({
           id: b.idBloque,
           texto: `Bloque ${b.idBloque} (${cortarHora(b.hora_inicio)} – ${cortarHora(b.hora_fin)})`
         }));
     });
 
-    this.form.get('asignatura')!.valueChanges.subscribe(v => this.onAsignaturaChange(v));
     this.form.get('tipo_solicitud')!.valueChanges.subscribe(v => {
       this.tipoSolicitud.set(v as any);
       this.minFechaInicio = this.calcularMinFecha(v as any);
     });
   }
 
-  onAsignaturaChange(valor: any) {
-    this.mostrarMotivo = valor === 'OTROS';
+  // ✅ ahora OTROS es null
+  onAsignaturaChange(valor: number | null) {
+    this.mostrarMotivo = valor === null;
+
     if (this.mostrarMotivo) {
       this.f.motivo.setValidators([Validators.required]);
     } else {
       this.f.motivo.clearValidators();
       this.form.patchValue({ motivo: '' });
     }
+
     this.f.motivo.updateValueAndValidity();
   }
 
@@ -239,19 +279,20 @@ export class SolicitarReservaComponent {
   }
 
   /* =========================
-     SUBMIT (🔥 FIX DEFINITIVO)
+     SUBMIT
   ========================= */
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      alert('Completa todos los campos.');
+      this.notify.warning('Completa todos los campos obligatorios.');
       return;
     }
 
-    const asignaturaSel = this.f.asignatura.value;
+    const asignaturaSel = this.f.asignatura.value; // number | null
 
-    if (!asignaturaSel) {
-      alert('Debes seleccionar una asignatura.');
+    // ✅ ahora null significa OTROS
+    if (asignaturaSel === undefined) {
+      this.notify.warning('Debes seleccionar una asignatura.');
       return;
     }
 
@@ -259,13 +300,9 @@ export class SolicitarReservaComponent {
       idUser: this.f.idUser.value,
       tipo: this.f.tipo_solicitud.value,
 
-      /** 🔥 CLAVE */
-      idAsignatura:
-        asignaturaSel === 'OTROS'
-          ? null
-          : Number(asignaturaSel),
+      idAsignatura: asignaturaSel, // number | null
 
-      motivo: asignaturaSel === 'OTROS' ? this.f.motivo.value : '',
+      motivo: asignaturaSel === null ? this.f.motivo.value : '',
       observacion: this.f.observacion.value,
       fecha_inicio: this.f.fecha_inicio.value,
       fecha_fin: this.f.fecha_fin.value,
@@ -282,16 +319,23 @@ export class SolicitarReservaComponent {
     };
 
     const token = localStorage.getItem('token') ?? '';
-    this.api.crearPrestamo(payload, token).subscribe(() => {
-      alert('Solicitud enviada.');
-      this.limpiar();
+    this.api.crearPrestamo(payload, token).subscribe({
+      next: () => {
+        this.notify.success('Solicitud enviada correctamente.');
+        this.limpiar();
+      },
+      error: err => {
+        this.notify.error(
+          err?.error?.error || 'Ocurrió un error al enviar la solicitud.'
+        );
+      }
     });
   }
 
   limpiar() {
     this.form.reset({
       tipo_solicitud: 'DENTRO',
-      asignatura: '',
+      asignatura: null,
       motivo: '',
       fecha_inicio: '',
       fecha_fin: '',
@@ -312,11 +356,4 @@ interface Equipo {
   categoria: string;
   codigo: string;
   tipo_equipo_id: number;
-}
-
-interface CarritoItem {
-  idTipoEquipo: number;
-  cantidad: number;
-  modo: 'cualquiera' | 'especifico';
-  equiposSeleccionados: number[];
 }

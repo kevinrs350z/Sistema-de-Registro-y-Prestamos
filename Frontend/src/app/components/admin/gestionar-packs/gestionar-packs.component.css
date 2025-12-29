@@ -287,3 +287,127 @@ textarea {
   background: #d64545;
   transform: translateY(-2px);
 }
+/* ===== Extras UX ===== */
+.estado-bar {
+  background: #eef6ff;
+  border: 1px solid #cfe4ff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  color: #2f5ea8;
+  font-weight: 600;
+}
+
+.estado-error {
+  background: #fff1f1;
+  border: 1px solid #ffcccc;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  color: #b00020;
+  font-weight: 600;
+}
+
+/* Mini layout pack en lista */
+.pack-mini {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pack-mini-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #e6e6e6;
+}
+
+/* Preview imagen en form */
+.preview-pack {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.preview-pack img {
+  width: 92px;
+  height: 92px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid #e6e6e6;
+}
+
+/* Detalle pack imagen */
+.pack-detalle-img img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid #e6e6e6;
+  margin-bottom: 12px;
+}
+
+/* Imagen resumen */
+.resumen-imagen img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid #e6e6e6;
+  margin: 8px 0 10px;
+}
+
+/* Botones secundarios */
+.acciones-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-cancelar-sec {
+  width: 100%;
+  background: #e9eef7;
+  color: #2a2a2a;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: 1px solid #d0d8ea;
+  cursor: pointer;
+}
+
+.btn-cancelar-sec:hover {
+  background: #dfe7f5;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid #d0d8ea;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.paginacion {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.paginacion button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd6f3;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.paginacion button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

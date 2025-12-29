@@ -1267,3 +1267,53 @@
   background: linear-gradient(135deg, #ef4444, #dc2626) !important;
   color: white !important;
 }
+
+/* ===============================
+   🔥 PREVIEW IMAGEN UPLOAD (FIX)
+================================ */
+
+.upload-area {
+  position: relative;
+  height: 200px; /* 🔥 tamaño visual correcto */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 🔥 CLAVE */
+  border-radius: 10px;
+  z-index: 1;
+}
+
+/* Oculta texto cuando hay imagen */
+.upload-area.has-image .upload-content {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Overlay sutil hover */
+.upload-area.has-image::after {
+  content: "Cambiar imagen";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  border-radius: 10px;
+}
+
+.upload-area.has-image:hover::after {
+  opacity: 1;
+}
+

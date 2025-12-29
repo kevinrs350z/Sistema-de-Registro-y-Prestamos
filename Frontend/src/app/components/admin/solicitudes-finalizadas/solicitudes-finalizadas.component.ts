@@ -8,7 +8,8 @@ type AdminSolicitud = {
   id: number;
   estudiante: string;
   email: string;
-  tipo: string;
+  tipo: 'DENTRO' | 'FUERA';
+  bloque: string;
   periodo: string;
   observacion: string;
 
@@ -16,10 +17,11 @@ type AdminSolicitud = {
     id: number;
     nombre: string;
     codigoActivo: string;
+    devuelto: boolean;
   }[];
 
   fechaSolicitud: string;
-  estado: 'aceptado' | 'prestado' | 'devuelto' | 'rechazado';
+  estado: 'APROBADO' | 'DEVUELTO' | 'RECHAZADO';
 };
 
 @Component({
@@ -35,7 +37,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
   solicitudSeleccionada: AdminSolicitud | null = null;
 
   filtroBusqueda = '';
-  filtroEstado: 'todos' | 'aceptado' | 'prestado' | 'devuelto' | 'rechazado' = 'todos';
+  filtroEstado: 'todos' | 'APROBADO' | 'DEVUELTO' | 'RECHAZADO' = 'todos';
   orden: 'recientes' | 'antiguas' = 'recientes';
 
   mostrarModal = false;
@@ -47,53 +49,40 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     this.cargarSolicitudes();
   }
 
- 
   cargarSolicitudes(): void {
     this.api.getHistorial().subscribe({
       next: (data: any[]) => {
+        this.solicitudes = data.map((p): AdminSolicitud => {
 
-        this.solicitudes = data
-          .map((p) => {
-            const estadoNormalizado = (p.estado ?? '')
-              .toString()
-              .trim()
-              .toLowerCase();
+          const equiposDetallados = Array.isArray(p.equipos)
+            ? p.equipos.map((eq: any) => ({
+                id: eq.id,
+                nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
+                codigoActivo: eq.codigo_activo ?? eq.codigo ?? '—',
+                devuelto: Boolean(eq.devuelto)
 
-            return { ...p, estadoNormalizado };
-          })
-          .filter(p =>
-            ['aceptado', 'prestado', 'devuelto', 'rechazado'].includes(p.estadoNormalizado)
-          )
-          .map((p): AdminSolicitud => {
+              }))
+            : [];
 
-            const equiposDetallados = Array.isArray(p.equipos)
-              ? p.equipos.map((eq: any) => ({
-                  id: eq.id,  // 👈 IMPORTANTE PARA DEVOLVER EQUIPO
-                  nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
-                  codigoActivo: eq.codigo_activo ?? eq.codigo ?? '—'
-                }))
-              : [];
-
-            return {
-              id: p.idPrestamo,
-              estudiante: p.user?.nombre ?? 'Desconocido',
-              email: p.user?.email ?? '',
-              tipo: p.tipo ?? '',
-              periodo: `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}`,
-              equiposDetallados,
-              observacion: p.observacion ?? 'Sin observación',
-              fechaSolicitud: p.created_at ?? '',
-              estado: p.estadoNormalizado as AdminSolicitud["estado"]
-            };
-          });
+          return {
+            id: p.idPrestamo,
+            estudiante: p.user?.nombre ?? 'Desconocido',
+            email: p.user?.email ?? '',
+            tipo: p.tipo,
+            bloque: p.bloquePrestamo ?? '—',
+            periodo: `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}`,
+            equiposDetallados,
+            observacion: p.observacion ?? 'Sin observación',
+            fechaSolicitud: p.created_at ?? '',
+            estado: p.estado as AdminSolicitud['estado']
+          };
+        });
       },
       error: (err) => console.error('Error al cargar historial:', err)
     });
   }
 
-
   get solicitudesFiltradas(): AdminSolicitud[] {
-
     const term = this.filtroBusqueda.toLowerCase().trim();
 
     let resultado = this.solicitudes.filter((s) => {
@@ -106,8 +95,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
       const coincideBusqueda = texto.includes(term);
 
       const coincideEstado =
-        this.filtroEstado === 'todos' ||
-        s.estado === this.filtroEstado.toLowerCase();
+        this.filtroEstado === 'todos' || s.estado === this.filtroEstado;
 
       return coincideBusqueda && coincideEstado;
     });
@@ -121,11 +109,9 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     return resultado;
   }
 
- 
   seleccionarSolicitud(s: AdminSolicitud): void {
     this.solicitudSeleccionada = s;
   }
-
 
   abrirFinalizar(): void {
     this.mostrarModal = true;
@@ -157,25 +143,43 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     this.motivoFinalizar = '';
   }
 
- 
   devolverEquipo(idPrestamo: number, idEquipo: number): void {
 
-    const motivo = prompt("Motivo de devolución del equipo:");
+    const motivo = prompt('Motivo de devolución del equipo:');
 
-    if (!motivo || motivo.trim() === "") {
-      alert("Debes ingresar un motivo.");
+    if (!motivo || motivo.trim() === '') {
+      alert('Debes ingresar un motivo.');
       return;
     }
 
     this.api.devolverEquipo(idPrestamo, idEquipo, motivo).subscribe({
       next: () => {
-        alert("Equipo devuelto correctamente.");
-        this.cargarSolicitudes(); // recargar datos
+
+        // ✅ ACTUALIZAR EL EQUIPO EN FRONT
+        const solicitud = this.solicitudes.find(s => s.id === idPrestamo);
+
+        if (solicitud) {
+          const equipo = solicitud.equiposDetallados.find(e => e.id === idEquipo);
+          if (equipo) {
+            equipo.devuelto = true;
+          }
+
+          // 🔥 si todos están devueltos → préstamo DEVUELTO
+          const quedanPendientes = solicitud.equiposDetallados
+            .some(e => !e.devuelto);
+
+          if (!quedanPendientes) {
+            solicitud.estado = 'DEVUELTO';
+          }
+        }
+
+        alert('Equipo devuelto correctamente.');
       },
       error: (err) => {
-        console.error("Error al devolver equipo:", err);
-        alert("Error al devolver equipo.");
+        console.error('Error al devolver equipo:', err);
+        alert('Error al devolver equipo.');
       }
     });
   }
+
 }

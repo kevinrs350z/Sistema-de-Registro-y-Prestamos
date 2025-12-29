@@ -115,19 +115,21 @@
             Imagen del Modelo (Opcional)
           </label>
           <div class="upload-area"
-               [class.has-image]="previewImagen">
+              [class.has-image]="previewImagen">
+
             <input type="file" class="file-input"
-                   (change)="onFileSelected($event)"
-                   accept="image/*">
-            <div class="upload-content">
+                  (change)="onFileSelected($event)"
+                  accept="image/*">
+
+            <div class="upload-content" *ngIf="!previewImagen">
               <i class="bi bi-cloud-arrow-up"></i>
               <p>Arrastra o haz clic para subir</p>
             </div>
-          </div>
 
-          <img *ngIf="previewImagen"
-               [src]="previewImagen"
-               class="preview-img-custom mt-3">
+            <img *ngIf="previewImagen"
+                [src]="previewImagen"
+                class="upload-preview">
+          </div>
         </div>
 
         <!-- PASO FINAL: CÓDIGO Y ESTADO -->

@@ -73,7 +73,8 @@ export class SolicitudesPendientesComponent implements OnInit {
             fechaInicio: p.fecha_inicio,
             fechaFin: p.fecha_fin,
             periodo: esExterno ? `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}` : '—',
-            estado: p.estado?.toUpperCase()
+            estado: p.estado
+
           };
         });
       },
@@ -132,7 +133,7 @@ confirmarAprobacion() {
     .aprobarPrestamo(
       this.solicitudSeleccionada.id!,
       this.motivoAprobacion,
-      'aceptar'
+      'aprobar'
     )
     .subscribe({
       next: () => {

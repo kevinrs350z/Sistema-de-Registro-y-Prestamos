@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { NavbarComponent } from './navbar/navbar.component';
 import { NavbarAdminComponent } from './components/admin/navbar-admin/navbar-admin.component';
 import { LoadingOverlayComponent } from './shared/loading-overlay/loading-overlay.component';
+import { NotificationComponent } from './shared/notification/notification.component';
 
 @Component({
   selector: 'app-root',
@@ -15,7 +16,8 @@ import { LoadingOverlayComponent } from './shared/loading-overlay/loading-overla
     NavbarComponent,
     NavbarAdminComponent,
     LoadingOverlayComponent, // 👈 IMPORTANTE
-    NgIf
+    NgIf,
+    NotificationComponent
   ],
   template: `
     <!-- 🔹 Overlay global de carga -->

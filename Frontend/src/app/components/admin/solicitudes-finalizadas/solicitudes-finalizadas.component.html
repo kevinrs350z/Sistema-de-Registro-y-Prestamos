@@ -10,10 +10,9 @@
 
     <select [(ngModel)]="filtroEstado">
       <option value="todos">Todos</option>
-      <option value="aceptado">Aceptados</option>
-      <option value="prestado">Prestados</option>
-      <option value="devuelto">Devueltos</option>
-      <option value="rechazado">Rechazados</option>
+      <option value="APROBADO">Aprobados</option>
+      <option value="DEVUELTO">Devueltos</option>
+      <option value="RECHAZADO">Rechazados</option>
     </select>
 
     <select [(ngModel)]="orden">
@@ -39,7 +38,7 @@
         <p>
           <strong>Equipo:</strong>
           <ng-container *ngIf="s.equiposDetallados as eqs">
-            {{ eqs[0]?.nombre || '—' }}
+            {{ eqs.length ? eqs[0].nombre : '—' }}
           </ng-container>
         </p>
 
@@ -48,13 +47,12 @@
         <span
           class="estado"
           [ngClass]="{
-            aceptado: s.estado === 'aceptado',
-            prestado: s.estado === 'prestado',
-            devuelto: s.estado === 'devuelto',
-            rechazado: s.estado === 'rechazado'
+            aprobado: s.estado === 'APROBADO',
+            devuelto: s.estado === 'DEVUELTO',
+            rechazado: s.estado === 'RECHAZADO'
           }"
         >
-          {{ s.estado | uppercase }}
+          {{ s.estado }}
         </span>
       </div>
 
@@ -71,57 +69,66 @@
 
       <div class="detalle-grid">
 
-        <div class="detalle-item">
-          <label>Estudiante:</label>
-          <input class="detalle-input" [value]="sel.estudiante" readonly />
+        <div class="detalle-item usuario">
+          <div class="avatar">
+            {{ sel.estudiante.charAt(0) }}
+          </div>
+
+          <div class="usuario-info">
+            <span class="nombre">{{ sel.estudiante }}</span>
+            <span class="email">{{ sel.email }}</span>
+          </div>
         </div>
 
-        <div class="detalle-item">
-          <label>Email:</label>
-          <input class="detalle-input" [value]="sel.email" readonly />
+        <div class="detalle-item meta">
+          <span class="label">Tipo</span>
+          <span class="valor tipo">{{ sel.tipo }}</span>
         </div>
 
-        <div class="detalle-item">
-          <label>Tipo:</label>
-          <input class="detalle-input" [value]="sel.tipo" readonly />
-        </div>
+        <ng-container *ngIf="sel.tipo === 'DENTRO'">
+          <div class="detalle-item meta">
+            <span class="label">Bloque</span>
+            <span class="valor">{{ sel.bloque || '—' }}</span>
+          </div>
+        </ng-container>
 
-        <div class="detalle-item">
-          <label>Periodo:</label>
-          <input class="detalle-input" [value]="sel.periodo" readonly />
-        </div>
+        <ng-container *ngIf="sel.tipo === 'FUERA'">
+          <div class="detalle-item meta">
+            <span class="label">Periodo</span>
+            <span class="valor">{{ sel.periodo || '—' }}</span>
+          </div>
+        </ng-container>
 
       </div>
 
       <!-- EQUIPOS -->
-<div class="equipos-box">
-  <h4>Equipos utilizados</h4>
+      <div class="equipos-box">
+        <h4>Equipos utilizados</h4>
 
-  <div class="equipo" *ngFor="let eq of sel.equiposDetallados">
-    <p class="nombre">{{ eq.nombre }}</p>
-    <p class="codigo">Código: {{ eq.codigoActivo }}</p>
+        <div class="equipo" *ngFor="let eq of sel.equiposDetallados">
+          <p class="nombre">{{ eq.nombre }}</p>
+          <p class="codigo">Código: {{ eq.codigoActivo }}</p>
 
-    <!-- BOTÓN DEVOLVER EQUIPO -->
-    <button 
-      class="btn-devolver-equipo"
-      *ngIf="sel.estado === 'prestado'"
-      (click)="devolverEquipo(sel.id, eq.id)"
-    >
-      Devolver este equipo
-    </button>
-  </div>
-</div>
+          <button 
+            class="btn-devolver-equipo"
+            *ngIf="sel.estado === 'APROBADO'&& !eq.devuelto"
+            (click)="devolverEquipo(sel.id, eq.id)"
+          >
+            Devolver este equipo
+          </button>
+        </div>
+      </div>
 
-
+      <!-- OBSERVACIÓN -->
       <div class="observacion-box">
         <h4>Observación</h4>
         <p>{{ sel.observacion || 'Sin observaciones' }}</p>
       </div>
 
-   
+      <!-- FINALIZAR -->
       <button
         class="btn-finalizar"
-        *ngIf="sel.estado === 'prestado'"
+        *ngIf="sel.estado === 'APROBADO'"
         (click)="abrirFinalizar()"
       >
         Devolver préstamo

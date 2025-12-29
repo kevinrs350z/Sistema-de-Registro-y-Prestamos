@@ -34,6 +34,9 @@ export class PrestamosAdminService {
       { headers: this.getAuthHeaders() }
     );
   }
+  devolverEquipo(idPrestamo: number, idEquipo: number, motivo: string) {
+    return this.http.patch(`${this.apiUrl}/${idPrestamo}/equipos/${idEquipo}/devolver`,{ motivo });
+  }
 
 aprobarPrestamo(id: number, motivo: string, accion: string) {
   return this.http.post(`${this.apiUrl}/aprobar/${id}`, {
@@ -47,11 +50,11 @@ marcarDevuelto(id: number, motivo: string) {
   });
 }
 
-devolverEquipo(idPrestamo: number, idEquipo: number, motivo: string) {
-  return this.http.patch(`${this.apiUrl}/prestamos/${idPrestamo}/devolver-equipo/${idEquipo}`, {
-    motivo
-  });
-}
+//devolverEquipo(idPrestamo: number, idEquipo: number, motivo: string) {
+ // return this.http.patch(`${this.apiUrl}/prestamos/${idPrestamo}/devolver-equipo/${idEquipo}`, {
+  //  motivo
+  //});
+//}
 
 
 

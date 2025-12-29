@@ -55,12 +55,16 @@
       <div class="grid-2">
         <div>
           <label>Asignatura</label>
-          <select formControlName="asignatura">
-            <option value="">Seleccionar...</option>
-            <option *ngFor="let a of asignaturas" [value]="a.idAsignatura">
-              {{ a.nombre }}
-            </option>
-          </select>
+            <select formControlName="asignatura">
+              <option [ngValue]="undefined">Seleccionar...</option>
+
+              <option *ngFor="let a of asignaturas()" [ngValue]="a.idAsignatura">
+                {{ a.nombre }}
+              </option>
+
+              <option [ngValue]="null">OTROS</option>
+            </select>
+
         </div>
 
         <div *ngIf="mostrarMotivo">
@@ -70,24 +74,69 @@
       </div>
     </div>
 
-    <!-- 4) Equipos
-    <div class="card">
-      <h2>Equipos seleccionados</h2>
+     
+<div class="card">
+  <h2>Equipos seleccionados</h2>
 
-      <ng-container *ngIf="equiposSeleccionados().length > 0; else sinEquipos">
-        <ul>
-          <li *ngFor="let e of equiposSeleccionados()">
-            {{ e.nombre }} — {{ e.categoria }} ({{ e.codigo }})
-          </li>
-        </ul>
-      </ng-container>
+  <ng-container *ngIf="equiposResumen().length > 0; else sinEquipos">
 
-      <ng-template #sinEquipos>
-        <div class="err">
-          No hay equipos seleccionados. Vuelve al catálogo.
+    <div class="equipos-card">
+
+      <!-- HEADER -->
+      <div class="equipos-header d-flex align-items-center">
+        <div class="icon-box">
+          <i class="bi bi-box-seam"></i>
         </div>
-      </ng-template>
-    </div> -->
+        <div>
+          <strong>Equipos seleccionados</strong>
+          <div class="equipos-sub">
+            {{ equiposResumen().length }} equipos ·
+            {{ totalUnidades() }} unidades
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTA -->
+      <ul class="equipos-list list-unstyled m-0">
+        <li
+          *ngFor="let e of equiposResumen()"
+          class="equipos-item d-flex align-items-center justify-content-between"
+        >
+          <div class="d-flex align-items-center gap-3">
+            <div class="equipos-icon">
+              <i class="bi bi-camera"></i>
+            </div>
+
+            <div class="equipos-info">
+              <div class="equipos-nombre">{{ e.nombre }}</div>
+              <div class="equipos-cantidad">
+                Cantidad:
+                <span class="cantidad">{{ e.cantidad }}</span>
+              </div>
+            </div>
+          </div>
+
+
+        </li>
+      </ul>
+
+      <!-- FOOTER -->
+      <div class="equipos-footer d-flex justify-content-between">
+        <span class="muted">Total de equipos</span>
+        <strong>{{ totalUnidades() }} unidades</strong>
+      </div>
+
+    </div>
+
+  </ng-container>
+
+    <ng-template #sinEquipos>
+      <div class="err">
+        No hay equipos seleccionados. Vuelve al catálogo.
+      </div>
+    </ng-template>
+  </div>
+
 
     <!-- 5) Periodo -->
     <div class="card" *ngIf="esFuera()">
@@ -167,22 +216,30 @@
     </div>
 
     <hr />
-    <!-- =
-    <div class="equipos-resumen">
-      <h4>Equipos seleccionados ({{ resumen().cantidadEquipos }})</h4>
+<div class="equipos-resumen-min" *ngIf="equiposResumen().length > 0">
 
-      <ng-container *ngIf="equiposSeleccionados().length > 0; else sinEquiposDesk">
-        <ul>
-          <li *ngFor="let e of equiposSeleccionados()">
-            {{ e.nombre }} — {{ e.codigo }}
-          </li>
-        </ul>
-      </ng-container>
+  <div class="resumen-title">
+    Equipos seleccionados
+    <span class="resumen-count">
+      {{ equiposResumen().length }} · {{ totalUnidades() }} u.
+    </span>
+  </div>
 
-      <ng-template #sinEquiposDesk>
-        <p class="vacio">Ningún equipo seleccionado.</p>
-      </ng-template>
-    </div>== -->
+  <ul class="resumen-list list-unstyled m-0">
+    <li *ngFor="let e of equiposResumen()">
+      <span class="dot">•</span>
+      <span class="name">{{ e.nombre }}</span>
+      <span class="qty">x{{ e.cantidad }}</span>
+    </li>
+  </ul>
+
+</div>
+
+
+<ng-template #sinEquiposDesk>
+  <p class="vacio">Ningún equipo seleccionado.</p>
+</ng-template>
+
 
   </aside>
 
@@ -215,21 +272,52 @@
 
       <hr />
 
-      <div class="equipos-resumen">
-        <h4>Equipos ({{ resumen().cantidadEquipos }})</h4>
+<div class="equipos-card">
 
-        <ng-container *ngIf="equiposSeleccionados().length > 0; else sinEquiposMobile">
-          <ul>
-            <li *ngFor="let e of equiposSeleccionados()">
-              {{ e.nombre }} — {{ e.codigo }}
-            </li>
-          </ul>
-        </ng-container>
-
-        <ng-template #sinEquiposMobile>
-          <p class="vacio">Ningún equipo seleccionado.</p>
-        </ng-template>
+  <!-- HEADER -->
+  <div class="equipos-header d-flex align-items-center">
+    <div class="icon-box">
+      <i class="bi bi-box-seam"></i>
+    </div>
+    <div>
+      <strong>Equipos seleccionados</strong>
+      <div class="equipos-sub">
+        {{ equiposResumen().length }} equipos ·
+        {{ totalUnidades() }} unidades
       </div>
+    </div>
+  </div>
+
+  <!-- LISTA -->
+  <ul class="equipos-list list-unstyled m-0">
+    <li
+      *ngFor="let e of equiposResumen()"
+      class="equipos-item d-flex align-items-center justify-content-between"
+    >
+      <div class="d-flex align-items-center gap-3">
+        <div class="equipos-icon">
+          <i class="bi bi-camera"></i>
+        </div>
+
+        <div class="equipos-info">
+          <div class="equipos-nombre">{{ e.nombre }}</div>
+          <div class="equipos-cantidad">
+            Cantidad:
+            <span class="cantidad">{{ e.cantidad }}</span>
+          </div>
+        </div>
+      </div>
+    </li>
+  </ul>
+
+  <!-- FOOTER -->
+  <div class="equipos-footer d-flex justify-content-between">
+    <span class="muted">Total de equipos</span>
+    <strong>{{ totalUnidades() }} unidades</strong>
+  </div>
+
+</div>
+
 
     </div>
   </div>

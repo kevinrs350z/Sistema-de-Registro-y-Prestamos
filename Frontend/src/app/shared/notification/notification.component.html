@@ -1,0 +1,6 @@
+<div *ngIf="notify.notification()" class="alert-container">
+  <div class="alert" [ngClass]="notify.notification()?.type">
+    <span>{{ notify.notification()?.message }}</span>
+    <button (click)="notify.clear()">×</button>
+  </div>
+</div>

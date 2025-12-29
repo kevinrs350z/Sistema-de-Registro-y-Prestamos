@@ -201,3 +201,143 @@
 .observacion-box {
   margin-top: 20px;
 }
+/* ================================
+   EQUIPOS – MINI CARDS
+================================ */
+.equipos-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Cada equipo */
+.equipo {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s ease;
+}
+
+.equipo:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+/* Texto */
+.equipo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.equipo .nombre {
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.equipo .codigo {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ================================
+   BOTÓN DEVOLVER EQUIPO
+================================ */
+.btn-devolver-equipo {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-devolver-equipo:hover {
+  background: #fed7aa;
+  transform: translateY(-1px);
+}
+
+
+/* ================================
+   DETALLE – USUARIO DESTACADO
+================================ */
+
+/* tarjeta usuario */
+.detalle-item.usuario {
+  grid-column: span 2; /* ocupa todo el ancho */
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
+
+/* avatar circular */
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #446ba9;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* info usuario */
+.usuario-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.usuario-info .nombre {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.usuario-info .email {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* ================================
+   META INFO (tipo / periodo)
+================================ */
+.detalle-item.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detalle-item.meta .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.detalle-item.meta .valor {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* badge tipo */
+.detalle-item.meta .tipo {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 4px 10px;
+  border-radius: 999px;
+  width: fit-content;
+}

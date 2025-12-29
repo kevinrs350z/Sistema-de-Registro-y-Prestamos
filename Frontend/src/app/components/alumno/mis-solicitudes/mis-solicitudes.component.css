@@ -148,6 +148,8 @@
 .estado.pendiente { background-color: #ffb58c; }
 .estado.aprobada  { background-color: #6cd38a; }
 .estado.rechazada { background-color: #e05b5b; }
+.estado.rechazado { background-color: #e05b5b; }
+
 .estado.devuelto  { background-color: #15ff00; }
 .estado.aceptado  { background-color: #23439c; }
 
