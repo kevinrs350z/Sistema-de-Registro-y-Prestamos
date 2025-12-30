@@ -38,12 +38,23 @@
               'bi-camera-video': c === 'Audiovisual',
               'bi-camera': c === 'Fotografía',
               'bi-laptop': c === 'Equipo Computacional',
-              'bi-lightbulb': c === 'Iluminación' || c === 'Iluminacion'
+              'bi-lightbulb': c === 'Iluminación' || c === 'Iluminacion' || c ==='Iluminación'
             }"
           ></i>
         </div>
         <span>{{ c }}</span>
+        
       </div>
+       <div
+    class="categoria-item"
+    [class.active]="categoriaSeleccionada() === 'Iluminación'"
+    (click)="categoriaSeleccionada.set('Iluminación')"
+  >
+    <div class="icono-categoria">
+      <i class="bi bi-lightbulb"></i>
+    </div>
+    <span>Iluminación</span>
+  </div>
     </div>
 
     <!-- BUSCADOR -->

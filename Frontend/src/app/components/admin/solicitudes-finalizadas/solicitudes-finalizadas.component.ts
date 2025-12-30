@@ -178,7 +178,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
       error: (err) => {
         console.error('Error al devolver equipo:', err);
         alert('Error al devolver equipo.');
-      }
+      } 
     });
   }
 
