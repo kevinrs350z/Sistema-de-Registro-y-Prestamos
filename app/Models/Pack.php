@@ -19,7 +19,7 @@ class Pack extends Model
 
     /**
      * Relación con equipos (muchos a muchos)
-     * Se implementará cuando tengamos la tabla pivote.
+     * 
      */
     public function equipos()
     {
