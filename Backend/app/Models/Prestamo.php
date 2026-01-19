@@ -62,12 +62,15 @@ class Prestamo extends Model
      */
     protected $fillable = [
         'idUser',
+        'evento_id',
         'fecha_inicio',
         'fecha_fin',
         'estado',
         'otra_motivo',
         'tipo',
+        'origen', 
         'observacion',
+        'ubicacion',
     ];
 
     /* ===================== Relaciones ===================== */
@@ -115,4 +118,9 @@ class Prestamo extends Model
     {
         return $this->hasMany(BloquePrestamo::class, 'idPrestamo', 'idPrestamo');
     }
+    public function evento()
+    {
+        return $this->belongsTo(Evento::class, 'evento_id');
+    }
+
 }

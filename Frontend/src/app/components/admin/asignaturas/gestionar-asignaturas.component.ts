@@ -1,19 +1,48 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FiltroEquipoPipe } from '../../../shared/pipes/filtro-equipo.pipe';
 
+import { EventosService } from '../../../services/eventos.service';
 import { AsignaturasService } from '../../../services/asignaturas.service';
+import { EquiposService } from '../../../services/equipos.service';
+import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+
 interface BloqueHorario {
   idBloque: number;
   nombre: string;
   texto: string;
 }
 
+type TipoReserva = 'ASIGNATURA' | 'EVENTO';
+
+interface ReservaUI {
+  id: number;
+  tipo: TipoReserva;
+
+  asignatura_id?: number | null;
+  asignaturaNombre?: string | null;
+
+  eventoNombre?: string | null;
+
+  profesor: string;
+  ubicacion?: string | null;
+
+  bloques: string[];
+  equipos: { idTipoEquipo: number; nombre: string; cantidad: number }[];
+
+  observacion?: string | null;
+
+  // opcional para estados
+  estado?: string | null;
+  fecha_inicio?: string | null;
+  fecha_fin?: string | null;
+}
 
 @Component({
   selector: 'app-gestionar-asignaturas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FiltroEquipoPipe],
   templateUrl: './gestionar-asignaturas.component.html',
   styleUrls: ['./gestionar-asignaturas.component.css']
 })
@@ -26,49 +55,59 @@ export class GestionarAsignaturasComponent implements OnInit {
   asignaturas: any[] = [];
 
   /* ======================================
-              RESERVAS SIMULADAS
+              RESERVAS (BACKEND)
   ======================================= */
-  reservas: any[] = [
-    {
-      id: 1,
-      tipo: 'asignatura',
-      asignatura_id: 1,
-      profesor: 'Marcelo Ortega',
-      ubicacion: 'Sala A-203',
-      bloques: ['08:00 – 09:30'],
-      equipos: [],
-      observacion: '',
-      asignaturaNombre: 'Diseño Multimedia I',
-      eventoNombre: null
-    }
-  ];
+  reservas: ReservaUI[] = [];
+  reservaSeleccionada: ReservaUI | null = null;
+  busquedaEquipo: string = '';
 
-  reservaSeleccionada: any = null;
+
   mostrarFormulario = false;
+  cargandoReservas = false;
+
+  /* ======================================
+              PAGINACIÓN (BOOTSTRAP)
+  ======================================= */
+  page = 1;
+  pageSize = 8;
+  totalItems = 0;   // si backend entrega total, lo usamos
+  totalPages = 1;
+
+  get reservasPaginadas(): ReservaUI[] {
+    // ✅ Si tu backend NO pagina, hacemos paginación cliente
+    // (igual funciona aunque luego actives paginación servidor)
+    const start = (this.page - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.reservas.slice(start, end);
+  }
 
   /* ======================================
               FORMULARIO PRINCIPAL
   ======================================= */
-form: {
-  tipo: string;
-  asignatura_id: number | '';
-  evento_nombre: string;
-  profesor: string;
-  ubicacion: string;
-  bloques: string[];
-  equipos: any[];
-  observacion: string;
-} = {
-  tipo: 'asignatura',
-  asignatura_id: '',
-  evento_nombre: '',
-  profesor: '',
-  ubicacion: '',
-  bloques: [],
-  equipos: [],
-  observacion: ''
-};
+  form: {
+    tipo: TipoReserva;
+    asignatura_id: number | '';
+    evento_nombre: string;
+    profesor: string;
+    ubicacion: string;
+    bloques: string[];
+    equipos: any[];
+    observacion: string;
+    fecha_inicio: string;
+    fecha_fin: string;
+  } = {
+    tipo: 'ASIGNATURA',
+    asignatura_id: '',
+    evento_nombre: '',
+    profesor: '',
+    ubicacion: '',
+    bloques: [],
+    equipos: [],
+    observacion: '',
+    fecha_inicio: '',
+    fecha_fin: '',
 
+  };
 
   /* ======================================
                CAMPOS TEMPORALES
@@ -79,38 +118,128 @@ form: {
   /* ======================================
               BLOQUES HORARIOS
   ======================================= */
-bloques: BloqueHorario[] = [
-  { idBloque: 1, nombre: 'Bloque 1', texto: '08:00 – 09:30' },
-  { idBloque: 2, nombre: 'Bloque 2', texto: '09:40 – 11:10' },
-  { idBloque: 3, nombre: 'Bloque 3', texto: '11:20 – 12:50' },
-  { idBloque: 4, nombre: 'Bloque 4', texto: '12:50 – 14:40' },
-  { idBloque: 5, nombre: 'Bloque 5', texto: '14:45 – 16:10' },
-  { idBloque: 6, nombre: 'Bloque 6', texto: '16:20 – 17:50' },
-  { idBloque: 7, nombre: 'Bloque 7', texto: '17:55 – 19:30' },
-  { idBloque: 8, nombre: 'Bloque 8', texto: '19:40 – 21:10' }
-];
-
+  bloques: BloqueHorario[] = [
+    { idBloque: 1, nombre: 'Bloque 1', texto: '08:00 – 09:30' },
+    { idBloque: 2, nombre: 'Bloque 2', texto: '09:40 – 11:10' },
+    { idBloque: 3, nombre: 'Bloque 3', texto: '11:20 – 12:50' },
+    { idBloque: 4, nombre: 'Bloque 4', texto: '12:50 – 14:40' },
+    { idBloque: 5, nombre: 'Bloque 5', texto: '14:45 – 16:10' },
+    { idBloque: 6, nombre: 'Bloque 6', texto: '16:20 – 17:50' },
+    { idBloque: 7, nombre: 'Bloque 7', texto: '17:55 – 19:30' },
+    { idBloque: 8, nombre: 'Bloque 8', texto: '19:40 – 21:10' }
+  ];
 
   /* ======================================
               REGEX
   ======================================= */
   private soloLetrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
-  constructor(private asignaturasService: AsignaturasService) {}
+  constructor(private eventosService: EventosService,  private equiposService: EquiposService,
+  private asignaturasService: AsignaturasService, private tipoEquipo: TipoEquipoService) {}
 
   ngOnInit(): void {
-    this.cargarDatos();
+    this.cargarDatosBase();
+    this.cargarReservas(); // ✅ trae del backend al cargar
   }
 
   /* ======================================
-              CARGAR DATOS
+        CARGAR DATOS BASE (equipos/asignaturas)
   ======================================= */
-  cargarDatos() {
-    this.asignaturasService.getEquipos()
-      .subscribe((r: any) => this.equipos = r);
+  cargarDatosBase() {
 
-    this.asignaturasService.getAsignaturas()
-      .subscribe((r: any) => this.asignaturas = r);
+    this.tipoEquipo.getCatalogo().subscribe({
+      next: (r: any[]) => {
+        this.equipos = (r ?? [])
+          .filter(eq => eq.stock > 0)     
+          .map(eq => ({
+            ...eq,
+            stockDisponible: eq.stock    
+          }));
+      },
+      error: err => console.error('Error getCatalogo', err)
+    });
+
+    this.asignaturasService.getAsignaturas().subscribe({
+      next: (r: any) => this.asignaturas = r ?? [],
+      error: err => console.error('Error getAsignaturas', err)
+    });
+
+  }
+
+
+  /* ======================================
+              CARGAR RESERVAS (con/sin paginación servidor)
+  ======================================= */
+  cargarReservas(page: number = this.page) {
+    this.cargandoReservas = true;
+
+    // ✅ Si tu backend soporta paginación, te conviene esto:
+    this.eventosService.getReservasAdmin(page, this.pageSize).subscribe({
+      next: (resp: any) => {
+        // Soporta ambos formatos:
+        // 1) Laravel paginator: { data:[], meta:{...} } o { data:[], total, per_page, current_page, last_page }
+        // 2) Lista simple: []
+        const data = Array.isArray(resp) ? resp : (resp?.data ?? resp?.reservas ?? []);
+        this.reservas = (data ?? []).map((x: any) => this.mapReservaFromApi(x));
+
+        // total/paginación servidor si existe:
+        const total = resp?.total ?? resp?.meta?.total ?? null;
+        const perPage = resp?.per_page ?? resp?.meta?.per_page ?? this.pageSize;
+        const current = resp?.current_page ?? resp?.meta?.current_page ?? page;
+        const last = resp?.last_page ?? resp?.meta?.last_page ?? null;
+
+        this.totalItems = total ?? this.reservas.length; // fallback
+        this.pageSize = perPage ?? this.pageSize;
+        this.page = current ?? page;
+
+        this.totalPages = last ?? Math.max(1, Math.ceil(this.totalItems / this.pageSize));
+        this.cargandoReservas = false;
+      },
+      error: (err) => {
+        console.error('Error cargarReservas', err);
+        this.cargandoReservas = false;
+      }
+    });
+  }
+
+  private mapReservaFromApi(x: any): ReservaUI {
+    // Ajusta aquí si tu backend devuelve nombres distintos
+    const tipo: TipoReserva = (x?.tipo_reserva ?? x?.tipo ?? 'ASIGNATURA') === 'EVENTO' ? 'EVENTO' : 'ASIGNATURA';
+
+    const bloquesTxt: string[] =
+      typeof x?.bloques === 'string'
+        ? x.bloques.split(',').map((b: string) => b.trim())
+        : [];
+
+
+    const equipos = (x?.equipos ?? x?.prestamo_equipos ?? [])
+      .map((e: any) => ({
+        idTipoEquipo: e?.idTipoEquipo ?? e?.tipo_equipo_id ?? e?.id_tipo_equipo ?? e?.id,
+        nombre: e?.nombre ?? e?.tipoEquipo?.nombre ?? e?.tipo_equipo?.nombre ?? 'Equipo',
+        cantidad: Number(e?.cantidad ?? 1)
+      }))
+      .filter((e: any) => !!e.idTipoEquipo);
+
+    return {
+      id: x?.id ?? x?.idPrestamo ?? 0,
+      tipo,
+
+      asignatura_id: x?.asignatura_id ?? x?.asignatura?.id ?? null,
+      asignaturaNombre: x?.asignaturaNombre ?? x?.asignatura?.nombre ?? null,
+
+      eventoNombre: x?.eventoNombre ?? x?.evento_nombre ?? x?.evento?.nombre ?? null,
+
+      profesor: x?.profesor ?? x?.docente ?? '',
+      ubicacion: x?.ubicacion ?? x?.lugar ?? '',
+
+      bloques: bloquesTxt,
+      equipos,
+
+      observacion: x?.observacion ?? null,
+      estado: x?.estado ?? null,
+      fecha_inicio: x?.fecha_inicio ?? null,
+      fecha_fin: x?.fecha_fin ?? null
+    };
   }
 
   /* ======================================
@@ -121,14 +250,16 @@ bloques: BloqueHorario[] = [
     this.reservaSeleccionada = null;
 
     this.form = {
-      tipo: 'asignatura',
+      tipo: 'ASIGNATURA',
       asignatura_id: '',
       evento_nombre: '',
       profesor: '',
       ubicacion: '',
       bloques: [],
       equipos: [],
-      observacion: ''
+      observacion: '',
+      fecha_inicio: '',
+      fecha_fin: ''
     };
 
     this.equipoSeleccionado = null;
@@ -138,7 +269,7 @@ bloques: BloqueHorario[] = [
   /* ======================================
               SELECCIONAR RESERVA
   ======================================= */
-  seleccionar(reserva: any) {
+  seleccionar(reserva: ReservaUI) {
     this.reservaSeleccionada = reserva;
     this.mostrarFormulario = false;
   }
@@ -146,30 +277,43 @@ bloques: BloqueHorario[] = [
   /* ======================================
               BLOQUES
   ======================================= */
-  toggleBloque(b: any) {
+  toggleBloque(b: BloqueHorario) {
     const idx = this.form.bloques.indexOf(b.texto);
     if (idx >= 0) this.form.bloques.splice(idx, 1);
     else this.form.bloques.push(b.texto);
   }
 
   /* ======================================
-              AGREGAR EQUIPOS
+              AGREGAR EQUIPOS (por tipo_equipo)
   ======================================= */
   agregarEquipo() {
     if (!this.equipoSeleccionado || this.cantidadSeleccionada < 1) return;
 
     const eq = this.equipoSeleccionado;
-    const idEquipo = eq.idEquipo ?? eq.id;
+    const idTipoEquipo = eq.id;
 
-    if (!idEquipo) return;
+    const yaAgregado = this.form.equipos.find(
+      (e: any) => e.idTipoEquipo === idTipoEquipo
+    );
 
-    const existente = this.form.equipos.find((e: any) => e.id === idEquipo);
+    const totalSolicitado =
+      (yaAgregado?.cantidad ?? 0) + this.cantidadSeleccionada;
+
+    if (totalSolicitado > eq.stock) {
+      alert(`Stock insuficiente. Disponible: ${eq.stock - (yaAgregado?.cantidad ?? 0)}`);
+      return;
+    }
+
+
+    const existente = this.form.equipos.find(
+      (e: any) => e.idTipoEquipo === idTipoEquipo
+    );
 
     if (existente) {
       existente.cantidad += this.cantidadSeleccionada;
     } else {
       this.form.equipos.push({
-        id: idEquipo,
+        idTipoEquipo,
         nombre: eq.nombre,
         cantidad: this.cantidadSeleccionada
       });
@@ -179,8 +323,29 @@ bloques: BloqueHorario[] = [
     this.cantidadSeleccionada = 1;
   }
 
+
+
   eliminarEquipo(i: number) {
+    const eliminado = this.form.equipos[i];
+
+    // 🔁 devolver stock al catálogo
+    const eqCatalogo = this.equipos.find(
+      (e: any) => e.id === eliminado.idTipoEquipo
+    );
+
+    if (eqCatalogo) {
+      eqCatalogo.stockDisponible += eliminado.cantidad;
+    }
+
     this.form.equipos.splice(i, 1);
+  }
+
+  getStockDisponible(eq: any): number {
+    const agregado = this.form.equipos.find(
+      (e: any) => e.idTipoEquipo === eq.id
+    );
+
+    return eq.stock - (agregado?.cantidad ?? 0);
   }
 
   /* ======================================
@@ -195,69 +360,173 @@ bloques: BloqueHorario[] = [
               GET DE NOMBRE MOSTRADO
   ======================================= */
   getNombreAsignaturaEvento(): string {
-    if (this.form.tipo === 'asignatura') {
+    if (this.form.tipo === 'ASIGNATURA') {
       return this.asignaturas.find(a => a.id == this.form.asignatura_id)?.nombre || '—';
     }
-
-    if (this.form.tipo === 'evento') {
+    if (this.form.tipo === 'EVENTO') {
       return this.form.evento_nombre.trim() || '—';
     }
-
     return '—';
   }
 
   /* ======================================
-              GUARDAR RESERVA
+              GUARDAR (POST backend)
   ======================================= */
-guardar() {
+  guardar() {
+    if (!this.form.ubicacion?.trim()) {
+      alert('Debe indicar una ubicación');
+      return;
+    }
 
-  if (!this.form.ubicacion) {
-    alert('Debe indicar una ubicación');
-    return;
-  }
+    if (!this.form.profesor?.trim() || !this.soloLetras(this.form.profesor)) {
+      alert('Debe ingresar un profesor válido (solo letras)');
+      return;
+    }
 
-const payload = {
-  idUserAlumno: 1, //  temporal (admin seleccionará alumno después)
+    if (this.form.tipo === 'ASIGNATURA' && !this.form.asignatura_id) {
+      alert('Debe seleccionar una asignatura');
+      return;
+    }
+    if (this.form.tipo === 'EVENTO') {
+      if (
+        !this.form.evento_nombre.trim() ||
+        !this.form.fecha_inicio ||
+        !this.form.fecha_fin
+      ) {
+        alert('Evento requiere nombre y fechas');
+        return;
+      }
+    }
+  const asignaturaId =
+    this.form.tipo === 'ASIGNATURA' && this.form.asignatura_id
+      ? Number(this.form.asignatura_id)
+      : null;
 
-  tipo: 'DENTRO',
-  asignatura: this.form.asignatura_id || null,
-  observacion: this.form.observacion,
+    // ✅ mapeo de bloques a ids
+    const bloquesIds = this.form.bloques
+      .map(txt => this.bloques.find(x => x.texto === txt)?.idBloque)
+      .filter((b): b is number => b !== undefined);
 
-  fecha_inicio: new Date().toISOString().slice(0, 10),
-  fecha_fin: new Date().toISOString().slice(0, 10),
+    // ✅ payload alineado a tu backend (prestamo + relacion a equipos y bloques)
+  
 
-  bloques: this.form.bloques
-    .map(b => this.bloques.find(x => x.texto === b)?.idBloque)
-    .filter((b): b is number => b !== undefined),
+        const tipoBackend = this.form.tipo === 'EVENTO' ? 'EVENTO' : 'DENTRO';
 
-  equipos: this.form.equipos.map((e: any) => ({
-    idTipoEquipo: e.idTipoEquipo,
-    cantidad: e.cantidad,
-    modo: 'cualquiera'
-  }))
-};
+        const payload: any = {
+          idUserAlumno: 1,
+          tipo: tipoBackend,
+          origen: 'ADMIN',
+          profesor: this.form.profesor.trim(),
+          ubicacion: this.form.ubicacion.trim(),
+          observacion: this.form.observacion?.trim() || null,
 
-  this.asignaturasService.crearPrestamoAdmin(payload)
-    .subscribe({
+          equipos: this.form.equipos.map((e: any) => ({
+            idTipoEquipo: e.idTipoEquipo,
+            cantidad: e.cantidad,
+            modo: 'cualquiera'
+          }))
+        };
+
+
+        // ===== ASIGNATURA =====
+        if (this.form.tipo === 'ASIGNATURA') {
+          payload.asignatura = Number(this.form.asignatura_id);
+          payload.bloques = bloquesIds;
+          payload.fecha_inicio = new Date().toISOString().slice(0, 10);
+          payload.fecha_fin = new Date().toISOString().slice(0, 10);
+        }
+
+        if (this.form.tipo === 'EVENTO') {
+          if (!this.form.evento_nombre?.trim()) {
+            alert('Evento requiere nombre');
+            return;
+          }
+
+          if (!this.form.fecha_inicio || !this.form.fecha_fin) {
+            alert('Evento requiere fechas');
+            return;
+          }
+
+          if (this.form.fecha_fin < this.form.fecha_inicio) {
+            alert('La fecha fin no puede ser menor a la fecha inicio');
+            return;
+          }
+
+          payload.nombre_evento = this.form.evento_nombre.trim();
+          payload.fecha_inicio = this.form.fecha_inicio;
+          payload.fecha_fin = this.form.fecha_fin;
+        }
+
+
+  
+
+    this.asignaturasService.crearPrestamoAdmin(payload).subscribe({
       next: () => {
-        alert('Préstamo registrado correctamente');
+        alert('Reserva registrada correctamente');
         this.mostrarFormulario = false;
-      },
-      error: err => {
+
+        // refrescar lista
+        this.cargarReservas(1);
+      },  
+      error: (err) => {
         console.error(err);
-        alert(err.error?.error || 'Error al crear préstamo');
+        alert(err?.error?.error || err?.error?.message || 'Error al crear reserva');
       }
     });
-}
+  }
 
-
+  /* ======================================
+              CANCELAR RESERVA (DELETE/PATCH)
+  ======================================= */
   cancelarReserva() {
     if (!this.reservaSeleccionada) return;
 
     const id = this.reservaSeleccionada.id;
-    this.reservas = this.reservas.filter(r => r.id !== id);
-    this.reservaSeleccionada = null;
+    const motivo = prompt('Motivo de cancelación (obligatorio):')?.trim();
 
-    alert('La reserva ha sido cancelada correctamente.');
+    if (!motivo) {
+      alert('Debe ingresar un motivo');
+      return;
+    }
+
+    this.eventosService.cancelarReservaAdmin(id, motivo).subscribe({
+      next: () => {
+        alert('La reserva fue cancelada correctamente.');
+        this.reservaSeleccionada = null;
+        this.cargarReservas(this.page);
+      },
+      error: (err) => {
+        console.error(err);
+        alert(err?.error?.message || 'Error al cancelar la reserva');
+      }
+    });
+  }
+
+  /* ======================================
+              PAGINACIÓN (Bootstrap)
+  ======================================= */
+  irPagina(p: number) {
+    if (p < 1 || p > this.totalPages) return;
+
+    this.page = p;
+
+    // ✅ si el backend pagina, llama backend:
+    this.cargarReservas(this.page);
+
+    // ✅ si NO pagina, basta con setear page y usar reservasPaginadas
+  }
+
+  get paginas(): number[] {
+    // paginación "bonita" con ventana
+    const total = this.totalPages || 1;
+    const current = this.page || 1;
+    const window = 2;
+
+    const start = Math.max(1, current - window);
+    const end = Math.min(total, current + window);
+
+    const arr: number[] = [];
+    for (let i = start; i <= end; i++) arr.push(i);
+    return arr;
   }
 }

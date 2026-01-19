@@ -22,7 +22,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\Prestamo\DevolucionAdminController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\reportes\Dashboard\DashboardReportesController;
-use App\Http\Controllers\Prestamo\AdminPrestamoController;
+//use App\Http\Controllers\Prestamo\AdminPrestamoController;
 use App\Http\Controllers\Reportes\ReporteProfesorController;
 use App\Http\Controllers\PackController;
 
@@ -110,8 +110,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/reservas', [PrestamoAdminController::class, 'store']);
     Route::get('admin/prestamos/pendientes', [PrestamoAdminController::class, 'pendientes']);
     Route::get('admin/prestamos/historial', [PrestamoAdminController::class, 'historial']);
+    Route::patch('/reservas/{idPrestamo}/equipos/{idEquipo}/devolver',[PrestamoAdminController::class, 'devolverEquipo']);
 
 
 Route::post('admin/prestamos/{id}/devolver', [PrestamoAdminController::class, 'marcarDevuelto']);
@@ -119,6 +121,9 @@ Route::post('admin/prestamos/{id}/devolver', [PrestamoAdminController::class, 'm
 
 
 });
+Route::post('admin/prestamos', [PrestamoAdminController::class, 'store']);
+Route::get('/admin/reservas', [PrestamoAdminController::class, 'index']);
+
 
 
 
@@ -178,14 +183,7 @@ Route::prefix('reportes/dashboard')->group(function () {
     Route::get('/top-alumnos', [DashboardReportesController::class, 'getTopAlumnos']);
 });
 
-Route::middleware(['auth:sanctum', 'role:admin'])
-    ->prefix('admin')
-    ->group(function () {
 
-        // Registrar préstamo directamente (ADMIN)
-        Route::post('/prestamos', [AdminPrestamoController::class, 'store']);
-
-    });
 
     Route::middleware(['auth:sanctum'])
     ->prefix('reportes/profesores')

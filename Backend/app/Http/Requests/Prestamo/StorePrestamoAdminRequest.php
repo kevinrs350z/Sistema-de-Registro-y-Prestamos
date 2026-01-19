@@ -14,14 +14,25 @@ class StorePrestamoAdminRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'tipo' => 'required|in:DENTRO,FUERA,EVENTO',
+
             'idUserAlumno' => 'required|exists:users,idUser',
-            'tipo'         => 'required|in:DENTRO,FUERA',
-            'asignatura'   => 'nullable',
-            'observacion'  => 'nullable|string',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
-            'bloques'      => 'required_if:tipo,DENTRO|array',
-            'equipos'      => 'required|array|min:1',
+
+            // ===== EVENTO =====
+            'nombre_evento' => 'required_if:tipo,EVENTO|string|max:255',
+            'fecha_inicio'  => 'required_if:tipo,EVENTO|date',
+            'fecha_fin'     => 'required_if:tipo,EVENTO|date|after_or_equal:fecha_inicio',
+
+            'responsable_id'     => 'nullable|exists:users,idUser',
+            'responsable_nombre' => 'nullable|string|max:255',
+
+            // ===== NORMAL =====
+            'ubicacion'   => 'nullable|string|max:255',
+            'observacion' => 'nullable|string',
+
+            'bloques' => 'required_if:tipo,DENTRO|array',
+            'equipos' => 'required|array|min:1',
         ];
     }
+
 }

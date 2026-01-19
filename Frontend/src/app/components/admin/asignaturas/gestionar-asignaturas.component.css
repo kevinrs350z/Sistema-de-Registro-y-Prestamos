@@ -318,3 +318,14 @@ textarea {
   background: #d64545;
   transform: translateY(-2px);
 }
+.input-busqueda {
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.equipo-flex select option:disabled {
+  color: #999;
+}

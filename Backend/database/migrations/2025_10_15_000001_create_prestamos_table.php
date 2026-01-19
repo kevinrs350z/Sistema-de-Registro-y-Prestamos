@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->date('fecha_fin')->nullable();
 
             // Estado del préstamo
-            $table->string('estado')->default('pendiente');
+            $table->string('estado')->default('PENDIENTE');
 
             // Motivo informado por el usuario
             $table->string('otra_motivo')->nullable();

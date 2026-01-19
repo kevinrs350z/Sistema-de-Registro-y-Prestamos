@@ -15,9 +15,15 @@ use App\Enums\EstadoEquipo;
 
 use Illuminate\Support\Facades\DB;
 use App\Models\Equipo;
+use App\Services\PrestamoService;
+use App\Models\Evento;
+
 
 class PrestamoAdminService
 {
+    public function __construct(
+        private PrestamoService $prestamoService
+    ) {}
     /* ============================================================
         APROBAR O RECHAZAR
     ============================================================ */
@@ -254,5 +260,55 @@ class PrestamoAdminService
             });
 
     }
+
+    public function crearPrestamoAdmin(array $data, $request)
+    {
+        
+        $data['origen'] = 'ADMIN';
+        // 1️⃣ EVENTO
+        if ($request->tipo === 'EVENTO') {
+
+            $evento = Evento::create([
+                'nombre_evento'      => $request->nombre_evento,
+                'fecha_inicio'       => $request->fecha_inicio,
+                'fecha_fin'          => $request->fecha_fin,
+                'responsable_nombre' => $request->profesor,
+                'descripcion'        => $request->observacion,
+            ]);
+
+            $prestamo = Prestamo::create(
+                array_merge($data, [
+                    'evento_id' => $evento->id,
+                ]));
+
+        } else {
+
+            // 2️⃣ ASIGNATURA / NORMAL
+           
+            $prestamo = Prestamo::create(
+                array_merge($data, [
+                    'fecha_inicio' => null, 
+                    'fecha_fin'    => null, 
+                ])
+            );
+
+            $this->prestamoService->asignarBloques(
+                $prestamo->idPrestamo,
+                $request->bloques,
+                $request->asignatura
+            );
+        }
+
+        // 3️⃣ EQUIPOS (IGUAL PARA TODOS)
+        $this->prestamoService->procesarEquipos(
+            $prestamo->idPrestamo,
+            $request->equipos
+        );
+
+        return $prestamo;
+    }
+
+
+
 
 }
