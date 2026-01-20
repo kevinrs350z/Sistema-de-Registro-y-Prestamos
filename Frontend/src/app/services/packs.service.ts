@@ -56,4 +56,12 @@ export class PacksService {
       { headers: this.getAuthHeaders() }
     );
   }
+
+  reactivarPack(id: number): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/packs/${id}/reactivar`,
+      null,
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }

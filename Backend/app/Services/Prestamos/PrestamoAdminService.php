@@ -27,10 +27,10 @@ class PrestamoAdminService
     /* ============================================================
         APROBAR O RECHAZAR
     ============================================================ */
-    public function cambiarEstado(  
+    public function cambiarEstado(
         int $idPrestamo,
         string $accion,
-        string $motivo
+        ?string $motivo
     ): void {
         $prestamo = Prestamo::with(['user.persona', 'equipos.tipo'])
             ->findOrFail($idPrestamo);
@@ -39,8 +39,20 @@ class PrestamoAdminService
             ? EstadoPrestamo::APROBADO
             : EstadoPrestamo::RECHAZADO;
 
+        // Guardamos estado y, si hay motivo, lo registramos en el campo observacion
         $prestamo->estado = $nuevoEstado;
+        if (!is_null($motivo) && trim($motivo) !== '') {
+            $prestamo->observacion = $motivo;
+        }
         $prestamo->save();
+
+        // Si se rechaza, liberar equipos a DISPONIBLE
+        if ($accion === 'rechazar') {
+            foreach ($prestamo->equipos as $equipo) {
+                $equipo->estado = EstadoEquipo::DISPONIBLE;
+                $equipo->save();
+            }
+        }
 
         $nombre = $prestamo->user->persona->Nombre ?? 'Usuario';
         $email  = $prestamo->user->Email ?? null;

@@ -19,19 +19,7 @@ import { NotificationComponent } from './shared/notification/notification.compon
     NgIf,
     NotificationComponent
   ],
-  template: `
-    <!-- 🔹 Overlay global de carga -->
-    <app-loading-overlay></app-loading-overlay>
-
-    <!-- 🔹 Navbar público -->
-    <app-navbar *ngIf="!esRutaAuth && !esRutaAdmin"></app-navbar>
-
-    <!-- 🔹 Navbar administrativo -->
-    <app-navbar-admin *ngIf="esRutaAdmin"></app-navbar-admin>
-
-    <!-- 🔹 Contenido principal -->
-    <router-outlet></router-outlet>
-  `
+  templateUrl: './app.component.html'
 })
 export class AppComponent {
 

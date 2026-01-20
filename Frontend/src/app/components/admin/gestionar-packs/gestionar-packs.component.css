@@ -287,6 +287,34 @@ textarea {
   background: #d64545;
   transform: translateY(-2px);
 }
+/* Botón Reactivar (profesional) */
+.btn-reactivar {
+  margin-top: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #4A74B7 0%, #2E5AA8 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(46,90,168,0.14);
+  transition: transform .16s ease, box-shadow .16s ease, opacity .12s ease;
+}
+
+.btn-reactivar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(46,90,168,0.18);
+}
+
+.btn-reactivar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 /* ===== Extras UX ===== */
 .estado-bar {
   background: #eef6ff;

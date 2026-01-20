@@ -24,6 +24,9 @@ export interface Pack {
   descripcion?: string;
   activo: boolean;
   equipos: number[];
+  // Compat: disponibilidad calculada en backend (para UI "agotado")
+  disponibles?: number;
+  agotado?: boolean;
 }
 
 export type TipoPrestamo = 'INDIVIDUAL' | 'PACK' | 'DENTRO' | 'FUERA';

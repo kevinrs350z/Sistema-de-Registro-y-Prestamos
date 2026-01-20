@@ -197,9 +197,9 @@ export class SolicitarReservaComponent {
       bloquesTxt:
         v.tipo_solicitud === 'DENTRO'
           ? this.bloques
-              .filter(b => (v.bloques ?? []).includes(b.id))
-              .map(b => b.texto)
-              .join(', ')
+            .filter(b => (v.bloques ?? []).includes(b.id))
+            .map(b => b.texto)
+            .join(', ')
           : '—',
     };
   });
@@ -297,10 +297,11 @@ export class SolicitarReservaComponent {
     }
 
     const payload = {
-      idUser: this.f.idUser.value,
+      // OJO: el backend usa Auth::user() para idUser; no necesitamos mandarlo.
       tipo: this.f.tipo_solicitud.value,
 
-      idAsignatura: asignaturaSel, // number | null
+      // Backend espera la key "asignatura" (nullable) para DENTRO
+      asignatura: asignaturaSel, // number | null
 
       motivo: asignaturaSel === null ? this.f.motivo.value : '',
       observacion: this.f.observacion.value,
@@ -308,14 +309,22 @@ export class SolicitarReservaComponent {
       fecha_fin: this.f.fecha_fin.value,
       bloques: this.f.bloques.value,
 
-      equipos: this.carrito.map(c => ({
-        idTipoEquipo: Number(c.idTipoEquipo),
-        cantidad: c.modo === 'especifico'
-          ? c.equiposSeleccionados.length
-          : Number(c.cantidad),
-        modo: c.modo,
-        equiposSeleccionados: c.equiposSeleccionados ?? []
-      }))
+      equipos: this.carrito.map(c => {
+        if (c.tipo === 'pack') {
+          return {
+            idPack: c.idPack, // ✅ Enviar ID del pack
+            cantidad: 1       // Packs son únicos
+          };
+        }
+        return {
+          idTipoEquipo: Number(c.idTipoEquipo),
+          cantidad: c.modo === 'especifico'
+            ? c.equiposSeleccionados.length
+            : Number(c.cantidad),
+          modo: c.modo,
+          equiposSeleccionados: c.equiposSeleccionados ?? []
+        };
+      })
     };
 
     const token = localStorage.getItem('token') ?? '';
@@ -323,6 +332,8 @@ export class SolicitarReservaComponent {
       next: () => {
         this.notify.success('Solicitud enviada correctamente.');
         this.limpiar();
+        // Limpiar también el carrito global para que el catálogo quede en blanco
+        this.carritoSrv.limpiar();
       },
       error: err => {
         this.notify.error(

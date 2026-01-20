@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { Pack } from '../../../models/pack.model';
 import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
 import { CarritoService } from '../../../services/carrito.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-catalogo-equipos',
@@ -18,6 +20,7 @@ export class CatalogoEquiposComponent {
   private api = inject(TipoEquipoService);
   private router = inject(Router);
   private carritoSrv = inject(CarritoService);
+  private notify = inject(NotificationService);
 
   // ===========================
   // ESTADOS
@@ -25,6 +28,7 @@ export class CatalogoEquiposComponent {
   tipos = signal<TipoEquipo[]>([]);
   packs = signal<Pack[]>([]);
   equiposFisicos = signal<EquipoFisico[]>([]);
+  expandedPacks = signal<number[]>([]);
 
   categoriaSeleccionada = signal<string>('TODOS');
   busqueda = signal<string>('');
@@ -38,7 +42,7 @@ export class CatalogoEquiposComponent {
   ngOnInit(): void {
     const token: string = localStorage.getItem('token') ?? '';
     if (!token) {
-      alert('⚠️ Debes iniciar sesión para ver los equipos.');
+      this.notify.warning('Debes iniciar sesión para ver el catálogo de equipos.');
       this.router.navigate(['/auth/login']);
       return;
     }
@@ -128,6 +132,10 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
+    if (e.stock <= 0 && delta > 0) {
+      this.notify.warning('Este equipo está agotado.');
+      return;
+    }
 
     const actual = this.carritoSrv.getCarrito();
 
@@ -147,18 +155,22 @@ export class CatalogoEquiposComponent {
     }
 
     // CASO 2: ya existe → modificar cantidad
-    const actualizado = actual.map(i => {
+    const actualizado: CarritoItem[] = [];
+    for (const i of actual) {
       if (i.tipo === 'equipo' && i.idTipoEquipo === idTipo) {
-
         let nueva = (i.cantidad ?? 0) + delta;
 
-        if (nueva < 1) nueva = 1;
+        // Permitir llegar a 0 → se elimina del carrito
+        if (nueva <= 0) {
+          continue;
+        }
         if (nueva > e.stock) nueva = e.stock;
 
-        return { ...i, cantidad: nueva };
+        actualizado.push({ ...i, cantidad: nueva });
+      } else {
+        actualizado.push(i);
       }
-      return i;
-    });
+    }
 
     this.carritoSrv.setCarrito(actualizado);
   }
@@ -170,6 +182,10 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
+    if (e.stock <= 0) {
+      this.notify.warning('Este equipo está agotado.');
+      return;
+    }
 
     const actual = this.carritoSrv.getCarrito();
 
@@ -197,12 +213,22 @@ export class CatalogoEquiposComponent {
   // CARRITO – PACKS (✅ ahora modifica el servicio)
   // ===========================
   agregarPackAlCarrito(pack: Pack): void {
+    if (pack.disponibles !== undefined && pack.disponibles <= 0) {
+      this.notify.warning('Este pack está agotado.');
+      return;
+    }
+
+    if (this.estaPackEnCarrito(pack.id)) {
+      this.notify.info('Este pack ya está agregado a tu solicitud.');
+      return;
+    }
+
     const actual = this.carritoSrv.getCarrito();
 
     const nuevo: CarritoItem = {
       tipo: 'pack',
       idPack: pack.id,
-      cantidad: 1,
+      cantidad: 1, // ✅ Siempre 1
       modo: 'cualquiera',
       equiposSeleccionados: []
     };
@@ -210,12 +236,68 @@ export class CatalogoEquiposComponent {
     this.carritoSrv.setCarrito([...actual, nuevo]);
   }
 
+  estaPackEnCarrito(idPack: number): boolean {
+    return this.carrito().some(c => c.tipo === 'pack' && c.idPack === idPack);
+  }
+
+  togglePack(idPack: number): void {
+    const p = this.packs().find(x => x.id === idPack);
+    if (!p) return;
+
+    if (p.disponibles !== undefined && p.disponibles <= 0) {
+      this.notify.warning('Este pack está agotado.');
+      return;
+    }
+
+    const actual = this.carritoSrv.getCarrito();
+
+    // Si ya está en el carrito, removerlo
+    if (this.estaPackEnCarrito(idPack)) {
+      this.carritoSrv.setCarrito(
+        actual.filter(c => !(c.tipo === 'pack' && c.idPack === idPack))
+      );
+      this.notify.info('Pack quitado de la solicitud.');
+      return;
+    }
+
+    // Agregar al carrito
+    const nuevo: CarritoItem = {
+      tipo: 'pack',
+      idPack: idPack,
+      cantidad: 1,
+      modo: 'cualquiera',
+      equiposSeleccionados: []
+    };
+
+    this.carritoSrv.setCarrito([...actual, nuevo]);
+    this.notify.success('Pack agregado a la solicitud.');
+  }
+
+  toggleDetallesPack(idPack: number): void {
+    const arr = [...this.expandedPacks()];
+    const idx = arr.indexOf(idPack);
+    if (idx >= 0) {
+      arr.splice(idx, 1);
+    } else {
+      arr.push(idPack);
+    }
+    this.expandedPacks.set(arr);
+  }
+
+  isExpanded(idPack: number): boolean {
+    return this.expandedPacks().includes(idPack);
+  }
+
+  hasEquipos(p: Pack): boolean {
+    return Array.isArray(p.equipos) && p.equipos.length > 0;
+  }
+
   // ===========================
   // CONTINUAR (✅ ya NO uses history.state)
   // ===========================
   continuarReserva(): void {
     if (this.carrito().length === 0) {
-      alert('⚠️ Debes seleccionar al menos un equipo o pack.');
+      this.notify.warning('Debes seleccionar al menos un equipo o pack para continuar.');
       return;
     }
 
@@ -243,10 +325,4 @@ interface EquipoFisico {
   tipo_equipo_id: number;
 }
 
-interface Pack {
-  id: number;
-  nombre: string;
-  categoria: string;
-  cantidad: number;
-  equipos: { nombre: string }[];
-}
+

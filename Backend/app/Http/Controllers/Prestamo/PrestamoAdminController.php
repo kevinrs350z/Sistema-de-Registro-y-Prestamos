@@ -42,11 +42,17 @@ namespace App\Http\Controllers\Prestamo;
             AprobarRechazarPrestamoRequest $request,
             int $id
         ) {
-            $this->service->cambiarEstado(
-                $id,
-                'rechazar',
-                $request->motivo
-            );
+                // Para rechazos, motivo es obligatorio en la lógica del controlador
+                $motivo = $request->motivo;
+                if (is_null($motivo) || trim($motivo) === '') {
+                    return response()->json(['error' => 'Debe ingresar un motivo para el rechazo.'], 422);
+                }
+
+                $this->service->cambiarEstado(
+                    $id,
+                    'rechazar',
+                    $motivo
+                );
 
             return response()->json([
                 'message' => 'Préstamo rechazado correctamente.'

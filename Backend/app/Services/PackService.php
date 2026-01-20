@@ -22,6 +22,24 @@ class PackService
     }
 
     /**
+     * Cantidad de packs “armables” con equipos DISPONIBLES.
+     * Como cada pack refiere a equipos físicos concretos, la disponibilidad es:
+     *  - 1 si TODOS los equipos del pack están DISPONIBLES
+     *  - 0 si al menos uno no lo está
+     */
+    public function cantidadDisponible(Pack $pack): int
+    {
+        $total = $pack->equipos->count();
+        if ($total === 0) {
+            return 0;
+        }
+
+        $disponibles = $pack->equipos->where('estado', 'DISPONIBLE')->count();
+
+        return $disponibles === $total ? 1 : 0;
+    }
+
+    /**
      * Crear un pack con imagen y equipos.
      */
     public function crear(array $data)

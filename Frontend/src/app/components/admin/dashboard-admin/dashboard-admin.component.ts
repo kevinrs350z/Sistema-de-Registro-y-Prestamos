@@ -11,6 +11,7 @@ import { CuentasComponent } from '../cuentas/cuentas.component';
 import { PreguntasFrecuentesAdminComponent } from '../preguntas-frecuentes-admin/preguntas-frecuentes-admin.component';  // ✅ NUEVO
 
 import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-dashboard-admin',
@@ -33,6 +34,7 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
   private router = inject(Router);
   private api = inject(AuthService);
+  private notify = inject(NotificationService);
 
   // 🔹 Secciones internas del dashboard
   seccionActiva:
@@ -120,9 +122,10 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
   /** 🔹 Cerrar sesión */
   cerrarSesion() {
-    if (confirm('¿Seguro deseas cerrar sesión?')) {
-      this.router.navigate(['/auth/login']);
-    }
+    this.api.logout();
+    sessionStorage.clear();
+    this.notify.info('Sesión cerrada.');
+    this.router.navigate(['/auth/login']);
   }
 
   /** 🔹 Navegar hacia la vista de asignaturas/eventos */

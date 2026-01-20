@@ -1,11 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuariosService } from '../../../services/usuarios.service';
+import { NotificationService } from '../../../services/notification.service';
 
 interface Alumno {
   id: number;
   nombre: string;
+  estado?: string;
   apellido1?: string;
   apellido2?: string;
   email: string;
@@ -30,6 +32,7 @@ export class CuentasComponent implements OnInit {
   alumnoSeleccionado: Alumno | null = null;
 
   filtro = '';
+  filtroEstado: 'todos' | 'ACTIVO' | 'INACTIVO' = 'todos';
   editMode = false;
   creando = false;
 
@@ -48,6 +51,8 @@ export class CuentasComponent implements OnInit {
   // ✅ Teléfono: números + espacios (ej: "569 23859228")
   public telefonoRegex = /^[0-9\s]+$/;
 
+  private notify = inject(NotificationService);
+
   constructor(private usuariosService: UsuariosService) {}
 
   ngOnInit(): void {
@@ -58,7 +63,8 @@ export class CuentasComponent implements OnInit {
      CARGA Y PAGINACIÓN
   ========================= */
   cargarAlumnos(page: number = 1) {
-    this.usuariosService.obtenerUsuarios(page).subscribe({
+    const estado = this.filtroEstado === 'todos' ? undefined : this.filtroEstado;
+    this.usuariosService.obtenerUsuariosPorEstado(page, estado).subscribe({
       next: (res: any) => {
         this.alumnos = res.data;
         this.currentPage = res.current_page;
@@ -87,6 +93,26 @@ export class CuentasComponent implements OnInit {
       (a.nombre || '').toLowerCase().includes(f) ||
       (a.email || '').toLowerCase().includes(f)
     );
+  }
+
+  reactivarCuenta() {
+    const a = this.alumnoSeleccionado;
+    if (!a?.id) return;
+
+    const ok = confirm(`¿Reactivar la cuenta de ${a.nombre} (${a.email})?`);
+    if (!ok) return;
+
+    this.usuariosService.reactivarUsuario(a.id).subscribe({
+      next: () => {
+        this.notify.success('Cuenta reactivada correctamente.');
+        this.alumnoSeleccionado = null;
+        this.cargarAlumnos(this.currentPage);
+      },
+      error: err => {
+        console.error(err);
+        this.notify.error('Ocurrió un error al reactivar la cuenta.');
+      }
+    });
   }
 
   /* =========================
@@ -186,7 +212,7 @@ export class CuentasComponent implements OnInit {
     if (!this.alumnoSeleccionado) return;
 
     if (!this.esEdicionValida()) {
-      alert('Corrige los errores antes de guardar');
+      this.notify.warning('Corrige los errores del formulario antes de guardar.');
       return;
     }
 
@@ -210,13 +236,38 @@ export class CuentasComponent implements OnInit {
 
     this.usuariosService.actualizarUsuario(a.id, payload).subscribe({
       next: () => {
-        alert('Usuario actualizado correctamente ✔');
+        this.notify.success('Usuario actualizado correctamente.');
         this.editMode = false;
         this.cargarAlumnos(this.currentPage);
       },
       error: err => {
         console.error(err);
-        alert('Error al actualizar usuario');
+        this.notify.error('Ocurrió un error al actualizar el usuario.');
+      }
+    });
+  }
+
+  /* =========================
+     ELIMINAR CUENTA
+  ========================= */
+  eliminarCuenta() {
+    const a = this.alumnoSeleccionado;
+    if (!a?.id) return;
+
+    const ok = confirm(`¿Desactivar la cuenta de ${a.nombre} (${a.email})?`);
+    if (!ok) return;
+
+    this.usuariosService.eliminarUsuario(a.id).subscribe({
+      next: () => {
+        this.notify.success('Cuenta desactivada correctamente.');
+        this.alumnoSeleccionado = null;
+        this.editMode = false;
+        this.creando = false;
+        this.cargarAlumnos(this.currentPage);
+      },
+      error: err => {
+        console.error(err);
+        this.notify.error('Ocurrió un error al desactivar la cuenta.');
       }
     });
   }
@@ -226,7 +277,7 @@ export class CuentasComponent implements OnInit {
   ========================= */
   crearCuenta() {
     if (!this.esCreacionValida()) {
-      alert('Revisa los datos ingresados');
+      this.notify.warning('Revisa los datos ingresados antes de crear la cuenta.');
       return;
     }
 
@@ -240,18 +291,19 @@ export class CuentasComponent implements OnInit {
       email: n.email,
       telefono: n.telefono,
       password: n.password,
-      rol: n.rol
+      // Backend acepta admin/alumno o ADMIN/ALUMNO; enviamos normalizado para evitar fallos
+      rol: (n.rol ?? '').toString().toUpperCase()
     };
 
     this.usuariosService.crearUsuario(payload).subscribe({
       next: () => {
-        alert('Cuenta creada correctamente ✔');
+        this.notify.success('Cuenta creada correctamente.');
         this.creando = false;
         this.cargarAlumnos();
       },
       error: err => {
         console.error(err);
-        alert('Error al crear usuario');
+        this.notify.error('Ocurrió un error al crear la cuenta.');
       }
     });
   }
@@ -271,7 +323,8 @@ export class CuentasComponent implements OnInit {
       celular: '',
       password: '',
       confirmPassword: '',
-      rol: 'Alumno'
+      // Debe calzar con el backend y la tabla de roles (ADMIN/ALUMNO)
+      rol: 'ALUMNO'
     };
   }
 }

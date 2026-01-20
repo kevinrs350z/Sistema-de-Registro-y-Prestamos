@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -7,6 +7,7 @@ import { AsignaturasService } from '../../../services/asignaturas.service';
 import { PacksService } from '../../../services/packs.service';
 
 import { Pack, Equipo } from '../../../models/pack.model';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-gestionar-packs',
@@ -59,6 +60,8 @@ export class GestionarPacksComponent implements OnInit {
   ================================ */
   imagenSeleccionada: File | null = null;
   previewImagen: string | null = null;
+
+  private notify = inject(NotificationService);
 
   constructor(
     private asignaturasService: AsignaturasService,
@@ -192,7 +195,7 @@ export class GestionarPacksComponent implements OnInit {
     );
 
     if (existe) {
-      alert('Ese equipo ya fue agregado al pack.');
+      this.notify.info('Ese equipo ya fue agregado al pack.');
       this.equipoSeleccionado = null;
       return;
     }
@@ -214,7 +217,7 @@ export class GestionarPacksComponent implements OnInit {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('El archivo debe ser una imagen.');
+      this.notify.warning('El archivo seleccionado debe ser una imagen.');
       return;
     }
 
@@ -237,12 +240,12 @@ export class GestionarPacksComponent implements OnInit {
   ================================ */
   crearPack(): void {
     if (!this.form.nombre.trim()) {
-      alert('Debe ingresar un nombre para el pack.');
+      this.notify.warning('Debes ingresar un nombre para el pack.');
       return;
     }
 
     if (this.form.equipos.length === 0) {
-      alert('Debe agregar al menos un equipo.');
+      this.notify.warning('Debes agregar al menos un equipo al pack.');
       return;
     }
 
@@ -263,7 +266,7 @@ export class GestionarPacksComponent implements OnInit {
 
     this.packsService.crearPack(data).subscribe({
       next: () => {
-        alert('Pack creado con éxito.');
+        this.notify.success('Pack creado con éxito.');
         this.guardando = false;
         this.creandoPack = false;
         this.cargarDatos();
@@ -284,12 +287,12 @@ actualizarPack(): void {
   if (!this.packSeleccionado) return;
 
   if (!this.form.nombre.trim()) {
-    alert('Debe ingresar un nombre para el pack.');
+    this.notify.warning('Debes ingresar un nombre para el pack.');
     return;
   }
 
   if (this.form.equipos.length === 0) {
-    alert('Debe agregar al menos un equipo.');
+    this.notify.warning('Debes agregar al menos un equipo al pack.');
     return;
   }
 
@@ -312,7 +315,7 @@ actualizarPack(): void {
     .actualizarPack(this.packSeleccionado.id, data)
     .subscribe({
       next: () => {
-        alert('Pack actualizado correctamente.');
+        this.notify.success('Pack actualizado correctamente.');
         this.guardando = false;
         this.creandoPack = false;
         this.editandoPack = false;
@@ -341,7 +344,7 @@ actualizarPack(): void {
 
     this.packsService.eliminarPack(id).subscribe({
       next: () => {
-        alert('Pack eliminado.');
+        this.notify.success('Pack eliminado correctamente.');
         this.eliminando = false;
         this.packSeleccionado = null;
         this.cargarDatos();
@@ -349,6 +352,27 @@ actualizarPack(): void {
       error: () => {
         this.eliminando = false;
         this.error = 'Error al eliminar pack.';
+      }
+    });
+  }
+
+  reactivarPack(id: number): void {
+    const ok = confirm('¿Reactivar este pack y marcar sus equipos como DISPONIBLE?');
+    if (!ok) return;
+
+    this.guardando = true;
+    this.error = null;
+
+    this.packsService.reactivarPack(id).subscribe({
+      next: () => {
+        this.notify.success('Pack reactivado correctamente.');
+        this.guardando = false;
+        this.packSeleccionado = null;
+        this.cargarDatos();
+      },
+      error: () => {
+        this.guardando = false;
+        this.error = 'Error al reactivar pack.';
       }
     });
   }

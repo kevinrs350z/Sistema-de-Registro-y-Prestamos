@@ -80,6 +80,12 @@
   border-color: #446ba9;
 }
 
+.item.inactivo {
+  opacity: 0.65;
+  background: #fff6f6;
+  border-color: #f3d6d6;
+}
+
 .item strong {
   font-size: 0.95rem;
   color: #1f2a44;

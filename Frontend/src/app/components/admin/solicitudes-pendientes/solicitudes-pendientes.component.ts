@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SolicitudEquipo } from '../../../shared/models';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
+import { NotificationService } from '../../../services/notification.service';
 
 type AdminSolicitud = SolicitudEquipo & {
   tipo?: 'DENTRO' | 'FUERA';
@@ -23,6 +24,8 @@ type AdminSolicitud = SolicitudEquipo & {
   styleUrls: ['./solicitudes-pendientes.component.css']
 })
 export class SolicitudesPendientesComponent implements OnInit {
+
+  private notify = inject(NotificationService);
 
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
@@ -124,11 +127,6 @@ export class SolicitudesPendientesComponent implements OnInit {
 
 confirmarAprobacion() {
   if (!this.solicitudSeleccionada) return;
-  if (this.motivoAprobacion.trim() === '') {
-    alert('Debes ingresar un motivo de aprobación.');
-    return;
-  }
-
   this.prestamosAdmin
     .aprobarPrestamo(
       this.solicitudSeleccionada.id!,
@@ -137,7 +135,7 @@ confirmarAprobacion() {
     )
     .subscribe({
       next: () => {
-        alert('Solicitud aprobada correctamente.');
+        this.notify.success('Solicitud aprobada correctamente.');
         this.cargarSolicitudes();
         this.cerrarModal();
       },
@@ -153,7 +151,7 @@ confirmarAprobacion() {
 confirmarRechazo() {
   if (!this.solicitudSeleccionada) return;
   if (this.motivoRechazo.trim() === '') {
-    alert('Debes ingresar un motivo.');
+    this.notify.warning('Debes ingresar un motivo para el rechazo.');
     return;
   }
 
@@ -165,7 +163,7 @@ confirmarRechazo() {
     )
     .subscribe({
       next: () => {
-        alert('Solicitud rechazada correctamente.');
+        this.notify.success('Solicitud rechazada correctamente.');
         this.cargarSolicitudes();
         this.cerrarModal();
       },

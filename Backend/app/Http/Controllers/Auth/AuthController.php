@@ -131,6 +131,11 @@ class AuthController extends Controller
         ->with(['persona', 'roles'])
         ->first();
 
+        // 2.1️⃣ Bloquear acceso si está desactivado
+        if ($user && (($user->estado ?? 'ACTIVO') !== 'ACTIVO' || (($user->persona->estado ?? 'ACTIVO') !== 'ACTIVO'))) {
+            return response()->json(['message' => 'Usuario desactivado'], 403);
+        }
+
         // 3️⃣ Validar credenciales
         if (!$user || !Auth::attempt(['idPersona' => $user->idPersona, 'password' => $request->password])) {
             return response()->json(['message' => 'Credenciales inválidas'], 401);

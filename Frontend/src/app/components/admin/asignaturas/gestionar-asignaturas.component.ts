@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FiltroEquipoPipe } from '../../../shared/pipes/filtro-equipo.pipe';
@@ -7,6 +7,7 @@ import { EventosService } from '../../../services/eventos.service';
 import { AsignaturasService } from '../../../services/asignaturas.service';
 import { EquiposService } from '../../../services/equipos.service';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { NotificationService } from '../../../services/notification.service';
 
 interface BloqueHorario {
   idBloque: number;
@@ -134,8 +135,12 @@ export class GestionarAsignaturasComponent implements OnInit {
   ======================================= */
   private soloLetrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
-  constructor(private eventosService: EventosService,  private equiposService: EquiposService,
-  private asignaturasService: AsignaturasService, private tipoEquipo: TipoEquipoService) {}
+  private notify = inject(NotificationService);
+
+  constructor(private eventosService: EventosService,
+              private equiposService: EquiposService,
+              private asignaturasService: AsignaturasService,
+              private tipoEquipo: TipoEquipoService) {}
 
   ngOnInit(): void {
     this.cargarDatosBase();
@@ -300,7 +305,8 @@ export class GestionarAsignaturasComponent implements OnInit {
       (yaAgregado?.cantidad ?? 0) + this.cantidadSeleccionada;
 
     if (totalSolicitado > eq.stock) {
-      alert(`Stock insuficiente. Disponible: ${eq.stock - (yaAgregado?.cantidad ?? 0)}`);
+      const disponible = eq.stock - (yaAgregado?.cantidad ?? 0);
+      this.notify.warning(`Stock insuficiente. Disponible: ${disponible}`);
       return;
     }
 
@@ -374,17 +380,17 @@ export class GestionarAsignaturasComponent implements OnInit {
   ======================================= */
   guardar() {
     if (!this.form.ubicacion?.trim()) {
-      alert('Debe indicar una ubicación');
+      this.notify.warning('Debes indicar una ubicación para la reserva.');
       return;
     }
 
     if (!this.form.profesor?.trim() || !this.soloLetras(this.form.profesor)) {
-      alert('Debe ingresar un profesor válido (solo letras)');
+      this.notify.warning('Debes ingresar un nombre de profesor válido (solo letras).');
       return;
     }
 
     if (this.form.tipo === 'ASIGNATURA' && !this.form.asignatura_id) {
-      alert('Debe seleccionar una asignatura');
+      this.notify.warning('Debes seleccionar una asignatura.');
       return;
     }
     if (this.form.tipo === 'EVENTO') {
@@ -393,7 +399,7 @@ export class GestionarAsignaturasComponent implements OnInit {
         !this.form.fecha_inicio ||
         !this.form.fecha_fin
       ) {
-        alert('Evento requiere nombre y fechas');
+        this.notify.warning('El evento requiere nombre y fechas de inicio y término.');
         return;
       }
     }
@@ -438,17 +444,17 @@ export class GestionarAsignaturasComponent implements OnInit {
 
         if (this.form.tipo === 'EVENTO') {
           if (!this.form.evento_nombre?.trim()) {
-            alert('Evento requiere nombre');
+            this.notify.warning('El evento requiere un nombre.');
             return;
           }
 
           if (!this.form.fecha_inicio || !this.form.fecha_fin) {
-            alert('Evento requiere fechas');
+            this.notify.warning('El evento requiere fechas de inicio y término.');
             return;
           }
 
           if (this.form.fecha_fin < this.form.fecha_inicio) {
-            alert('La fecha fin no puede ser menor a la fecha inicio');
+            this.notify.warning('La fecha de término no puede ser menor que la fecha de inicio.');
             return;
           }
 
@@ -462,7 +468,7 @@ export class GestionarAsignaturasComponent implements OnInit {
 
     this.asignaturasService.crearPrestamoAdmin(payload).subscribe({
       next: () => {
-        alert('Reserva registrada correctamente');
+        this.notify.success('Reserva registrada correctamente.');
         this.mostrarFormulario = false;
 
         // refrescar lista
@@ -470,7 +476,8 @@ export class GestionarAsignaturasComponent implements OnInit {
       },  
       error: (err) => {
         console.error(err);
-        alert(err?.error?.error || err?.error?.message || 'Error al crear reserva');
+        const mensaje = err?.error?.error || err?.error?.message || 'Ocurrió un error al crear la reserva.';
+        this.notify.error(mensaje);
       }
     });
   }
@@ -485,19 +492,20 @@ export class GestionarAsignaturasComponent implements OnInit {
     const motivo = prompt('Motivo de cancelación (obligatorio):')?.trim();
 
     if (!motivo) {
-      alert('Debe ingresar un motivo');
+      this.notify.warning('Debes ingresar un motivo para cancelar la reserva.');
       return;
     }
 
     this.eventosService.cancelarReservaAdmin(id, motivo).subscribe({
       next: () => {
-        alert('La reserva fue cancelada correctamente.');
+        this.notify.success('La reserva fue cancelada correctamente.');
         this.reservaSeleccionada = null;
         this.cargarReservas(this.page);
       },
       error: (err) => {
         console.error(err);
-        alert(err?.error?.message || 'Error al cancelar la reserva');
+        const mensaje = err?.error?.message || 'Ocurrió un error al cancelar la reserva.';
+        this.notify.error(mensaje);
       }
     });
   }

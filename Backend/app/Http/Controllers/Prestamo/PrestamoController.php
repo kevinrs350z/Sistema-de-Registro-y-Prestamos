@@ -26,7 +26,7 @@ class PrestamoController extends Controller
             }
 
             $prestamos = Prestamo::with([
-                    'equipos',                    
+                    'equipos.tipo',                    
                     'bloquePrestamo.bloque',
                     'bloquePrestamo.asignatura'
                 ])

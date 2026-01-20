@@ -26,7 +26,7 @@ export class AuthCallbackComponent implements OnInit {
 
       if (error) {
         console.error('Error al iniciar sesión con Google:', error);
-        this.router.navigate(['/login']);
+        this.router.navigate(['/auth/login']);
         return;
       }
 
@@ -37,11 +37,13 @@ export class AuthCallbackComponent implements OnInit {
         this.authService.getUsuario(token).subscribe({
           next: user => {
             localStorage.setItem('user', JSON.stringify(user));
-            this.router.navigate(['/']); // o a tu dashboard
+            // En esta app la raíz redirige a /auth/login; mandamos al catálogo por defecto.
+            // (Si luego quieres, aquí podemos detectar rol y mandar a /admin/dashboard)
+            this.router.navigate(['/equipos/catalogo']);
           },
           error: err => {
             console.error(err);
-            this.router.navigate(['/login']);
+            this.router.navigate(['/auth/login']);
           }
         });
       }

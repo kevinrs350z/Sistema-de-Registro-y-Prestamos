@@ -15,42 +15,35 @@
       <p *ngIf="reservas.length === 0" class="sin-reservas">
         No hay reservas creadas.
       </p>
-    <div
-      class="reserva-card"
-      *ngFor="let r of reservas"
-      (click)="seleccionar(r)"
-      [class.activa]="r === reservaSeleccionada"
-    >
-      <!-- TÍTULO -->
-      <h4>
-        {{ r.tipo?.toLowerCase() === 'EVENTO' ? 'Evento' : 'Asignatura' }}
+      <div class="reserva-card" *ngFor="let r of reservas" (click)="seleccionar(r)"
+        [class.activa]="r === reservaSeleccionada">
+        <!-- TÍTULO -->
+        <h4>
+          {{ r.tipo === 'EVENTO' ? 'Evento' : 'Asignatura' }}
 
-        <small style="color:red">{{ r.tipo }}</small>
+          <small style="color:red">{{ r.tipo }}</small>
 
-      </h4>
+        </h4>
 
-      <!-- NOMBRE SEGÚN TIPO -->
-      <p class="sub-info">
-        <ng-container *ngIf="r.tipo === 'EVENTO'; else asignaturaTpl">
-          <strong>Evento:</strong>
-          {{ r.eventoNombre || '—' }}
-        </ng-container>
+        <!-- NOMBRE SEGÚN TIPO -->
+        <p class="sub-info">
+          <ng-container *ngIf="r.tipo === 'EVENTO'; else asignaturaTpl">
+            <strong>Evento:</strong>
+            {{ r.eventoNombre || '—' }}
+          </ng-container>
 
-        <ng-template #asignaturaTpl>
-          <strong>Asignatura:</strong>
-          {{ r.asignaturaNombre || '—' }}
-        </ng-template>
-      </p>
+          <ng-template #asignaturaTpl>
+            <strong>Asignatura:</strong>
+            {{ r.asignaturaNombre || '—' }}
+          </ng-template>
+        </p>
 
-      <!-- BLOQUES SOLO PARA ASIGNATURA -->
-      <p
-        class="fecha"
-        *ngIf="r.tipo === 'ASIGNATURA' && r.bloques?.length"
-      >
-        🕒
-        <span *ngFor="let bl of r.bloques"> • {{ bl }} </span>
-      </p>
-    </div>
+        <!-- BLOQUES SOLO PARA ASIGNATURA -->
+        <p class="fecha" *ngIf="r.tipo === 'ASIGNATURA' && r.bloques?.length">
+          🕒
+          <span *ngFor="let bl of r.bloques"> • {{ bl }} </span>
+        </p>
+      </div>
 
 
     </div>
@@ -86,11 +79,7 @@
 
           <div class="form-grupo">
             <label>Nombre del evento</label>
-            <input
-              type="text"
-              [(ngModel)]="form.evento_nombre"
-              placeholder="Ej: Seminario, Taller, Charla..."
-            >
+            <input type="text" [(ngModel)]="form.evento_nombre" placeholder="Ej: Seminario, Taller, Charla...">
           </div>
 
           <div class="form-grupo">
@@ -109,13 +98,8 @@
         <!-- Profesor -->
         <div class="form-grupo">
           <label>Profesor a cargo</label>
-          <input
-            type="text"
-            [(ngModel)]="form.profesor"
-            placeholder="Nombre del profesor"
-          >
-          <small class="error"
-            *ngIf="form.profesor && !soloLetras(form.profesor)">
+          <input type="text" [(ngModel)]="form.profesor" placeholder="Nombre del profesor">
+          <small class="error" *ngIf="form.profesor && !soloLetras(form.profesor)">
             Solo letras
           </small>
         </div>
@@ -123,11 +107,7 @@
         <!-- Ubicación -->
         <div class="form-grupo">
           <label>Ubicación</label>
-          <input
-            type="text"
-            [(ngModel)]="form.ubicacion"
-            placeholder="Ej: Sala A-203, Laboratorio Multimedia"
-          >
+          <input type="text" [(ngModel)]="form.ubicacion" placeholder="Ej: Sala A-203, Laboratorio Multimedia">
         </div>
 
         <!-- Bloques -->
@@ -135,12 +115,8 @@
           <label>Bloques</label>
 
           <div class="bloques-container">
-            <div
-              class="bloque-item"
-              *ngFor="let b of bloques"
-              (click)="toggleBloque(b)"
-              [class.activo]="form.bloques.includes(b.texto)"
-            >
+            <div class="bloque-item" *ngFor="let b of bloques" (click)="toggleBloque(b)"
+              [class.activo]="form.bloques.includes(b.texto)">
               <strong>{{ b.nombre }}</strong>
               <span>{{ b.texto }}</span>
             </div>
@@ -148,60 +124,47 @@
         </div>
 
         <!-- Equipos -->
-      <div class="form-grupo">
-        <label>Agregar equipo</label>
+        <div class="form-grupo">
+          <label>Agregar equipo</label>
 
 
 
-        <div class="equipo-flex">
-          <select [(ngModel)]="equipoSeleccionado">
-            <option [ngValue]="null">Seleccionar equipo...</option>
+          <div class="equipo-flex">
+            <select [(ngModel)]="equipoSeleccionado">
+              <option [ngValue]="null">Seleccionar equipo...</option>
 
-          <option
-            *ngFor="let eq of equipos"
-            [ngValue]="eq"
-            [disabled]="getStockDisponible(eq) === 0"
-          >
-            {{ eq.nombre }} —
-            {{
-              getStockDisponible(eq) > 0
+              <option *ngFor="let eq of equipos" [ngValue]="eq" [disabled]="getStockDisponible(eq) === 0">
+                {{ eq.nombre }} —
+                {{
+                getStockDisponible(eq) > 0
                 ? 'Stock: ' + getStockDisponible(eq)
                 : 'Sin stock'
-            }}
-          </option>
+                }}
+              </option>
 
-          </select>
+            </select>
 
-          <input
-            type="number"
-            min="1"
-            [max]="equipoSeleccionado ? getStockDisponible(equipoSeleccionado) : 1"
-            [(ngModel)]="cantidadSeleccionada"
-            class="input-cantidad"
-          >
+            <input type="number" min="1" [max]="equipoSeleccionado ? getStockDisponible(equipoSeleccionado) : 1"
+              [(ngModel)]="cantidadSeleccionada" class="input-cantidad">
 
 
 
-          <button
-            class="btn-agregar"
-            (click)="agregarEquipo()"
-            [disabled]="!equipoSeleccionado"
-          >
-            Agregar
-          </button>
-        </div>
+            <button class="btn-agregar" (click)="agregarEquipo()" [disabled]="!equipoSeleccionado">
+              Agregar
+            </button>
+          </div>
 
-        <!-- Lista seleccionados -->
-        <div class="lista-equipos" *ngIf="form.equipos.length > 0">
-          <div class="item-equipo" *ngFor="let e of form.equipos; let i = index">
-            <span>
-              {{ e.nombre }}
-              — <strong>Cant:</strong> {{ e.cantidad }}
-            </span>
-            <button class="btn-eliminar" (click)="eliminarEquipo(i)">✕</button>
+          <!-- Lista seleccionados -->
+          <div class="lista-equipos" *ngIf="form.equipos.length > 0">
+            <div class="item-equipo" *ngFor="let e of form.equipos; let i = index">
+              <span>
+                {{ e.nombre }}
+                — <strong>Cant:</strong> {{ e.cantidad }}
+              </span>
+              <button class="btn-eliminar" (click)="eliminarEquipo(i)">✕</button>
+            </div>
           </div>
         </div>
-      </div>
 
 
 
@@ -230,7 +193,7 @@
         <p><strong>Profesor:</strong> {{ reservaSeleccionada.profesor }}</p>
         <p><strong>Ubicación:</strong> {{ reservaSeleccionada.ubicacion?.trim() || '—' }}</p>
 
-        <p  *ngIf="reservaSeleccionada.tipo === 'ASIGNATURA'"> <strong>Bloques seleccionados:</strong>
+        <p *ngIf="reservaSeleccionada.tipo === 'ASIGNATURA'"> <strong>Bloques seleccionados:</strong>
           <span *ngFor="let bl of reservaSeleccionada.bloques">• {{ bl }} </span>
         </p>
 
@@ -244,7 +207,7 @@
 
     <!-- ================= RESUMEN ================= -->
     <div class="columna-resumen" *ngIf="mostrarFormulario">
- 
+
 
 
       <div class="resumen-box">
@@ -259,9 +222,9 @@
           {{ getNombreAsignaturaEvento() }}
         </p>
 
-             <p *ngIf="form.tipo === 'EVENTO'">
-              <strong>Fecha:</strong> {{ form.fecha_inicio }} → {{ form.fecha_fin }}
-            </p>
+        <p *ngIf="form.tipo === 'EVENTO'">
+          <strong>Fecha:</strong> {{ form.fecha_inicio }} → {{ form.fecha_fin }}
+        </p>
 
         <p *ngIf="form.tipo === 'ASIGNATURA'"><strong>Bloques:</strong>
           <span *ngFor="let bl of form.bloques">• {{ bl }} </span>

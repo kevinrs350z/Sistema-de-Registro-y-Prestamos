@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { map } from 'rxjs/operators';
+
 @Injectable({ providedIn: 'root' })
 export class TipoEquipoService {
 
@@ -85,9 +87,11 @@ export class TipoEquipoService {
   // LISTAR PACKS
   // ============================================================
   getPacks(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/packs`, {
+    return this.http.get<any>(`${this.apiUrl}/packs`, {
       headers: this.getHeaders()
-    });
+    }).pipe(
+      map((response: any) => response.data)
+    );
   }
 
 

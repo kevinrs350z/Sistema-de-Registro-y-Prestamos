@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Usuario\StoreUsuarioRequest;
 use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Services\UsuarioService;
+use Illuminate\Http\Request;
 
 /**
  * Controlador responsable de gestionar las operaciones CRUD relacionadas con usuarios.
@@ -26,10 +27,11 @@ class UsuarioController extends Controller
      * @param  UsuarioService  $service  Servicio encargado de la gestión de usuarios.
      * @return \Illuminate\Http\JsonResponse   Respuesta JSON con el listado de usuarios.
      */
-    public function index(UsuarioService $service)
+    public function index(Request $request, UsuarioService $service)
     {
         try {
-            $usuarios = $service->listarUsuarios();
+            $estado = $request->query('estado', null); // ACTIVO | INACTIVO | null=TODOS
+            $usuarios = $service->listarUsuarios($estado);
             return response()->json($usuarios, 200);
 
         } catch (\Exception $e) {
@@ -146,13 +148,37 @@ class UsuarioController extends Controller
             $service->eliminarUsuario($id);
 
             return response()->json([
-                'message' => 'Usuario eliminado correctamente'
+                'message' => 'Usuario desactivado correctamente'
             ], 200);
 
         } catch (\Exception $e) {
 
             return response()->json([
                 'error'   => 'Error al eliminar el usuario',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reactiva un usuario previamente desactivado.
+     *
+     * @param int $id
+     * @param UsuarioService $service
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reactivar($id, UsuarioService $service)
+    {
+        try {
+            $service->reactivarUsuario($id);
+
+            return response()->json([
+                'message' => 'Usuario reactivado correctamente'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al reactivar el usuario',
                 'message' => $e->getMessage()
             ], 500);
         }

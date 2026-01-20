@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { EquiposService } from '../../../services/equipos.service';
 import { CategoriaService } from '../../../services/categoria.service';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-inventario',
@@ -14,6 +15,8 @@ import { TipoEquipoService } from '../../../services/tipoEquipo.service';
   styleUrls: ['./inventario.component.css']
 })
 export class InventarioComponent implements OnInit {
+
+  private notify = inject(NotificationService);
 
   equipos: any[] = [];
   equiposFiltrados: any[] = [];
@@ -116,13 +119,13 @@ export class InventarioComponent implements OnInit {
 
   guardarNuevoEquipo() {
     if (!this.nuevoEquipo.categoria_id || !this.nuevoEquipo.codigo) {
-      alert('Complete los campos obligatorios');
+      this.notify.warning('Completa los campos obligatorios antes de guardar.');
       return;
     }
 
     if (this.modo === 'nuevo') {
       if (!this.nuevoEquipo.nuevoModelo) {
-        alert('Ingrese el nombre del nuevo modelo');
+        this.notify.warning('Ingresa el nombre del nuevo modelo.');
         return;
       }
 
@@ -149,7 +152,7 @@ export class InventarioComponent implements OnInit {
       estado: this.nuevoEquipo.estado
     }).subscribe({
       next: () => {
-        alert('Equipo creado exitosamente');
+        this.notify.success('Equipo creado exitosamente.');
         this.cargarEquipos();
         this.limpiarModal();
       },
@@ -222,14 +225,14 @@ guardarCambiosEquipo() {
     this.equiposService.eliminarEquipo(this.equipoSeleccionado.id)
       .subscribe({
         next: () => {
-          alert('Equipo eliminado correctamente');
+          this.notify.success('Equipo eliminado correctamente.');
           this.cargarEquipos();
           this.cerrarPanel();
           this.guardando = false;
         },
         error: err => {
           console.error(err);
-          alert('Error al eliminar equipo');
+          this.notify.error('Ocurrió un error al eliminar el equipo.');
           this.guardando = false;
         }
       });
@@ -245,14 +248,14 @@ guardarCambiosEquipo() {
     }
   ).subscribe({
     next: () => {
-      alert('Equipo actualizado correctamente');
+      this.notify.success('Equipo actualizado correctamente.');
       this.cargarEquipos();
       this.cerrarPanel();
       this.guardando = false;
     },
     error: err => {
       console.error(err);
-      alert('Error al actualizar equipo');
+      this.notify.error('Ocurrió un error al actualizar el equipo.');
       this.guardando = false;
     }
   });
