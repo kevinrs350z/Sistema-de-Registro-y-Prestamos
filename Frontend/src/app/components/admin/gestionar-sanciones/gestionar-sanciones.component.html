@@ -11,7 +11,7 @@
       <h3>Sanciones</h3>
 
       <div class="botones-header">
-        <button class="btn-crear" (click)="toggleRegistrar()">+ Registrar sanción</button>
+        <button class="btn-crear" (click)="toggleRegistrar()">Registrar sanción</button>
         <button class="btn-crear" (click)="toggleAsignar()">Asignar sanción</button>
       </div>
     </div>
@@ -19,17 +19,20 @@
     <input class="buscador" type="text" placeholder="Buscar..."
            [(ngModel)]="filtro">
 
-    <div *ngFor="let s of sancionesFiltradas"
-         class="item"
-         [class.activo]="sancionSeleccionada?.id === s.id"
-         (click)="seleccionar(s)">
+    <!-- GRID DE ITEMS (2 columnas) -->
+    <div class="items-grid">
+      <div *ngFor="let s of sancionesFiltradas"
+           class="item"
+           [class.activo]="sancionSeleccionada?.id === s.id"
+           (click)="seleccionar(s)">
 
-      <p><strong>{{ s.usuario }}</strong></p>
-      <p>{{ s.motivo }}</p>
+        <p><strong>{{ s.usuario }}</strong></p>
+        <p>{{ s.motivo }}</p>
 
-      <p class="estado" [class.activa]="s.estado === 'ACTIVA'">
-        {{ s.estado }}
-      </p>
+        <p class="estado" [class.activa]="s.estado === 'ACTIVA'">
+          {{ s.estado }}
+        </p>
+      </div>
     </div>
   </div>
 
@@ -53,8 +56,30 @@
 
 
     <div class="acciones-detalle">
-      <button class="btn-azul" (click)="abrirModalAmpliar()">Ampliar 7 días</button>
-      <button class="btn-rojo" (click)="quitarSancion()">Quitar sanción</button>
+      <button class="btn-azul" (click)="toggleEditarSancion()">Editar sanción</button>
+      <button class="btn-eliminar" (click)="quitarSancion()">Quitar sanción</button>
+    </div>
+
+    <!-- FORMULARIO DE EDICIÓN RÁPIDA -->
+    <div class="editar-sancion" *ngIf="editarSancionVisible">
+      <h3>Editar sanción</h3>
+
+      <label>
+        <input type="checkbox" [(ngModel)]="extender" /> Extender sanción
+      </label>
+
+      <div *ngIf="extender" style="margin-top:8px">
+        <label>Días a extender (info):</label>
+        <input type="number" [(ngModel)]="extenderDias" min="1" />
+
+        <label style="display:block; margin-top:8px">Motivo de la extensión</label>
+        <textarea rows="3" [(ngModel)]="motivoEdicion" placeholder="Ingrese motivo..."></textarea>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:8px">
+        <button class="btn-azul" (click)="guardarEdicion()">Guardar</button>
+        <button class="btn-cancelar" (click)="toggleEditarSancion()">Cancelar</button>
+      </div>
     </div>
   </div>
 
@@ -69,7 +94,10 @@
       </div>
     </div>
 
-    <button class="btn-azul" (click)="registrarTipo()">Registrar</button>
+    <div style="display:flex; gap:8px; align-items:center">
+      <button class="btn-azul" (click)="registrarTipo()">Registrar</button>
+      <button type="button" class="btn-cancelar" (click)="cancelarRegistrar()">Cancelar</button>
+    </div>
   </div>
 
   <!-- FORMULARIO ASIGNAR (CORREGIDO CON ESTILO PANEL) -->
@@ -79,9 +107,16 @@
 
     <div class="detalle-grid">
 
-      <div class="col-100">
+      <div class="col-100" style="position:relative;">
         <label>Usuario</label>
-        <input type="text" [(ngModel)]="asignarUsuario">
+        <input type="text" [(ngModel)]="asignarUsuario" (input)="onAsignarUsuarioInput($any($event.target).value)" autocomplete="off">
+
+        <ul *ngIf="usuariosSugeridos.length > 0" class="sugerencias-list">
+          <li *ngFor="let u of usuariosSugeridos" (click)="seleccionarSugerido(u)">
+            <strong>{{ u.nombre }}</strong>
+            <div style="font-size:0.85rem; color:#6b7280">{{ u.email }} {{ u.rut ? ('· ' + u.rut) : '' }}</div>
+          </li>
+        </ul>
       </div>
 
       <div class="col-100">
@@ -103,7 +138,10 @@
 
     </div>
 
-    <button class="btn-azul" (click)="asignarSancion()">Asignar</button>
+    <div style="display:flex; gap:8px; align-items:center">
+      <button class="btn-azul" (click)="asignarSancion()">Asignar</button>
+      <button type="button" class="btn-cancelar" (click)="toggleAsignar()">Cancelar</button>
+    </div>
   </div>
 
 </div>

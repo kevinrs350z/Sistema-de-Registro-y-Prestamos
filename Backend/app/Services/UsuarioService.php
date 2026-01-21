@@ -40,7 +40,7 @@ class UsuarioService
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function listarUsuarios($estado = null)
+    public function listarUsuarios($estado = null, $q = null)
     {
         $query = User::select(
                 'users.idUser as id',
@@ -66,6 +66,18 @@ class UsuarioService
         } elseif ($estado === 'INACTIVO') {
             $query->where('users.estado', 'INACTIVO')
                   ->where('persona.estado', 'INACTIVO');
+        }
+
+        // Búsqueda libre: nombre, apellido, email o rut
+        if (!empty($q)) {
+            $q = trim($q);
+            $query->where(function ($sub) use ($q) {
+                $sub->where('persona.Nombre', 'like', "%{$q}%")
+                    ->orWhere('persona.apellido1', 'like', "%{$q}%")
+                    ->orWhere('persona.apellido2', 'like', "%{$q}%")
+                    ->orWhere('users.Email', 'like', "%{$q}%")
+                    ->orWhere('persona.Rut', 'like', "%{$q}%");
+            });
         }
 
         return $query->paginate(50);

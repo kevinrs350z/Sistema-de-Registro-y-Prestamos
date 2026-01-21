@@ -31,7 +31,8 @@ class UsuarioController extends Controller
     {
         try {
             $estado = $request->query('estado', null); // ACTIVO | INACTIVO | null=TODOS
-            $usuarios = $service->listarUsuarios($estado);
+            $q = $request->query('q', null); // búsqueda por nombre, email o rut
+            $usuarios = $service->listarUsuarios($estado, $q);
             return response()->json($usuarios, 200);
 
         } catch (\Exception $e) {

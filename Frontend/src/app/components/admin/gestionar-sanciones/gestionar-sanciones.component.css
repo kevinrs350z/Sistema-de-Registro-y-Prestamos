@@ -43,6 +43,11 @@
   flex-direction: column;
 }
 
+.lista {
+  max-height: calc(100vh - 180px);
+  overflow: auto;
+}
+
 .lista-header {
   display: flex;
   justify-content: space-between;
@@ -125,6 +130,14 @@
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
 }
 
+.detalle {
+  position: sticky;
+  top: 90px;
+  align-self: start;
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+}
+
 .detalle h2 {
   font-size: 1.35rem;
   font-weight: 700;
@@ -138,6 +151,120 @@
   grid-template-columns: 1fr 1fr;
   gap: 18px;
   margin-bottom: 20px;
+}
+
+/* GRID PARA ITEMS EN LISTA */
+.items-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ACCIONES DEL PANEL (alineadas y compactas) */
+.acciones-detalle {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Botones compactos */
+.acciones-detalle button {
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  width: auto;
+}
+
+/* Botón quitar: estilo outline rojo, menos intrusivo */
+.btn-eliminar {
+  background: transparent;
+  color: #b91c1c;
+  border: 1px solid rgba(185,28,28,0.12);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.btn-eliminar:hover {
+  background: #fff5f5;
+  border-color: rgba(185,28,28,0.22);
+}
+
+@media (max-width: 900px) {
+  .cuentas-container {
+    grid-template-columns: 1fr !important;
+    padding: 0 16px;
+  }
+
+  .items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detalle {
+    position: relative;
+    top: 0;
+    max-height: none;
+  }
+}
+
+/* Estilos del formulario de edición rápida */
+.editar-sancion {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f7f9ff;
+  border: 1px solid #e2e6ef;
+}
+
+.editar-sancion label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.editar-sancion input[type="number"],
+.editar-sancion textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d7ddee;
+  margin-top: 6px;
+}
+
+.btn-cancelar {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+/* Sugerencias autocomplete */
+.sugerencias-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #e6e9f0;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  margin-top: 8px;
+  max-height: 240px;
+  overflow: auto;
+  z-index: 50;
+  list-style: none;
+  padding: 8px;
+}
+
+.sugerencias-list li {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sugerencias-list li:hover {
+  background: #f3f6ff;
 }
 
 .col-100 {

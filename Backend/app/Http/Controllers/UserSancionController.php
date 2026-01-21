@@ -70,7 +70,11 @@ class UserSancionController extends Controller
 
     public function listarSanciones()
     {
-        $sanciones = Sancion::with(['users.persona'])->get();
+        // Devolver sanciones ordenadas por fecha_inicio descendente (más recientes primero)
+        $sanciones = Sancion::with(['users.persona'])
+            ->orderBy('fecha_inicio', 'desc')
+            ->orderBy('idSancion', 'desc')
+            ->get();
 
         return response()->json([
             'message'   => 'Listado completo de sanciones con sus usuarios.',
@@ -80,8 +84,11 @@ class UserSancionController extends Controller
 
     public function listarSancionesActivas()
     {
+        // Listado de sanciones activas ordenadas por fecha inicio desc
         $sanciones = Sancion::with(['users.persona'])
-            ->where('estado', 'ACTIVA') // filtra solo las activas
+            ->where('estado', 'ACTIVA')
+            ->orderBy('fecha_inicio', 'desc')
+            ->orderBy('idSancion', 'desc')
             ->get();
 
         return response()->json([

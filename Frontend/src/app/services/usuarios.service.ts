@@ -34,6 +34,12 @@ export class UsuariosService {
     return this.http.get<UsuarioResponse>(`${this.apiUrl}/usuarios${qs}`);
   }
 
+  // Búsqueda para autocompletado: devuelve usuarios coincidentes (puede paginar)
+  buscarUsuarios(q: string, page: number = 1): Observable<UsuarioResponse> {
+    const term = encodeURIComponent(q);
+    return this.http.get<UsuarioResponse>(`${this.apiUrl}/usuarios?q=${term}&page=${page}`);
+  }
+
   // Actualizar usuario
   actualizarUsuario(id: number, data: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/usuarios/${id}`, data);
