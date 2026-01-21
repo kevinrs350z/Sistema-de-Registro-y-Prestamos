@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 import { SancionesService } from '../../../services/sanciones.service';
 import { NotificationService } from '../../../services/notification.service';
+import { UsuariosService } from '../../../services/usuarios.service';
 
 interface Sancion {
   id: number;
@@ -35,12 +36,16 @@ export class GestionarSancionesComponent implements OnInit {
   constructor(
     private router: Router,
     private sancionesService: SancionesService
+    , private usuariosService: UsuariosService
   ) {}
 
 
   sanciones: Sancion[] = [];
   sancionSeleccionada: Sancion | null = null;
   filtro = '';
+  // Autocomplete usuarios
+  usuariosSugeridos: any[] = [];
+  private buscarTimeout: any = null;
 
 
   tiposSancion: string[] = [
@@ -67,6 +72,11 @@ export class GestionarSancionesComponent implements OnInit {
 
   mostrarModalAmpliar = false;
   motivoAmpliacion = '';
+  // Editar sanción
+  editarSancionVisible = false;
+  motivoEdicion = '';
+  extender = false;
+  extenderDias = 7; // por defecto mostrar 7 días
 
   private notify = inject(NotificationService);
 
@@ -109,8 +119,13 @@ export class GestionarSancionesComponent implements OnInit {
             s.estado === 'ACTIVA' ? 'ACTIVA' : 'EXPIRADA';
 
 
-          const nombre = persona?.Nombre ?? '';
-          const apellido = persona?.Apellido1 ?? '';
+          const nombre = persona?.Nombre ?? persona?.nombre ?? '';
+          const apellido =
+            persona?.Apellido1 ??
+            persona?.apellido1 ??
+            persona?.Apellido2 ??
+            persona?.apellido2 ??
+            '';
 
           return {
             id: s.idSancion,
@@ -152,6 +167,44 @@ export class GestionarSancionesComponent implements OnInit {
     this.formularioAsignar = false;
   }
 
+  // ===== Autocomplete para asignar sanción =====
+  onAsignarUsuarioInput(term: string) {
+    this.asignarUsuario = term;
+
+    if (this.buscarTimeout) clearTimeout(this.buscarTimeout);
+
+    const q = term.trim();
+    if (!q) {
+      this.usuariosSugeridos = [];
+      return;
+    }
+
+    // debounce 300ms
+    this.buscarTimeout = setTimeout(() => {
+      this.usuariosService.buscarUsuarios(q, 1).subscribe({
+        next: (res: any) => {
+          // buscamos en res.data
+          this.usuariosSugeridos = (res.data || []).slice(0, 8).map((u: any) => ({
+            id: u.id,
+            nombre: `${u.nombre} ${u.apellido1 || ''} ${u.apellido2 || ''}`.trim(),
+            email: u.email,
+            rut: u.rut
+          }));
+        },
+        error: (err: any) => {
+          console.error('Error buscando usuarios:', err);
+          this.usuariosSugeridos = [];
+        }
+      });
+    }, 300);
+  }
+
+  seleccionarSugerido(u: any) {
+    // seleccionamos por email para que backend lo encuentre fácilmente
+    this.asignarUsuario = u.email || u.rut || u.id;
+    this.usuariosSugeridos = [];
+  }
+
 
   toggleRegistrar(): void {
     this.formularioVisible = !this.formularioVisible;
@@ -159,6 +212,11 @@ export class GestionarSancionesComponent implements OnInit {
       this.formularioAsignar = false;
       this.sancionSeleccionada = null;
     }
+  }
+
+  cancelarRegistrar(): void {
+    this.formularioVisible = false;
+    this.nuevoTipo = '';
   }
 
   toggleAsignar(): void {
@@ -202,6 +260,46 @@ confirmarAmpliacion() {
       }
     });
 }
+
+  // ====== EDITAR SANCIÓN ======
+  toggleEditarSancion() {
+    if (!this.sancionSeleccionada) return;
+    this.editarSancionVisible = !this.editarSancionVisible;
+    this.motivoEdicion = '';
+    this.extender = false;
+    this.extenderDias = 7;
+  }
+
+  guardarEdicion() {
+    if (!this.sancionSeleccionada) return;
+
+    // Si el admin eligió extender, usamos el endpoint existente 'ampliarSancion'
+    if (this.extender) {
+      if (!this.motivoEdicion.trim()) {
+        this.notify.warning('Debes ingresar un motivo para la extensión.');
+        return;
+      }
+
+      // Nota: la API actual solo recibe 'motivo' y determina la extensión.
+      this.sancionesService.ampliarSancion(this.sancionSeleccionada.id, this.motivoEdicion.trim())
+        .subscribe({
+          next: () => {
+            this.notify.success('Sanción extendida correctamente.');
+            this.editarSancionVisible = false;
+            this.motivoEdicion = '';
+            this.extender = false;
+            this.cargarDatosReales();
+          },
+          error: (err) => {
+            console.error(err);
+            this.notify.error('Ocurrió un error al extender la sanción.');
+          }
+        });
+    } else {
+      this.notify.info('No se aplicaron cambios. Marca "Extender" para ampliar la sanción.');
+      this.editarSancionVisible = false;
+    }
+  }
 
 
  

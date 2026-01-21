@@ -22,6 +22,8 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  max-height: calc(100vh - 140px);
+  overflow: auto;
 }
 
 /* Encabezado + botón Crear */
@@ -110,6 +112,36 @@
   display: flex;
   flex-direction: column;
   gap: 25px;
+  position: sticky;
+  top: 90px;
+  align-self: start;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+}
+
+/* Grid interno para mostrar los items en 2 columnas */
+.items-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* En pantallas pequeñas vuelven a una columna */
+@media (max-width: 900px) {
+  .cuentas-container {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+  }
+
+  .items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detalle {
+    position: relative;
+    top: 0;
+    max-height: none;
+  }
 }
 
 .detalle h3 {
@@ -169,4 +201,46 @@
   font-size: 0.75rem;
   margin-top: 4px;
   display: block;
+}
+
+/* ==========================
+   ACCIONES: botones alineados
+   ========================== */
+.detalle .acciones {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Evitar que todos los botones del detalle sean anchos iguales */
+.detalle .acciones button {
+  width: auto;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  min-width: 0;
+}
+
+/* Botón Desactivar: estilo más pequeño y menos "tosco" */
+.btn-eliminar {
+  background: transparent;
+  color: #b91c1c;
+  border: 1px solid rgba(185,28,28,0.12);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.btn-eliminar:hover {
+  background: #fff5f5;
+  border-color: rgba(185,28,28,0.22);
+  transform: none;
+}
+
+/* Si se necesita versión más contundente (cuando es crítico), usar esta clase adicional */
+.btn-eliminar.fuerte {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
 }

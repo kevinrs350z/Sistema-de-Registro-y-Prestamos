@@ -21,22 +21,25 @@
       />
     </div>
 
-    <div
-      class="item"
-      *ngFor="let a of alumnosFiltrados"
-      (click)="seleccionar(a)"
-      [class.activo]="a === alumnoSeleccionado"
-      [class.inactivo]="a.estado === 'INACTIVO'"
-    >
-      <h4>{{ a.nombre }} <span *ngIf="a.estado === 'INACTIVO'" style="color:#b00; font-weight:600; font-size:0.9rem">(desactivado)</span></h4>
-      <p>{{ a.email }}</p>
+    <!-- GRID DE ITEMS: ahora en 2 columnas para ocupar mejor la pantalla -->
+    <div class="items-grid">
+      <div
+        class="item"
+        *ngFor="let a of alumnosFiltrados"
+        (click)="seleccionar(a)"
+        [class.activo]="a === alumnoSeleccionado"
+        [class.inactivo]="a.estado === 'INACTIVO'"
+      >
+        <h4>{{ a.nombre }} <span *ngIf="a.estado === 'INACTIVO'" style="color:#b00; font-weight:600; font-size:0.9rem">(desactivado)</span></h4>
+        <p>{{ a.email }}</p>
+      </div>
     </div>
 
     <p *ngIf="alumnos.length === 0" class="sin-alumnos">
       No hay estudiantes registrados.
     </p>
 
-    <div class="paginacion" style="margin-top: 20px; text-align:center;">
+    <div class="paginacion" style="margin-top: 20px; text-align:center; grid-column: 1 / -1;">
       <button (click)="paginaAnterior()" [disabled]="currentPage === 1">
         ◀ Anterior
       </button>
