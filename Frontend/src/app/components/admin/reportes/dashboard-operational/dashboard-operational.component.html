@@ -1,0 +1,135 @@
+<div class="dashboard-operational">
+  <!-- HEADER -->
+  <div class="header-section">
+    <div class="header-title">
+      <h1>Dashboard</h1>
+      <p>Resumen operativo y estado del servicio</p>
+    </div>
+  </div>
+
+  <!-- KPIs PRINCIPALES -->
+  <div class="kpis-grid">
+    <div class="kpi-card kpi-activos" @slideIn>
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-content">
+        <p class="kpi-label">Préstamos Activos</p>
+        <h2 class="kpi-value">{{ kpis.prestamosActivos }}</h2>
+        <span class="kpi-desc">En curso ahora</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-vencidos" @slideIn>
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-content">
+        <p class="kpi-label">Préstamos Vencidos</p>
+        <h2 class="kpi-value">{{ kpis.prestamosVencidos }}</h2>
+        <span class="kpi-desc">Acción urgente requerida</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-proximosvencer" @slideIn>
+      <div class="kpi-icon">⏰</div>
+      <div class="kpi-content">
+        <p class="kpi-label">Próximos a Vencer</p>
+        <h2 class="kpi-value">{{ kpis.prestamosProximosAVencer }}</h2>
+        <span class="kpi-desc">Dentro de 3 días</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-disponibles" @slideIn>
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-content">
+        <p class="kpi-label">Equipos Disponibles</p>
+        <h2 class="kpi-value">{{ kpis.equiposDisponibles }}/{{ kpis.equiposTotales }}</h2>
+        <div class="kpi-progress">
+          <div class="progress-bar" [style.width.%]="kpis.porcentajeDisponibilidad"></div>
+        </div>
+        <span class="kpi-percentage">{{ kpis.porcentajeDisponibilidad }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN CENTRAL: INVENTARIO + ALERTAS -->
+  <div class="content-grid">
+    <!-- ESTADO DEL INVENTARIO -->
+    <div class="card inventario-card" @fadeIn>
+      <div class="card-header">
+        <h3>Estado del Inventario</h3>
+      </div>
+      <div class="inventario-chart">
+        <ng-container *ngIf="estadoInventario && estadoInventario.length; else sinDatosInventario">
+          <canvas #inventarioCanvas></canvas>
+        </ng-container>
+        <ng-template #sinDatosInventario>
+          <div class="sin-datos" style="height:250px;display:flex;align-items:center;justify-content:center;color:#64748b;">
+            No hay datos de inventario disponibles
+          </div>
+        </ng-template>
+      </div>
+      <div class="inventario-legend">
+        <div class="legend-item" *ngFor="let item of estadoInventario">
+          <span class="legend-color" [ngClass]="'color-' + item.estado.toLowerCase()"></span>
+          <span class="legend-text">{{ item.estado }}: {{ item.total }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTAS CRÍTICAS -->
+    <div class="card alertas-card" @fadeIn>
+      <div class="card-header">
+        <h3>🚨 Alertas Críticas</h3>
+      </div>
+
+      <!-- Sanciones Activas -->
+      <div class="alertas-section" *ngIf="alertas.sanciones.length > 0">
+        <h4 class="alertas-subtitle">Sanciones Activas ({{ alertas.totalSanciones }})</h4>
+        <div class="alerta-item" *ngFor="let sancion of alertas.sanciones">
+          <div class="alerta-icon sancion">🔴</div>
+          <div class="alerta-content">
+            <p class="alerta-titulo">{{ sancion.nombre }}</p>
+            <p class="alerta-desc">{{ sancion.nivel_sancion }} - Vence: {{ sancion.fecha_vencimiento | date: 'dd/MM' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Retrasos/Préstamos Vencidos -->
+      <div class="alertas-section" *ngIf="alertas.retrasos.length > 0">
+        <h4 class="alertas-subtitle">Retrasos ({{ alertas.totalRetrasos }})</h4>
+        <div class="alerta-item" *ngFor="let retraso of alertas.retrasos">
+          <div class="alerta-icon retraso">🟡</div>
+          <div class="alerta-content">
+            <p class="alerta-titulo">{{ retraso.nombre }}</p>
+            <p class="alerta-desc">{{ retraso.retrasos }} préstamo(s) vencido(s)</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="alertas.retrasos.length === 0 && alertas.sanciones.length === 0" class="no-alertas">
+        <p>✓ Sin alertas críticas</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVIDAD RECIENTE -->
+  <div class="card actividad-card" @fadeIn>
+    <div class="card-header">
+      <h3>Actividad Reciente</h3>
+    </div>
+    <div class="actividad-timeline">
+      <div class="timeline-item" *ngFor="let evento of actividadReciente">
+        <div class="timeline-marker" [ngClass]="'estado-' + evento.estado_actual.toLowerCase()"></div>
+        <div class="timeline-content">
+          <p class="timeline-usuario">{{ evento.usuario }}</p>
+          <p class="timeline-accion">
+            {{ getTipoActividad(evento.estado_actual) }}
+            <span class="timeline-tipo">{{ evento.tipo_prestamo }}</span>
+          </p>
+          <p class="timeline-fecha">{{ evento.fecha_solicitud | date: 'dd/MM HH:mm' }}</p>
+        </div>
+        <div class="timeline-estado" [ngClass]="'badge-' + evento.estado_actual.toLowerCase()">
+          {{ evento.estado_actual }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

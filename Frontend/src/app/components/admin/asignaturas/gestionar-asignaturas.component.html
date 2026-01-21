@@ -23,7 +23,7 @@
     >
       <!-- TÍTULO -->
       <h4>
-        {{ r.tipo?.toLowerCase() === 'EVENTO' ? 'Evento' : 'Asignatura' }}
+        {{ (r.tipo || '').toLowerCase() === 'evento' ? 'Evento' : 'Asignatura' }}
 
         <small style="color:red">{{ r.tipo }}</small>
 

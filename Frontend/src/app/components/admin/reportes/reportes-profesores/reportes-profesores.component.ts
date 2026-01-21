@@ -23,11 +23,20 @@ export class ReportesProfesoresComponent
   totalPages = 1;
   pages: number[] = [];
 
+  // Loading flags
+  loadingPrestamos = true;
+  loadingTendencia = true;
+  loadingEquipos = true;
+
   // =========================
   // CHARTS
   // =========================
   chartPrestamos!: echarts.ECharts;
   chartTendencia!: echarts.ECharts;
+
+  // Resize handlers so we can remove listeners later
+  private onResizePrestamos = () => { if (this.chartPrestamos) this.chartPrestamos.resize(); };
+  private onResizeTendencia = () => { if (this.chartTendencia) this.chartTendencia.resize(); };
 
   constructor(private reportesService: ReportesProfesoresService) {}
 
@@ -40,18 +49,20 @@ export class ReportesProfesoresComponent
   }
 
   ngAfterViewInit(): void {
-    // 1️⃣ Inicializar gráficos (DOM ya existe)
-    this.initPrestamoChart();
-    this.initTendenciaChart();
-
-    // 2️⃣ Cargar datos
+    // Cargar datos; inicializaremos cada gráfico después de que su DOM se renderice
     this.loadGraficoPrestamos();
     this.loadGraficoTendencia();
   }
 
   ngOnDestroy(): void {
-    if (this.chartPrestamos) this.chartPrestamos.dispose();
-    if (this.chartTendencia) this.chartTendencia.dispose();
+    if (this.chartPrestamos) {
+      this.chartPrestamos.dispose();
+      window.removeEventListener('resize', this.onResizePrestamos);
+    }
+    if (this.chartTendencia) {
+      this.chartTendencia.dispose();
+      window.removeEventListener('resize', this.onResizeTendencia);
+    }
   }
 
   // =============================================================
@@ -60,10 +71,17 @@ export class ReportesProfesoresComponent
   loadEquiposProfesor(): void {
     this.reportesService
       .getEquiposPorProfesor(this.currentPage, this.pageSize)
-      .subscribe((res) => {
-        this.equiposProfesor = res.data ?? [];
-        this.totalPages = res.totalPages ?? 1;
-        this.updatePagination();
+      .subscribe({
+        next: (res) => {
+          this.equiposProfesor = res.data ?? [];
+          this.totalPages = res.totalPages ?? 1;
+          this.updatePagination();
+          this.loadingEquipos = false;
+        },
+        error: () => {
+          this.equiposProfesor = [];
+          this.loadingEquipos = false;
+        }
       });
   }
 
@@ -125,9 +143,7 @@ export class ReportesProfesoresComponent
       ],
     });
 
-    window.addEventListener("resize", () =>
-      this.chartPrestamos.resize()
-    );
+    window.addEventListener('resize', this.onResizePrestamos);
   }
 
   loadGraficoPrestamos(): void {
@@ -135,7 +151,14 @@ export class ReportesProfesoresComponent
       const profesores = data.map((x: any) => x.profesor);
       const totales = data.map((x: any) => x.total);
 
-      this.setPrestamoChartOptions(profesores, totales);
+      // marcar como cargado para que el DOM del chart se muestre
+      this.loadingPrestamos = false;
+
+      // inicializar el chart cuando el DOM ya esté en el documento
+      requestAnimationFrame(() => {
+        this.initPrestamoChart();
+        this.setPrestamoChartOptions(profesores, totales);
+      });
     });
   }
 
@@ -145,10 +168,15 @@ export class ReportesProfesoresComponent
   ): void {
     if (!this.chartPrestamos) return;
 
+    // Limitar a los top 12 para evitar overplotting
+    const limit = 12;
+    const slicedProfesores = profesores.slice(0, limit);
+    const slicedTotales = totales.slice(0, limit);
+
     this.chartPrestamos.setOption(
       {
-        yAxis: { data: profesores },
-        series: [{ data: totales }],
+        yAxis: { data: slicedProfesores },
+        series: [{ data: slicedTotales }],
       },
       { notMerge: true }
     );
@@ -183,25 +211,41 @@ export class ReportesProfesoresComponent
       series: [],
     });
 
-    window.addEventListener("resize", () =>
-      this.chartTendencia.resize()
-    );
+    window.addEventListener('resize', this.onResizeTendencia);
   }
 
   loadGraficoTendencia(): void {
     this.reportesService.getTendenciaPrestamos().subscribe((res) => {
-      this.setTendenciaChartOptions(res.meses, res.series);
+      this.loadingTendencia = false;
+      requestAnimationFrame(() => {
+        this.initTendenciaChart();
+        this.setTendenciaChartOptions(res.meses, res.series);
+      });
     });
   }
 
   setTendenciaChartOptions(meses: string[], series: any[]): void {
     if (!this.chartTendencia) return;
 
+    // Mostrar sólo las series top (por suma total) para mejorar legibilidad
+    const maxSeries = 6;
+    const seriesWithTotal = series.map((s: any) => ({
+      ...s,
+      _total: (s.data || []).reduce((a: number, b: number) => a + b, 0),
+    }));
+
+    seriesWithTotal.sort((a: any, b: any) => b._total - a._total);
+    const topSeries = seriesWithTotal.slice(0, maxSeries).map((s: any) => {
+      const copy = { ...s };
+      delete copy._total;
+      return copy;
+    });
+
     this.chartTendencia.setOption(
       {
         xAxis: { data: meses },
-        series,
-        legend: { data: series.map((s) => s.name) },
+        series: topSeries,
+        legend: { data: topSeries.map((s: any) => s.name) },
       },
       { notMerge: true }
     );

@@ -27,3 +27,18 @@
 .styled-table {
   margin-bottom: 0;
 }
+
+.chart-area {
+  height: 320px;
+  position: relative;
+}
+
+.chart-area-sm {
+  height: 260px;
+  position: relative;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}

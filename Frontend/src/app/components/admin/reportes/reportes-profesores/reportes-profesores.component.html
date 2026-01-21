@@ -31,7 +31,8 @@
         </div>
       </div>
       <div class="chart-body">
-        <div id="profesorPrestamoChart" class="echart"></div>
+        <div *ngIf="loadingPrestamos" class="chart-loading">Cargando gráfico…</div>
+        <div *ngIf="!loadingPrestamos" id="profesorPrestamoChart" class="echart"></div>
       </div>
     </div>
 
@@ -44,7 +45,8 @@
         </div>
       </div>
       <div class="chart-body">
-        <div id="profesorTendenciaChart" class="echart"></div>
+        <div *ngIf="loadingTendencia" class="chart-loading">Cargando gráfico…</div>
+        <div *ngIf="!loadingTendencia" id="profesorTendenciaChart" class="echart"></div>
       </div>
     </div>
 
@@ -108,7 +110,11 @@
         </div>
       </div>
 
-      <div *ngIf="!equiposProfesor.length" class="empty-state">
+      <div *ngIf="loadingEquipos" class="empty-state">
+        <p>Cargando datos…</p>
+      </div>
+
+      <div *ngIf="!loadingEquipos && !equiposProfesor.length" class="empty-state">
         <p>Sin datos disponibles</p>
       </div>
 

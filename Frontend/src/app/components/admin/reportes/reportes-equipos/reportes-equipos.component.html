@@ -78,6 +78,48 @@
 
     </div>
 
+    <!-- SECCIÓN OPERATIVA: Disponibilidad y equipos críticos -->
+    <div class="two-cols" style="margin-top:20px">
+
+      <div class="card fade-in">
+        <h2 class="card-title">Disponibilidad inmediata</h2>
+        <p class="card-subtitle">Estado actual por equipo</p>
+        <div class="table-wrapper">
+          <table class="styled-table">
+            <thead>
+              <tr><th>Código</th><th>Tipo</th><th>Estado</th><th>Ubicación</th><th>Último evento</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of disponibilidadEquipos">
+                <td>{{ d.codigo }}</td>
+                <td>{{ d.tipo }}</td>
+                <td>{{ d.estado }}</td>
+                <td>{{ d.ubicacion }}</td>
+                <td>{{ d.ultimo_evento | date:'dd/MM HH:mm' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card fade-in">
+        <h2 class="card-title">Equipos críticos / bloqueados</h2>
+        <p class="card-subtitle">Equipos que requieren atención operativa</p>
+        <div *ngIf="equiposCriticos.length; else noCriticos">
+          <div class="alerta-item" *ngFor="let c of equiposCriticos">
+            <div class="alerta-content">
+              <p class="alerta-titulo">{{ c.codigo }} — {{ c.tipo }}</p>
+              <p class="alerta-desc">{{ c.estado }} • {{ c.observacion || 'Sin detalle' }}</p>
+            </div>
+          </div>
+        </div>
+        <ng-template #noCriticos>
+          <p class="text-muted">No hay equipos críticos en este momento.</p>
+        </ng-template>
+      </div>
+
+    </div>
+
     <!-- TABLA: Equipos dados de baja 
     <div class="card fade-in">
       <h2 class="card-title">Equipos dados de baja</h2>

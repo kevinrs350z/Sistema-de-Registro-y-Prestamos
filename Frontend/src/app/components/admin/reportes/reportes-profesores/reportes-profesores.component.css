@@ -30,6 +30,21 @@
   height: 100%;
 }
 
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.empty-state {
+  padding: 1.2rem 1.5rem;
+  color: #6b7280;
+  text-align: center;
+}
+
 /* TABLA */
 .custom-table-header,
 .row-card {

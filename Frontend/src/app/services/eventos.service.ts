@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +9,7 @@ import { Observable } from 'rxjs';
 export class EventosService {
 
 
-  private api = 'http://localhost:8000/api';
+  private readonly api = `${environment.apiBaseUrl}/api`;
 
   constructor(private http: HttpClient) {}
 

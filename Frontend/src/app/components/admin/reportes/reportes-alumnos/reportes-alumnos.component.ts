@@ -1,4 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ElementRef
+} from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Chart } from 'chart.js/auto';
 import { ExportButtonsComponent } from '../export-buttons/export-buttons.component';
@@ -32,6 +38,12 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   today = new Date();
   mensaje: string | null = null;
 
+  // Canvas refs
+  @ViewChild('prestamosCarreraCanvas') prestamosCarreraCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('evolucionPrestamosCanvas') evolucionPrestamosCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('sancionesNivelCanvas') sancionesNivelCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('topAlumnosCanvas') topAlumnosCanvas?: ElementRef<HTMLCanvasElement>;
+
   // KPIs
   kpis: KpiAlumno[] = [
     { label: 'Alumnos con préstamos', value: 0 },
@@ -40,21 +52,16 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
     { label: 'Nuevos alumnos este semestre', value: 0 }
   ];
 
-  // Gráficos (instancias)
+  // Charts
   private chartPrestamosCarrera?: Chart;
   private chartSancionesNivel?: Chart;
   private chartEvolucionPrestamos?: Chart;
   private chartTopAlumnos?: Chart;
 
-  // Datos de resumen
-  resumenSanciones = {
-    total: 0,
-    leves: 0,
-    medias: 0,
-    graves: 0
-  };
+  // Resumen sanciones
+  resumenSanciones = { total: 0, leves: 0, medias: 0, graves: 0 };
 
-  // Ranking de alumnos
+  // Ranking alumnos
   topAlumnos: AlumnoRanking[] = [];
 
   constructor(
@@ -71,32 +78,41 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyCharts();
+  }
+
+  private destroyCharts() {
     this.chartPrestamosCarrera?.destroy();
     this.chartSancionesNivel?.destroy();
     this.chartEvolucionPrestamos?.destroy();
     this.chartTopAlumnos?.destroy();
+
+    this.chartPrestamosCarrera = undefined;
+    this.chartSancionesNivel = undefined;
+    this.chartEvolucionPrestamos = undefined;
+    this.chartTopAlumnos = undefined;
   }
 
-  /* ===================== UTILIDAD MENSAJE ===================== */
   private mostrarMensaje(texto: string) {
     this.mensaje = texto;
     setTimeout(() => (this.mensaje = null), 3000);
   }
 
-  /* ===================== 1) KPIs ALUMNOS ===================== */
+  /* ===================== 1) KPIs ===================== */
   private cargarKPIs() {
     this.alumnosService.getKPIsAlumnos().subscribe({
       next: (data) => {
-        // ajusta los nombres a lo que devuelva tu backend
-        this.kpis[0].value = data.alumnosConPrestamos ?? 0;
-        this.kpis[1].value = data.prestamosPromedio ?? 0;
-        this.kpis[2].value = data.alumnosConSanciones ?? 0;
-        this.kpis[3].value = data.nuevosSemestre ?? 0;
+        this.kpis[0].value = data?.alumnosConPrestamos ?? 0;
+        this.kpis[1].value = data?.prestamosPromedio ?? 0;
+        this.kpis[2].value = data?.alumnosConSanciones ?? 0;
+        this.kpis[3].value = data?.nuevosSemestre ?? 0;
 
-        if (data.variacionPrestamos != null) {
-          const dif = data.variacionPrestamos;
+        if (data?.variacionPrestamos != null) {
+          const dif = Number(data.variacionPrestamos);
           const signo = dif > 0 ? '+' : '';
           this.kpis[1].detail = `${signo}${dif} vs período anterior`;
+        } else {
+          this.kpis[1].detail = '';
         }
       },
       error: () => this.mostrarMensaje('No se pudieron cargar los KPIs de alumnos.')
@@ -107,33 +123,35 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   private cargarPrestamosPorCarrera() {
     this.alumnosService.getPrestamosPorCarrera().subscribe({
       next: (data) => {
-        const labels = data.map((x: any) => x.carrera || 'Sin carrera');
-        const valores = data.map((x: any) => x.total_prestamos || x.total || 0);
+        const safe = Array.isArray(data) ? data : [];
+
+        const labels = safe.map((x: any) => x.carrera || 'Sin carrera');
+        const valores = safe.map((x: any) => Number(x.total_prestamos ?? x.total ?? 0));
 
         this.chartPrestamosCarrera?.destroy();
 
-        this.chartPrestamosCarrera = new Chart('chartPrestamosCarrera', {
+        const canvas = this.prestamosCarreraCanvas?.nativeElement;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        this.chartPrestamosCarrera = new Chart(ctx, {
           type: 'bar',
           data: {
             labels,
-            datasets: [
-              {
-                label: 'Préstamos',
-                data: valores,
-                backgroundColor: '#1f78ff'
-              }
-            ]
+            datasets: [{
+              label: 'Préstamos',
+              data: valores,
+              backgroundColor: '#1f78ff'
+            }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              x: {
-                ticks: { maxRotation: 40, minRotation: 0 }
-              },
-              y: {
-                beginAtZero: true
-              }
+              x: { ticks: { maxRotation: 40, minRotation: 0 } },
+              y: { beginAtZero: true }
             }
           }
         });
@@ -146,38 +164,44 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   private cargarSancionesPorNivel() {
     this.alumnosService.getSancionesPorNivel().subscribe({
       next: (data) => {
-        const labels = data.map((x: any) => x.nivel);
-        const valores = data.map((x: any) => x.total);
+        const safe = Array.isArray(data) ? data : [];
 
-        // Resumen rápido
-        this.resumenSanciones.total = valores.reduce((a: number, b: number) => a + b, 0);
-        this.resumenSanciones.leves =
-          (data.find((d: any) => (d.nivel || '').toUpperCase() === 'LEVE')?.total) || 0;
-        this.resumenSanciones.medias =
-          (data.find((d: any) => (d.nivel || '').toUpperCase() === 'MEDIA')?.total) || 0;
-        this.resumenSanciones.graves =
-          (data.find((d: any) => (d.nivel || '').toUpperCase() === 'GRAVE')?.total) || 0;
+        const labels = safe.map((x: any) => x.nivel ?? 'DESCONOCIDO');
+        const valores = safe.map((x: any) => Number(x.total ?? 0));
+
+        // Resumen
+        const total = valores.reduce((a: number, b: number) => a + b, 0);
+        this.resumenSanciones.total = total;
+
+        const get = (nivel: string) =>
+          (safe.find((d: any) => String(d.nivel || '').toUpperCase() === nivel)?.total) ?? 0;
+
+        this.resumenSanciones.leves = Number(get('LEVE'));
+        this.resumenSanciones.medias = Number(get('MEDIA'));
+        this.resumenSanciones.graves = Number(get('GRAVE'));
 
         this.chartSancionesNivel?.destroy();
 
-        this.chartSancionesNivel = new Chart('chartSancionesNivel', {
+        const canvas = this.sancionesNivelCanvas?.nativeElement;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        this.chartSancionesNivel = new Chart(ctx, {
           type: 'doughnut',
           data: {
             labels,
-            datasets: [
-              {
-                data: valores,
-                backgroundColor: ['#f1c40f', '#e67e22', '#e74c3c']
-              }
-            ]
+            datasets: [{
+              data: valores,
+              backgroundColor: ['#f1c40f', '#e67e22', '#e74c3c']
+            }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: {
-                position: 'bottom'
-              }
+              legend: { position: 'bottom' }
             }
           }
         });
@@ -186,30 +210,36 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* ===================== 4) EVOLUCIÓN PRÉSTAMOS ALUMNOS ===================== */
+  /* ===================== 4) EVOLUCIÓN PRÉSTAMOS ===================== */
   private cargarEvolucionPrestamos() {
     this.alumnosService.getEvolucionPrestamosAlumnos().subscribe({
       next: (data) => {
-        const labels = data.map((x: any) => x.periodo); // ej: '2025-01', '2025-02'
-        const valores = data.map((x: any) => x.total_prestamos || x.total || 0);
+        const safe = Array.isArray(data) ? data : [];
+
+        const labels = safe.map((x: any) => x.periodo);
+        const valores = safe.map((x: any) => Number(x.total_prestamos ?? x.total ?? 0));
 
         this.chartEvolucionPrestamos?.destroy();
 
-        this.chartEvolucionPrestamos = new Chart('chartEvolucionPrestamos', {
+        const canvas = this.evolucionPrestamosCanvas?.nativeElement;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        this.chartEvolucionPrestamos = new Chart(ctx, {
           type: 'line',
           data: {
             labels,
-            datasets: [
-              {
-                label: 'Préstamos',
-                data: valores,
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.15)',
-                tension: 0.3,
-                fill: true,
-                pointRadius: 3
-              }
-            ]
+            datasets: [{
+              label: 'Préstamos',
+              data: valores,
+              borderColor: '#0d6efd',
+              backgroundColor: 'rgba(13, 110, 253, 0.15)',
+              tension: 0.3,
+              fill: true,
+              pointRadius: 3
+            }]
           },
           options: {
             responsive: true,
@@ -228,12 +258,14 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   private cargarTopAlumnos() {
     this.alumnosService.getRankingAlumnos().subscribe({
       next: (data) => {
-        this.topAlumnos = (data || []).map((a: any) => ({
+        const safe = Array.isArray(data) ? data : [];
+
+        this.topAlumnos = safe.map((a: any) => ({
           nombre: a.nombre,
           email: a.email,
           carrera: a.carrera,
-          total_prestamos: a.total_prestamos ?? a.total_solicitudes ?? 0,
-          sanciones: a.sanciones ?? 0
+          total_prestamos: Number(a.total_prestamos ?? a.total_solicitudes ?? 0),
+          sanciones: Number(a.sanciones ?? 0)
         }));
 
         const labels = this.topAlumnos.map(a => a.nombre);
@@ -241,16 +273,21 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
 
         this.chartTopAlumnos?.destroy();
 
-        this.chartTopAlumnos = new Chart('chartTopAlumnosAl', {
+        const canvas = this.topAlumnosCanvas?.nativeElement;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        this.chartTopAlumnos = new Chart(ctx, {
           type: 'bar',
           data: {
             labels,
-            datasets: [
-              {
-                data: valores,
-                backgroundColor: '#6c5ce7'
-              }
-            ]
+            datasets: [{
+              label: 'Préstamos',
+              data: valores,
+              backgroundColor: '#6c5ce7'
+            }]
           },
           options: {
             responsive: true,
@@ -306,7 +343,7 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
     try {
       this.exportService.exportarExcel(sheets, `Reporte_Alumnos_UTA_${Date.now()}.xlsx`);
       this.mostrarMensaje('Excel exportado correctamente.');
-    } catch (error) {
+    } catch {
       this.mostrarMensaje('Ocurrió un error al exportar el Excel.');
     }
   }

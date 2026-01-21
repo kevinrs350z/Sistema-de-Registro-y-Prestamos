@@ -1,6 +1,6 @@
 <div class="inventario-container fade-in">
 
-  <!-- 🔹 FILTROS -->
+  <!--  FILTROS -->
   <div class="filtros d-flex gap-2 mb-3">
     <input
       type="text"
@@ -151,9 +151,7 @@
           <select class="form-select-custom"
                   [(ngModel)]="nuevoEquipo.estado">
             <option value="DISPONIBLE">✓ Disponible</option>
-            <option value="OCUPADO">⟳ Ocupado</option>
             <option value="MANTENIMIENTO">🔧 Mantenimiento</option>
-            <option value="FUERA_SERVICIO">✕ Fuera de servicio</option>
           </select>
         </div>
 
@@ -221,7 +219,8 @@
     ======================================================== -->
     <div class="columna-derecha" *ngIf="modeloSeleccionado && !panelCrear">
 
-      <img class="foto-equipo" [src]="getImagenEquipo(modeloSeleccionado)" alt="Foto modelo">
+      <img class="foto-equipo" [src]="getImagenModelo(modeloSeleccionado)" alt="Foto modelo">
+
 
       <h2>{{ modeloSeleccionado.nombre }}</h2>
 
@@ -255,7 +254,7 @@
 
       <h2>{{ equipoSeleccionado.nombre }}</h2>
 
-      <p><strong>ID:</strong> {{ equipoSeleccionado.idEquipo }}</p>
+      
       <p><strong>Categoría:</strong> {{ equipoSeleccionado.categoria }}</p>
 
       <img class="foto-equipo" [src]="getImagenEquipo(equipoSeleccionado)" alt="Foto equipo">
