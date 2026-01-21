@@ -29,9 +29,25 @@ export class UsuariosService {
     return this.http.get<UsuarioResponse>(`${this.apiUrl}/usuarios?page=${page}`);
   }
 
+  // Obtener usuarios con filtro por estado (ACTIVO | INACTIVO | todos omitir)
+  obtenerUsuariosPorEstado(page: number = 1, estado?: string): Observable<UsuarioResponse> {
+    const qs = `?page=${page}` + (estado ? `&estado=${estado}` : '');
+    return this.http.get<UsuarioResponse>(`${this.apiUrl}/usuarios${qs}`);
+  }
+
   // Actualizar usuario
   actualizarUsuario(id: number, data: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/usuarios/${id}`, data);
 
+  }
+
+  // Eliminar usuario
+  eliminarUsuario(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/usuarios/${id}`);
+  }
+
+  // Reactivar usuario
+  reactivarUsuario(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/usuarios/${id}/reactivar`, {});
   }
 }

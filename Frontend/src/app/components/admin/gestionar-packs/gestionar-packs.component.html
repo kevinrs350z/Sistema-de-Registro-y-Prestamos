@@ -262,6 +262,16 @@
             {{ eliminando ? 'Eliminando...' : '🗑 Eliminar Pack' }}
           </button>
 
+          <button
+            *ngIf="packSeleccionado.agotado"
+            class="btn-reactivar"
+            type="button"
+            (click)="reactivarPack(packSeleccionado.id)"
+            [disabled]="guardando"
+          >
+            {{ guardando ? 'Procesando...' : '♻️ Reactivar Pack' }}
+          </button>
+
         </div>
 
       </div>

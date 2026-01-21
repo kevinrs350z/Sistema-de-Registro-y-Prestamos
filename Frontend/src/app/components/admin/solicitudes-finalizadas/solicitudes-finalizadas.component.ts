@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
 import { NavbarAdminComponent } from "../navbar-admin/navbar-admin.component";
+import { NotificationService } from '../../../services/notification.service';
 
 type AdminSolicitud = {
   id: number;
@@ -32,6 +33,8 @@ type AdminSolicitud = {
   styleUrls: ['./solicitudes-finalizadas.component.css']
 })
 export class SolicitudesFinalizadasComponent implements OnInit {
+
+  private notify = inject(NotificationService);
 
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
@@ -121,7 +124,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     if (!this.solicitudSeleccionada) return;
 
     if (this.motivoFinalizar.trim() === '') {
-      alert('Debes ingresar un motivo.');
+      this.notify.warning('Debes ingresar un motivo para finalizar el préstamo.');
       return;
     }
 
@@ -130,7 +133,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
       this.motivoFinalizar
     ).subscribe({
       next: () => {
-        alert('Préstamo marcado como devuelto correctamente.');
+        this.notify.success('Préstamo marcado como devuelto correctamente.');
         this.cargarSolicitudes();
         this.cerrarModal();
       },
@@ -148,7 +151,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     const motivo = prompt('Motivo de devolución del equipo:');
 
     if (!motivo || motivo.trim() === '') {
-      alert('Debes ingresar un motivo.');
+      this.notify.warning('Debes ingresar un motivo para la devolución.');
       return;
     }
 
@@ -173,11 +176,11 @@ export class SolicitudesFinalizadasComponent implements OnInit {
           }
         }
 
-        alert('Equipo devuelto correctamente.');
+        this.notify.success('Equipo devuelto correctamente.');
       },
       error: (err) => {
         console.error('Error al devolver equipo:', err);
-        alert('Error al devolver equipo.');
+        this.notify.error('Ocurrió un error al devolver el equipo.');
       } 
     });
   }

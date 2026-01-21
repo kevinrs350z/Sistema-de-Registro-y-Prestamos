@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Prestamo;
 use App\Models\BloquePrestamo;
+use App\Models\Pack;
 use Illuminate\Support\Facades\DB;
 
 class PrestamoService
@@ -37,6 +38,12 @@ class PrestamoService
     {
         foreach ($equipos as $item) {
 
+            // ✅ LÓGICA DE PACKS
+            if (isset($item['idPack'])) {
+                $this->asignarPack($idPrestamo, $item['idPack']);
+                continue;
+            }
+
             $idTipo   = $item['idTipoEquipo'];
             $cantidad = $item['cantidad'];
             $modo     = $item['modo'];
@@ -47,6 +54,25 @@ class PrestamoService
             }
 
             $this->asignarEquiposCualquiera($idPrestamo, $idTipo, $cantidad);
+        }
+    }
+
+    private function asignarPack(int $idPrestamo, int $idPack): void
+    {
+        $pack = Pack::with('equipos')->find($idPack);
+
+        if (!$pack) {
+            throw new \Exception("El pack seleccionado no existe.");
+        }
+
+        foreach ($pack->equipos as $equipo) {
+            // Verificar disponibilidad del equipo específico del pack
+            // Como es un pack físico pre-definido, validamos ESE equipo exacto
+            if ($equipo->estado !== 'DISPONIBLE') {
+                throw new \Exception("El equipo '{$equipo->codigo}' del pack no está disponible.");
+            }
+
+            $this->asignarEquipo($idPrestamo, $equipo->id);
         }
     }
 

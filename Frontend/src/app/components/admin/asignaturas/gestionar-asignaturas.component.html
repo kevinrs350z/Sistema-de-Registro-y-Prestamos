@@ -1,275 +1,35 @@
-<div class="admin-container">
+<p *ngIf="reservas.length === 0" class="sin-reservas">
+  No hay reservas creadas.
+</p>
 
-  <h2 class="titulo-pagina">Reservas de Asignaturas y Eventos</h2>
+<div
+  class="reserva-card"
+  *ngFor="let r of reservas"
+  (click)="seleccionar(r)"
+  [class.activa]="r === reservaSeleccionada"
+>
+  <!-- TÍTULO -->
+  <h4>
+    {{ (r.tipo || '').toLowerCase() === 'evento' ? 'Evento' : 'Asignatura' }}
+    <small style="color:red">{{ r.tipo }}</small>
+  </h4>
 
-  <div class="reservas-layout">
+  <!-- NOMBRE SEGÚN TIPO -->
+  <p class="sub-info">
+    <ng-container *ngIf="(r.tipo || '').toLowerCase() === 'evento'; else asignaturaTpl">
+      <strong>Evento:</strong>
+      {{ r.eventoNombre || '—' }}
+    </ng-container>
 
-    <!-- ================= LISTA DE RESERVAS ================= -->
-    <div class="columna-lista scroll-columna">
+    <ng-template #asignaturaTpl>
+      <strong>Asignatura:</strong>
+      {{ r.asignaturaNombre || '—' }}
+    </ng-template>
+  </p>
 
-      <div class="header-lista">
-        <h3>Reservas</h3>
-        <button class="btn-crear" (click)="nuevaReserva()">+ Crear nueva reserva</button>
-      </div>
-
-      <p *ngIf="reservas.length === 0" class="sin-reservas">
-        No hay reservas creadas.
-      </p>
-    <div
-      class="reserva-card"
-      *ngFor="let r of reservas"
-      (click)="seleccionar(r)"
-      [class.activa]="r === reservaSeleccionada"
-    >
-      <!-- TÍTULO -->
-      <h4>
-        {{ (r.tipo || '').toLowerCase() === 'evento' ? 'Evento' : 'Asignatura' }}
-
-        <small style="color:red">{{ r.tipo }}</small>
-
-      </h4>
-
-      <!-- NOMBRE SEGÚN TIPO -->
-      <p class="sub-info">
-        <ng-container *ngIf="r.tipo === 'EVENTO'; else asignaturaTpl">
-          <strong>Evento:</strong>
-          {{ r.eventoNombre || '—' }}
-        </ng-container>
-
-        <ng-template #asignaturaTpl>
-          <strong>Asignatura:</strong>
-          {{ r.asignaturaNombre || '—' }}
-        </ng-template>
-      </p>
-
-      <!-- BLOQUES SOLO PARA ASIGNATURA -->
-      <p
-        class="fecha"
-        *ngIf="r.tipo === 'ASIGNATURA' && r.bloques?.length"
-      >
-        🕒
-        <span *ngFor="let bl of r.bloques"> • {{ bl }} </span>
-      </p>
-    </div>
-
-
-    </div>
-
-    <!-- ================= FORMULARIO ================= -->
-    <div class="columna-form" *ngIf="mostrarFormulario">
-
-      <div class="formulario-reserva">
-        <h3 class="titulo-form">Crear Nueva Reserva</h3>
-
-        <!-- Tipo -->
-        <div class="form-grupo">
-          <label>Tipo</label>
-          <select [(ngModel)]="form.tipo">
-            <option value="asignatura">Asignatura</option>
-            <option value="evento">Evento</option>
-          </select>
-        </div>
-
-        <!-- Asignatura -->
-        <div class="form-grupo" *ngIf="form.tipo === 'ASIGNATURA'">
-          <label>Asignatura</label>
-          <select [(ngModel)]="form.asignatura_id">
-            <option value="">Seleccionar...</option>
-            <option *ngFor="let a of asignaturas" [value]="a.id">
-              {{ a.nombre }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Evento -->
-        <div *ngIf="form.tipo === 'EVENTO'">
-
-          <div class="form-grupo">
-            <label>Nombre del evento</label>
-            <input
-              type="text"
-              [(ngModel)]="form.evento_nombre"
-              placeholder="Ej: Seminario, Taller, Charla..."
-            >
-          </div>
-
-          <div class="form-grupo">
-            <label>Fecha inicio</label>
-            <input type="date" [(ngModel)]="form.fecha_inicio">
-          </div>
-
-          <div class="form-grupo">
-            <label>Fecha fin</label>
-            <input type="date" [(ngModel)]="form.fecha_fin">
-          </div>
-
-        </div>
-
-
-        <!-- Profesor -->
-        <div class="form-grupo">
-          <label>Profesor a cargo</label>
-          <input
-            type="text"
-            [(ngModel)]="form.profesor"
-            placeholder="Nombre del profesor"
-          >
-          <small class="error"
-            *ngIf="form.profesor && !soloLetras(form.profesor)">
-            Solo letras
-          </small>
-        </div>
-
-        <!-- Ubicación -->
-        <div class="form-grupo">
-          <label>Ubicación</label>
-          <input
-            type="text"
-            [(ngModel)]="form.ubicacion"
-            placeholder="Ej: Sala A-203, Laboratorio Multimedia"
-          >
-        </div>
-
-        <!-- Bloques -->
-        <div class="form-grupo" *ngIf="form.tipo === 'ASIGNATURA'">
-          <label>Bloques</label>
-
-          <div class="bloques-container">
-            <div
-              class="bloque-item"
-              *ngFor="let b of bloques"
-              (click)="toggleBloque(b)"
-              [class.activo]="form.bloques.includes(b.texto)"
-            >
-              <strong>{{ b.nombre }}</strong>
-              <span>{{ b.texto }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Equipos -->
-      <div class="form-grupo">
-        <label>Agregar equipo</label>
-
-
-
-        <div class="equipo-flex">
-          <select [(ngModel)]="equipoSeleccionado">
-            <option [ngValue]="null">Seleccionar equipo...</option>
-
-          <option
-            *ngFor="let eq of equipos"
-            [ngValue]="eq"
-            [disabled]="getStockDisponible(eq) === 0"
-          >
-            {{ eq.nombre }} —
-            {{
-              getStockDisponible(eq) > 0
-                ? 'Stock: ' + getStockDisponible(eq)
-                : 'Sin stock'
-            }}
-          </option>
-
-          </select>
-
-          <input
-            type="number"
-            min="1"
-            [max]="equipoSeleccionado ? getStockDisponible(equipoSeleccionado) : 1"
-            [(ngModel)]="cantidadSeleccionada"
-            class="input-cantidad"
-          >
-
-
-
-          <button
-            class="btn-agregar"
-            (click)="agregarEquipo()"
-            [disabled]="!equipoSeleccionado"
-          >
-            Agregar
-          </button>
-        </div>
-
-        <!-- Lista seleccionados -->
-        <div class="lista-equipos" *ngIf="form.equipos.length > 0">
-          <div class="item-equipo" *ngFor="let e of form.equipos; let i = index">
-            <span>
-              {{ e.nombre }}
-              — <strong>Cant:</strong> {{ e.cantidad }}
-            </span>
-            <button class="btn-eliminar" (click)="eliminarEquipo(i)">✕</button>
-          </div>
-        </div>
-      </div>
-
-
-
-        <!-- Observación -->
-        <div class="form-grupo">
-          <label>Observación (opcional)</label>
-          <textarea rows="3" [(ngModel)]="form.observacion"></textarea>
-        </div>
-
-        <button class="btn-guardar" (click)="guardar()">Crear Reserva</button>
-      </div>
-    </div>
-
-    <!-- ================= DETALLE ================= -->
-    <div class="columna-form" *ngIf="reservaSeleccionada && !mostrarFormulario">
-
-      <div class="detalle-reserva-box">
-        <h3>Detalle de la reserva</h3>
-
-        <p><strong>Tipo:</strong> {{ reservaSeleccionada.tipo | titlecase }}</p>
-
-        <p><strong>Asignatura / Evento:</strong>
-          {{ reservaSeleccionada.asignaturaNombre || reservaSeleccionada.eventoNombre }}
-        </p>
-
-        <p><strong>Profesor:</strong> {{ reservaSeleccionada.profesor }}</p>
-        <p><strong>Ubicación:</strong> {{ reservaSeleccionada.ubicacion?.trim() || '—' }}</p>
-
-        <p  *ngIf="reservaSeleccionada.tipo === 'ASIGNATURA'"> <strong>Bloques seleccionados:</strong>
-          <span *ngFor="let bl of reservaSeleccionada.bloques">• {{ bl }} </span>
-        </p>
-
-        <p><strong>Observación:</strong> {{ reservaSeleccionada.observacion || '—' }}</p>
-
-        <button class="btn-cancelar" (click)="cancelarReserva()">
-          Cancelar reserva
-        </button>
-      </div>
-    </div>
-
-    <!-- ================= RESUMEN ================= -->
-    <div class="columna-resumen" *ngIf="mostrarFormulario">
- 
-
-
-      <div class="resumen-box">
-        <h3>Resumen de reserva</h3>
-
-        <p><strong>Profesor:</strong> {{ form.profesor || '—' }}</p>
-        <p><strong>Ubicación:</strong> {{ form.ubicacion || '—' }}</p>
-
-        <p><strong>Tipo:</strong> {{ form.tipo | titlecase }}</p>
-
-        <p><strong>Asignatura / Evento:</strong>
-          {{ getNombreAsignaturaEvento() }}
-        </p>
-
-             <p *ngIf="form.tipo === 'EVENTO'">
-              <strong>Fecha:</strong> {{ form.fecha_inicio }} → {{ form.fecha_fin }}
-            </p>
-
-        <p *ngIf="form.tipo === 'ASIGNATURA'"><strong>Bloques:</strong>
-          <span *ngFor="let bl of form.bloques">• {{ bl }} </span>
-        </p>
-
-        <p><strong>Observación:</strong> {{ form.observacion || '—' }}</p>
-      </div>
-    </div>
-
-  </div>
+  <!-- BLOQUES SOLO PARA ASIGNATURA -->
+  <p class="fecha" *ngIf="(r.tipo || '').toLowerCase() === 'asignatura' && r.bloques?.length">
+    🕒
+    <span *ngFor="let bl of r.bloques"> • {{ bl }} </span>
+  </p>
 </div>

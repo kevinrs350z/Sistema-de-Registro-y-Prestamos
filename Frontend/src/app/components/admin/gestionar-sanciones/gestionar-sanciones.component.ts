@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 import { SancionesService } from '../../../services/sanciones.service';
+import { NotificationService } from '../../../services/notification.service';
 
 interface Sancion {
   id: number;
@@ -66,6 +67,8 @@ export class GestionarSancionesComponent implements OnInit {
 
   mostrarModalAmpliar = false;
   motivoAmpliacion = '';
+
+  private notify = inject(NotificationService);
 
 
   ngOnInit(): void {
@@ -178,7 +181,7 @@ export class GestionarSancionesComponent implements OnInit {
 
 confirmarAmpliacion() {
   if (!this.motivoAmpliacion.trim()) {
-    alert("Debes ingresar un motivo.");
+    this.notify.warning('Debes ingresar un motivo para ampliar la sanción.');
     return;
   }
 
@@ -188,14 +191,14 @@ confirmarAmpliacion() {
     .ampliarSancion(this.sancionSeleccionada.id, this.motivoAmpliacion.trim())
     .subscribe({
       next: () => {
-        alert("Sanción ampliada correctamente.");
+        this.notify.success('Sanción ampliada correctamente.');
         this.mostrarModalAmpliar = false;
         this.motivoAmpliacion = '';
         this.cargarDatosReales();
       },
       error: (err) => {
         console.error(err);
-        alert("Error al ampliar la sanción.");
+        this.notify.error('Ocurrió un error al ampliar la sanción.');
       }
     });
 }
@@ -206,18 +209,18 @@ confirmarAmpliacion() {
     const tipo = this.nuevoTipo.trim();
 
     if (!tipo) {
-      alert('Ingresa un nombre para el tipo de sanción.');
+      this.notify.warning('Ingresa un nombre para el tipo de sanción.');
       return;
     }
 
     if (this.tiposSancion.some(t => t.toLowerCase() === tipo.toLowerCase())) {
-      alert('Ese tipo de sanción ya existe.');
+      this.notify.info('Ese tipo de sanción ya existe.');
       return;
     }
 
     this.tiposSancion.push(tipo);
     this.nuevoTipo = '';
-    alert('Tipo registrado correctamente.');
+    this.notify.success('Tipo de sanción registrado correctamente.');
   }
 
 
@@ -226,7 +229,7 @@ asignarSancion(): void {
       !this.asignarTipo ||
       !this.asignarInicio ||
       !this.asignarFin) {
-    alert('Completa todos los campos para asignar la sanción.');
+    this.notify.warning('Completa todos los campos para asignar la sanción.');
     return;
   }
 
@@ -239,13 +242,13 @@ asignarSancion(): void {
 
   this.sancionesService.asignarSancion(payload).subscribe({
     next: () => {
-      alert('Sanción asignada correctamente.');
+      this.notify.success('Sanción asignada correctamente.');
       this.cargarDatosReales();
       this.formularioAsignar = false;
     },
     error: (err) => {
       console.error(err);
-      alert('Error asignando sanción.');
+      this.notify.error('Ocurrió un error al asignar la sanción.');
     }
   });
 }
@@ -262,13 +265,13 @@ quitarSancion(): void {
 
   this.sancionesService.quitarSancion(this.sancionSeleccionada.id, motivo).subscribe({
     next: () => {
-      alert('Sanción quitada correctamente.');
+      this.notify.success('Sanción quitada correctamente.');
       this.sancionSeleccionada = null;
       this.cargarDatosReales();
     },
     error: (err) => {
       console.error(err);
-      alert('Error al quitar la sanción.');
+      this.notify.error('Ocurrió un error al quitar la sanción.');
     }
   });
 }

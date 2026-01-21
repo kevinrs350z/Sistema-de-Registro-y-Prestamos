@@ -22,7 +22,9 @@ class StoreUsuarioRequest extends FormRequest
             'telefono'   => 'nullable|string|max:20',
             'celular'    => 'nullable|string|max:20',
             'password'   => 'required|string|min:6',
-            'rol'        => 'required|string|in:admin,alumno'
+            // En BD los roles suelen estar como "ADMIN" / "ALUMNO".
+            // Aceptamos ambos formatos (mayúsculas/minúsculas) para evitar que el front falle.
+            'rol'        => 'required|string|in:admin,alumno,ADMIN,ALUMNO'
         ];
     }
 }

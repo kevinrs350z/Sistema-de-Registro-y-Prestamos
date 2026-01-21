@@ -12,7 +12,7 @@ protected $primaryKey = 'idPersona';
     public $incrementing = true;
     
     protected $fillable = [
-        'Nombre', 'apellido1', 'apellido2', 'Rut', 'Email'
+        'Nombre', 'apellido1', 'apellido2', 'Rut', 'Email', 'estado', 'telefono', 'celular'
     ];
     
     // Relación inversa UNO A UNO: Una persona tiene un usuario.

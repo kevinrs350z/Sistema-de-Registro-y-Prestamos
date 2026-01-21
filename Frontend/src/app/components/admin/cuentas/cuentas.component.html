@@ -6,20 +6,29 @@
 
     <button class="btn-crear" (click)="comenzarCrear()">+ Crear cuenta</button>
 
-    <input
-      type="text"
-      class="buscador"
-      placeholder="Buscar estudiante..."
-      [(ngModel)]="filtro"
-    />
+    <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+      <select [(ngModel)]="filtroEstado" (change)="cargarAlumnos()">
+        <option value="todos">Todos</option>
+        <option value="ACTIVO">Activos</option>
+        <option value="INACTIVO">Inactivos</option>
+      </select>
+
+      <input
+        type="text"
+        class="buscador"
+        placeholder="Buscar estudiante..."
+        [(ngModel)]="filtro"
+      />
+    </div>
 
     <div
       class="item"
       *ngFor="let a of alumnosFiltrados"
       (click)="seleccionar(a)"
       [class.activo]="a === alumnoSeleccionado"
+      [class.inactivo]="a.estado === 'INACTIVO'"
     >
-      <h4>{{ a.nombre }}</h4>
+      <h4>{{ a.nombre }} <span *ngIf="a.estado === 'INACTIVO'" style="color:#b00; font-weight:600; font-size:0.9rem">(desactivado)</span></h4>
       <p>{{ a.email }}</p>
     </div>
 
@@ -49,56 +58,56 @@
     <div *ngIf="creando">
       <h3>Crear Nueva Cuenta</h3>
 
-      <label>Nombre:</label>
-      <input type="text" [(ngModel)]="nuevoAlumno.nombre" />
+      <label>Nombre: <span class="req">*</span></label>
+      <input type="text" [(ngModel)]="nuevoAlumno.nombre" placeholder="Ej: Juan" />
       <small class="error" *ngIf="nuevoAlumno.nombre && !soloLetras(nuevoAlumno.nombre)">
         Solo letras
       </small>
 
-      <label>Apellido 1:</label>
-      <input type="text" [(ngModel)]="nuevoAlumno.apellido1" />
+      <label>Apellido 1: <span class="req">*</span></label>
+      <input type="text" [(ngModel)]="nuevoAlumno.apellido1" placeholder="Ej: Pérez" />
       <small class="error" *ngIf="nuevoAlumno.apellido1 && !soloLetras(nuevoAlumno.apellido1)">
         Solo letras
       </small>
 
       <label>Apellido 2:</label>
-      <input type="text" [(ngModel)]="nuevoAlumno.apellido2" />
+      <input type="text" [(ngModel)]="nuevoAlumno.apellido2" placeholder="Ej: González (opcional)" />
       <small class="error" *ngIf="nuevoAlumno.apellido2 && !soloLetras(nuevoAlumno.apellido2)">
         Solo letras
       </small>
 
-      <label>Email:</label>
-      <input type="email" [(ngModel)]="nuevoAlumno.email" />
+      <label>Email: <span class="req">*</span></label>
+      <input type="email" [(ngModel)]="nuevoAlumno.email" placeholder="Ej: nombre.apellido@alumnos.uta.cl" />
       <small class="error" *ngIf="nuevoAlumno.email && !emailValido(nuevoAlumno.email)">
         Email inválido
       </small>
 
-      <label>RUT:</label>
-      <input type="text" [(ngModel)]="nuevoAlumno.rut" />
+      <label>RUT: <span class="req">*</span></label>
+      <input type="text" [(ngModel)]="nuevoAlumno.rut" placeholder="Ej: 21.345.678-9" />
       <small class="error" *ngIf="nuevoAlumno.rut && !rutRegex.test(nuevoAlumno.rut)">
         Solo números, puntos y guión
       </small>
 
       <label>Teléfono:</label>
-      <input type="text" [(ngModel)]="nuevoAlumno.telefono" />
+      <input type="text" [(ngModel)]="nuevoAlumno.telefono" placeholder="Ej: 569 1234 5678 (opcional)" />
       <small class="error" *ngIf="nuevoAlumno.telefono && !telefonoRegex.test(nuevoAlumno.telefono)">
         Solo números y espacios
       </small>
 
-      <label>Contraseña:</label>
-      <input type="password" [(ngModel)]="nuevoAlumno.password" />
+      <label>Contraseña: <span class="req">*</span></label>
+      <input type="password" [(ngModel)]="nuevoAlumno.password" placeholder="Mínimo 6 caracteres" />
       <small class="error" *ngIf="nuevoAlumno.password && nuevoAlumno.password.length < 6">
         Mínimo 6 caracteres
       </small>
 
-      <label>Confirmar contraseña:</label>
-      <input type="password" [(ngModel)]="nuevoAlumno.confirmPassword" />
+      <label>Confirmar contraseña: <span class="req">*</span></label>
+      <input type="password" [(ngModel)]="nuevoAlumno.confirmPassword" placeholder="Repite la contraseña" />
       <small class="error"
         *ngIf="nuevoAlumno.confirmPassword && nuevoAlumno.password !== nuevoAlumno.confirmPassword">
         Las contraseñas no coinciden
       </small>
 
-      <label>Rol:</label>
+      <label>Rol: <span class="req">*</span></label>
       <select [(ngModel)]="nuevoAlumno.rol">
         <option value="ALUMNO">Alumno</option>
         <option value="ADMIN">Admin</option>
@@ -193,6 +202,14 @@
 
         <button class="btn-guardar" *ngIf="editMode" (click)="guardar()">
           Guardar
+        </button>
+
+        <button class="btn-eliminar" *ngIf="!editMode" (click)="eliminarCuenta()">
+          Desactivar cuenta
+        </button>
+
+        <button class="btn-guardar" *ngIf="!editMode && alumnoSeleccionado?.estado === 'INACTIVO'" (click)="reactivarCuenta()">
+          Reactivar cuenta
         </button>
 
         <button class="btn-cancelar" *ngIf="editMode" (click)="editMode = false">

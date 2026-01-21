@@ -34,11 +34,16 @@ class PackController extends Controller
                     ? asset('storage/' . $pack->imagen)
                     : null,
                 'created_at'  => $pack->created_at,
+                'disponibles' => $this->service->cantidadDisponible($pack),
+                'agotado'     => $this->service->cantidadDisponible($pack) === 0,
                 'equipos'     => $pack->equipos->map(fn ($e) => [
                     'id'            => $e->id,
-                    'nombre'        => $e->codigo,
+                    // Mostrar el nombre legible: preferir el nombre del tipo si existe,
+                    // si no, usar el código del equipo como fallback.
+                    'nombre'        => $e->tipo?->nombre ?? $e->codigo,
                     'descripcion'   => $e->observacion,
                     'codigo_activo' => $e->codigo,
+                    'estado'        => $e->estado,
                 ]),
             ]),
             'meta' => [
@@ -97,6 +102,23 @@ class PackController extends Controller
 
         return response()->json([
             'message' => 'Pack eliminado correctamente.'
+        ]);
+    }
+
+    /**
+     * POST /api/packs/{pack}/reactivar
+     * Reactivar un pack forzando los equipos asociados a DISPONIBLE.
+     */
+    public function reactivar(Pack $pack)
+    {
+        // Forzar estado DISPONIBLE en los equipos asociados al pack.
+        foreach ($pack->equipos as $equipo) {
+            $equipo->estado = 'DISPONIBLE';
+            $equipo->save();
+        }
+
+        return response()->json([
+            'message' => 'Pack reactivado correctamente.'
         ]);
     }
 }

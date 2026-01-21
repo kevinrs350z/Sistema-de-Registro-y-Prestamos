@@ -17,8 +17,8 @@ class AprobarRechazarPrestamoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            
-            'motivo' => 'required|string|min:3'
+            // Motivo será obligatorio para rechazos pero opcional para aprobaciones.
+            'motivo' => 'nullable|string|min:3'
         ];
     }
 
@@ -27,7 +27,6 @@ class AprobarRechazarPrestamoRequest extends FormRequest
         return [
             'accion.required' => 'Debe indicar una acción.',
             'accion.in'       => 'La acción debe ser aprobar o rechazar.',
-            'motivo.required' => 'Debe ingresar un motivo.',
             'motivo.min'      => 'El motivo debe tener al menos 3 caracteres.'
         ];
     }

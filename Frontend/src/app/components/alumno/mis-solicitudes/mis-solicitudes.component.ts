@@ -120,10 +120,13 @@ export class MisSolicitudesComponent implements OnInit {
       case 'PENDIENTE':
         return 'pendiente';
       case 'APROBADA':
+      case 'APROBADO':
         return 'aprobada';
       case 'ACEPTADA':
+      case 'ACEPTADO':
         return 'aceptado';
       case 'RECHAZADA':
+      case 'RECHAZADO':
         return 'rechazada';
       case 'DEVUELTO':
         return 'devuelto';

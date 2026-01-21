@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-navbar',
@@ -13,6 +15,9 @@ import { filter } from 'rxjs/operators';
 export class NavbarComponent {
   esAdmin = false;
   menuAbierto = false;
+
+  private auth = inject(AuthService);
+  private notify = inject(NotificationService);
 
   constructor(private router: Router) {
     // Detectar ruta inicial
@@ -32,14 +37,11 @@ export class NavbarComponent {
   }
 
   cerrarSesion() {
-    if (confirm('¿Deseas cerrar sesión?')) {
-      // Limpieza de datos locales
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // Redirigir al login correcto del módulo auth
-      this.router.navigate(['/auth/login']);
-    }
+    // Evitamos confirm() (modal del navegador). Cerramos sesión y avisamos con toast.
+    this.auth.logout();
+    sessionStorage.clear();
+    this.notify.info('Sesión cerrada.');
+    this.router.navigate(['/auth/login']);
   }
 
 }

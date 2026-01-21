@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SolicitudEquipo } from '../../../shared/models'; // ✅ Usa tu archivo models.ts
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-notificaciones',
@@ -54,6 +55,8 @@ export class NotificacionesComponent implements OnInit {
   solicitudDetalle: SolicitudEquipo | null = null;
   motivoRechazo = '';
 
+  private notify = inject(NotificationService);
+
   constructor(private router: Router) {}
 
   ngOnInit(): void {
@@ -69,7 +72,7 @@ export class NotificacionesComponent implements OnInit {
     if (confirm(`¿Estás seguro de aprobar la solicitud de ${solicitud.estudiante}?`)) {
       solicitud.estado = 'APROBADA';
       this.actualizarListas();
-      alert('✅ Solicitud aprobada exitosamente');
+      this.notify.success('Solicitud aprobada exitosamente.');
     }
   }
 
@@ -81,7 +84,7 @@ export class NotificacionesComponent implements OnInit {
 
   confirmarRechazo(): void {
     if (!this.motivoRechazo.trim()) {
-      alert('Por favor, ingresa el motivo del rechazo');
+      this.notify.warning('Por favor, ingresa el motivo del rechazo.');
       return;
     }
 
@@ -90,7 +93,7 @@ export class NotificacionesComponent implements OnInit {
       this.solicitudSeleccionada.motivoRechazo = this.motivoRechazo;
       this.actualizarListas();
       this.cerrarModal();
-      alert('❌ Solicitud rechazada exitosamente');
+      this.notify.info('Solicitud rechazada exitosamente.');
     }
   }
 

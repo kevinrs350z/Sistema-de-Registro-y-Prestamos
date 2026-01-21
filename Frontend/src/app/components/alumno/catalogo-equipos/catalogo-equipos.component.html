@@ -120,7 +120,7 @@
   <!-- ======== GRID PACKS ======== -->
   <div class="grid-equipos" *ngIf="esVistaPacks()">
 
-    <div *ngFor="let p of packs()" class="card-equipo pack">
+    <div *ngFor="let p of packs()" class="card-equipo pack" [class.agotado]="p.disponibles === 0">
 
       <div class="imagen-wrapper">
         <img
@@ -131,13 +131,35 @@
 
       <div class="contenido-card">
         <h3>{{ p.nombre }}</h3>
-        <p class="cat">{{ p.categoria }}</p>
-        <p class="stock">Cantidad disponible: {{ p.cantidad }}</p>
+          <p class="cat">{{ p.categoria }}</p>
+          <p class="descripcion" *ngIf="p.descripcion">{{ p.descripcion }}</p>
+          <p class="stock">
+            {{ p.disponibles === 0 ? 'Agotado' : ('Disponibles: ' + (p.disponibles ?? '—')) }}
+          </p>
       </div>
 
-      <button class="btn-principal" (click)="agregarPackAlCarrito(p)">
-        Agregar pack a la solicitud
-      </button>
+        <div class="pack-actions">
+          <button 
+            class="btn-principal" 
+            [disabled]="p.disponibles === 0"
+            (click)="togglePack(p.id)"
+          >
+            {{ p.disponibles === 0
+                ? 'Agotado'
+                : (estaPackEnCarrito(p.id) ? 'Quitar pack' : 'Agregar pack a la solicitud') }}
+          </button>
+        </div>
+
+        <div class="pack-info" aria-hidden="true">
+          <div class="pack-info-icon">!</div>
+          <div class="pack-tooltip">
+            <h4>Equipos incluidos</h4>
+            <ul>
+              <li *ngFor="let e of p.equipos">• {{ e.nombre }}</li>
+            </ul>
+            <p *ngIf="!hasEquipos(p)" class="texto-vacio">No hay equipos asociados a este pack.</p>
+          </div>
+        </div>
 
     </div>
 

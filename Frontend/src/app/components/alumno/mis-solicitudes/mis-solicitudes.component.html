@@ -10,10 +10,8 @@
       <select (change)="filtrarEstado($event)">
         <option value="">Filtrar por estado</option>
         <option value="PENDIENTE">Pendiente</option>
-        <option value="APROBADA">Aprobada</option>
-        <option value="ACEPTADA">Aceptada</option>
-        <option value="RECHAZADA">Rechazada</option>
-        <option value="DEVUELTO">Devuelto</option>
+        <option value="APROBADO">Aprobado</option>
+        <option value="RECHAZADO">Rechazado</option>
       </select>
 
       <select (change)="ordenarPorFecha($event)">
@@ -86,7 +84,7 @@
           <h3>Solicitud #{{ s.id }} — {{ s.tipo }}</h3>
 
           <!-- 🔥 ESTADO -->
-          <span class="estado" [ngClass]="s.estado.toLowerCase()">
+          <span class="estado" [ngClass]="getEstadoClass(s.estado)">
             {{ s.estado }}
           </span>
         </div>

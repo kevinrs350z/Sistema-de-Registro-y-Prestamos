@@ -40,9 +40,9 @@ class UsuarioService
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function listarUsuarios()
+    public function listarUsuarios($estado = null)
     {
-        return User::select(
+        $query = User::select(
                 'users.idUser as id',
                 'persona.Nombre as nombre',
                 'persona.apellido1',
@@ -51,13 +51,24 @@ class UsuarioService
                 'users.Email as email',
                 'persona.telefono',
                 'persona.celular',
-                'rol.Nombre as rol'
+                'rol.Nombre as rol',
+                'users.estado as estado'
             )
             ->join('persona', 'persona.idPersona', '=', 'users.idPersona')
             ->leftJoin('rol_user', 'rol_user.idUser', '=', 'users.idUser')
             ->leftJoin('rol', 'rol.idRol', '=', 'rol_user.idRol')
-            ->orderBy('persona.Nombre', 'asc')
-            ->paginate(50);       
+        ->orderBy('persona.Nombre', 'asc');
+
+        // Filtrado por estado (ACTIVO / INACTIVO / null=TODOS)
+        if ($estado === 'ACTIVO') {
+            $query->where('users.estado', 'ACTIVO')
+                  ->where('persona.estado', 'ACTIVO');
+        } elseif ($estado === 'INACTIVO') {
+            $query->where('users.estado', 'INACTIVO')
+                  ->where('persona.estado', 'INACTIVO');
+        }
+
+        return $query->paginate(50);
     }
 
 
@@ -82,7 +93,8 @@ class UsuarioService
                 'users.Email as email',
                 'persona.telefono',
                 'persona.celular',
-                'rol.Nombre as rol'
+                'rol.Nombre as rol',
+                'users.estado as estado'
             )
             ->join('persona', 'persona.idPersona', '=', 'users.idPersona')
             ->leftJoin('rol_user', 'rol_user.idUser', '=', 'users.idUser')
@@ -126,8 +138,9 @@ class UsuarioService
             'Email'      => $data['email'],
         ]);
 
-        // Asignar rol
-        $rol = Rol::where('Nombre', $data['rol'])->firstOrFail();
+        // Asignar rol (normalizamos a mayúsculas para coincidir con la tabla `rol`)
+        $rolNombre = strtoupper((string) $data['rol']);
+        $rol = Rol::where('Nombre', $rolNombre)->firstOrFail();
 
         
         $usuario->roles()->attach($rol->idRol);
@@ -213,15 +226,49 @@ class UsuarioService
      */
     public function eliminarUsuario($id)
     {
-        $usuario = User::findOrFail($id);
+        // Soft delete por estado: NO se borra nada, solo se desactiva.
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $usuario = User::with('persona')->findOrFail($id);
 
-        // Eliminar roles
-        $usuario->roles()->detach();
+            $usuario->estado = 'INACTIVO';
+            $usuario->save();
 
-        // Eliminar persona
-        Persona::find($usuario->idPersona)?->delete();
+            if ($usuario->persona) {
+                $usuario->persona->estado = 'INACTIVO';
+                $usuario->persona->save();
+            }
 
-        // Eliminar usuario
-        $usuario->delete();
+            // Revocar tokens para que el usuario quede expulsado de la sesión
+            try {
+                $usuario->tokens()->delete();
+            } catch (\Throwable $e) {
+                // si sanctum no está disponible por algún motivo, no bloqueamos la desactivación
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Reactiva una cuenta de usuario (estado ACTIVO tanto en users como persona).
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function reactivarUsuario($id)
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $usuario = User::with('persona')->findOrFail($id);
+
+            $usuario->estado = 'ACTIVO';
+            $usuario->save();
+
+            if ($usuario->persona) {
+                $usuario->persona->estado = 'ACTIVO';
+                $usuario->persona->save();
+            }
+
+            return true;
+        });
     }
 }

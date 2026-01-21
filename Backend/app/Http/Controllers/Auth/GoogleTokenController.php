@@ -97,12 +97,17 @@ class GoogleTokenController extends Controller
                 Log::info('🟡 [STEP 6] Persona NO existe, creando');
 
                 try {
+                    // Generar un Rut válido/no nulo para cumplir la restricción de la BD
+                    // Usamos el "sub" de Google como identificador estable, y si no existe,
+                    // generamos un UUID. Se trunca a 20 caracteres por seguridad.
+                    $rutGenerado = substr((string)($payload['sub'] ?? Str::uuid()), 0, 20);
+
                     $persona = Persona::create([
-                        'Nombre' => $name,
+                        'Nombre'    => $name,
                         'apellido1' => '',
                         'apellido2' => null,
-                        'Rut' => null,
-                        'Email' => $email,
+                        'Rut'       => $rutGenerado,
+                        'Email'     => $email,
                     ]);
                 } catch (\Throwable $e) {
                     Log::error('🔥 [STEP 6] Error creando Persona', ['error' => $e->getMessage()]);

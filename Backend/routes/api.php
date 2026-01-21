@@ -84,6 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/usuarios/{id}', [UsuarioController::class, 'show']);
     Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
     Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
+    Route::post('/usuarios/{id}/reactivar', [UsuarioController::class, 'reactivar']);
 
 
     Route::get('/bloques', [BloqueController::class, 'index']);// muestra los bloques
@@ -202,6 +203,7 @@ Route::prefix('reportes/dashboard')->group(function () {
     Route::prefix('packs')->group(function () {
         Route::get('/', [PackController::class, 'index']);
         Route::post('/', [PackController::class, 'store']);
+        Route::post('/{pack}/reactivar', [PackController::class, 'reactivar']);
         Route::delete('/{pack}', [PackController::class, 'destroy']);
         Route::put('/{pack}', [PackController::class, 'update']);
 

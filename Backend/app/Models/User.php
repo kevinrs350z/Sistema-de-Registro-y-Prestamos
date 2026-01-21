@@ -28,6 +28,7 @@ class User extends Authenticatable implements CanResetPasswordContract
         'Contrasena',
         'estadoSancion',
         'Email',
+        'estado',
     ];
 
     /**
