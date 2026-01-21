@@ -38,4 +38,10 @@ class ReporteProfesorController extends Controller
             $this->service->getEquiposPorProfesor($page, $pageSize)
         );
     }
+
+    // Compatibilidad: ruta antigua '/reportes/profesores/prestamos'
+    public function prestamos(Request $request)
+    {
+        return $this->prestamosPorProfesor();
+    }
 }

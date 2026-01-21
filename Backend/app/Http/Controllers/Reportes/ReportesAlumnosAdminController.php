@@ -10,43 +10,34 @@ class ReportesAlumnosAdminController extends Controller
 {
     public function __construct(private ReportesAlumnosAdminService $service) {}
 
-    public function kpis()
-    {
-        return response()->json($this->service->getKPIs());
-    }
-
-    public function workflowEstados()
-    {
-        return response()->json($this->service->getWorkflowEstados());
-    }
-
-    public function tiempoResolucion(Request $request)
+    public function kpis(Request $request)
     {
         $months = (int)($request->query('months', 6));
-        return response()->json($this->service->getTiempoResolucion($months));
+        return response()->json($this->service->getKPIs($months));
     }
 
-    public function equiposCriticos(Request $request)
+    public function prestamosCarrera(Request $request)
+    {
+        $months = (int)($request->query('months', 12));
+        return response()->json($this->service->getPrestamosPorCarrera($months));
+    }
+
+    public function sancionesNivel(Request $request)
+    {
+        $months = (int)($request->query('months', 12));
+        return response()->json($this->service->getSancionesPorNivel($months));
+    }
+
+    public function evolucionPrestamos(Request $request)
     {
         $months = (int)($request->query('months', 6));
-        return response()->json($this->service->getEquiposCriticos($months));
+        return response()->json($this->service->getEvolucionPrestamosAlumnos($months));
     }
 
-    public function inventarioEvolucion(Request $request)
+    public function ranking(Request $request)
     {
-        $months = (int)($request->query('months', 6));
-        return response()->json($this->service->getInventarioEvolucion($months));
-    }
-
-    public function heatmap(Request $request)
-    {
-        $months = (int)($request->query('months', 3));
-        return response()->json($this->service->getHeatmapSolicitudes($months));
-    }
-
-    public function riesgo(Request $request)
-    {
-        $months = (int)($request->query('months', 6));
-        return response()->json($this->service->getRiesgoPorAlumno($months));
+        $limit = (int)($request->query('limit', 10));
+        $months = (int)($request->query('months', 12));
+        return response()->json($this->service->getRankingAlumnos($limit, $months));
     }
 }
