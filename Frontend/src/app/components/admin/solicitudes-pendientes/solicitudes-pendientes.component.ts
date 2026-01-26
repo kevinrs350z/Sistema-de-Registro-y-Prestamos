@@ -5,7 +5,7 @@ import { SolicitudEquipo } from '../../../shared/models';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
 import { NotificationService } from '../../../services/notification.service';
 
-type AdminSolicitud = SolicitudEquipo & {
+type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
   bloque?: string;
   periodo?: string;
@@ -14,6 +14,7 @@ type AdminSolicitud = SolicitudEquipo & {
   motivoAprobacion?: string;
   estudiante?: string;
   email?: string;
+  estado: 'PENDIENTE' | 'PENDIENTE_A_ENTREGA' | 'ENTREGADO' | 'RECHAZADO';
 };
 
 @Component({
@@ -89,7 +90,7 @@ export class SolicitudesPendientesComponent implements OnInit {
     const texto = this.filtroBusqueda.toLowerCase().trim();
 
     let resultado = this.solicitudes.filter((s) => {
-      if (s.estado !== 'PENDIENTE') return false;
+      if (s.estado !== 'PENDIENTE' && s.estado !== 'PENDIENTE_A_ENTREGA') return false;
 
       const coincideEst = (s.estudiante ?? '').toLowerCase().includes(texto);
 
@@ -127,20 +128,27 @@ export class SolicitudesPendientesComponent implements OnInit {
 
 confirmarAprobacion() {
   if (!this.solicitudSeleccionada) return;
-  this.prestamosAdmin
-    .aprobarPrestamo(
-      this.solicitudSeleccionada.id!,
-      this.motivoAprobacion,
-      'aprobar'
-    )
-    .subscribe({
-      next: () => {
-        this.notify.success('Solicitud aprobada correctamente.');
-        this.cargarSolicitudes();
-        this.cerrarModal();
-      },
-      error: (err) => console.error('Error al aprobar:', err)
-    });
+  
+  // Simulación frontend: cambiar estado a PENDIENTE_A_ENTREGA
+  this.solicitudSeleccionada.estado = 'PENDIENTE_A_ENTREGA';
+  this.notify.success('Solicitud aprobada correctamente. Estado: PENDIENTE A ENTREGA');
+  this.cerrarModal();
+  
+  // Más adelante: descomentar para llamar a API
+  // this.prestamosAdmin
+  //   .aprobarPrestamo(
+  //     this.solicitudSeleccionada.id!,
+  //     this.motivoAprobacion,
+  //     'aprobar'
+  //   )
+  //   .subscribe({
+  //     next: () => {
+  //       this.notify.success('Solicitud aprobada correctamente.');
+  //       this.cargarSolicitudes();
+  //       this.cerrarModal();
+  //     },
+  //     error: (err) => console.error('Error al aprobar:', err)
+  //   });
 }
 
 
@@ -187,6 +195,38 @@ confirmarRechazo() {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  marcarEntregado(id?: number) {
+    if (!this.solicitudSeleccionada) return;
+    
+    // Simulación frontend: cambiar estado a ENTREGADO
+    this.solicitudSeleccionada.estado = 'ENTREGADO';
+    this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
+    
+    // Más adelante: descomentar para llamar a API
+    // this.prestamosAdmin.marcarEntregado(id || this.solicitudSeleccionada.id).subscribe({
+    //   next: () => {
+    //     this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
+    //     this.cargarSolicitudes();
+    //   },
+    //   error: (err) => console.error('Error al marcar como entregado:', err),
+    // });
+  }
+
+  getEstadoTexto(estado?: string): string {
+    switch (estado) {
+      case 'PENDIENTE':
+        return 'PENDIENTE';
+      case 'PENDIENTE_A_ENTREGA':
+        return 'PENDIENTE A ENTREGA';
+      case 'ENTREGADO':
+        return 'ENTREGADO';
+      case 'RECHAZADO':
+        return 'RECHAZADO';
+      default:
+        return 'PENDIENTE';
+    }
   }
 }
 

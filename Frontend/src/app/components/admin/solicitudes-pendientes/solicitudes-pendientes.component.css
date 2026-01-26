@@ -111,6 +111,28 @@ h2 {
   margin-top: 6px;
 }
 
+.estado.pendiente-entrega {
+  background: #ffeb3b;
+  color: #000;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.estado.entregado {
+  background: #4caf50;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin-top: 6px;
+}
+
 /* =========================
    PANEL DERECHO (DETALLE)
 ========================= */
@@ -153,6 +175,35 @@ h2 {
   padding: 10px 18px;
   border-radius: 12px;
   cursor: pointer;
+}
+
+.btn-entregar {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.btn-entregar:hover {
+  background: #45a049;
+}
+
+.estado-entregado {
+  background: #e8f5e9;
+  border: 2px solid #4caf50;
+  border-radius: 12px;
+  padding: 15px;
+  text-align: center;
+}
+
+.estado-entregado p {
+  color: #2e7d32;
+  font-weight: 700;
+  margin: 0;
 }
 
 /* =========================

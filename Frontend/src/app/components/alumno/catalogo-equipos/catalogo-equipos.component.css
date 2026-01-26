@@ -381,3 +381,46 @@
     gap: 20px;
   }
 }
+
+/* ======================================================
+   BOTÓN FLOTANTE ABAJO DERECHA
+====================================================== */
+.btn-flotante-continuar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 14px 26px;
+  font-size: 16px;
+  font-weight: 700;
+  background: #446BA9;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(68, 107, 169, 0.3);
+  cursor: pointer;
+  z-index: 1000;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-flotante-continuar:hover:not(:disabled) {
+  background: #365a8f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(68, 107, 169, 0.4);
+}
+
+.btn-flotante-continuar:disabled {
+  background: #dbe8fa;
+  color: #446BA9;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* En móviles, ajustar posición */
+@media (max-width: 768px) {
+  .btn-flotante-continuar {
+    top: 15px;
+    right: 15px;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}

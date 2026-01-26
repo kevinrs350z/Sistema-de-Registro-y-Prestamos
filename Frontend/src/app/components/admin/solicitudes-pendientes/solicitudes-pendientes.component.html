@@ -28,7 +28,16 @@
       >
         <h4>{{ s.estudiante }}</h4>
         <p class="fecha">📅 {{ formatearFecha(s.fechaSolicitud) }}</p>
-        <span class="estado pendiente">PENDIENTE</span>
+        <span 
+          class="estado" 
+          [ngClass]="{
+            'pendiente': s.estado === 'PENDIENTE',
+            'pendiente-entrega': s.estado === 'PENDIENTE_A_ENTREGA',
+            'entregado': s.estado === 'ENTREGADO'
+          }"
+        >
+          {{ getEstadoTexto(s.estado) }}
+        </span>
       </div>
 
       <p *ngIf="solicitudesFiltradas.length === 0" class="sin-solicitudes">
@@ -107,12 +116,26 @@
 
       <!-- ACCIONES -->
       <div class="acciones">
-        <button class="btn-aceptar" (click)="abrirAprobacion()">
-          Aprobar
-        </button>
-        <button class="btn-rechazar" (click)="abrirRechazo()">
-          Rechazar
-        </button>
+        <ng-container *ngIf="sel.estado === 'PENDIENTE'">
+          <button class="btn-aceptar" (click)="abrirAprobacion()">
+            Aprobar
+          </button>
+          <button class="btn-rechazar" (click)="abrirRechazo()">
+            Rechazar
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="sel.estado === 'PENDIENTE_A_ENTREGA'">
+          <button class="btn-entregar" (click)="marcarEntregado(sel.id)">
+            ✓ Marcar como ENTREGADO
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="sel.estado === 'ENTREGADO'">
+          <div class="estado-entregado">
+            <p>✓ Préstamo ENTREGADO</p>
+          </div>
+        </ng-container>
       </div>
 
     </div>
