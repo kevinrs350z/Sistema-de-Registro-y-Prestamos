@@ -14,7 +14,7 @@ type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   motivoAprobacion?: string;
   estudiante?: string;
   email?: string;
-  estado: 'PENDIENTE' | 'PENDIENTE_A_ENTREGA' | 'ENTREGADO' | 'RECHAZADO';
+  estado: 'PENDIENTE' | 'APROBADO' | 'ENTREGADO' | 'RECHAZADO';
 };
 
 @Component({
@@ -32,11 +32,12 @@ export class SolicitudesPendientesComponent implements OnInit {
   solicitudSeleccionada: AdminSolicitud | null = null;
 
   motivoRechazo = '';
-  motivoAprobacion = '';
   mostrarModal = false;
-  mostrarModalAprobacion = false;
   filtroBusqueda = '';
   orden: 'recientes' | 'antiguas' = 'recientes';
+  paginaPendientes = 1;
+  paginaPendientesEntrega = 1;
+  tamanioPagina = 6;
 
   constructor(private prestamosAdmin: PrestamosAdminService) {}
 
@@ -81,6 +82,9 @@ export class SolicitudesPendientesComponent implements OnInit {
 
           };
         });
+        this.paginaPendientes = 1;
+        this.paginaPendientesEntrega = 1;
+        this.solicitudSeleccionada = null;
       },
       error: (err) => console.error('Error al cargar préstamos pendientes:', err)
     });
@@ -90,7 +94,8 @@ export class SolicitudesPendientesComponent implements OnInit {
     const texto = this.filtroBusqueda.toLowerCase().trim();
 
     let resultado = this.solicitudes.filter((s) => {
-      if (s.estado !== 'PENDIENTE' && s.estado !== 'PENDIENTE_A_ENTREGA') return false;
+      // Mostrar PENDIENTE y APROBADO en solicitudes pendientes
+      if (s.estado !== 'PENDIENTE' && s.estado !== 'APROBADO') return false;
 
       const coincideEst = (s.estudiante ?? '').toLowerCase().includes(texto);
 
@@ -118,42 +123,77 @@ export class SolicitudesPendientesComponent implements OnInit {
     return resultado;
   }
 
+  get pendientes(): AdminSolicitud[] {
+    return this.solicitudesFiltradas.filter((s) => s.estado === 'PENDIENTE');
+  }
+
+  get pendientesEntrega(): AdminSolicitud[] {
+    return this.solicitudesFiltradas.filter((s) => s.estado === 'APROBADO');
+  }
+
+  get totalPaginasPendientes(): number {
+    return Math.max(1, Math.ceil(this.pendientes.length / this.tamanioPagina));
+  }
+
+  get totalPaginasPendientesEntrega(): number {
+    return Math.max(1, Math.ceil(this.pendientesEntrega.length / this.tamanioPagina));
+  }
+
+  get paginaPendientesLista(): AdminSolicitud[] {
+    const inicio = (this.paginaPendientes - 1) * this.tamanioPagina;
+    return this.pendientes.slice(inicio, inicio + this.tamanioPagina);
+  }
+
+  get paginaPendientesEntregaLista(): AdminSolicitud[] {
+    const inicio = (this.paginaPendientesEntrega - 1) * this.tamanioPagina;
+    return this.pendientesEntrega.slice(inicio, inicio + this.tamanioPagina);
+  }
+
   seleccionarSolicitud(s: AdminSolicitud) {
     this.solicitudSeleccionada = s;
   }
 
-  abrirAprobacion() {
-    this.mostrarModalAprobacion = true;
+  irPaginaPendientes(pagina: number) {
+    if (pagina < 1 || pagina > this.totalPaginasPendientes) return;
+    this.paginaPendientes = pagina;
+    this.solicitudSeleccionada = null;
   }
 
-confirmarAprobacion() {
-  if (!this.solicitudSeleccionada) return;
-  
-  // Simulación frontend: cambiar estado a PENDIENTE_A_ENTREGA
-  this.solicitudSeleccionada.estado = 'PENDIENTE_A_ENTREGA';
-  this.notify.success('Solicitud aprobada correctamente. Estado: PENDIENTE A ENTREGA');
-  this.cerrarModal();
-  
-  // Más adelante: descomentar para llamar a API
-  // this.prestamosAdmin
-  //   .aprobarPrestamo(
-  //     this.solicitudSeleccionada.id!,
-  //     this.motivoAprobacion,
-  //     'aprobar'
-  //   )
-  //   .subscribe({
-  //     next: () => {
-  //       this.notify.success('Solicitud aprobada correctamente.');
-  //       this.cargarSolicitudes();
-  //       this.cerrarModal();
-  //     },
-  //     error: (err) => console.error('Error al aprobar:', err)
-  //   });
-}
+  irPaginaPendientesEntrega(pagina: number) {
+    if (pagina < 1 || pagina > this.totalPaginasPendientesEntrega) return;
+    this.paginaPendientesEntrega = pagina;
+    this.solicitudSeleccionada = null;
+  }
 
+  resetPaginacion() {
+    this.paginaPendientes = 1;
+    this.paginaPendientesEntrega = 1;
+    this.solicitudSeleccionada = null;
+  }
+
+  cerrarDetalle() {
+    this.solicitudSeleccionada = null;
+  }
 
   abrirRechazo() {
     this.mostrarModal = true;
+  }
+
+  aprobarSolicitud(id?: number) {
+    const solicitudId = id ?? this.solicitudSeleccionada?.id;
+    if (!solicitudId) {
+      return;
+    }
+
+    this.prestamosAdmin
+      .aprobarPrestamo(solicitudId, '', 'aprobar')
+      .subscribe({
+        next: () => {
+          this.notify.success('Solicitud aprobada correctamente.');
+          this.cargarSolicitudes();
+        },
+        error: (err) => console.error('Error al aprobar:', err)
+      });
   }
 
 confirmarRechazo() {
@@ -182,8 +222,6 @@ confirmarRechazo() {
 
   cerrarModal() {
     this.mostrarModal = false;
-    this.mostrarModalAprobacion = false;
-    this.motivoAprobacion = '';
     this.motivoRechazo = '';
     this.solicitudSeleccionada = null;
   }
@@ -200,25 +238,21 @@ confirmarRechazo() {
   marcarEntregado(id?: number) {
     if (!this.solicitudSeleccionada) return;
     
-    // Simulación frontend: cambiar estado a ENTREGADO
-    this.solicitudSeleccionada.estado = 'ENTREGADO';
-    this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
-    
-    // Más adelante: descomentar para llamar a API
-    // this.prestamosAdmin.marcarEntregado(id || this.solicitudSeleccionada.id).subscribe({
-    //   next: () => {
-    //     this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
-    //     this.cargarSolicitudes();
-    //   },
-    //   error: (err) => console.error('Error al marcar como entregado:', err),
-    // });
+    // Llamada real a la API
+    this.prestamosAdmin.marcarEntregado(id || this.solicitudSeleccionada.id!).subscribe({
+      next: () => {
+        this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
+        this.cargarSolicitudes();
+      },
+      error: (err: any) => console.error('Error al marcar como entregado:', err),
+    });
   }
 
   getEstadoTexto(estado?: string): string {
     switch (estado) {
       case 'PENDIENTE':
         return 'PENDIENTE';
-      case 'PENDIENTE_A_ENTREGA':
+      case 'APROBADO':
         return 'PENDIENTE A ENTREGA';
       case 'ENTREGADO':
         return 'ENTREGADO';

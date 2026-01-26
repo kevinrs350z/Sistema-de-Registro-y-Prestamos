@@ -103,7 +103,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/admin/prestamos/rechazar/{id}',[PrestamoAdminController::class, 'rechazar']);
     Route::get('/admin/prestamos/pendientes', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
     Route::patch('/admin/prestamos/{idPrestamo}/equipos/{idEquipo}/devolver',[PrestamoAdminController::class, 'devolverEquipo']);
-    Route::post('/admin/prestamos/{id}/marcar-entregado', [PrestamoAdminController::class, 'marcarEntregado']);
+    Route::post('/admin/prestamos/{id}/entregar', [PrestamoAdminController::class, 'marcarEntregado']);
     Route::get('/admin/sanciones/prefill', [UserSancionController::class, 'prefill']);
     Route::get('/admin/sanciones/catalogo', [UserSancionController::class, 'catalogo']);
     Route::get('/admin/sanciones', [UserSancionController::class, 'listarSanciones']);
@@ -123,6 +123,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
 
 Route::post('admin/prestamos/{id}/devolver', [PrestamoAdminController::class, 'marcarDevuelto']);
+Route::post('admin/prestamos/{id}/entregar', [PrestamoAdminController::class, 'marcarEntregado']);
 
 
 

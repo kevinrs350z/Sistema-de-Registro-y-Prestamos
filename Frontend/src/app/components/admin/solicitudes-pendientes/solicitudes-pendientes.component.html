@@ -6,9 +6,10 @@
       type="text"
       placeholder="Buscar por nombre, equipo u observación..."
       [(ngModel)]="filtroBusqueda"
+      (ngModelChange)="resetPaginacion()"
     />
 
-    <select [(ngModel)]="orden">
+    <select [(ngModel)]="orden" (ngModelChange)="resetPaginacion()">
       <option value="recientes">Más recientes</option>
       <option value="antiguas">Más antiguas</option>
     </select>
@@ -17,44 +18,114 @@
   <!-- CONTENIDO -->
   <div class="solicitudes-wrapper">
 
-    <!-- LISTA IZQUIERDA -->
-    <div class="lista-solicitudes scroll-columna">
-
-      <div
-        class="solicitud-card"
-        *ngFor="let s of solicitudesFiltradas"
-        (click)="seleccionarSolicitud(s)"
-        [class.activa]="s === solicitudSeleccionada"
-      >
-        <h4>{{ s.estudiante }}</h4>
-        <p class="fecha">📅 {{ formatearFecha(s.fechaSolicitud) }}</p>
-        <span 
-          class="estado" 
-          [ngClass]="{
-            'pendiente': s.estado === 'PENDIENTE',
-            'pendiente-entrega': s.estado === 'PENDIENTE_A_ENTREGA',
-            'entregado': s.estado === 'ENTREGADO'
-          }"
-        >
-          {{ getEstadoTexto(s.estado) }}
-        </span>
+    <div class="columna">
+      <div class="columna-header">
+        <h3>Solicitudes pendientes</h3>
+        <p>Solicitudes que aún esperan aprobación.</p>
       </div>
 
-      <p *ngIf="solicitudesFiltradas.length === 0" class="sin-solicitudes">
-        No hay solicitudes pendientes.
-      </p>
+      <div class="lista-solicitudes scroll-columna">
+        <div
+          class="solicitud-card"
+          *ngFor="let s of paginaPendientesLista"
+          (click)="seleccionarSolicitud(s)"
+          [class.activa]="s === solicitudSeleccionada"
+        >
+          <h4>{{ s.estudiante }}</h4>
+          <p class="fecha">{{ formatearFecha(s.fechaSolicitud) }}</p>
+          <span class="estado pendiente">
+            {{ getEstadoTexto(s.estado) }}
+          </span>
+        </div>
 
+        <p *ngIf="pendientes.length === 0" class="sin-solicitudes">
+          No hay solicitudes pendientes.
+        </p>
+      </div>
+
+      <div class="paginacion" *ngIf="pendientes.length > tamanioPagina">
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaPendientes(paginaPendientes - 1)"
+          [disabled]="paginaPendientes === 1"
+        >
+          Anterior
+        </button>
+
+        <span class="paginacion-info">
+          Página {{ paginaPendientes }} de {{ totalPaginasPendientes }}
+        </span>
+
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaPendientes(paginaPendientes + 1)"
+          [disabled]="paginaPendientes === totalPaginasPendientes"
+        >
+          Siguiente
+        </button>
+      </div>
     </div>
 
-    <!-- PANEL DERECHO -->
-    <div class="detalle-solicitud" *ngIf="solicitudSeleccionada as sel">
+    <div class="columna">
+      <div class="columna-header">
+        <h3>Pendientes de entrega</h3>
+        <p>Solicitudes aprobadas a la espera de entrega.</p>
+      </div>
 
-      <h3>Detalle de la solicitud</h3>
+      <div class="lista-solicitudes scroll-columna">
+        <div
+          class="solicitud-card"
+          *ngFor="let s of paginaPendientesEntregaLista"
+          (click)="seleccionarSolicitud(s)"
+          [class.activa]="s === solicitudSeleccionada"
+        >
+          <h4>{{ s.estudiante }}</h4>
+          <p class="fecha">{{ formatearFecha(s.fechaSolicitud) }}</p>
+          <span class="estado pendiente-entrega">
+            {{ getEstadoTexto(s.estado) }}
+          </span>
+        </div>
 
-      <!-- ====== CUADRADO BONITO (MISMO DISEÑO QUE FINALIZADAS) ====== -->
+        <p *ngIf="pendientesEntrega.length === 0" class="sin-solicitudes">
+          No hay solicitudes pendientes de entrega.
+        </p>
+      </div>
+
+      <div class="paginacion" *ngIf="pendientesEntrega.length > tamanioPagina">
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaPendientesEntrega(paginaPendientesEntrega - 1)"
+          [disabled]="paginaPendientesEntrega === 1"
+        >
+          Anterior
+        </button>
+
+        <span class="paginacion-info">
+          Página {{ paginaPendientesEntrega }} de {{ totalPaginasPendientesEntrega }}
+        </span>
+
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaPendientesEntrega(paginaPendientesEntrega + 1)"
+          [disabled]="paginaPendientesEntrega === totalPaginasPendientesEntrega"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="detalle-overlay" *ngIf="solicitudSeleccionada as sel">
+    <div class="detalle-panel">
+      <div class="detalle-panel-header">
+        <div>
+          <h3>Detalle de la solicitud</h3>
+          <p class="detalle-subtitulo">Revisa la información antes de gestionar la respuesta.</p>
+        </div>
+        <button class="detalle-cerrar" (click)="cerrarDetalle()">Cerrar</button>
+      </div>
+
       <div class="detalle-grid">
-
-        <!-- ESTUDIANTE DESTACADO -->
         <div class="detalle-item usuario">
           <div class="avatar">
             {{ sel.estudiante.charAt(0) }}
@@ -66,13 +137,11 @@
           </div>
         </div>
 
-        <!-- TIPO -->
         <div class="detalle-item meta">
           <span class="label">Tipo</span>
           <span class="valor tipo">{{ sel.tipo || '—' }}</span>
         </div>
 
-        <!-- BLOQUE (DENTRO) -->
         <ng-container *ngIf="sel.tipo === 'DENTRO'">
           <div class="detalle-item meta">
             <span class="label">Bloque</span>
@@ -80,44 +149,33 @@
           </div>
         </ng-container>
 
-        <!-- PERIODO (FUERA) -->
         <ng-container *ngIf="sel.tipo === 'FUERA'">
           <div class="detalle-item meta">
             <span class="label">Periodo</span>
             <span class="valor">{{ sel.periodo || '—' }}</span>
           </div>
         </ng-container>
-
       </div>
-      <!-- ====== FIN CUADRADO BONITO ====== -->
 
-<!-- ================================
-     EQUIPOS – MINI CARDS
-================================ -->
-<div class="equipos-box">
-  <h4>Equipos solicitados</h4>
+      <div class="equipos-box">
+        <h4>Equipos solicitados</h4>
 
-  <div class="equipo" *ngFor="let eq of sel.equipos">
-    <div class="equipo-info">
-      <p class="nombre">{{ eq.nombre }}</p>
-      <p class="codigo">Código: {{ eq.codigo }}</p>
-    </div>
-  </div>
-</div>
+        <div class="equipo" *ngFor="let eq of sel.equipos">
+          <div class="equipo-info">
+            <p class="nombre">{{ eq.nombre }}</p>
+            <p class="codigo">Código: {{ eq.codigo }}</p>
+          </div>
+        </div>
+      </div>
 
-<!-- ================================
-     OBSERVACIÓN
-================================ -->
-<div class="observacion-box">
-  <h4>Observación</h4>
-  <p>{{ sel.observacion || 'Sin observación' }}</p>
-</div>
+      <div class="observacion-box">
+        <h4>Observación</h4>
+        <p>{{ sel.observacion || 'Sin observación' }}</p>
+      </div>
 
-
-      <!-- ACCIONES -->
       <div class="acciones">
         <ng-container *ngIf="sel.estado === 'PENDIENTE'">
-          <button class="btn-aceptar" (click)="abrirAprobacion()">
+          <button class="btn-aceptar" (click)="aprobarSolicitud(sel.id)">
             Aprobar
           </button>
           <button class="btn-rechazar" (click)="abrirRechazo()">
@@ -125,40 +183,17 @@
           </button>
         </ng-container>
 
-        <ng-container *ngIf="sel.estado === 'PENDIENTE_A_ENTREGA'">
+        <ng-container *ngIf="sel.estado === 'APROBADO'">
           <button class="btn-entregar" (click)="marcarEntregado(sel.id)">
-            ✓ Marcar como ENTREGADO
+            Marcar como ENTREGADO
           </button>
         </ng-container>
 
         <ng-container *ngIf="sel.estado === 'ENTREGADO'">
           <div class="estado-entregado">
-            <p>✓ Préstamo ENTREGADO</p>
+            <p>Préstamo ENTREGADO</p>
           </div>
         </ng-container>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- MODAL APROBACIÓN -->
-  <div class="modal" *ngIf="mostrarModalAprobacion">
-    <div class="modal-content modal-aprobacion">
-      <h4>Motivo de la aprobación</h4>
-
-      <textarea
-        [(ngModel)]="motivoAprobacion"
-        rows="3"
-        placeholder="Ingrese el motivo..."
-      ></textarea>
-
-      <div class="modal-actions">
-        <button class="btn-confirmar" (click)="confirmarAprobacion()">
-          Confirmar
-        </button>
-        <button class="btn-cancelar" (click)="cerrarModal()">
-          Cancelar
-        </button>
       </div>
     </div>
   </div>
