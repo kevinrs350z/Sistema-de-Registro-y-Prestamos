@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
 import { NavbarAdminComponent } from "../navbar-admin/navbar-admin.component";
 import { NotificationService } from '../../../services/notification.service';
+import { Router } from '@angular/router';
 
 type AdminSolicitud = {
   id: number;
@@ -22,7 +23,7 @@ type AdminSolicitud = {
   }[];
 
   fechaSolicitud: string;
-  estado: 'APROBADO' | 'DEVUELTO' | 'RECHAZADO';
+  estado: 'APROBADO' | 'DEVUELTO' | 'RECHAZADO' | 'ENTREGADO';
 };
 
 @Component({
@@ -40,13 +41,13 @@ export class SolicitudesFinalizadasComponent implements OnInit {
   solicitudSeleccionada: AdminSolicitud | null = null;
 
   filtroBusqueda = '';
-  filtroEstado: 'todos' | 'APROBADO' | 'DEVUELTO' | 'RECHAZADO' = 'todos';
+  filtroEstado: 'todos' | 'APROBADO' | 'DEVUELTO' | 'RECHAZADO' | 'ENTREGADO' = 'todos';
   orden: 'recientes' | 'antiguas' = 'recientes';
 
   mostrarModal = false;
   motivoFinalizar = '';
 
-  constructor(private api: PrestamosAdminService) {}
+  constructor(private api: PrestamosAdminService, private router: Router) {}
 
   ngOnInit(): void {
     this.cargarSolicitudes();
@@ -114,6 +115,12 @@ export class SolicitudesFinalizadasComponent implements OnInit {
 
   seleccionarSolicitud(s: AdminSolicitud): void {
     this.solicitudSeleccionada = s;
+  }
+
+  irASanciones(prestamoId: number): void {
+    this.router.navigate(['/admin/sanciones'], {
+      queryParams: { prestamoId }
+    });
   }
 
   abrirFinalizar(): void {

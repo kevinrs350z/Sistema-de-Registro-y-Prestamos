@@ -115,6 +115,19 @@
   font-weight: bold;
 }
 
+.meta-asignacion {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-asignacion .dot {
+  color: #cbd5e1;
+}
+
 .estado.activa {
   color: #d9534f;
 }
@@ -143,6 +156,91 @@
   font-weight: 700;
   color: #2b478b;
   margin-bottom: 20px;
+}
+
+/* ========================
+   PREFILL CARD
+========================= */
+.prefill-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.prefill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.prefill-title {
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+.prefill-subtitle {
+  color: #6b7280;
+  margin: 0;
+}
+
+.prefill-badge {
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.prefill-badge.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.prefill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.prefill-grid label {
+  display: block;
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.prefill-grid p {
+  margin: 0;
+  font-weight: 600;
+  color: #111827;
+}
+
+.prefill-equipos label {
+  display: block;
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.equipos-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.equipos-item {
+  background: #eef2ff;
+  color: #1f2a44;
+  border: 1px solid #dbeafe;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 /* GRID PARA DETALLE Y FORMULARIOS */
@@ -230,6 +328,14 @@
   border-radius: 8px;
   border: 1px solid #d7ddee;
   margin-top: 6px;
+}
+
+.detalle textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #fff;
 }
 
 .btn-cancelar {

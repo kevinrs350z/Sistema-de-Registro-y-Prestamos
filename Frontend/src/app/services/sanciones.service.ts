@@ -27,4 +27,14 @@ export class SancionesService {
   quitarSancion(id: number, motivo?: string) {
     return this.http.patch(`${this.apiUrl}/${id}/quitar`, { motivo });
   }
+
+  prefillSancion(prestamoId: number) {
+    return this.http.get(`${this.apiUrl}/prefill`, {
+      params: { prestamo_id: prestamoId }
+    });
+  }
+
+  getCatalogo() {
+    return this.http.get<{ sanciones: any[] }>(`${this.apiUrl}/catalogo`);
+  }
 }

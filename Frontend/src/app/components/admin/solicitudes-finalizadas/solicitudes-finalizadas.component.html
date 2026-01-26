@@ -11,6 +11,7 @@
     <select [(ngModel)]="filtroEstado">
       <option value="todos">Todos</option>
       <option value="APROBADO">Aprobados</option>
+      <option value="ENTREGADO">Entregados</option>
       <option value="DEVUELTO">Devueltos</option>
       <option value="RECHAZADO">Rechazados</option>
     </select>
@@ -48,6 +49,7 @@
           class="estado"
           [ngClass]="{
             aprobado: s.estado === 'APROBADO',
+            entregado: s.estado === 'ENTREGADO',
             devuelto: s.estado === 'DEVUELTO',
             rechazado: s.estado === 'RECHAZADO'
           }"
@@ -132,6 +134,14 @@
         (click)="abrirFinalizar()"
       >
         Devolver préstamo
+      </button>
+
+      <button
+        class="btn-azul"
+        *ngIf="sel.estado === 'DEVUELTO' || sel.estado === 'ENTREGADO'"
+        (click)="irASanciones(sel.id)"
+      >
+        Ir a sanciones
       </button>
 
     </div>

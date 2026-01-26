@@ -96,6 +96,16 @@ class User extends Authenticatable implements CanResetPasswordContract
         return $this->hasRole('ADMIN');
     }
 
+    /**
+     * Historial de cambios de estado que este usuario registró.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function historialCambiosPrestamo()
+    {
+        return $this->hasMany(PrestamoHistorial::class, 'idUser', 'idUser');
+    }
+
    
     /**
      * The attributes that should be cast.

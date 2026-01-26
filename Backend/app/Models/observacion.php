@@ -43,11 +43,11 @@ class observacion extends Model
     protected $primaryKey = 'idObservacion';
     
     /**
-     * Indica que el modelo no utiliza timestamps automáticos.
+     * Habilitar timestamps automáticos para auditoría.
      *
      * @var bool
      */
-    public $timestamps = false;
+    public $timestamps = true;
 
     
     /**
@@ -57,7 +57,9 @@ class observacion extends Model
      */
     protected $fillable = [
         'idPrestamo',
+        'idUser',
         'descripcion',
+        'tipo',
         'estado',
     ];
 
@@ -70,6 +72,17 @@ class observacion extends Model
      */
     public function prestamo()
     {
-        return $this->belongsTo(Prestamo::class, 'idPrestamo');
+        return $this->belongsTo(Prestamo::class, 'idPrestamo', 'idPrestamo');
+    }
+
+    /**
+     * Relación con el usuario que registró esta observación/cambio de estado.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'idUser', 'idUser');
     }
 }
+

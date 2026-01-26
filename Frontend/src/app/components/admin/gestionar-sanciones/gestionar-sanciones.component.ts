@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 import { SancionesService } from '../../../services/sanciones.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -18,9 +18,29 @@ interface Sancion {
   apellido: string;
 
   motivo: string;
+  descripcion?: string;
   fecha_inicio: string;
   fecha_fin: string;
   estado: 'ACTIVA' | 'EXPIRADA';  
+  asignada_por?: string;
+  asignada_en?: string;
+}
+
+interface PrefillData {
+  prestamo: {
+    idPrestamo: number;
+    estado: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    equipos?: { id: number; nombre: string; codigo?: string }[];
+  };
+  usuario: {
+    idUser?: number;
+    nombre?: string;
+    apellido?: string;
+    email?: string;
+    rut?: string;
+  };
 }
 
 
@@ -35,7 +55,8 @@ export class GestionarSancionesComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private sancionesService: SancionesService
+    private sancionesService: SancionesService,
+    private route: ActivatedRoute
     , private usuariosService: UsuariosService
   ) {}
 
@@ -48,13 +69,7 @@ export class GestionarSancionesComponent implements OnInit {
   private buscarTimeout: any = null;
 
 
-  tiposSancion: string[] = [
-    'Atraso en devolución',
-    'Daño en equipo',
-    'Uso indebido de sala',
-    'Consumo de alimentos en laboratorio',
-    'Uso prolongado de equipo sin reserva'
-  ];
+  tiposSancion: { id: number; nivel: string; descripcion?: string }[] = [];
 
   // Formularios
   formularioVisible = false;
@@ -65,9 +80,10 @@ export class GestionarSancionesComponent implements OnInit {
 
   // Asignación
   asignarUsuario = '';
-  asignarTipo = '';
+  asignarTipo: number | null = null;
   asignarInicio = '';
   asignarFin = '';
+  asignarDescripcion = '';
 
 
   mostrarModalAmpliar = false;
@@ -78,12 +94,23 @@ export class GestionarSancionesComponent implements OnInit {
   extender = false;
   extenderDias = 7; // por defecto mostrar 7 días
 
+  prefillData: PrefillData | null = null;
+  prefillLoading = false;
+  prefillError: string | null = null;
+
   private notify = inject(NotificationService);
 
 
   ngOnInit(): void {
     this.cargarDatosReales();
-    this.asignarTipo = this.tiposSancion[0] || '';
+    this.cargarCatalogo();
+
+    this.route.queryParams.subscribe((params) => {
+      const prestamoId = Number(params['prestamoId']);
+      if (prestamoId) {
+        this.precargarSancion(prestamoId);
+      }
+    });
 
     // Listener navbar admin
     window.addEventListener('admin-navegacion', (e: any) => {
@@ -103,6 +130,49 @@ export class GestionarSancionesComponent implements OnInit {
       }
       if (destino === 'cuentas') {
         this.router.navigate(['/admin/dashboard']);
+      }
+    });
+  }
+
+  cargarCatalogo(): void {
+    this.sancionesService.getCatalogo().subscribe({
+      next: (resp) => {
+        this.tiposSancion = resp.sanciones || [];
+        this.asignarTipo = this.tiposSancion[0]?.id ?? null;
+      },
+      error: () => {
+        this.notify.error('No se pudo cargar el catálogo de sanciones.');
+      }
+    });
+  }
+
+  precargarSancion(prestamoId: number): void {
+    this.prefillLoading = true;
+    this.prefillError = null;
+    this.prefillData = null;
+
+    this.sancionesService.prefillSancion(prestamoId).subscribe({
+      next: (data: any) => {
+        const usuario = data?.usuario || {};
+        const prestamo = data?.prestamo || {};
+
+        this.asignarUsuario = usuario.email || usuario.rut || usuario.idUser || '';
+        this.asignarInicio = prestamo.fecha_inicio || '';
+        this.asignarFin = prestamo.fecha_fin || '';
+
+        this.prefillData = { usuario, prestamo };
+
+        this.formularioAsignar = true;
+        this.formularioVisible = false;
+        this.sancionSeleccionada = null;
+
+        this.notify.success('Datos precargados para sanción.');
+        this.prefillLoading = false;
+      },
+      error: () => {
+        this.prefillLoading = false;
+        this.prefillError = 'No se pudo precargar la sanción.';
+        this.notify.error('No se pudo precargar la sanción.');
       }
     });
   }
@@ -135,9 +205,12 @@ export class GestionarSancionesComponent implements OnInit {
             nombre,
             apellido,
             motivo: s.nivel,
+            descripcion: s.descripcion ?? '',
             fecha_inicio: s.fecha_inicio,
             fecha_fin: s.fecha_fin,
-            estado: estadoUI
+            estado: estadoUI,
+            asignada_por: `${u?.pivot?.assigned_by_nombre ?? ''} ${u?.pivot?.assigned_by_apellido ?? ''}`.trim() || u?.pivot?.assigned_by_email || '—',
+            asignada_en: u?.pivot?.created_at ?? ''
           } as Sancion;
         });
 
@@ -304,21 +377,7 @@ confirmarAmpliacion() {
 
  
   registrarTipo(): void {
-    const tipo = this.nuevoTipo.trim();
-
-    if (!tipo) {
-      this.notify.warning('Ingresa un nombre para el tipo de sanción.');
-      return;
-    }
-
-    if (this.tiposSancion.some(t => t.toLowerCase() === tipo.toLowerCase())) {
-      this.notify.info('Ese tipo de sanción ya existe.');
-      return;
-    }
-
-    this.tiposSancion.push(tipo);
-    this.nuevoTipo = '';
-    this.notify.success('Tipo de sanción registrado correctamente.');
+    this.notify.info('El catálogo de sanciones se administra desde el backend.');
   }
 
 
@@ -331,9 +390,15 @@ asignarSancion(): void {
     return;
   }
 
-  const payload = {
+    if (!this.asignarTipo) {
+      this.notify.warning('Selecciona un tipo de sanción válido.');
+      return;
+    }
+
+    const payload = {
     usuario: this.asignarUsuario.trim(), // id, correo o rut
-    nivel: this.asignarTipo,
+      idSancion: this.asignarTipo,
+    descripcion: this.asignarDescripcion?.trim() || null,
     fecha_inicio: this.asignarInicio,
     fecha_fin: this.asignarFin,
   };

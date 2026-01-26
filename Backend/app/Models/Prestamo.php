@@ -123,4 +123,14 @@ class Prestamo extends Model
         return $this->belongsTo(Evento::class, 'evento_id');
     }
 
+    /**
+     * Historial de cambios de estado (auditoría).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function historialEstados()
+    {
+        return $this->hasMany(PrestamoHistorial::class, 'idPrestamo', 'idPrestamo')
+                    ->orderBy('created_at', 'desc');
+    }
 }
