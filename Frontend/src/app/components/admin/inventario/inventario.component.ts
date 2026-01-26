@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ImagenService } from '../../../services/image.service';
 
 import { EquiposService } from '../../../services/equipos.service';
 import { CategoriaService } from '../../../services/categoria.service';
@@ -55,7 +56,8 @@ export class InventarioComponent implements OnInit {
   constructor(
     private equiposService: EquiposService,
     private categoriaService: CategoriaService,
-    private tipoEquipoService: TipoEquipoService
+    private tipoEquipoService: TipoEquipoService,
+    private imagenSrv: ImagenService
   ) {}
 
   ngOnInit(): void {
@@ -263,13 +265,38 @@ guardarCambiosEquipo() {
 
 
 
+private getTipoEquipoById(tipoId: number): any | null {
+  return this.todosTipos.find((t: any) => Number(t.id) === Number(tipoId)) ?? null;
+}
+
+  /**
+   * Imagen para EQUIPO FÍSICO (detalle derecho)
+   * Usa tipo_equipo_id -> busca el tipo -> usa ImagenService (backend)
+   */
   getImagenEquipo(equipo: any): string {
-    const n = equipo.nombre?.toLowerCase() || '';
-    if (n.includes('cámara') || n.includes('canon')) return 'assets/equipos/camara.jpg';
-    if (n.includes('micrófono') || n.includes('rode')) return 'assets/equipos/aro.jpg';
-    if (n.includes('tablet') || n.includes('wacom')) return 'assets/equipos/computador.jpg';
-    if (n.includes('proyector') || n.includes('epson')) return 'assets/equipos/proyector.jpg';
-    if (n.includes('grabadora') || n.includes('zoom')) return 'assets/equipos/luz.jpg';
-    return 'assets/equipos/lampara.jpg';
+    const tipo = equipo?.tipo_equipo_id
+      ? this.getTipoEquipoById(equipo.tipo_equipo_id)
+      : null;
+
+    // resolveTipoEquipoImage prioriza backend (tipo.imagen) y cae a default/fallback
+    return this.imagenSrv.resolveTipoEquipoImage({
+      imagen: tipo?.imagen,
+      nombre: tipo?.nombre ?? equipo?.nombre
+    });
   }
+
+  /**
+   * Imagen para MODELO (panel derecho cuando seleccionas grupo)
+   */
+  getImagenModelo(modeloSeleccionado: any): string {
+    const tipo = this.todosTipos.find((t: any) =>
+      (t.nombre ?? '').toLowerCase() === (modeloSeleccionado?.nombre ?? '').toLowerCase()
+    ) ?? null;
+
+    return this.imagenSrv.resolveTipoEquipoImage({
+      imagen: tipo?.imagen,
+      nombre: tipo?.nombre ?? modeloSeleccionado?.nombre
+    });
+  }
+
 }

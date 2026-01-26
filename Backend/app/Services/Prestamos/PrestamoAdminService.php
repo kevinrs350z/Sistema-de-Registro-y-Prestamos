@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Log;
 
 use App\Models\Prestamo;
 use App\Models\Observacion;
+use App\Models\PrestamoHistorial;
+use App\Models\User;
 use App\Mail\PrestamoAprobadoMail;
 use App\Mail\PrestamoRechazadoMail;
 
@@ -35,16 +37,28 @@ class PrestamoAdminService
         $prestamo = Prestamo::with(['user.persona', 'equipos.tipo'])
             ->findOrFail($idPrestamo);
 
+        $estadoAnterior = $prestamo->estado;
+
         $nuevoEstado = $accion === 'aprobar'
             ? EstadoPrestamo::APROBADO
             : EstadoPrestamo::RECHAZADO;
 
-        // Guardamos estado y, si hay motivo, lo registramos en el campo observacion
+        // Guardamos estado
         $prestamo->estado = $nuevoEstado;
         if (!is_null($motivo) && trim($motivo) !== '') {
             $prestamo->observacion = $motivo;
         }
         $prestamo->save();
+
+        // 🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
+        $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
+        $this->registrarHistorial(
+            $prestamo->idPrestamo,
+            $userId,
+            $estadoAnterior,
+            $nuevoEstado,
+            $motivo
+        );
 
         // Si se rechaza, liberar equipos a DISPONIBLE
         if ($accion === 'rechazar') {
@@ -99,6 +113,8 @@ class PrestamoAdminService
         $prestamo = Prestamo::with(['equipos'])
             ->findOrFail($idPrestamo);
 
+        $estadoAnterior = $prestamo->estado;
+
         if ($prestamo->estado !== EstadoPrestamo::APROBADO) {
             throw new \Exception('Solo préstamos APROBADOS pueden devolverse.');
         }
@@ -106,11 +122,15 @@ class PrestamoAdminService
         $prestamo->estado = EstadoPrestamo::DEVUELTO;
         $prestamo->save();
 
-        Observacion::create([
-            'idPrestamo' => $prestamo->idPrestamo,
-            'motivo'     => $motivo,
-            'tipo'       => 'DEVOLUCION'
-        ]);
+        // 🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
+        $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
+        $this->registrarHistorial(
+            $prestamo->idPrestamo,
+            $userId,
+            $estadoAnterior,
+            EstadoPrestamo::DEVUELTO,
+            $motivo
+        );
 
         foreach ($prestamo->equipos as $equipo) {
             $equipo->estado = EstadoEquipo::DISPONIBLE;
@@ -146,9 +166,11 @@ class PrestamoAdminService
 
             // 3️⃣ Registrar observación
             Observacion::create([
-                'idPrestamo' => $idPrestamo,
-                'motivo'     => $motivo,
-                'tipo'       => 'DEVOLUCION_PARCIAL'
+                'idPrestamo'  => $idPrestamo,
+                'idUser'      => auth()->id() ?? auth('sanctum')->user()?->idUser,
+                'descripcion' => $motivo,
+                'tipo'        => 'DEVOLUCION_PARCIAL',
+                'estado'      => 'habilitado'
             ]);
 
             // 4️⃣ ¿Quedan equipos sin devolver?
@@ -159,8 +181,18 @@ class PrestamoAdminService
 
             // 5️⃣ Si NO quedan → préstamo DEVUELTO
             if ($pendientes === 0) {
+                $estadoAnterior = $prestamo->estado;
                 $prestamo->estado = EstadoPrestamo::DEVUELTO;
                 $prestamo->save();
+
+                $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
+                $this->registrarHistorial(
+                    $prestamo->idPrestamo,
+                    $userId,
+                    $estadoAnterior,
+                    EstadoPrestamo::DEVUELTO,
+                    'Todos los equipos devueltos'
+                );
             }
         });
     }
@@ -318,6 +350,77 @@ class PrestamoAdminService
         );
 
         return $prestamo;
+    }
+
+    /* ============================================================
+        MARCAR ENTREGADO
+    ============================================================ */
+    public function marcarEntregado(
+        int $idPrestamo,
+        int $adminId
+    ): void {
+        DB::transaction(function () use ($idPrestamo, $adminId) {
+            
+            // 1️⃣ OBTENER PRÉSTAMO
+            $prestamo = Prestamo::findOrFail($idPrestamo);
+
+            $estadoAnterior = $prestamo->estado;
+
+            // 2️⃣ VALIDAR: Solo APROBADO → ENTREGADO
+            if ($prestamo->estado !== EstadoPrestamo::APROBADO) {
+                throw new \Exception(
+                    "Solo préstamos en estado APROBADO pueden marcarse como ENTREGADO. " .
+                    "Estado actual: {$prestamo->estado}"
+                );
+            }
+
+            // 3️⃣ VALIDAR QUE QUIEN EJECUTA SEA ADMIN
+            $admin = User::findOrFail($adminId);
+            if (!$admin->isAdmin()) {
+                throw new \Exception('Solo un administrador puede marcar un préstamo como ENTREGADO.');
+            }
+
+            // 4️⃣ CAMBIAR ESTADO
+            $prestamo->estado = EstadoPrestamo::ENTREGADO;
+            $prestamo->save();
+
+            // 5️⃣ REGISTRAR EN HISTORIAL DE CAMBIOS
+            $this->registrarHistorial(
+                $prestamo->idPrestamo,
+                $adminId,
+                $estadoAnterior,
+                EstadoPrestamo::ENTREGADO,
+                'Entrega física realizada'
+            );
+
+            // 6️⃣ LOG DE AUDITORÍA
+            Log::info('Préstamo marcado como ENTREGADO', [
+                'idPrestamo'   => $idPrestamo,
+                'admin_id'     => $adminId,
+                'admin_nombre' => $admin->persona?->Nombre ?? 'Admin',
+                'timestamp'    => now(),
+            ]);
+        });
+    }
+
+    private function registrarHistorial(
+        int $idPrestamo,
+        ?int $idUser,
+        string $estadoAnterior,
+        string $estadoNuevo,
+        ?string $descripcion = null
+    ): void {
+        if (!$idUser) {
+            return;
+        }
+
+        PrestamoHistorial::create([
+            'idPrestamo'     => $idPrestamo,
+            'idUser'         => $idUser,
+            'estado_anterior'=> $estadoAnterior,
+            'estado_nuevo'   => $estadoNuevo,
+            'descripcion'    => $descripcion,
+        ]);
     }
 
 

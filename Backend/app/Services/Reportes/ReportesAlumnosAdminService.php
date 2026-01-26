@@ -367,4 +367,108 @@ class ReportesAlumnosAdminService
     return $out;
 }
 
+/* ============================================================
+   7) PRÉSTAMOS POR CARRERA  (para Chart.js)
+   Retorna: [{ carrera, total_prestamos }]
+   Nota: Para una sola carrera
+============================================================ */
+public function getPrestamosPorCarrera($months = 12)
+{
+    [$start, $end] = $this->getRange($months);
+    $alumnos = $this->alumnosUserIds();
+
+    return DB::table('prestamos as p')
+        ->whereIn('p.idUser', $alumnos)
+        ->whereBetween('p.created_at', [$start, $end])
+        ->selectRaw("'Sin carrera' as carrera, COUNT(*) as total_prestamos")
+        ->groupBy('carrera')
+        ->get();
+}
+
+/* ============================================================
+   8) EVOLUCIÓN PRÉSTAMOS ALUMNOS (línea)
+   Retorna: [{ periodo: 'YYYY-MM', total_prestamos }]
+============================================================ */
+public function getEvolucionPrestamosAlumnos($months = 6)
+{
+    [$start, $end] = $this->getRange($months);
+    $alumnos = $this->alumnosUserIds();
+
+    return DB::table('prestamos as p')
+        ->whereIn('p.idUser', $alumnos)
+        ->whereBetween('p.created_at', [$start, $end])
+        ->selectRaw("DATE_FORMAT(p.created_at, '%Y-%m') as periodo, COUNT(*) as total_prestamos")
+        ->groupBy('periodo')
+        ->orderBy('periodo')
+        ->get();
+}
+
+/* ============================================================
+   9) SANCIONES POR NIVEL (doughnut)
+   Retorna: [{ nivel: 'LEVE'|'MEDIA'|'GRAVE', total }]
+   OJO: en tu DB se llama 'sancions' y pivote 'user_sancion'
+============================================================ */
+public function getSancionesPorNivel($months = 12)
+{
+    [$start, $end] = $this->getRange($months);
+    $alumnos = $this->alumnosUserIds();
+
+    // Si tu pivot user_sancion tiene created_at, filtramos por meses.
+    // Si no tiene created_at, elimina whereBetween de abajo.
+    $q = DB::table('user_sancion as us')
+        ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
+        ->whereIn('us.idUser', $alumnos);
+
+    // aplica filtro temporal solo si existe created_at en user_sancion
+    // (si no existe, comenta estas 2 líneas)
+    $q->whereNotNull('us.created_at')
+      ->whereBetween('us.created_at', [$start, $end]);
+
+    return $q->selectRaw("UPPER(s.nivel) as nivel, COUNT(*) as total")
+        ->groupBy(DB::raw("UPPER(s.nivel)"))
+        ->orderByDesc('total')
+        ->get();
+}
+
+/* ============================================================
+   10) RANKING ALUMNOS (bar + tabla)
+   Retorna: [{ nombre, email, carrera, total_prestamos, sanciones }]
+============================================================ */
+    public function getRankingAlumnos($limit = 10, $months = 12)
+    {
+        [$start, $end] = $this->getRange($months);
+        $alumnos = $this->alumnosUserIds();
+
+        // Prestamos por alumno
+        $prestamos = DB::table('prestamos as p')
+            ->join('users as u', 'u.idUser', '=', 'p.idUser')
+            ->join('persona as per', 'per.idPersona', '=', 'u.idPersona')
+            ->whereIn('p.idUser', $alumnos)
+            ->whereBetween('p.created_at', [$start, $end])
+            ->selectRaw("
+                u.idUser as idUser,
+                CONCAT(per.Nombre,' ',per.apellido1,' ',COALESCE(per.apellido2,'')) as nombre,
+                u.Email as email,
+                'Sin carrera' as carrera,
+                COUNT(*) as total_prestamos
+            ")
+            ->groupBy('u.idUser','per.Nombre','per.apellido1','per.apellido2','u.Email');
+
+        // Sanciones por alumno
+        $sanciones = DB::table('user_sancion as us')
+            ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
+            ->whereIn('us.idUser', $alumnos)
+            ->selectRaw("us.idUser, COUNT(*) as sanciones")
+            ->groupBy('us.idUser');
+
+        return DB::query()
+            ->fromSub($prestamos, 'p')
+            ->leftJoinSub($sanciones, 's', 's.idUser', '=', 'p.idUser')
+            ->selectRaw("p.nombre, p.email, p.carrera, p.total_prestamos, COALESCE(s.sanciones,0) as sanciones")
+            ->orderByDesc('p.total_prestamos')
+            ->limit($limit)
+            ->get();
+    }
+
+
 }

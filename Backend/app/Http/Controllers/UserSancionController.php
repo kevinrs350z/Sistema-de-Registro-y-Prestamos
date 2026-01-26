@@ -4,20 +4,65 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Sancion;
+use App\Models\Prestamo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SancionNotificacion; // la creamos más abajo
 
 class UserSancionController extends Controller
 {
+    // -------- PREFILL PARA SANCIÓN DESDE PRÉSTAMO FINALIZADO --------
+    public function prefill(Request $request)
+    {
+        $request->validate([
+            'prestamo_id' => 'required|integer'
+        ]);
+
+        $prestamo = Prestamo::with(['user.persona', 'equipos.tipo'])
+            ->findOrFail($request->prestamo_id);
+
+        if (!in_array($prestamo->estado, ['ENTREGADO', 'DEVUELTO'])) {
+            return response()->json([
+                'error' => 'El préstamo no está finalizado.'
+            ], 422);
+        }
+
+        $persona = $prestamo->user?->persona;
+
+        return response()->json([
+            'prestamo' => [
+                'idPrestamo'   => $prestamo->idPrestamo,
+                'estado'       => $prestamo->estado,
+                'fecha_inicio' => $prestamo->fecha_inicio,
+                'fecha_fin'    => $prestamo->fecha_fin,
+                'equipos'      => $prestamo->equipos->map(function ($e) {
+                    return [
+                        'id'     => $e->id,
+                        'nombre' => $e->tipo->nombre ?? 'Equipo',
+                        'codigo' => $e->codigo ?? '—'
+                    ];
+                })
+            ],
+            'usuario' => [
+                'idUser'  => $prestamo->user?->idUser,
+                'nombre'  => $persona?->Nombre ?? '',
+                'apellido'=> $persona?->Apellido1 ?? '',
+                'email'   => $prestamo->user?->Email ?? '',
+                'rut'     => $persona?->Rut ?? ''
+            ]
+        ]);
+    }
     // -------- ASIGNAR SANCION A UN USUARIO (ID, CORREO O RUT) --------
     public function asignarSancion(Request $request)
     {
         $request->validate([
             'usuario'      => 'required|string',     // puede ser id, correo o rut
-            'nivel'        => 'required|string',
+            'idSancion'    => 'nullable|integer|exists:sancions,idSancion',
+            'nivel'        => 'nullable|string',
+            'descripcion'  => 'nullable|string',
             'fecha_inicio' => 'required|date',
             'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
+            'prestamo_id'  => 'nullable|integer|exists:prestamos,idPrestamo',
         ]);
 
         $identificador = $request->usuario;
@@ -38,16 +83,22 @@ class UserSancionController extends Controller
 
         $user = $userQuery->firstOrFail();
 
-        // Crear sanción (estado siempre se inicia en 'activo')
-        $sancion = Sancion::create([
-            'nivel'        => $request->nivel,
-            'estado'       => 'ACTIVA',
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin'    => $request->fecha_fin,
-        ]);
+        // Resolver sanción desde catálogo
+        $sancion = null;
+        if ($request->idSancion) {
+            $sancion = Sancion::findOrFail($request->idSancion);
+        } elseif ($request->nivel) {
+            $sancion = Sancion::where('nivel', $request->nivel)->firstOrFail();
+        }
 
-        // Asignar sanción en tabla pivote
-        $user->sanciones()->attach($sancion->idSancion);
+        // Asignar sanción en tabla pivote con auditoría
+        $user->sanciones()->attach($sancion->idSancion, [
+            'assigned_by' => auth()->user()?->idUser,
+            'prestamo_id' => $request->prestamo_id,
+            'descripcion' => $request->descripcion,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
 
         // Enviar correo
        // Mail::to($user->Email)->send(
@@ -67,6 +118,17 @@ class UserSancionController extends Controller
         ], 201);
     }
 
+    public function catalogo()
+    {
+        $catalogo = Sancion::select('idSancion', 'nivel', 'descripcion', 'estado')
+            ->orderBy('nivel')
+            ->get();
+
+        return response()->json([
+            'sanciones' => $catalogo
+        ]);
+    }
+
 
     public function listarSanciones()
     {
@@ -75,6 +137,26 @@ class UserSancionController extends Controller
             ->orderBy('fecha_inicio', 'desc')
             ->orderBy('idSancion', 'desc')
             ->get();
+
+        // Enriquecer con información del admin que asignó
+        $assignedIds = $sanciones->flatMap(function ($s) {
+            return $s->users->map(fn ($u) => $u->pivot?->assigned_by)->filter();
+        })->unique()->values();
+
+        $assignedUsers = User::with('persona')
+            ->whereIn('idUser', $assignedIds)
+            ->get()
+            ->keyBy('idUser');
+
+        $sanciones = $sanciones->map(function ($s) use ($assignedUsers) {
+            $s->users->each(function ($u) use ($assignedUsers) {
+                $assigned = $assignedUsers->get($u->pivot?->assigned_by);
+                $u->pivot->assigned_by_nombre = $assigned?->persona?->Nombre ?? null;
+                $u->pivot->assigned_by_apellido = $assigned?->persona?->Apellido1 ?? null;
+                $u->pivot->assigned_by_email = $assigned?->Email ?? null;
+            });
+            return $s;
+        });
 
         return response()->json([
             'message'   => 'Listado completo de sanciones con sus usuarios.',
@@ -90,6 +172,25 @@ class UserSancionController extends Controller
             ->orderBy('fecha_inicio', 'desc')
             ->orderBy('idSancion', 'desc')
             ->get();
+
+        $assignedIds = $sanciones->flatMap(function ($s) {
+            return $s->users->map(fn ($u) => $u->pivot?->assigned_by)->filter();
+        })->unique()->values();
+
+        $assignedUsers = User::with('persona')
+            ->whereIn('idUser', $assignedIds)
+            ->get()
+            ->keyBy('idUser');
+
+        $sanciones = $sanciones->map(function ($s) use ($assignedUsers) {
+            $s->users->each(function ($u) use ($assignedUsers) {
+                $assigned = $assignedUsers->get($u->pivot?->assigned_by);
+                $u->pivot->assigned_by_nombre = $assigned?->persona?->Nombre ?? null;
+                $u->pivot->assigned_by_apellido = $assigned?->persona?->Apellido1 ?? null;
+                $u->pivot->assigned_by_email = $assigned?->Email ?? null;
+            });
+            return $s;
+        });
 
         return response()->json([
             'message'   => 'Listado de sanciones activas.',

@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Pack } from '../models/pack.model';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({ providedIn: 'root' })
 export class PacksService {
 
-  private readonly baseUrl = 'http://localhost:8000/api';
+  private readonly baseUrl = `${environment.apiBaseUrl}/api`;
 
   constructor(private http: HttpClient) {}
 
@@ -19,7 +20,7 @@ export class PacksService {
     });
   }
 
-  // ✅ AHORA SÍ ACEPTA PAGINACIÓN
+
   getPacks(page = 1, perPage = 10): Observable<any> {
     return this.http.get<any>(
       `${this.baseUrl}/packs?page=${page}&per_page=${perPage}`,

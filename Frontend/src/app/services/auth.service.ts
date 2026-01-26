@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 interface LoginResponse {
   token: string;
@@ -20,7 +21,7 @@ interface LoginResponse {
 })
 export class AuthService {
   //private apiUrl = 'https://cofferlike-nonaseptic-stephen.ngrok-free.dev/api'; 
-  private apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = `${environment.apiBaseUrl}/api`;
   //private apiUrl = 'http://192.168.1.83:8000/api';
 
 

@@ -27,6 +27,11 @@
 
         <p><strong>{{ s.usuario }}</strong></p>
         <p>{{ s.motivo }}</p>
+        <p class="meta-asignacion" *ngIf="s.asignada_por || s.asignada_en">
+          <span>{{ s.asignada_por || '—' }}</span>
+          <span class="dot">•</span>
+          <span>{{ s.asignada_en ? (s.asignada_en | date:'dd MMM yyyy · HH:mm') : '—' }}</span>
+        </p>
 
         <p class="estado" [class.activa]="s.estado === 'ACTIVA'">
           {{ s.estado }}
@@ -48,6 +53,9 @@
   <div><label>RUT</label><p>{{ sancionSeleccionada.rut }}</p></div>
 
   <div><label>Motivo</label><p>{{ sancionSeleccionada.motivo }}</p></div>
+    <div class="col-100"><label>Descripción</label><p>{{ sancionSeleccionada.descripcion || '—' }}</p></div>
+  <div><label>Asignada por</label><p>{{ sancionSeleccionada.asignada_por || '—' }}</p></div>
+  <div><label>Asignada en</label><p>{{ sancionSeleccionada.asignada_en || '—' }}</p></div>
   <div><label>Fecha inicio</label><p>{{ sancionSeleccionada.fecha_inicio }}</p></div>
   <div><label>Fecha fin</label><p>{{ sancionSeleccionada.fecha_fin }}</p></div>
   <div><label>Estado</label><p>{{ sancionSeleccionada.estado }}</p></div>
@@ -104,6 +112,64 @@
 
     <h2>Asignar Sanción a Usuario</h2>
 
+    <div class="prefill-card" *ngIf="prefillLoading">
+      <div class="prefill-header">
+        <span class="prefill-title">Precargando datos del préstamo…</span>
+        <span class="prefill-badge">Cargando</span>
+      </div>
+    </div>
+
+    <div class="prefill-card" *ngIf="prefillError">
+      <div class="prefill-header">
+        <span class="prefill-title">No se pudo precargar</span>
+        <span class="prefill-badge error">Error</span>
+      </div>
+      <p class="prefill-subtitle">{{ prefillError }}</p>
+    </div>
+
+    <div class="prefill-card" *ngIf="prefillData">
+      <div class="prefill-header">
+        <span class="prefill-title">Datos del préstamo</span>
+        <span class="prefill-badge">Prefill</span>
+      </div>
+
+      <div class="prefill-grid">
+        <div>
+          <label>Alumno</label>
+          <p>{{ prefillData.usuario.nombre }} {{ prefillData.usuario.apellido }}</p>
+        </div>
+        <div>
+          <label>Correo</label>
+          <p>{{ prefillData.usuario.email || '—' }}</p>
+        </div>
+        <div>
+          <label>RUT</label>
+          <p>{{ prefillData.usuario.rut || '—' }}</p>
+        </div>
+        <div>
+          <label>Préstamo</label>
+          <p>#{{ prefillData.prestamo.idPrestamo }} · {{ prefillData.prestamo.estado }}</p>
+        </div>
+        <div>
+          <label>Fecha inicio</label>
+          <p>{{ prefillData.prestamo.fecha_inicio || '—' }}</p>
+        </div>
+        <div>
+          <label>Fecha fin</label>
+          <p>{{ prefillData.prestamo.fecha_fin || '—' }}</p>
+        </div>
+      </div>
+
+      <div class="prefill-equipos" *ngIf="prefillData.prestamo.equipos?.length">
+        <label>Equipos</label>
+        <div class="equipos-list">
+          <span class="equipos-item" *ngFor="let eq of prefillData.prestamo.equipos">
+            {{ eq.nombre }} · {{ eq.codigo || '—' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <div class="detalle-grid">
 
       <div class="col-100" style="position:relative;">
@@ -121,8 +187,15 @@
       <div class="col-100">
         <label>Tipo de sanción</label>
         <select [(ngModel)]="asignarTipo">
-          <option *ngFor="let t of tiposSancion">{{ t }}</option>
+          <option *ngFor="let t of tiposSancion" [ngValue]="t.id">
+            {{ t.nivel }}
+          </option>
         </select>
+      </div>
+
+      <div class="col-100">
+        <label>Descripción (opcional)</label>
+        <textarea rows="3" [(ngModel)]="asignarDescripcion" placeholder="Explica brevemente lo ocurrido..."></textarea>
       </div>
 
       <div>

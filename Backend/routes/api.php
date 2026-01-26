@@ -25,6 +25,8 @@ use App\Http\Controllers\reportes\Dashboard\DashboardReportesController;
 //use App\Http\Controllers\Prestamo\AdminPrestamoController;
 use App\Http\Controllers\Reportes\ReporteProfesorController;
 use App\Http\Controllers\PackController;
+use App\Http\Controllers\Reportes\ReportesAlumnosAdminController;
+use App\Http\Controllers\Reportes\Dashboard\DashboardOperationalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -101,6 +103,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/admin/prestamos/rechazar/{id}',[PrestamoAdminController::class, 'rechazar']);
     Route::get('/admin/prestamos/pendientes', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
     Route::patch('/admin/prestamos/{idPrestamo}/equipos/{idEquipo}/devolver',[PrestamoAdminController::class, 'devolverEquipo']);
+    Route::post('/admin/prestamos/{id}/marcar-entregado', [PrestamoAdminController::class, 'marcarEntregado']);
+    Route::get('/admin/sanciones/prefill', [UserSancionController::class, 'prefill']);
+    Route::get('/admin/sanciones/catalogo', [UserSancionController::class, 'catalogo']);
     Route::get('/admin/sanciones', [UserSancionController::class, 'listarSanciones']);
     Route::get('/admin/sanciones/activa', [UserSancionController::class, 'listarSancionesActivas']);
     Route::post('/admin/sanciones/asignar', [UserSancionController::class, 'asignarSancion']);
@@ -206,3 +211,43 @@ Route::prefix('reportes/dashboard')->group(function () {
         Route::put('/{pack}', [PackController::class, 'update']);
 
     });
+
+
+    //esto es de repotes tambien 
+    Route::middleware(['auth:sanctum'])
+      ->prefix('reportes/alumnos')
+      ->group(function () {
+          Route::get('/kpis', [ReportesAlumnosAdminController::class, 'kpis']);
+          Route::get('/prestamos-carrera', [ReportesAlumnosAdminController::class, 'prestamosCarrera']);
+          Route::get('/sanciones-nivel', [ReportesAlumnosAdminController::class, 'sancionesNivel']);
+          Route::get('/evolucion-prestamos', [ReportesAlumnosAdminController::class, 'evolucionPrestamos']);
+          Route::get('/ranking', [ReportesAlumnosAdminController::class, 'ranking']);
+
+          // los que ya tenías
+          Route::get('/workflow-estados', [ReportesAlumnosAdminController::class, 'workflowEstados']);
+          Route::get('/tiempo-resolucion', [ReportesAlumnosAdminController::class, 'tiempoResolucion']);
+          Route::get('/equipos-criticos', [ReportesAlumnosAdminController::class, 'equiposCriticos']);
+          Route::get('/inventario-evolucion', [ReportesAlumnosAdminController::class, 'inventarioEvolucion']);
+          Route::get('/heatmap', [ReportesAlumnosAdminController::class, 'heatmap']);
+          Route::get('/riesgo', [ReportesAlumnosAdminController::class, 'riesgo']);
+      });
+
+    // Dashboard operacional (estado actual del sistema)
+    Route::middleware(['auth:sanctum'])
+      ->prefix('dashboard/operational')
+      ->group(function () {
+          Route::get('/kpis', [DashboardOperationalController::class, 'getKPIs']);
+          Route::get('/inventario', [DashboardOperationalController::class, 'getEstadoInventario']);
+        Route::get('/disponibilidad', [DashboardOperationalController::class, 'getDisponibilidad']);
+        Route::get('/criticos', [DashboardOperationalController::class, 'getEquiposCriticos']);
+        Route::get('/equipos/{id}/ultimo-evento', [DashboardOperationalController::class, 'getEquipoUltimoEvento']);
+        // Profesores - operativos
+        Route::get('/profesores/{id}/prestamos-activos', [DashboardOperationalController::class, 'getPrestamosActivosPorProfesor']);
+        Route::get('/profesores/{id}/prestamos-proximos', [DashboardOperationalController::class, 'getPrestamosProximosPorProfesor']);
+        Route::get('/profesores/{id}/riesgos', [DashboardOperationalController::class, 'getRiesgosPorProfesor']);
+        Route::get('/profesores/{id}/responsabilidad', [DashboardOperationalController::class, 'getResponsabilidadPorProfesor']);
+        Route::get('/profesores/{id}/alertas', [DashboardOperationalController::class, 'getAlertasPorProfesor']);
+          Route::get('/alertas', [DashboardOperationalController::class, 'getAlertasCriticas']);
+          Route::get('/actividad-reciente', [DashboardOperationalController::class, 'getActividadReciente']);
+          Route::get('/salud', [DashboardOperationalController::class, 'getSaludSistema']);
+      });

@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PrestamosAdminService {
 
-  private apiUrl = 'http://localhost:8000/api/admin/prestamos';
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/admin/prestamos`;
 
   constructor(private http: HttpClient) {}
 
@@ -19,7 +20,7 @@ export class PrestamosAdminService {
     });
   }
 
-  // 🔹 1. Obtener solicitudes pendientes
+  //  1. Obtener solicitudes pendientes
   getPendientes(): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.apiUrl}/pendientes`,
@@ -27,7 +28,7 @@ export class PrestamosAdminService {
     );
   }
 
-  // 🔹 2. Obtener historial de préstamos (aceptados/rechazados/finalizados)
+  //  2. Obtener historial de préstamos (aceptados/rechazados/finalizados)
   getHistorial(): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.apiUrl}/historial`,
@@ -45,7 +46,7 @@ aprobarPrestamo(id: number, motivo: string, accion: string) {
   });
 }
 marcarDevuelto(id: number, motivo: string) {
-  return this.http.post(`http://localhost:8000/api/admin/prestamos/${id}/devolver`, {
+  return this.http.post(`${this.apiUrl}/${id}/devolver`, {
     motivo
   });
 }

@@ -1,18 +1,6 @@
 <div class="reportes-wrapper container py-4">
 
-  <!-- Mensaje flotante -->
-  <div *ngIf="mensaje" class="msg-box">{{ mensaje }}</div>
 
-  <!-- Título general -->
-  <div class="text-center mb-4">
-    <h2 class="fw-bold text-primary">Reportes de alumnos</h2>
-    <p class="text-muted">
-      Análisis del comportamiento de los estudiantes en el sistema de préstamos.
-    </p>
-    <p class="text-muted small">
-      Fecha de reporte: {{ today | date: 'dd/MM/yyyy' }}
-    </p>
-  </div>
 
   <!-- Botones de exportación -->
   <app-export-buttons
@@ -23,38 +11,11 @@
   <!-- CONTENIDO EXPORTABLE A PDF -->
   <div id="contenidoPDFAlumnos" class="page-wrapper">
 
-    <!-- Encabezado institucional solo PDF -->
-    <div class="pdf-header fade-in solo-pdf">
-      
-
-      <div class="pdf-header-text">
-        <h1 class="pdf-title">Universidad de Tarapacá</h1>
-        <p class="pdf-subtitle">Sistema de Préstamos de Equipos</p>
-        <p class="pdf-date">
-          Fecha de reporte: {{ today | date: 'dd/MM/yyyy' }}
-        </p>
-        <p class="pdf-section">
-          Sección: Reportes de Alumnos
-        </p>
-      </div>
-    </div>
+ 
 
     <hr class="pdf-divider fade-in" />
 
-    <!-- ============== Fila KPIs ================= -->
-    <div class="row g-3 mb-4 fade-in">
-      <div class="col-6 col-md-3" *ngFor="let k of kpis">
-        <div class="card kpi-summary-card shadow-sm">
-          <div class="card-body text-center">
-            <h6 class="text-muted mb-1">{{ k.label }}</h6>
-            <h2 class="fw-bold text-primary mb-0">{{ k.value }}</h2>
-            <small class="text-muted" *ngIf="k.detail">
-              {{ k.detail }}
-            </small>
-          </div>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- ============== Fila 1: préstamos x carrera / evolución ============== -->
     <div class="two-cols mb-4">
@@ -65,7 +26,7 @@
           Distribución de préstamos según la carrera del estudiante.
         </p>
         <div class="chart-area">
-          <canvas id="chartPrestamosCarrera"></canvas>
+          <canvas #prestamosCarreraCanvas></canvas>
         </div>
       </div>
 
@@ -76,7 +37,7 @@
           Tendencia temporal de los préstamos realizados por alumnos.
         </p>
         <div class="chart-area">
-          <canvas id="chartEvolucionPrestamos"></canvas>
+          <canvas #evolucionPrestamosCanvas></canvas>
         </div>
       </div>
     </div>
@@ -90,38 +51,11 @@
           Distribución de sanciones leves, medias y graves.
         </p>
         <div class="chart-area-sm">
-          <canvas id="chartSancionesNivel"></canvas>
+          <canvas #sancionesNivelCanvas></canvas>
         </div>
       </div>
 
-      <!-- KPIs sanciones -->
-      <div class="card fade-in">
-        <h2 class="card-title">Resumen de sanciones</h2>
-        <p class="card-subtitle">
-          Vista rápida de la carga disciplinaria sobre los alumnos.
-        </p>
-
-        <div class="kpi-wrapper">
-          <div class="kpi-item">
-            <h3>{{ resumenSanciones.total }}</h3>
-            <span>Total de sanciones</span>
-          </div>
-          <div class="kpi-item">
-            <h3>{{ resumenSanciones.leves }}</h3>
-            <span>Leves</span>
-          </div>
-          <div class="kpi-item">
-            <h3>{{ resumenSanciones.medias }}</h3>
-            <span>Medias</span>
-          </div>
-          <div class="kpi-item">
-            <h3>{{ resumenSanciones.graves }}</h3>
-            <span>Graves</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
+ 
     <!-- ============== Fila 3: ranking alumnos ============== -->
     <div class="card fade-in">
       <h2 class="card-title">Ranking de alumnos</h2>
@@ -131,7 +65,7 @@
 
       <!-- Gráfico -->
       <div class="chart-area-sm mb-3">
-        <canvas id="chartTopAlumnosAl"></canvas>
+        <canvas #topAlumnosCanvas></canvas>
       </div>
 
       <!-- Tabla -->
@@ -170,46 +104,3 @@
   </div> <!-- /contenidoPDFAlumnos -->
 
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

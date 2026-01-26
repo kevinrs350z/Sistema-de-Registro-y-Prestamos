@@ -138,5 +138,56 @@ class PrestamoSeeder extends Seeder
             [ 'idPrestamo' => $p5, 'idBloque' => 1, 'idAsignatura' => 1, 'created_at' => $now, 'updated_at' => $now ],
             [ 'idPrestamo' => $p5, 'idBloque' => 2, 'idAsignatura' => 2, 'created_at' => $now, 'updated_at' => $now ],
         ]);
+
+        // GENERAR MUCHOS MÁS PRÉSTAMOS PARA VISUALIZAR EL RANKING
+        for ($i = 2; $i <= 5; $i++) {
+            for ($j = 0; $j < 8; $j++) {
+                DB::table('prestamos')->insert([
+                    'idUser'       => $i,
+                    'fecha_inicio' => null,
+                    'fecha_fin'    => null,
+                    'estado'       => ['pendiente', 'aprobado', 'devuelto'][rand(0, 2)],
+                    'tipo'         => ['DENTRO', 'FUERA'][rand(0, 1)],
+                    'otra_motivo'  => 'Préstamo ' . $j,
+                    'observacion'  => null,
+                    'created_at'   => Carbon::now()->subDays(rand(1, 30)),
+                    'updated_at'   => Carbon::now(),
+                ]);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PRÉSTAMOS PRÓXIMOS A VENCER (FUERA) - USADOS PARA EL DASHBOARD
+        | Se crean préstamos tipo FUERA con fecha_fin entre hoy +1 y +3 días
+        |--------------------------------------------------------------------------
+        */
+        for ($u = 2; $u <= 4; $u++) {
+            for ($k = 0; $k < 2; $k++) {
+                $inicio = Carbon::now()->subDays(rand(1, 5))->toDateString();
+                $fin = Carbon::now()->addDays(rand(1, 3))->toDateString();
+
+                $pid = DB::table('prestamos')->insertGetId([
+                    'idUser'       => $u,
+                    'fecha_inicio' => $inicio,
+                    'fecha_fin'    => $fin,
+                    'estado'       => 'aprobado',
+                    'tipo'         => 'FUERA',
+                    'otra_motivo'  => 'Préstamo exterior próximamente a vencer',
+                    'observacion'  => null,
+                    'created_at'   => Carbon::now()->subDays(rand(1, 10)),
+                    'updated_at'   => Carbon::now(),
+                ]);
+
+                // asociar un equipo aleatorio (1..6 si existen)
+                $equipoId = rand(1, 6);
+                DB::table('prestamo_equipo')->insert([
+                    'idPrestamo' => $pid,
+                    'idEquipo' => $equipoId,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([
         AuthInterceptor,
-        LoadingInterceptor   // 👈 AQUÍ
+        LoadingInterceptor   
       ])
     ),
     provideAnimations(),

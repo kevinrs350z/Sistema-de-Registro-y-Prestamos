@@ -7,7 +7,7 @@ import { ReportesMantenimientosComponent } from '../reportes-mantenimientos/repo
 import { ReportesSancionesComponent } from '../reportes-sanciones/reportes-sanciones.component';
 
 
-import { ReportesDashboardComponent } from '../reportes-dashboard/reportes-dashboard.component';
+// removed old ReportesDashboardComponent — replaced by DashboardOperational
 import { ReportesProfesoresComponent } from '../reportes-profesores/reportes-profesores.component';
 import { ReportesAsignaturasComponent } from '../reportes-asignaturas/reportes-asignaturas.component';
 import { ReportesInventarioComponent } from '../reportes-inventario/reportes-inventario.component';
@@ -24,7 +24,7 @@ import { Router, RouterModule } from '@angular/router';
     ReportesSancionesComponent,
     ReportesMantenimientosComponent,
     ReportesTendenciasComponent,
-    ReportesDashboardComponent,
+    // ReportesDashboardComponent removed
     ReportesProfesoresComponent,
     ReportesAsignaturasComponent,
     ReportesInventarioComponent

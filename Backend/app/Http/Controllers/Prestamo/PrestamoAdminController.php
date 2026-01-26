@@ -93,6 +93,28 @@ namespace App\Http\Controllers\Prestamo;
         }
 
         /* ============================================================
+            MARCAR ENTREGADO
+        ============================================================ */
+        public function marcarEntregado(
+            int $id
+        ) {
+            try {
+                $this->service->marcarEntregado(
+                    $id,
+                    auth()->user()->idUser
+                );
+
+                return response()->json([
+                    'message' => 'Préstamo marcado como ENTREGADO correctamente.'
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => $e->getMessage()
+                ], 400);
+            }
+        }
+
+        /* ============================================================
             PENDIENTES
         ============================================================ */
         public function pendientes()

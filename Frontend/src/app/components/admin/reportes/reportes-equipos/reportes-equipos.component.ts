@@ -54,6 +54,8 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
   sanciones = 0;
   rechazos = 0;
   equiposBaja: any[] = [];
+  disponibilidadEquipos: any[] = [];
+  equiposCriticos: any[] = [];
   today = new Date();
   mensaje: string | null = null;
 
@@ -73,6 +75,8 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
     this.cargarUsoInternoExterno();
     this.cargarSancionesYRechazos();
     this.cargarEquiposDadoDeBaja();
+    this.cargarDisponibilidad();
+    this.cargarEquiposCriticos();
   }
 
   ngOnDestroy(): void {
@@ -177,6 +181,22 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
   cargarEquiposDadoDeBaja() {
     this.reportesService.getEquiposDadoDeBaja().subscribe((data) => {
       this.equiposBaja = data;
+    });
+  }
+
+  cargarDisponibilidad() {
+    this.reportesService.getDisponibilidadEquipos().subscribe((data) => {
+      this.disponibilidadEquipos = data || [];
+    }, (err) => {
+      console.error('Error cargando disponibilidad:', err);
+    });
+  }
+
+  cargarEquiposCriticos() {
+    this.reportesService.getEquiposCriticos().subscribe((data) => {
+      this.equiposCriticos = data || [];
+    }, (err) => {
+      console.error('Error cargando equipos críticos:', err);
     });
   }
 
