@@ -15,6 +15,7 @@ class Sancion extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'user_sancion', 'idSancion', 'idUser')
-            ->withPivot(['assigned_by', 'prestamo_id', 'descripcion', 'created_at']);
+            ->withPivot(['assigned_by', 'prestamo_id', 'descripcion', 'accion', 'created_at'])
+            ->withTimestamps();
     }
 }

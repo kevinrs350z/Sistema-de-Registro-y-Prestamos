@@ -1,35 +1,103 @@
+.reportes-page {
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 35%, #f8fafc 100%);
+  min-height: calc(100vh - 120px);
+  padding: 24px 0 36px;
+  position: relative;
+  z-index: 1;
+}
+
+.reportes-wrapper {
+  margin-top: 10px;
+}
+
+.reportes-header {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.reportes-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.reportes-subtitle {
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+.reportes-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reportes-badge {
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
 .reportes-nav {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
   justify-content: center;
 }
 
 .nav-btn {
-  background: #f8f9fa;
-  border: 1px solid #d7d7d7;
-  padding: 8px 18px;
-  border-radius: 20px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 9px 18px;
+  border-radius: 999px;
   font-size: 0.9rem;
-  color: #333;
+  color: #334155;
   text-decoration: none;
-  transition: 0.2s ease;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .nav-btn:hover {
-  background: #e9ecef;
+  background: #e2e8f0;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
 .nav-btn.active {
-  background: #0d6efd;
-  color: #fff !important;
-  border-color: #0d6efd;
-}
-.reportes-wrapper {
-  margin-top: 25px;
-}
-
-.reportes-nav {
-  margin-bottom: 15px;
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  color: #ffffff !important;
+  border-color: transparent;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
 }
 
 .reporte-tab-btn {
   margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .reportes-header {
+    align-items: flex-start;
+  }
+
+  .reportes-title {
+    font-size: 1.5rem;
+  }
 }

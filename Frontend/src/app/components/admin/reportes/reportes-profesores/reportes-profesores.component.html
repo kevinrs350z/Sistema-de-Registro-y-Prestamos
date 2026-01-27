@@ -1,19 +1,18 @@
-<div id="profesoresReport" class="report-section container-fluid py-4">
+<div class="report-page report-animate">
+<div id="profesoresReport" class="reportes-wrapper container report-surface py-4">
 
   <!-- HEADER -->
-  <div class="report-header">
+  <div class="report-header report-section-header">
     <div class="header-content">
-      <h2 class="report-main-title">Análisis de Profesores</h2>
-      <p class="report-subtitle">Estadísticas de préstamos y equipos por docente</p>
+      <h2 class="report-main-title report-section-title">Análisis de Profesores</h2>
+      <p class="report-subtitle report-section-subtitle">Estadísticas de préstamos y equipos por docente</p>
     </div>
 
-    <div class="export-actions">
-      <button class="btn-export pdf-btn" (click)="onExportPDF()">
-        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
-      </button>
-      <button class="btn-export excel-btn" (click)="onExportExcel()">
-        <i class="bi bi-file-earmark-excel-fill"></i> Excel
-      </button>
+    <div class="export-actions report-section-actions">
+      <app-export-buttons
+        [onExportPDF]="onExportPDF.bind(this)"
+        [onExportExcel]="onExportExcel.bind(this)">
+      </app-export-buttons>
     </div>
   </div>
 
@@ -136,4 +135,5 @@
     </div>
 
   </div>
+</div>
 </div>

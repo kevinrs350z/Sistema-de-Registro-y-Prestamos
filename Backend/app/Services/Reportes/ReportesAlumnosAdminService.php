@@ -33,16 +33,26 @@ class ReportesAlumnosAdminService
     /* ============================================================
        0) KPIs DASHBOARD
     ============================================================ */
-    public function getKPIs()
+    public function getKPIs($months = 1)
     {
-        [$start, $end] = $this->getRange(1);
+        [$start, $end] = $this->getRange($months);
         $alumnos = $this->alumnosUserIds();
 
-        // solicitudes creadas este mes
+        // solicitudes creadas en el rango
         $totalLoans = DB::table('prestamos')
             ->whereIn('idUser', $alumnos)
             ->whereBetween('created_at', [$start, $end])
             ->count();
+
+        $alumnosConPrestamos = DB::table('prestamos')
+            ->whereIn('idUser', $alumnos)
+            ->whereBetween('created_at', [$start, $end])
+            ->distinct('idUser')
+            ->count('idUser');
+
+        $prestamosPromedio = $alumnosConPrestamos > 0
+            ? round($totalLoans / $alumnosConPrestamos, 1)
+            : 0;
 
         $pending = DB::table('prestamos')
             ->whereIn('idUser', $alumnos)
@@ -76,7 +86,37 @@ class ReportesAlumnosAdminService
             ->distinct('pe.idEquipo')
             ->count('pe.idEquipo');
 
+        // alumnos con sanciones (user_sancion no tiene timestamps)
+        $alumnosConSanciones = DB::table('user_sancion')
+            ->whereIn('idUser', $alumnos)
+            ->distinct('idUser')
+            ->count('idUser');
+
+        // nuevos alumnos en el rango (según users.created_at)
+        $nuevosSemestre = DB::table('users')
+            ->whereIn('idUser', $alumnos)
+            ->whereBetween('created_at', [$start, $end])
+            ->count();
+
+        // variación de préstamos vs periodo anterior
+        [$prevStart, $prevEnd] = $this->getRange($months);
+        $prevStart = $prevStart->copy()->subMonths($months);
+        $prevEnd = $prevEnd->copy()->subMonths($months);
+        $prestamosPrevios = DB::table('prestamos')
+            ->whereIn('idUser', $alumnos)
+            ->whereBetween('created_at', [$prevStart, $prevEnd])
+            ->count();
+
+        $variacionPrestamos = $totalLoans - $prestamosPrevios;
+
         return [
+            // campos esperados por frontend
+            'alumnosConPrestamos' => $alumnosConPrestamos,
+            'prestamosPromedio' => $prestamosPromedio,
+            'alumnosConSanciones' => $alumnosConSanciones,
+            'nuevosSemestre' => $nuevosSemestre,
+            'variacionPrestamos' => $variacionPrestamos,
+
             'totalLoans' => $totalLoans,
             'pendingApprovals' => $pending,
             'activeLoans' => $active,
@@ -410,24 +450,16 @@ public function getEvolucionPrestamosAlumnos($months = 6)
 ============================================================ */
 public function getSancionesPorNivel($months = 12)
 {
-    [$start, $end] = $this->getRange($months);
-    $alumnos = $this->alumnosUserIds();
+        $alumnos = $this->alumnosUserIds();
 
-    // Si tu pivot user_sancion tiene created_at, filtramos por meses.
-    // Si no tiene created_at, elimina whereBetween de abajo.
-    $q = DB::table('user_sancion as us')
-        ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
-        ->whereIn('us.idUser', $alumnos);
-
-    // aplica filtro temporal solo si existe created_at en user_sancion
-    // (si no existe, comenta estas 2 líneas)
-    $q->whereNotNull('us.created_at')
-      ->whereBetween('us.created_at', [$start, $end]);
-
-    return $q->selectRaw("UPPER(s.nivel) as nivel, COUNT(*) as total")
-        ->groupBy(DB::raw("UPPER(s.nivel)"))
-        ->orderByDesc('total')
-        ->get();
+        // user_sancion no tiene timestamps, por lo tanto no filtrar por fecha aquí
+        return DB::table('user_sancion as us')
+            ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
+            ->whereIn('us.idUser', $alumnos)
+            ->selectRaw("UPPER(s.nivel) as nivel, COUNT(*) as total")
+            ->groupBy(DB::raw("UPPER(s.nivel)"))
+            ->orderByDesc('total')
+            ->get();
 }
 
 /* ============================================================

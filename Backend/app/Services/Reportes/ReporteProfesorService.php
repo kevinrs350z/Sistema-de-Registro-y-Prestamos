@@ -15,7 +15,7 @@ class ReporteProfesorService
             ->join('persona AS pe', 'pe.idPersona', '=', 'd.idPersona')
             ->leftJoin('users AS u', 'u.idPersona', '=', 'pe.idPersona')
             ->leftJoin('prestamos AS p', 'p.idUser', '=', 'u.idUser')
-            ->selectRaw("CONCAT(pe.Nombre, ' ', pe.apellido1) AS profesor")
+            ->selectRaw("CONCAT(pe.Nombre, ' ', pe.Apellido1) AS profesor")
             ->selectRaw("COUNT(p.idPrestamo) AS total")
             ->groupBy('d.idDocente', 'profesor')
             ->orderByDesc('total')
@@ -42,7 +42,7 @@ public function getTendenciaMensual()
         ->leftJoin('users AS u', 'u.idPersona', '=', 'pe.idPersona')
         ->select(
             'd.idDocente',
-            DB::raw("CONCAT(pe.Nombre, ' ', pe.apellido1) AS profesor"),
+            DB::raw("CONCAT(pe.Nombre, ' ', pe.Apellido1) AS profesor"),
             'u.idUser'
         )
         ->get();
@@ -105,7 +105,7 @@ public function getEquiposPorProfesor($page, $pageSize)
         ->leftJoin('prestamo_equipo AS peq', 'peq.idPrestamo', '=', 'p.idPrestamo')
         ->leftJoin('equipos AS e', 'e.id', '=', 'peq.idEquipo')
         ->selectRaw('d.idDocente')
-        ->selectRaw("CONCAT(pe.Nombre, ' ', pe.apellido1) AS profesor")
+        ->selectRaw("CONCAT(pe.Nombre, ' ', pe.Apellido1) AS profesor")
         ->selectRaw("e.codigo AS equipo")
         ->selectRaw("COUNT(e.id) AS total")
         ->groupBy('d.idDocente', 'profesor', 'equipo')

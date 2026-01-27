@@ -54,6 +54,14 @@ class PrestamoController extends Controller
         try {
             $user = Auth::user();
 
+            if ($user?->bloqueado) {
+                return response()->json([
+                    'message' => 'Alumno bloqueado. No puedes solicitar equipos hasta resolver el incidente.',
+                    'motivo' => $user->bloqueado_motivo,
+                    'fecha' => $user->bloqueado_fecha
+                ], 403);
+            }
+
             $prestamo = $service->crearPrestamo([
                 'idUser'       => $user->idUser,
                 'fecha_inicio' => $request->fecha_inicio,
@@ -89,6 +97,13 @@ class PrestamoController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            if ($e->getCode() === 403 && $e->getMessage() === 'ALUMNO_BLOQUEADO') {
+                return response()->json([
+                    'message' => 'Alumno bloqueado. No puedes solicitar equipos hasta resolver el incidente.',
+                    'motivo' => $user->bloqueado_motivo ?? null,
+                    'fecha' => $user->bloqueado_fecha ?? null
+                ], 403);
+            }
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }

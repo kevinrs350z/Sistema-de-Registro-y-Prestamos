@@ -1,5 +1,6 @@
 <!-- reportes-dashboard.component.html -->
-<div class="reportes-wrapper container py-4">
+<div class="report-page report-animate">
+  <div class="reportes-wrapper container report-surface py-4">
 
   <!-- Mensaje flotante -->
   <div *ngIf="mensaje" class="msg-box">
@@ -7,14 +8,14 @@
   </div>
 
   <!-- Título general -->
-  <div class="text-center mb-4">
-    <h2 class="fw-bold text-primary">Dashboard general</h2>
-    <p class="text-muted mb-1">
-      Vista resumida del sistema de préstamos de equipos.
-    </p>
-    <p class="text-muted small">
-      Fecha de reporte: {{ today | date:'dd/MM/yyyy' }}
-    </p>
+  <div class="report-section-header">
+    <div>
+      <h2 class="report-section-title">Dashboard general</h2>
+      <p class="report-section-subtitle">
+        Vista resumida del sistema de préstamos de equipos · Fecha de reporte: {{ today | date:'dd/MM/yyyy' }}
+      </p>
+    </div>
+    <div class="report-section-actions"></div>
   </div>
 
   <!-- Botones exportación -->
@@ -26,22 +27,19 @@
   <!-- CONTENIDO QUE VA AL PDF -->
   <div id="contenidoPDFDashboard" class="page-wrapper">
 
-    <!-- Encabezado solo para PDF (logo, texto institucional) 
-    <div class="pdf-header fade-in solo-pdf">
-      <img src="assets/logo-uta.png" class="uta-logo" alt="Logo UTA" />
-
-      <div class="pdf-header-text">
-        <h1 class="pdf-title">Universidad de Tarapacá</h1>
-        <p class="pdf-subtitle">Sistema de Préstamos de Equipos</p>
-        <p class="pdf-date">
-          Fecha de reporte: {{ today | date:'dd/MM/yyyy' }}
-        </p>
-        <p class="pdf-section">
-          Sección: Dashboard general
-        </p>
+    <div class="inst-header">
+      <img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
+      <div>
+        <h1 class="inst-title">{{ universidad }}</h1>
+        <p class="inst-subtitle">{{ departamento }}</p>
+        <p class="inst-report">{{ reporteTitulo }}</p>
+        <div class="inst-info">
+          <span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span>Usuario: {{ usuarioGenera }}</span>
+          <span>Rango: {{ rangoFechas }}</span>
+        </div>
       </div>
     </div>
-    -->
 
     <hr class="pdf-divider fade-in" />
 
@@ -181,4 +179,5 @@
     </div>
 
   </div> <!-- /contenidoPDFDashboard -->
+  </div>
 </div>

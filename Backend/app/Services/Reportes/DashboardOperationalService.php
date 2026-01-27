@@ -73,7 +73,7 @@ class DashboardOperationalService
             ->get()
             ->map(function($item) {
                 return [
-                    'estado' => ucfirst(strtolower($item->estado)),
+                    'estado' => strtoupper($item->estado),
                     'total' => $item->total
                 ];
             });
@@ -84,8 +84,9 @@ class DashboardOperationalService
      */
     public function getDisponibilidadEquipos()
     {
-        return DB::table('equipos')
-            ->select('idEquipo as id', 'codigo', 'tipo', 'estado', 'ubicacion', 'updated_at as ultimo_evento')
+        return DB::table('equipos as e')
+            ->join('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
+            ->select('e.id as id', 'e.codigo', 'te.nombre as tipo', 'e.estado', 'e.ubicacion', 'e.updated_at as ultimo_evento')
             ->orderByRaw("FIELD(estado, 'DISPONIBLE','PRESTADO','MANTENIMIENTO','BAJA')")
             ->get();
     }
@@ -96,8 +97,9 @@ class DashboardOperationalService
     public function getEquiposCriticos()
     {
         // Consideramos críticos los que están en MANTENIMIENTO o BAJA o con observación que indique bloqueo
-        return DB::table('equipos')
-            ->select('idEquipo as id', 'codigo', 'tipo', 'estado', 'observacion', 'updated_at')
+        return DB::table('equipos as e')
+            ->join('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
+            ->select('e.id as id', 'e.codigo', 'te.nombre as tipo', 'e.estado', 'e.observacion', 'e.updated_at')
             ->whereIn('estado', ['MANTENIMIENTO', 'BAJA'])
             ->orWhere('observacion', 'like', '%bloque%')
             ->orderBy('updated_at', 'desc')
@@ -183,10 +185,11 @@ class DashboardOperationalService
     {
         return DB::table('prestamos as p')
             ->join('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
-            ->join('equipos as e', 'e.idEquipo', '=', 'pe.idEquipo')
+            ->join('equipos as e', 'e.id', '=', 'pe.idEquipo')
+            ->join('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
             ->where('p.idUser', $idUser)
             ->where('p.estado', 'APROBADO')
-            ->select('e.idEquipo as id', 'e.codigo', 'e.tipo', 'e.estado', 'p.fecha_fin as fecha_asignacion')
+            ->select('e.id as id', 'e.codigo', 'te.nombre as tipo', 'e.estado', 'p.fecha_fin as fecha_asignacion')
             ->get();
     }
 

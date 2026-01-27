@@ -244,6 +244,23 @@ button.ghost {
 
 .overlay-close {
   background: #f2f4ff;
+.alert-bloqueo {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.alert-detalle {
+  font-size: 0.85rem;
+  color: #7f1d1d;
+}
   color: var(--azul);
   border: 1px solid var(--borde);
   width: 40px;

@@ -1,1 +1,124 @@
-<p>reportes-sanciones works!</p>
+<div class="report-page report-animate">
+<div class="reportes-wrapper container report-surface py-4">
+
+	<div class="report-section-header">
+		<div>
+			<h2 class="report-section-title">Reporte de Sanciones y Bloqueos</h2>
+			<p class="report-section-subtitle">Indicadores disciplinarios y reincidencia</p>
+		</div>
+		<div class="report-section-actions"></div>
+	</div>
+
+	<app-export-buttons
+		[onExportPDF]="exportarPDF.bind(this)"
+		[onExportExcel]="exportarExcel.bind(this)">
+	</app-export-buttons>
+
+	<div id="contenidoPDFSanciones" class="page-wrapper">
+
+		<div class="inst-header">
+			<img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
+			<div>
+				<h1 class="inst-title">{{ universidad }}</h1>
+				<p class="inst-subtitle">{{ departamento }}</p>
+				<p class="inst-report">{{ reporteTitulo }}</p>
+				<div class="inst-info">
+					<span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
+					<span>Usuario: {{ usuarioGenera }}</span>
+					<span>Rango: {{ rangoFechas }}</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="two-cols mb-4">
+			<div class="card fade-in">
+				<h2 class="card-title">KPIs disciplinarios</h2>
+				<div class="kpi-wrapper">
+					<div class="kpi-item"><h3>{{ kpis.sancionesActivas }}</h3><span>Sanciones activas</span></div>
+					<div class="kpi-item"><h3>{{ kpis.sancionesTotal }}</h3><span>Total sanciones</span></div>
+					<div class="kpi-item"><h3>{{ kpis.bloqueosActivos }}</h3><span>Bloqueos activos</span></div>
+					<div class="kpi-item"><h3>{{ kpis.bloqueosHistoricos }}</h3><span>Bloqueos históricos</span></div>
+				</div>
+			</div>
+
+			<div class="card fade-in">
+				<h2 class="card-title">Motivos más frecuentes</h2>
+				<p class="card-subtitle">Distribución de sanciones por motivo</p>
+				<div class="chart-area">
+					<canvas #motivosChart></canvas>
+				</div>
+			</div>
+		</div>
+
+		<div class="card fade-in mb-4">
+			<h2 class="card-title">Reincidencia de usuarios</h2>
+			<p class="card-subtitle">Usuarios con mayor número de sanciones</p>
+			<div class="chart-area">
+				<canvas #reincidenciaChart></canvas>
+			</div>
+		</div>
+
+		<div class="two-cols">
+			<div class="card fade-in">
+				<h2 class="card-title">Bloqueos activos</h2>
+				<p class="card-subtitle">Usuarios bloqueados actualmente</p>
+				<div class="table-responsive">
+					<table class="styled-table">
+						<thead>
+							<tr>
+								<th>Usuario</th>
+								<th>Email</th>
+								<th>Motivo</th>
+								<th>Fecha</th>
+								<th>Admin</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr *ngFor="let b of bloqueos">
+								<td>{{ b.usuario }}</td>
+								<td>{{ b.email }}</td>
+								<td>{{ b.bloqueado_motivo || '—' }}</td>
+								<td>{{ b.bloqueado_fecha | date:'dd/MM/yyyy' }}</td>
+								<td>{{ b.bloqueado_por || '—' }}</td>
+							</tr>
+							<tr *ngIf="bloqueos.length === 0">
+								<td colspan="5" class="text-center text-muted">Sin bloqueos activos</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div class="card fade-in">
+				<h2 class="card-title">Relación sanciones / atrasos</h2>
+				<p class="card-subtitle">Comparación de incidentes disciplinarios</p>
+				<div class="table-responsive">
+					<table class="styled-table">
+						<thead>
+							<tr>
+								<th>Usuario</th>
+								<th>Email</th>
+								<th>Sanciones</th>
+								<th>Atrasos</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr *ngFor="let r of relacionAtrasos">
+								<td>{{ r.usuario }}</td>
+								<td>{{ r.email }}</td>
+								<td>{{ r.sanciones }}</td>
+								<td>{{ r.atrasos }}</td>
+							</tr>
+							<tr *ngIf="relacionAtrasos.length === 0">
+								<td colspan="4" class="text-center text-muted">Sin datos disponibles</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+</div>
+</div>

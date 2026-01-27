@@ -8,7 +8,7 @@ import {
 import { CommonModule, DatePipe } from '@angular/common';
 import { Chart } from 'chart.js/auto';
 import { ExportButtonsComponent } from '../export-buttons/export-buttons.component';
-import { ExportService } from '../../../../services/export.service';
+import { ExportService, ReporteData } from '../../../../services/export.service';
 import { ReportesAlumnosService } from '../../../../services/reportes/reportes-alumnos.service';
 
 interface KpiAlumno {
@@ -37,6 +37,12 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
 
   today = new Date();
   mensaje: string | null = null;
+  universidad = 'Universidad de Tarapacá';
+  departamento = 'Departamento de Diseño Multimedia';
+  reporteTitulo = 'Reporte de Alumnos';
+  rangoFechas = 'Últimos 12 meses';
+  usuarioGenera = '—';
+  fechaGeneracion = new Date();
 
   // Canvas refs
   @ViewChild('prestamosCarreraCanvas') prestamosCarreraCanvas?: ElementRef<HTMLCanvasElement>;
@@ -70,6 +76,7 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.cargarUsuario();
     this.cargarKPIs();
     this.cargarPrestamosPorCarrera();
     this.cargarSancionesPorNivel();
@@ -304,7 +311,55 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
 
   /* ===================== EXPORTAR ===================== */
   exportarPDF() {
-    this.exportService.exportarPDF('contenidoPDFAlumnos', 'Reporte_Alumnos_UTA.pdf')
+    const reporteData: ReporteData = {
+      titulo: 'Reporte de Alumnos',
+      subtitulo: 'Comportamiento, sanciones y uso por carrera',
+      fechaGeneracion: new Date(),
+      usuario: this.usuarioGenera,
+      periodo: this.rangoFechas,
+      secciones: [
+        {
+          tipo: 'kpis',
+          titulo: 'Indicadores Clave',
+          datos: this.kpis.map(k => ({ label: k.label, valor: k.value }))
+        },
+        {
+          tipo: 'tabla',
+          titulo: 'Ranking de Alumnos',
+          subtitulo: 'Estudiantes con mayor número de préstamos',
+          datos: {
+            columnas: ['#', 'Nombre', 'Email', 'Carrera', 'Préstamos', 'Sanciones'],
+            filas: this.topAlumnos.map((a, idx) => [
+              idx + 1,
+              a.nombre,
+              a.email,
+              a.carrera || '—',
+              a.total_prestamos,
+              a.sanciones ?? 0
+            ]),
+            anchos: [30, '*', '*', '*', 60, 60]
+          }
+        },
+        {
+          tipo: 'tabla',
+          titulo: 'Resumen de Sanciones',
+          subtitulo: 'Distribución por nivel de gravedad',
+          datos: {
+            columnas: ['Tipo de Sanción', 'Cantidad'],
+            filas: [
+              ['Total sanciones', this.resumenSanciones.total],
+              ['Sanciones leves', this.resumenSanciones.leves],
+              ['Sanciones medias', this.resumenSanciones.medias],
+              ['Sanciones graves', this.resumenSanciones.graves]
+            ],
+            anchos: ['*', 100]
+          }
+        }
+      ]
+    };
+
+    this.exportService.exportarPDFInstitucional(reporteData, 'Reporte_Alumnos_UTA.pdf')
+      .then(() => this.mostrarMensaje('PDF generado correctamente.'))
       .catch(() => this.mostrarMensaje('Ocurrió un error al generar el PDF.'));
   }
 
@@ -345,6 +400,17 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
       this.mostrarMensaje('Excel exportado correctamente.');
     } catch {
       this.mostrarMensaje('Ocurrió un error al exportar el Excel.');
+    }
+  }
+
+  private cargarUsuario(): void {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return;
+      const u = JSON.parse(raw);
+      this.usuarioGenera = u?.nombre || u?.email || '—';
+    } catch {
+      this.usuarioGenera = '—';
     }
   }
 }

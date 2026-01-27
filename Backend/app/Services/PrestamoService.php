@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Prestamo;
 use App\Models\BloquePrestamo;
 use App\Models\Pack;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class PrestamoService
@@ -14,6 +15,12 @@ class PrestamoService
      */
     public function crearPrestamo(array $data): Prestamo
     {
+        if (isset($data['idUser']) && ($data['estado'] ?? null) === 'PENDIENTE') {
+            $user = User::find($data['idUser']);
+            if ($user && $user->bloqueado) {
+                throw new \Exception('ALUMNO_BLOQUEADO', 403);
+            }
+        }
         return Prestamo::create($data);
     }
 

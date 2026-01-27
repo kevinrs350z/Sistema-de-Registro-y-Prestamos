@@ -56,4 +56,17 @@ export class UsuariosService {
   reactivarUsuario(id: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/usuarios/${id}/reactivar`, {});
   }
+
+  bloquearAlumno(id: number, motivo: string, fecha?: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/admin/alumnos/${id}/bloquear`, {
+      motivo,
+      fecha: fecha || null
+    });
+  }
+
+  desbloquearAlumno(id: number, motivo?: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/admin/alumnos/${id}/desbloquear`, {
+      motivo: motivo || null
+    });
+  }
 }

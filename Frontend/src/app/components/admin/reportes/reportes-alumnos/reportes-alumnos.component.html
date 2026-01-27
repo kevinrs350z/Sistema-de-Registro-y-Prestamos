@@ -1,4 +1,13 @@
-<div class="reportes-wrapper container py-4">
+<div class="report-page report-animate">
+<div class="reportes-wrapper container report-surface py-4">
+
+  <div class="report-section-header">
+    <div>
+      <h2 class="report-section-title">Reporte de Alumnos</h2>
+      <p class="report-section-subtitle">Comportamiento, sanciones y uso por carrera</p>
+    </div>
+    <div class="report-section-actions"></div>
+  </div>
 
 
 
@@ -10,6 +19,20 @@
 
   <!-- CONTENIDO EXPORTABLE A PDF -->
   <div id="contenidoPDFAlumnos" class="page-wrapper">
+
+    <div class="inst-header">
+      <img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
+      <div>
+        <h1 class="inst-title">{{ universidad }}</h1>
+        <p class="inst-subtitle">{{ departamento }}</p>
+        <p class="inst-report">{{ reporteTitulo }}</p>
+        <div class="inst-info">
+          <span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span>Usuario: {{ usuarioGenera }}</span>
+          <span>Rango: {{ rangoFechas }}</span>
+        </div>
+      </div>
+    </div>
 
  
 
@@ -69,7 +92,7 @@
       </div>
 
       <!-- Tabla -->
-      <div class="table-responsive">
+      <div class="table-responsive table-wrapper">
         <table class="styled-table">
           <thead>
             <tr>
@@ -103,4 +126,5 @@
 
   </div> <!-- /contenidoPDFAlumnos -->
 
+</div>
 </div>

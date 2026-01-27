@@ -27,6 +27,11 @@ use App\Http\Controllers\Reportes\ReporteProfesorController;
 use App\Http\Controllers\PackController;
 use App\Http\Controllers\Reportes\ReportesAlumnosAdminController;
 use App\Http\Controllers\Reportes\Dashboard\DashboardOperationalController;
+use App\Http\Controllers\Reportes\ReportesInventarioController;
+use App\Http\Controllers\Reportes\ReportesSancionesController;
+use App\Http\Controllers\Reportes\ReportesMantenimientosController;
+use App\Http\Controllers\Reportes\ReportesTendenciasController;
+use App\Http\Controllers\Reportes\ReportesAsignaturasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -112,6 +117,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::patch('/admin/sanciones/{id}/ampliar', [UserSancionController::class, 'ampliarSancion']);
     Route::patch('/admin/sanciones/{id}/quitar', [UserSancionController::class, 'quitarSancion']);
     Route::post('/admin/devolucion', [DevolucionAdminController::class, 'devolverEquipo']);
+
+    Route::patch('/admin/alumnos/{id}/bloquear', [UsuarioController::class, 'bloquear']);
+    Route::patch('/admin/alumnos/{id}/desbloquear', [UsuarioController::class, 'desbloquear']);
     
 });
 
@@ -231,6 +239,51 @@ Route::prefix('reportes/dashboard')->group(function () {
           Route::get('/heatmap', [ReportesAlumnosAdminController::class, 'heatmap']);
           Route::get('/riesgo', [ReportesAlumnosAdminController::class, 'riesgo']);
       });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/asignaturas')
+            ->group(function () {
+                    Route::get('/uso', [ReportesAsignaturasController::class, 'getUsoAsignaturas']);
+                    Route::get('/tendencia', [ReportesAsignaturasController::class, 'getTendencia']);
+                    Route::get('/equipos', [ReportesAsignaturasController::class, 'getEquiposPorAsignatura']);
+            });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/inventario')
+            ->group(function () {
+                    Route::get('/estado', [ReportesInventarioController::class, 'estado']);
+                    Route::get('/categorias', [ReportesInventarioController::class, 'categorias']);
+                    Route::get('/antiguedad', [ReportesInventarioController::class, 'antiguedad']);
+                    Route::get('/top-utilizados', [ReportesInventarioController::class, 'topUtilizados']);
+                    Route::get('/subutilizados', [ReportesInventarioController::class, 'subUtilizados']);
+            });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/sanciones')
+            ->group(function () {
+                    Route::get('/kpis', [ReportesSancionesController::class, 'kpis']);
+                    Route::get('/motivos', [ReportesSancionesController::class, 'motivos']);
+                    Route::get('/reincidencia', [ReportesSancionesController::class, 'reincidencia']);
+                    Route::get('/bloqueos', [ReportesSancionesController::class, 'bloqueos']);
+                    Route::get('/relacion-atrasos', [ReportesSancionesController::class, 'relacionAtrasos']);
+            });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/mantenimientos')
+            ->group(function () {
+                    Route::get('/atrasos', [ReportesMantenimientosController::class, 'atrasos']);
+                    Route::get('/incidentes', [ReportesMantenimientosController::class, 'incidentes']);
+                    Route::get('/incidentes-equipo', [ReportesMantenimientosController::class, 'incidentesEquipo']);
+                    Route::get('/equipos-mantenimiento', [ReportesMantenimientosController::class, 'equiposMantenimiento']);
+            });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/tendencias')
+            ->group(function () {
+                    Route::get('/prestamos-mes', [ReportesTendenciasController::class, 'prestamosPorMes']);
+                    Route::get('/categorias', [ReportesTendenciasController::class, 'categorias']);
+                    Route::get('/uso-tipo-usuario', [ReportesTendenciasController::class, 'usoPorTipo']);
+            });
 
     // Dashboard operacional (estado actual del sistema)
     Route::middleware(['auth:sanctum'])

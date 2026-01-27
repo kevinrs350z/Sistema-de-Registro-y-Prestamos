@@ -184,4 +184,59 @@ class UsuarioController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Bloquear alumno por incidente grave.
+     */
+    public function bloquear($id, Request $request, UsuarioService $service)
+    {
+        $request->validate([
+            'motivo' => 'required|string|min:5|max:500',
+            'fecha'  => 'nullable|date'
+        ]);
+
+        try {
+            $adminId = $request->user()->idUser;
+            $user = $service->bloquearUsuario($id, $request->motivo, $request->fecha, $adminId);
+
+            return response()->json([
+                'message' => 'Alumno bloqueado correctamente.',
+                'bloqueado' => $user->bloqueado,
+                'bloqueado_motivo' => $user->bloqueado_motivo,
+                'bloqueado_fecha' => $user->bloqueado_fecha,
+                'bloqueado_por' => $user->bloqueado_por,
+            ], 200);
+        } catch (\Exception $e) {
+            $code = $e->getCode() === 403 ? 403 : 500;
+            return response()->json([
+                'error' => 'No se pudo bloquear al alumno',
+                'message' => $e->getMessage()
+            ], $code);
+        }
+    }
+
+    /**
+     * Desbloquear alumno.
+     */
+    public function desbloquear($id, Request $request, UsuarioService $service)
+    {
+        $request->validate([
+            'motivo' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            $adminId = $request->user()->idUser;
+            $user = $service->desbloquearUsuario($id, $request->motivo, $adminId);
+
+            return response()->json([
+                'message' => 'Alumno desbloqueado correctamente.',
+                'bloqueado' => $user->bloqueado,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'No se pudo desbloquear al alumno',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

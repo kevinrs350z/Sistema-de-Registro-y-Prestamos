@@ -99,6 +99,38 @@
   color: #555;
 }
 
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.badge-inactivo {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-bloqueado {
+  background: #111827;
+  color: #fff;
+}
+
+.alert-bloqueo {
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 
 /* ============================================
    PANEL DERECHO (DETALLE DEL ALUMNO)
@@ -243,4 +275,54 @@
   background: #fee2e2;
   color: #991b1b;
   border-color: #fca5a5;
+}
+
+.btn-bloquear {
+  background: #111827;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.btn-bloquear:hover {
+  background: #1f2937;
+}
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  width: 420px;
+  max-width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-sub {
+  color: #6b7280;
+  margin: 4px 0 12px;
+}
+
+.modal textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.modal-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
 }

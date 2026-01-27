@@ -47,7 +47,7 @@ class ReportesController extends Controller
         $sanciones = DB::table('user_sancion')->count();
 
         $rechazos = DB::table('prestamos')
-            ->where('estado', 'rechazado')
+            ->whereRaw('LOWER(estado) = ?', ['rechazado'])
             ->count();
 
         return response()->json([

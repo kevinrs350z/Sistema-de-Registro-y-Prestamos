@@ -85,7 +85,13 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   border-left: 4px solid #0d6efd;
   transition: 0.2s ease;
+  animation: kpiRise 0.6s ease both;
 }
+
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.12s; }
+.kpi-card:nth-child(3) { animation-delay: 0.19s; }
+.kpi-card:nth-child(4) { animation-delay: 0.26s; }
 
 .kpi-card:hover {
   transform: translateY(-3px);
@@ -108,6 +114,23 @@
   font-size: 0.8rem;
   color: #7d8ca3;
   margin-top: 3px;
+}
+
+@keyframes kpiRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kpi-card {
+    animation: none;
+  }
 }
 
 /* ============================================================

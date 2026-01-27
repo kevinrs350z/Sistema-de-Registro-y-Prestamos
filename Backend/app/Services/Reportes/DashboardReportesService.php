@@ -79,9 +79,9 @@ class DashboardReportesService
             ->join('prestamos as p', 'pe.idPrestamo', '=', 'p.idPrestamo')
             ->join('equipos as e', 'pe.idEquipo', '=', 'e.id')
             ->join('tipo_equipos as t', 'e.tipo_equipo_id', '=', 't.id')
-            ->join('categorias as c', 't.categoria_id', '=', 'c.idCategoria')
+            ->join('categorias as c', 't.categoria_id', '=', 'c.id')
             ->select('c.nombre as categoria', DB::raw('COUNT(*) as total_solicitudes'))
-            ->groupBy('c.idCategoria', 'c.nombre')
+            ->groupBy('c.id', 'c.nombre')
             ->orderByDesc('total_solicitudes')
             ->take(5)
             ->get();

@@ -7,6 +7,17 @@
       <h1>Solicitar reserva de equipo</h1>
       <p class="page-sub">Completa los datos y confirma tu solicitud.</p>
 
+      <div class="alert-bloqueo" *ngIf="bloqueado">
+        <strong>Cuenta bloqueada.</strong>
+        <span>
+          No puedes solicitar equipos hasta resolver el incidente.
+        </span>
+        <div class="alert-detalle" *ngIf="bloqueadoMotivo || bloqueadoFecha">
+          <div *ngIf="bloqueadoMotivo"><b>Motivo:</b> {{ bloqueadoMotivo }}</div>
+          <div *ngIf="bloqueadoFecha"><b>Desde:</b> {{ bloqueadoFecha | date:'dd MMM yyyy · HH:mm' }}</div>
+        </div>
+      </div>
+
       <!-- Chip resumen móvil -->
       <button type="button" class="chip-resumen" (click)="abrirResumenMobile()">
         Ver resumen · {{ resumen().cantidadEquipos }} equipos
@@ -178,7 +189,7 @@
 
     <!-- Acciones desktop -->
     <div class="actions actions-desktop">
-      <button type="submit">Solicitar</button>
+      <button type="submit" [disabled]="bloqueado">Solicitar</button>
       <button type="button" class="ghost" (click)="limpiar()">Limpiar</button>
     </div>
 
@@ -187,7 +198,7 @@
       <button type="button" class="ghost" (click)="abrirResumenMobile()">
         Resumen
       </button>
-      <button type="submit" class="primary">
+      <button type="submit" class="primary" [disabled]="bloqueado">
         Solicitar
       </button>
     </div>

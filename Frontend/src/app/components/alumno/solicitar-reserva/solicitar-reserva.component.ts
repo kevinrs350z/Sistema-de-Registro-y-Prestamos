@@ -56,6 +56,9 @@ export class SolicitarReservaComponent {
   private cdr = inject(ChangeDetectorRef);
 
   usuarioActivo: any = null;
+  bloqueado = false;
+  bloqueadoMotivo: string | null = null;
+  bloqueadoFecha: string | null = null;
 
   equipos = signal<Equipo[]>([]);
   carrito: CarritoItem[] = [];
@@ -217,6 +220,9 @@ export class SolicitarReservaComponent {
 
     this.api.getUsuario(token).subscribe(data => {
       this.usuarioActivo = data;
+      this.bloqueado = !!data?.bloqueado;
+      this.bloqueadoMotivo = data?.bloqueado_motivo ?? null;
+      this.bloqueadoFecha = data?.bloqueado_fecha ?? null;
       this.form.patchValue({
         idUser: data.idUser,
         nombre: data.persona?.Nombre,
@@ -282,6 +288,10 @@ export class SolicitarReservaComponent {
      SUBMIT
   ========================= */
   submit() {
+    if (this.bloqueado) {
+      this.notify.error('Tu cuenta está bloqueada. No puedes solicitar equipos.');
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.notify.warning('Completa todos los campos obligatorios.');
@@ -336,9 +346,16 @@ export class SolicitarReservaComponent {
         this.carritoSrv.limpiar();
       },
       error: err => {
-        this.notify.error(
-          err?.error?.error || 'Ocurrió un error al enviar la solicitud.'
-        );
+        if (err?.status === 403) {
+          this.notify.error(
+            err?.error?.message || 'Tu cuenta está bloqueada.'
+          );
+          this.bloqueado = true;
+          this.bloqueadoMotivo = err?.error?.motivo ?? null;
+          this.bloqueadoFecha = err?.error?.fecha ?? null;
+          return;
+        }
+        this.notify.error(err?.error?.error || 'Ocurrió un error al enviar la solicitud.');
       }
     });
   }

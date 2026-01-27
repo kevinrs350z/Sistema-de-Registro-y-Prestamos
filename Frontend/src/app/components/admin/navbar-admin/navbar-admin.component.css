@@ -7,12 +7,19 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 50px;
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 0;
+  z-index: 1100;
   box-shadow: 0 6px 20px rgba(2, 6, 23, 0.25);
   border-bottom: 2px solid rgba(145, 181, 232, 0.3);
   font-family: "Poppins", sans-serif;
+  transition: transform 0.3s ease;
+}
+
+/* ======== HOST OCULTO ======== */
+:host(.navbar-hidden) .navbar-admin {
+  transform: translateY(-100%);
 }
 
 /* ======== LADO IZQUIERDO ======== */
@@ -53,6 +60,7 @@
   flex-direction: column;
   min-width: 180px;
   overflow: hidden;
+  z-index: 10000;
 }
 
 .menu-dropdown button {
