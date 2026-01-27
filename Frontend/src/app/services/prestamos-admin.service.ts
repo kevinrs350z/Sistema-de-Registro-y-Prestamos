@@ -51,6 +51,10 @@ marcarDevuelto(id: number, motivo: string) {
   });
 }
 
+marcarEntregado(id: number) {
+  return this.http.post(`${this.apiUrl}/${id}/entregar`, {});
+}
+
 //devolverEquipo(idPrestamo: number, idEquipo: number, motivo: string) {
  // return this.http.patch(`${this.apiUrl}/prestamos/${idPrestamo}/devolver-equipo/${idEquipo}`, {
   //  motivo

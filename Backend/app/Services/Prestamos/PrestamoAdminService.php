@@ -207,7 +207,10 @@ class PrestamoAdminService
             'equipos.tipo',
             'bloquePrestamo.bloque'
         ])
-        ->where('estado', EstadoPrestamo::PENDIENTE)
+        ->whereIn('estado', [
+            EstadoPrestamo::PENDIENTE,
+            EstadoPrestamo::APROBADO,
+        ])
         ->get()
         ->map(function ($p) {
 

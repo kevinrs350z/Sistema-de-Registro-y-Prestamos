@@ -526,6 +526,13 @@
   background: #f9fafb;
 }
 
+.acciones-asignar {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
 /* BOTONES */
 .btn-azul {
   background: #446ba9;

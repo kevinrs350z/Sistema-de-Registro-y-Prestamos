@@ -261,7 +261,7 @@
 
     </div>
 
-    <div style="position: fixed; bottom: 10px; right: 10px; display:flex; gap:8px; z-index: 1000;">
+    <div class="acciones-asignar">
       <button class="btn-azul" type="button"
               [disabled]="!asignarUsuario.trim() || !asignarTipo || !asignarInicio || !asignarFin || tiposSancion.length === 0"
               (click)="asignarSancion()">
