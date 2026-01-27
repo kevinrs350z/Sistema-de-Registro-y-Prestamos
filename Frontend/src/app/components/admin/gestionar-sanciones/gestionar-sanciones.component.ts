@@ -80,7 +80,7 @@ export class GestionarSancionesComponent implements OnInit {
 
   // Asignación
   asignarUsuario = '';
-  asignarTipo: number | null = null;
+  asignarTipo: number = 0;
   asignarInicio = '';
   asignarFin = '';
   asignarDescripcion = '';
@@ -138,7 +138,7 @@ export class GestionarSancionesComponent implements OnInit {
     this.sancionesService.getCatalogo().subscribe({
       next: (resp) => {
         this.tiposSancion = resp.sanciones || [];
-        this.asignarTipo = this.tiposSancion[0]?.id ?? null;
+        this.asignarTipo = this.tiposSancion[0]?.id ?? 0;
       },
       error: () => {
         this.notify.error('No se pudo cargar el catálogo de sanciones.');
@@ -297,7 +297,20 @@ export class GestionarSancionesComponent implements OnInit {
     if (this.formularioAsignar) {
       this.formularioVisible = false;
       this.sancionSeleccionada = null;
+      // Resetear campos del formulario
+      this.resetFormularioAsignar();
     }
+  }
+
+  resetFormularioAsignar(): void {
+    this.asignarUsuario = '';
+    this.asignarTipo = this.tiposSancion[0]?.id ?? 0;
+    this.asignarInicio = '';
+    this.asignarFin = '';
+    this.asignarDescripcion = '';
+    this.prefillData = null;
+    this.prefillError = null;
+    this.usuariosSugeridos = [];
   }
 
 
@@ -382,20 +395,28 @@ confirmarAmpliacion() {
 
 
 asignarSancion(): void {
-  if (!this.asignarUsuario.trim() ||
-      !this.asignarTipo ||
-      !this.asignarInicio ||
-      !this.asignarFin) {
-    this.notify.warning('Completa todos los campos para asignar la sanción.');
+  // Validaciones específicas para cada campo
+  if (!this.asignarUsuario || !this.asignarUsuario.trim()) {
+    this.notify.warning('Debes ingresar un usuario (correo, RUT o ID).');
     return;
   }
 
-    if (!this.asignarTipo) {
-      this.notify.warning('Selecciona un tipo de sanción válido.');
-      return;
-    }
+  if (!this.asignarTipo || this.asignarTipo <= 0) {
+    this.notify.warning('Selecciona un tipo de sanción válido.');
+    return;
+  }
 
-    const payload = {
+  if (!this.asignarInicio) {
+    this.notify.warning('Debes seleccionar una fecha de inicio.');
+    return;
+  }
+
+  if (!this.asignarFin) {
+    this.notify.warning('Debes seleccionar una fecha de fin.');
+    return;
+  }
+
+  const payload = {
     usuario: this.asignarUsuario.trim(), // id, correo o rut
       idSancion: this.asignarTipo,
     descripcion: this.asignarDescripcion?.trim() || null,

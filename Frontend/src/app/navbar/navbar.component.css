@@ -1,175 +1,256 @@
-/* ======================================================
-   NAVBAR BASE (mobile-first)
-====================================================== */
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  width: 100%;
-  background: linear-gradient(135deg, #446ba9, #3b5f98);
-  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.25);
-  border-bottom: 2px solid rgba(145, 181, 232, 0.3);
-  padding: 10px 12px;
-  box-sizing: border-box;
-}
-
-/* ======================================================
-   LOGO
-====================================================== */
-.nav-top {
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-.logo {
-  display: block;
-  font-weight: 800;
-  font-size: 17px;
-  color: #ffffff;
-  line-height: 1.2;
-}
-
-.logo small {
-  display: block;
-  font-weight: 500;
-  font-size: 12px;
-  opacity: 0.9;
-  color: #ffffff;
-}
-
-/* ======================================================
-   ACCIONES
-====================================================== */
-.nav-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-/* ======================================================
-   BOTONES
-====================================================== */
-.nav-btn {
+.home-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+}
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  width: 100%;
+  background: linear-gradient(135deg, #446ba9, #3b5f98);
+  border-bottom: 2px solid rgba(145, 181, 232, 0.28);
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.28);
+  padding: 16px 18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
 
-  background-color: #f5a474;
-  color: #ffffff !important;               /* 🔥 FIX */
-  text-decoration: none;
-  border: none;
+.navbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
 
-  font-weight: 700;
-  font-size: 12.5px;
-  padding: 9px 8px;
-  border-radius: 11px;
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
+.menu-toggle {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.25s ease;
-
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
 }
 
-.nav-btn i {
-  font-size: 15px;
-  color: #ffffff;                          /* 🔥 FIX */
+.menu-toggle span {
+  width: 18px;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-/* ======================================================
-   HOVER / ACTIVE / ROUTER ACTIVE
-====================================================== */
-/* ======================================================
-   HOVER / ACTIVE / ROUTER ACTIVE (MEJORADO)
-====================================================== */
-.nav-btn:hover {
-  background-color: #5f8fd6;        /* azul más fuerte */
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-  transform: translateY(-2px);
+.menu-toggle:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #f5a474;
+  box-shadow: 0 0 0 2px rgba(245, 164, 116, 0.35);
+  transform: translateY(-1px);
 }
 
-
-/* 🔥 BOTÓN ACTIVO REAL */
-.nav-btn.active,
-.nav-btn[routerLinkActive="active"] {
-  background-color: #5f8fd6;              /* MÁS OSCURO */
-  border: 2px solid #ffffff;              /* BORDE BLANCO */
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.25),
-              0 6px 14px rgba(0,0,0,0.25); /* GLOW + PROFUNDIDAD */
-  transform: translateY(-2px);
+.menu-toggle:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
-/* ======================================================
-   BOTÓN CERRAR SESIÓN
-====================================================== */
-.nav-btn.logout {
-  grid-column: span 2;
-  background-color: #e94f64;
-  color: #ffffff !important;
+.menu-open .menu-toggle {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
-.nav-btn.logout i {
+.menu-open .menu-toggle span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.menu-open .menu-toggle span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-open .menu-toggle span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.home-btn {
+  padding: 10px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.nav-btn.logout:hover {
-  background-color: #f07183;
-  color: #ffffff !important;
+.home-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #f5a474;
+  box-shadow: 0 0 0 2px rgba(245, 164, 116, 0.35);
 }
 
-/* ======================================================
-   TABLET
-====================================================== */
+.home-icon {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+}
+
+.home-icon::before,
+.home-icon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+}
+
+.home-icon::before {
+  width: 18px;
+  height: 12px;
+  bottom: 0;
+  border-radius: 3px;
+}
+
+.home-icon::after {
+  width: 14px;
+  height: 14px;
+  top: 0;
+  transform: translate(-50%, -25%) rotate(45deg);
+  border-radius: 3px 3px 0 0;
+}
+
+.logo {
+  flex: 1;
+  text-align: center;
+}
+
+.logo-title {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.08rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.nav-spacer {
+  width: 64px;
+  height: 1px;
+}
+
+.nav-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-panel {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  width: min(230px, calc(100vw - 32px));
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #d7dcef;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 22px 46px rgba(15, 23, 42, 0.28);
+  z-index: 10;
+}
+
+.dropdown-panel.visible {
+  display: flex;
+  animation: dropdownFade 0.22s ease;
+}
+
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 0.94rem;
+  color: #1f2a4a;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+  transition: all 0.2s ease;
+}
+
+.dropdown-btn:hover,
+.dropdown-btn.active,
+.dropdown-btn[routerLinkActive="active"] {
+  border-color: #446ba9;
+  box-shadow: 0 12px 28px rgba(68, 107, 169, 0.2);
+}
+
+.dropdown-btn.logout {
+  padding: 10px 14px;
+  background: #fef2f2;
+  border-color: #fbd5d5;
+  color: #c53030;
+  font-size: 0.88rem;
+}
+
+.dropdown-btn.logout:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
 @media (min-width: 768px) {
   .navbar {
-    padding: 14px 32px;
+    padding: 20px 36px;
   }
 
-  .logo {
-    font-size: 20px;
+  .logo-title {
+    font-size: 1.18rem;
+    letter-spacing: 0.5px;
   }
 
-  .logo small {
-    font-size: 13px;
-  }
-
-  .nav-actions {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-
-  .nav-btn {
-    font-size: 13.5px;
-    padding: 10px 9px;
-  }
-
-  .nav-btn i {
-    font-size: 16px;
-  }
-
-  .nav-btn.logout {
-    grid-column: auto;
+  .dropdown-panel {
+    width: 260px;
   }
 }
 
-/* ======================================================
-   DESKTOP GRANDE
-====================================================== */
 @media (min-width: 1200px) {
   .navbar {
-    padding: 18px 60px;
+    padding: 22px 64px;
   }
 
-  .logo {
-    font-size: 22px;
+  .logo-title {
+    font-size: 1.28rem;
   }
 
-  .nav-btn {
-    font-size: 14px;
-    padding: 11px 10px;
+  .dropdown-panel {
+    width: 280px;
   }
+}
 
-  .nav-btn i {
-    font-size: 17px;
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

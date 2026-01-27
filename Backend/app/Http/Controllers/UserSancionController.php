@@ -238,7 +238,7 @@ class UserSancionController extends Controller
         $sancion = Sancion::with('users.persona')->findOrFail($idSancion);
 
         // en vez de borrar, la marcamos como no activo para mantener historial
-        $sancion->estado = 'EXPIRADA    ';
+        $sancion->estado = 'EXPIRADA';
         $sancion->save();
 
         $user = $sancion->users->first();
