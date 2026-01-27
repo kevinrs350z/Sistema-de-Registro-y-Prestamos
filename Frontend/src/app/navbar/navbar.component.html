@@ -1,50 +1,72 @@
-<nav class="navbar navbar-mobile">
-  <!-- LOGO -->
-  <div class="nav-top">
-    <span class="logo">
-      Registro y Préstamo
-      <small>Diseño Multimedia</small>
-    </span>
+<nav class="navbar navbar-mobile" [class.menu-open]="menuAbierto && !esAdmin">
+  <div class="navbar-top">
+    <div class="nav-controls">
+      <button
+        type="button"
+        class="menu-toggle"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="menuAbierto"
+        aria-label="Menú"
+        [disabled]="esAdmin"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <button
+        type="button"
+        class="home-btn"
+        (click)="irCatalogo()"
+        aria-label="Inicio"
+      >
+        <span class="home-icon"></span>
+      </button>
+    </div>
+
+    <div class="logo">
+      <span class="logo-title">Registro y Préstamos Diseño Multimedia</span>
+    </div>
+
+    <div class="nav-spacer" aria-hidden="true"></div>
   </div>
 
-  <!-- BOTONES USUARIO NORMAL -->
-  <div class="nav-actions" *ngIf="!esAdmin">
+  <div class="nav-dropdown" *ngIf="!esAdmin">
+    <div class="dropdown-panel" [class.visible]="menuAbierto">
+      <a
+        routerLink="/equipos/catalogo"
+        routerLinkActive="active"
+        class="dropdown-btn"
+        (click)="menuAbierto = false"
+      >
+        Solicitar equipo
+      </a>
 
-    <a
-      routerLink="/equipos/catalogo"
-      routerLinkActive="active"
-      class="nav-btn"
-    >
-      <i class="bi bi-box-seam"></i>
-      <span>Solicitar</span>
-    </a>
+      <a
+        routerLink="/mis-solicitudes"
+        routerLinkActive="active"
+        class="dropdown-btn"
+        (click)="menuAbierto = false"
+      >
+        Mis solicitudes
+      </a>
 
-    <a
-      routerLink="/mis-solicitudes"
-      routerLinkActive="active"
-      class="nav-btn"
-    >
-      <i class="bi bi-clock-history"></i>
-      <span>Mis solicitudes</span>
-    </a>
+      <a
+        routerLink="/preguntas-frecuentes"
+        routerLinkActive="active"
+        class="dropdown-btn"
+        (click)="menuAbierto = false"
+      >
+        Preguntas frecuentes
+      </a>
 
-    <a
-      routerLink="/preguntas-frecuentes"
-      routerLinkActive="active"
-      class="nav-btn"
-    >
-      <i class="bi bi-question-circle"></i>
-      <span>Ayuda</span>
-    </a>
-
-    <button
-      type="button"
-      class="nav-btn logout"
-      (click)="cerrarSesion()"
-    >
-      <i class="bi bi-box-arrow-right"></i>
-      <span>Salir</span>
-    </button>
-
+      <button
+        type="button"
+        class="dropdown-btn logout"
+        (click)="cerrarSesion()"
+      >
+        Cerrar sesión
+      </button>
+    </div>
   </div>
 </nav>

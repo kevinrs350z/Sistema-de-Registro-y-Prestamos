@@ -2,20 +2,15 @@
 
   <div class="nav-left">
 
-    <button class="icon-btn" (click)="toggleMenu()">
-      <i class="bi bi-list"></i>
+    <button class="icon-btn" (click)="toggleMenu()" aria-label="Menú">
+      <span></span>
+      <span></span>
+      <span></span>
     </button>
 
-    <div class="nav-icons">
-
-      <!-- Inicio -->
-      <i class="bi bi-house-door-fill" (click)="navegarInterno('gestionar')" title="Inicio">
-      </i>
-
-      <!-- 🔹 Nuevo: Preguntas Frecuentes (Admin) -->
-      <i class="bi bi-question-circle" (click)="navegarInterno('preguntas-frecuentes')" title="Preguntas frecuentes">
-      </i>
-    </div>
+    <button class="home-btn" (click)="navegarInterno('gestionar')" aria-label="Inicio" title="Inicio">
+      <i class="bi bi-house-door-fill"></i>
+    </button>
 
     <!-- MENU LATERAL -->
     <div class="menu-dropdown" *ngIf="menuAbierto">
@@ -49,17 +44,12 @@
       </button>
 
 
-      <!-- 🔹 Nuevo: Preguntas Frecuentes -->
-      <button (click)="navegarInterno('preguntas-frecuentes')">
-        Preguntas frecuentes
-      </button>
-
     </div>
 
   </div>
 
   <div class="nav-center">
-    <span class="brand">Registro Y Préstamo. Diseño Multimedia</span>
+    <span class="brand">Registro y Préstamos Diseño Multimedia</span>
   </div>
 
   <div class="nav-right">

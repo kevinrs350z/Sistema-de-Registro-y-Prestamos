@@ -128,7 +128,7 @@
       <div class="detalle-grid">
         <div class="detalle-item usuario">
           <div class="avatar">
-            {{ sel.estudiante.charAt(0) }}
+            {{ (sel.estudiante || '?').charAt(0) }}
           </div>
 
           <div class="usuario-info">

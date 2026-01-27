@@ -238,6 +238,7 @@
       <div class="col-100">
         <label>Tipo de sanción</label>
         <select [(ngModel)]="asignarTipo" [disabled]="tiposSancion.length === 0">
+          <option [ngValue]="0" disabled>Selecciona un tipo</option>
           <option *ngFor="let t of tiposSancion" [ngValue]="t.id">
             {{ t.nivel }}
           </option>
@@ -265,7 +266,7 @@
       <button class="btn-azul" type="button"
               [disabled]="!asignarUsuario.trim() || !asignarTipo || !asignarInicio || !asignarFin || tiposSancion.length === 0"
               (click)="asignarSancion()">
-        Continuar con lo seleccionado
+        Asignar sanción
       </button>
       <button type="button" class="btn-cancelar" (click)="toggleAsignar()">Cancelar</button>
     </div>

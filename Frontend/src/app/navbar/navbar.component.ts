@@ -33,11 +33,20 @@ export class NavbarComponent {
   }
 
   toggleMenu() {
+    if (this.esAdmin) {
+      return;
+    }
     this.menuAbierto = !this.menuAbierto;
+  }
+
+  irCatalogo() {
+    this.menuAbierto = false;
+    this.router.navigate(['/equipos/catalogo']);
   }
 
   cerrarSesion() {
     // Evitamos confirm() (modal del navegador). Cerramos sesión y avisamos con toast.
+    this.menuAbierto = false;
     this.auth.logout();
     sessionStorage.clear();
     this.notify.info('Sesión cerrada.');
