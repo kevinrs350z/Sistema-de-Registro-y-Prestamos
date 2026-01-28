@@ -95,6 +95,7 @@ public function getTendenciaMensual()
 
     /* ============================================================
        3. Equipos más usados por profesor (tabla paginada)
+       Agrupado por TIPO DE EQUIPO, no por equipo físico individual
     ============================================================ */
 public function getEquiposPorProfesor($page, $pageSize)
 {
@@ -104,11 +105,13 @@ public function getEquiposPorProfesor($page, $pageSize)
         ->leftJoin('prestamos AS p', 'p.idUser', '=', 'u.idUser')
         ->leftJoin('prestamo_equipo AS peq', 'peq.idPrestamo', '=', 'p.idPrestamo')
         ->leftJoin('equipos AS e', 'e.id', '=', 'peq.idEquipo')
+        ->leftJoin('tipo_equipos AS te', 'te.id', '=', 'e.tipo_equipo_id')
         ->selectRaw('d.idDocente')
         ->selectRaw("CONCAT(pe.Nombre, ' ', pe.Apellido1) AS profesor")
-        ->selectRaw("e.codigo AS equipo")
+        ->selectRaw("te.nombre AS equipo")
         ->selectRaw("COUNT(e.id) AS total")
-        ->groupBy('d.idDocente', 'profesor', 'equipo')
+        ->whereNotNull('te.nombre')
+        ->groupBy('d.idDocente', 'profesor', 'te.nombre')
         ->orderByDesc('total');
 
     // Total sin paginar

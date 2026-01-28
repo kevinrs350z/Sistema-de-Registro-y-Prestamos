@@ -20,6 +20,7 @@ export class ReportesAsignaturasComponent implements OnInit, OnDestroy {
   equiposAsignatura: any[] = [];
   page = 1;
   totalPages = 1;
+  perPage = 10;
   search = '';
 
   universidad = 'Universidad de Tarapacá';
@@ -84,7 +85,7 @@ export class ReportesAsignaturasComponent implements OnInit, OnDestroy {
   }
 
   cargarEquipos(): void {
-    this.asignaturasService.getEquiposPorAsignatura(this.page, 10, this.search).subscribe((data) => {
+    this.asignaturasService.getEquiposPorAsignatura(this.page, this.perPage, this.search).subscribe((data) => {
       this.equiposAsignatura = data.data || [];
       this.totalPages = data.totalPages || 1;
     });

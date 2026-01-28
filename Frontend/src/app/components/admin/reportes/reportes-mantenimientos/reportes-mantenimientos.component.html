@@ -58,41 +58,50 @@
 		</div>
 
 		<div class="two-cols">
-			<div class="card fade-in">
-				<h2 class="card-title">Préstamos atrasados</h2>
-				<p class="card-subtitle">Casos con devolución fuera de plazo</p>
-				<div class="table-responsive">
-					<table class="styled-table">
+			<div class="tabla-pro-card fade-in">
+				<div class="tabla-pro-header bg-warning-pro">
+					<h2 class="tabla-pro-title">Préstamos Atrasados</h2>
+					<p class="tabla-pro-subtitle">Casos con devolución fuera de plazo</p>
+				</div>
+				<div class="tabla-pro-container">
+					<table class="tabla-pro">
 						<thead>
 							<tr>
-								<th>Préstamo</th>
+								<th>ID</th>
 								<th>Usuario</th>
-								<th>Email</th>
-								<th>Fecha fin</th>
-								<th>Días atraso</th>
+								<th>Correo</th>
+								<th>Fecha Límite</th>
+								<th>Días Atraso</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr *ngFor="let a of atrasos">
-								<td>#{{ a.idPrestamo }}</td>
-								<td>{{ a.usuario }}</td>
-								<td>{{ a.email }}</td>
-								<td>{{ a.fecha_fin | date:'dd/MM/yyyy' }}</td>
-								<td>{{ a.dias_atraso }}</td>
+							<tr *ngFor="let a of atrasos; let i = index" class="tabla-pro-row">
+								<td><span class="id-badge">#{{ a.idPrestamo }}</span></td>
+								<td><span class="texto-principal">{{ a.usuario }}</span></td>
+								<td><span class="texto-secundario">{{ a.email }}</span></td>
+								<td><span class="fecha-texto">{{ a.fecha_fin | date:'dd/MM/yyyy' }}</span></td>
+								<td><span class="dias-badge alerta">{{ a.dias_atraso }} días</span></td>
 							</tr>
 							<tr *ngIf="atrasos.length === 0">
-								<td colspan="5" class="text-center text-muted">Sin atrasos registrados</td>
+								<td colspan="5" class="tabla-pro-empty">
+									<div class="empty-state-pro">
+										<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+										<span>Sin atrasos registrados</span>
+									</div>
+								</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
 			</div>
 
-			<div class="card fade-in">
-				<h2 class="card-title">Equipos en mantenimiento</h2>
-				<p class="card-subtitle">Equipos con estado crítico</p>
-				<div class="table-responsive">
-					<table class="styled-table">
+			<div class="tabla-pro-card fade-in">
+				<div class="tabla-pro-header bg-info-pro">
+					<h2 class="tabla-pro-title">Equipos en Mantenimiento</h2>
+					<p class="tabla-pro-subtitle">Equipos con estado crítico o en reparación</p>
+				</div>
+				<div class="tabla-pro-container">
+					<table class="tabla-pro">
 						<thead>
 							<tr>
 								<th>Código</th>
@@ -102,14 +111,19 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr *ngFor="let e of equiposMantenimiento">
-								<td>{{ e.codigo }}</td>
-								<td>{{ e.estado }}</td>
-								<td>{{ e.observacion || '—' }}</td>
-								<td>{{ e.updated_at | date:'dd/MM/yyyy' }}</td>
+							<tr *ngFor="let e of equiposMantenimiento; let i = index" class="tabla-pro-row">
+								<td><span class="codigo-pro">{{ e.codigo }}</span></td>
+								<td><span class="estado-badge-pro mantenimiento">{{ e.estado }}</span></td>
+								<td><span class="texto-secundario">{{ e.observacion || 'Sin observaciones' }}</span></td>
+								<td><span class="fecha-texto">{{ e.updated_at | date:'dd/MM/yyyy' }}</span></td>
 							</tr>
 							<tr *ngIf="equiposMantenimiento.length === 0">
-								<td colspan="4" class="text-center text-muted">Sin equipos críticos</td>
+								<td colspan="4" class="tabla-pro-empty">
+									<div class="empty-state-pro success">
+										<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+										<span>Todos los equipos operativos</span>
+									</div>
+								</td>
 							</tr>
 						</tbody>
 					</table>

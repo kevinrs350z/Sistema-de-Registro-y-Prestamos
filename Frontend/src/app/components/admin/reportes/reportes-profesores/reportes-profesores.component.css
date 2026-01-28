@@ -165,9 +165,321 @@
   border-color: transparent;
 }
 
+/* ============================================================
+   TABLA PROFESIONAL PROFESORES
+   ============================================================ */
+
+.tabla-pro-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  margin-top: 1.5rem;
+}
+
+.tabla-pro-header {
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.tabla-pro-header.bg-primary-pro {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+}
+
+.tabla-pro-title {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.025em;
+}
+
+.tabla-pro-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.tabla-pro-container {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.tabla-pro {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tabla-pro thead tr {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.tabla-pro th {
+  padding: 14px 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.th-numero { width: 60px; }
+.th-profesor { width: 35%; text-align: left !important; }
+.th-equipo { width: 35%; text-align: left !important; }
+.th-total { width: 20%; }
+
+.tabla-pro-row {
+  transition: all 0.2s ease;
+}
+
+.tabla-pro-row:hover {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.tabla-pro-row:not(:last-child) td {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tabla-pro td {
+  padding: 14px 20px;
+  text-align: center;
+  vertical-align: middle;
+  color: #334155;
+}
+
+.td-profesor, .td-equipo {
+  text-align: left !important;
+}
+
+.numero-fila {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #475569;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.profesor-info-pro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profesor-avatar-pro {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.texto-principal {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.equipo-info-pro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.equipo-icon-pro {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.texto-equipo {
+  font-weight: 500;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.total-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.progress-bar-pro {
+  width: 80px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1e3a5f 0%, #3d5a7f 100%);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.total-badge-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  color: #ffffff;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.25);
+}
+
+/* Estado vacío */
+.tabla-pro-empty {
+  padding: 40px 20px !important;
+}
+
+.empty-state-pro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+}
+
+.empty-state-pro svg {
+  opacity: 0.5;
+}
+
+.empty-state-pro span {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Paginación profesional */
+.tabla-pro-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.pagination-btn-pro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn-pro:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  border-color: #1e3a5f;
+  color: #ffffff;
+}
+
+.pagination-btn-pro:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-pages-pro {
+  display: flex;
+  gap: 6px;
+}
+
+.page-num-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-num-btn:hover {
+  background: #f1f5f9;
+}
+
+.page-num-btn.active {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  color: #ffffff;
+  border-color: #1e3a5f;
+}
+
 @media (max-width: 900px) {
   .charts-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabla-pro-header {
+    padding: 16px;
+  }
+  
+  .tabla-pro-title {
+    font-size: 1.1rem;
+  }
+  
+  .tabla-pro th,
+  .tabla-pro td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .th-numero {
+    display: none;
+  }
+  
+  td:first-child {
+    display: none;
+  }
+  
+  .profesor-info-pro,
+  .equipo-info-pro {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .tabla-pro-pagination {
+    flex-direction: column;
+    gap: 12px;
   }
 }
 

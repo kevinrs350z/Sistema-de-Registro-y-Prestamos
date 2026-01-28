@@ -26,7 +26,10 @@ class DatabaseSeeder extends Seeder
             
             AsignaturaDocenteSeeder::class,
             //BloquePrestamosSeeder::class,
-            EquiposRelacionadosSeeder::class
+            EquiposRelacionadosSeeder::class,
+            
+            // Seeder de datos masivos para reportes
+            ReportesDataSeeder::class,
         ]);
     }
 }

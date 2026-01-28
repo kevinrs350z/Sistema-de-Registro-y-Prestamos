@@ -45,7 +45,6 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   fechaGeneracion = new Date();
 
   // Canvas refs
-  @ViewChild('prestamosCarreraCanvas') prestamosCarreraCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('evolucionPrestamosCanvas') evolucionPrestamosCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('sancionesNivelCanvas') sancionesNivelCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('topAlumnosCanvas') topAlumnosCanvas?: ElementRef<HTMLCanvasElement>;
@@ -59,7 +58,6 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   ];
 
   // Charts
-  private chartPrestamosCarrera?: Chart;
   private chartSancionesNivel?: Chart;
   private chartEvolucionPrestamos?: Chart;
   private chartTopAlumnos?: Chart;
@@ -78,7 +76,6 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.cargarUsuario();
     this.cargarKPIs();
-    this.cargarPrestamosPorCarrera();
     this.cargarSancionesPorNivel();
     this.cargarEvolucionPrestamos();
     this.cargarTopAlumnos();
@@ -89,12 +86,10 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   }
 
   private destroyCharts() {
-    this.chartPrestamosCarrera?.destroy();
     this.chartSancionesNivel?.destroy();
     this.chartEvolucionPrestamos?.destroy();
     this.chartTopAlumnos?.destroy();
 
-    this.chartPrestamosCarrera = undefined;
     this.chartSancionesNivel = undefined;
     this.chartEvolucionPrestamos = undefined;
     this.chartTopAlumnos = undefined;
@@ -126,48 +121,7 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* ===================== 2) PRÉSTAMOS POR CARRERA ===================== */
-  private cargarPrestamosPorCarrera() {
-    this.alumnosService.getPrestamosPorCarrera().subscribe({
-      next: (data) => {
-        const safe = Array.isArray(data) ? data : [];
-
-        const labels = safe.map((x: any) => x.carrera || 'Sin carrera');
-        const valores = safe.map((x: any) => Number(x.total_prestamos ?? x.total ?? 0));
-
-        this.chartPrestamosCarrera?.destroy();
-
-        const canvas = this.prestamosCarreraCanvas?.nativeElement;
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        this.chartPrestamosCarrera = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels,
-            datasets: [{
-              label: 'Préstamos',
-              data: valores,
-              backgroundColor: '#1f78ff'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: { ticks: { maxRotation: 40, minRotation: 0 } },
-              y: { beginAtZero: true }
-            }
-          }
-        });
-      },
-      error: () => this.mostrarMensaje('No se pudieron cargar los préstamos por carrera.')
-    });
-  }
-
-  /* ===================== 3) SANCIONES POR NIVEL ===================== */
+  /* ===================== 2) SANCIONES POR NIVEL ===================== */
   private cargarSancionesPorNivel() {
     this.alumnosService.getSancionesPorNivel().subscribe({
       next: (data) => {

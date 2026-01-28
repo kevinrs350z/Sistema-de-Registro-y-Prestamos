@@ -3,3 +3,225 @@
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 12px;
 }
+
+/* ============================================================
+   TABLAS PROFESIONALES ACADÉMICAS - SANCIONES
+   ============================================================ */
+
+.tabla-pro-card {
+	background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+	border-radius: 16px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+	overflow: hidden;
+	border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.tabla-pro-header {
+	padding: 20px 24px;
+	text-align: center;
+}
+
+.tabla-pro-header.bg-danger-pro {
+	background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.tabla-pro-header.bg-primary-pro {
+	background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+}
+
+.tabla-pro-title {
+	color: #ffffff;
+	font-size: 1.2rem;
+	font-weight: 700;
+	margin: 0 0 4px 0;
+	letter-spacing: -0.025em;
+}
+
+.tabla-pro-subtitle {
+	color: rgba(255, 255, 255, 0.85);
+	font-size: 0.85rem;
+	margin: 0;
+	font-weight: 400;
+}
+
+.tabla-pro-container {
+	padding: 0;
+	overflow-x: auto;
+}
+
+.tabla-pro {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+}
+
+.tabla-pro thead tr {
+	background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.tabla-pro th {
+	padding: 14px 16px;
+	text-align: center;
+	font-weight: 700;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #475569;
+	border-bottom: 2px solid #cbd5e1;
+}
+
+.tabla-pro-row {
+	transition: all 0.2s ease;
+}
+
+.tabla-pro-row:hover {
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.tabla-pro-row:not(:last-child) td {
+	border-bottom: 1px solid #f1f5f9;
+}
+
+.tabla-pro td {
+	padding: 14px 16px;
+	text-align: center;
+	vertical-align: middle;
+	color: #334155;
+}
+
+/* Usuario info */
+.usuario-info-pro {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	justify-content: flex-start;
+}
+
+.usuario-avatar-pro {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+	color: #ffffff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 0.9rem;
+}
+
+.usuario-avatar-pro.danger {
+	background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.texto-principal {
+	font-weight: 600;
+	color: #1e293b;
+}
+
+.texto-secundario {
+	color: #64748b;
+	font-size: 0.9rem;
+}
+
+.fecha-texto {
+	color: #64748b;
+	font-size: 0.85rem;
+	font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.motivo-texto {
+	color: #64748b;
+	font-size: 0.85rem;
+	max-width: 180px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: inline-block;
+}
+
+.admin-badge {
+	display: inline-block;
+	padding: 4px 10px;
+	background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+	color: #475569;
+	border-radius: 6px;
+	font-weight: 500;
+	font-size: 0.8rem;
+}
+
+/* Contadores */
+.contador-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 40px;
+	padding: 6px 14px;
+	border-radius: 20px;
+	font-weight: 700;
+	font-size: 0.9rem;
+}
+
+.contador-badge.sanciones {
+	background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+	color: #ffffff;
+	box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.contador-badge.atrasos {
+	background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+	color: #ffffff;
+	box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+}
+
+/* Estado vacío */
+.tabla-pro-empty {
+	padding: 40px 20px !important;
+}
+
+.empty-state-pro {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	color: #94a3b8;
+}
+
+.empty-state-pro svg {
+	opacity: 0.5;
+}
+
+.empty-state-pro span {
+	font-size: 0.95rem;
+	font-weight: 500;
+}
+
+.empty-state-pro.success {
+	color: #10b981;
+}
+
+.empty-state-pro.success span {
+	color: #059669;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.tabla-pro-header {
+		padding: 16px;
+	}
+	
+	.tabla-pro-title {
+		font-size: 1rem;
+	}
+	
+	.tabla-pro th,
+	.tabla-pro td {
+		padding: 10px 8px;
+		font-size: 0.75rem;
+	}
+	
+	.usuario-info-pro {
+		flex-direction: column;
+		gap: 4px;
+	}
+}

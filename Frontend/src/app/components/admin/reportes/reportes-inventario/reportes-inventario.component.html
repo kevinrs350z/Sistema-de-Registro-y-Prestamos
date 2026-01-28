@@ -76,25 +76,33 @@
 			</div>
 		</div>
 
-		<div class="card fade-in">
-			<h2 class="card-title">Equipos subutilizados</h2>
-			<p class="card-subtitle">Tipos con menor uso en el periodo</p>
-
-			<div class="table-responsive">
-				<table class="styled-table">
+		<div class="tabla-pro-card fade-in">
+			<div class="tabla-pro-header bg-secondary-pro">
+				<h2 class="tabla-pro-title">Equipos Subutilizados</h2>
+				<p class="tabla-pro-subtitle">Tipos de equipos con menor demanda en el periodo</p>
+			</div>
+			<div class="tabla-pro-container">
+				<table class="tabla-pro">
 					<thead>
 						<tr>
-							<th>Equipo</th>
-							<th>Solicitudes</th>
+							<th class="th-numero">#</th>
+							<th>Tipo de Equipo</th>
+							<th>Total Solicitudes</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr *ngFor="let e of subutilizados">
-							<td>{{ e.equipo }}</td>
-							<td>{{ e.total }}</td>
+						<tr *ngFor="let e of subutilizados; let i = index" class="tabla-pro-row">
+							<td><span class="numero-fila">{{ i + 1 }}</span></td>
+							<td><span class="texto-principal">{{ e.equipo }}</span></td>
+							<td><span class="contador-badge bajo">{{ e.total }}</span></td>
 						</tr>
 						<tr *ngIf="subutilizados.length === 0">
-							<td colspan="2" class="text-center text-muted">Sin datos disponibles</td>
+							<td colspan="3" class="tabla-pro-empty">
+								<div class="empty-state-pro">
+									<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+									<span>Todos los equipos tienen uso regular</span>
+								</div>
+							</td>
 						</tr>
 					</tbody>
 				</table>

@@ -115,8 +115,8 @@ class PrestamoAdminService
 
         $estadoAnterior = $prestamo->estado;
 
-        if ($prestamo->estado !== EstadoPrestamo::APROBADO) {
-            throw new \Exception('Solo préstamos APROBADOS pueden devolverse.');
+        if ($prestamo->estado !== EstadoPrestamo::ENTREGADO) {
+            throw new \Exception('Solo préstamos ENTREGADOS pueden marcarse como devueltos.');
         }
 
         $prestamo->estado = EstadoPrestamo::DEVUELTO;
@@ -150,8 +150,8 @@ class PrestamoAdminService
 
             $prestamo = Prestamo::with('equipos')->findOrFail($idPrestamo);
 
-            if ($prestamo->estado !== EstadoPrestamo::APROBADO) {
-                throw new \Exception('El préstamo no está en estado APROBADO.');
+            if ($prestamo->estado !== EstadoPrestamo::ENTREGADO) {
+                throw new \Exception('El préstamo no está en estado ENTREGADO.');
             }
 
             // 1️⃣ Marcar equipo como devuelto SOLO en este préstamo

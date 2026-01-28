@@ -4,7 +4,7 @@
   <div class="report-section-header">
     <div>
       <h2 class="report-section-title">Reporte de Alumnos</h2>
-      <p class="report-section-subtitle">Comportamiento, sanciones y uso por carrera</p>
+      <p class="report-section-subtitle">Comportamiento, sanciones y uso del sistema</p>
     </div>
     <div class="report-section-actions"></div>
   </div>
@@ -40,19 +40,8 @@
 
     
 
-    <!-- ============== Fila 1: préstamos x carrera / evolución ============== -->
+    <!-- ============== Fila 1: evolución de préstamos ============== -->
     <div class="two-cols mb-4">
-      <!-- Préstamos por carrera -->
-      <div class="card fade-in">
-        <h2 class="card-title">Préstamos por carrera</h2>
-        <p class="card-subtitle">
-          Distribución de préstamos según la carrera del estudiante.
-        </p>
-        <div class="chart-area">
-          <canvas #prestamosCarreraCanvas></canvas>
-        </div>
-      </div>
-
       <!-- Evolución de préstamos (línea) -->
       <div class="card fade-in">
         <h2 class="card-title">Evolución de préstamos</h2>
@@ -63,60 +52,80 @@
           <canvas #evolucionPrestamosCanvas></canvas>
         </div>
       </div>
-    </div>
 
-    <!-- ============== Fila 2: sanciones x nivel / resumen ============== -->
-    <div class="two-cols mb-4">
       <!-- Gráfico sanciones por nivel -->
       <div class="card fade-in">
         <h2 class="card-title">Sanciones por nivel</h2>
         <p class="card-subtitle">
           Distribución de sanciones leves, medias y graves.
         </p>
-        <div class="chart-area-sm">
+        <div class="chart-area">
           <canvas #sancionesNivelCanvas></canvas>
         </div>
       </div>
+    </div>
 
- 
-    <!-- ============== Fila 3: ranking alumnos ============== -->
-    <div class="card fade-in">
-      <h2 class="card-title">Ranking de alumnos</h2>
-      <p class="card-subtitle">
-        Estudiantes con mayor número de préstamos registrados en el sistema.
-      </p>
+    <!-- ============== Ranking de alumnos ============== -->
+    <div class="ranking-card-pro fade-in">
+      <div class="ranking-header-pro">
+        <h2 class="ranking-title-pro">Ranking de Alumnos</h2>
+        <p class="ranking-subtitle-pro">Estudiantes destacados por uso del sistema de préstamos</p>
+      </div>
 
       <!-- Gráfico -->
-      <div class="chart-area-sm mb-3">
+      <div class="ranking-chart-area">
         <canvas #topAlumnosCanvas></canvas>
       </div>
 
       <!-- Tabla -->
-      <div class="table-responsive table-wrapper">
-        <table class="styled-table">
+      <div class="ranking-table-wrapper">
+        <table class="ranking-table-pro">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Nombre</th>
-              <th>Carrera</th>
-              <th>Email</th>
-              <th>Préstamos</th>
-              <th>Sanciones</th>
+              <th class="th-pos">Posición</th>
+              <th class="th-estudiante">Estudiante</th>
+              <th class="th-correo">Correo Institucional</th>
+              <th class="th-prestamos">Total Préstamos</th>
+              <th class="th-sanciones">Sanciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let a of topAlumnos; let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>{{ a.nombre }}</td>
-              <td>{{ a.carrera || '-' }}</td>
-              <td>{{ a.email }}</td>
-              <td>{{ a.total_prestamos }}</td>
-              <td>{{ a.sanciones ?? 0 }}</td>
+            <tr *ngFor="let a of topAlumnos; let i = index" class="ranking-row-pro" [class.top-3]="i < 3">
+              <td class="td-pos">
+                <span class="pos-badge-pro" [class]="'pos-' + (i + 1)">
+                  {{ i + 1 }}
+                </span>
+              </td>
+              <td class="td-estudiante">
+                <div class="estudiante-info-pro">
+                  <div class="estudiante-avatar-pro">{{ a.nombre?.charAt(0) || 'U' }}</div>
+                  <span class="estudiante-nombre-pro">{{ a.nombre }}</span>
+                </div>
+              </td>
+              <td class="td-correo">
+                <span class="correo-texto">{{ a.email }}</span>
+              </td>
+              <td class="td-prestamos">
+                <span class="prestamos-badge-pro">{{ a.total_prestamos }}</span>
+              </td>
+              <td class="td-sanciones">
+                <span class="sanciones-badge-pro" [class.con-sanciones]="(a.sanciones ?? 0) > 0">
+                  {{ a.sanciones ?? 0 }}
+                </span>
+              </td>
             </tr>
 
             <tr *ngIf="topAlumnos.length === 0">
-              <td colspan="6" class="text-center text-muted">
-                No hay datos disponibles para el ranking de alumnos.
+              <td colspan="5" class="td-empty-ranking">
+                <div class="empty-ranking-state">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  <span>No hay datos disponibles para el ranking</span>
+                </div>
               </td>
             </tr>
           </tbody>
