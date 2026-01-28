@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Prestamo;
     use App\Http\Controllers\Controller;
     use App\Http\Requests\Prestamo\Admin\AprobarRechazarPrestamoRequest;
     use App\Http\Requests\Prestamo\Admin\MarcarDevueltoRequest;
+    use App\Http\Requests\Prestamo\Admin\ExtenderPrestamoRequest;
     use App\Services\Prestamos\PrestamoAdminService;
     use App\Http\Requests\Prestamo\StorePrestamoAdminRequest;
     use Illuminate\Support\Facades\DB;
@@ -89,6 +90,22 @@ namespace App\Http\Controllers\Prestamo;
 
             return response()->json([
                 'message' => 'Equipo devuelto correctamente.'
+            ]);
+        }
+
+        public function extender(
+            ExtenderPrestamoRequest $request,
+            int $id
+        ) {
+            $this->service->extenderPrestamo(
+                $id,
+                $request->fecha,
+                $request->equiposIds,
+                $request->comentario
+            );
+
+            return response()->json([
+                'message' => 'Préstamo extendido correctamente.'
             ]);
         }
 

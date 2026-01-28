@@ -26,6 +26,20 @@ type AdminSolicitud = {
   estado: 'APROBADO' | 'DEVUELTO' | 'RECHAZADO' | 'ENTREGADO';
 };
 
+type EquipoTarjeta = {
+  solicitud: AdminSolicitud;
+  equipo: AdminSolicitud['equiposDetallados'][number];
+  pendientesRestantes: number;
+  devueltosTotales: number;
+};
+
+type ExtendModalState = {
+  fecha: string;
+  comentario: string;
+  aplicarATodos: boolean;
+  equiposSeleccionados: Record<number, boolean>;
+};
+
 @Component({
   selector: 'app-solicitudes-finalizadas',
   standalone: true,
@@ -39,13 +53,22 @@ export class SolicitudesFinalizadasComponent implements OnInit {
 
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
+  equipoSeleccionado: EquipoTarjeta | null = null;
 
   filtroBusqueda = '';
-  filtroEstado: 'todos' | 'APROBADO' | 'DEVUELTO' | 'RECHAZADO' | 'ENTREGADO' = 'todos';
   orden: 'recientes' | 'antiguas' = 'recientes';
 
   mostrarModal = false;
   motivoFinalizar = '';
+  mostrarExtendModal = false;
+  extendModal: ExtendModalState = {
+    fecha: '',
+    comentario: '',
+    aplicarATodos: true,
+    equiposSeleccionados: {}
+  };
+  readonly hoyISO = new Date().toISOString().split('T')[0];
+  private reselectPrestamoId: number | null = null;
 
   constructor(private api: PrestamosAdminService, private router: Router) {}
 
@@ -81,6 +104,26 @@ export class SolicitudesFinalizadasComponent implements OnInit {
             estado: p.estado as AdminSolicitud['estado']
           };
         });
+
+        if (this.reselectPrestamoId !== null) {
+          const seleccionada = this.solicitudes.find((s) => s.id === this.reselectPrestamoId) ?? null;
+          this.solicitudSeleccionada = seleccionada;
+
+          if (seleccionada) {
+            const equipoBaseId = this.equipoSeleccionado?.equipo?.id ?? null;
+            const equipoReselect = equipoBaseId
+              ? seleccionada.equiposDetallados.find((eq) => eq.id === equipoBaseId)
+              : seleccionada.equiposDetallados.find((eq) => eq.devuelto) ?? seleccionada.equiposDetallados[0];
+
+            this.equipoSeleccionado = equipoReselect
+              ? this.crearTarjeta(seleccionada, equipoReselect)
+              : null;
+          } else {
+            this.equipoSeleccionado = null;
+          }
+
+          this.reselectPrestamoId = null;
+        }
       },
       error: (err) => console.error('Error al cargar historial:', err)
     });
@@ -98,10 +141,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
 
       const coincideBusqueda = texto.includes(term);
 
-      const coincideEstado =
-        this.filtroEstado === 'todos' || s.estado === this.filtroEstado;
-
-      return coincideBusqueda && coincideEstado;
+      return coincideBusqueda;
     });
 
     resultado.sort((a, b) => {
@@ -113,8 +153,68 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     return resultado;
   }
 
-  seleccionarSolicitud(s: AdminSolicitud): void {
-    this.solicitudSeleccionada = s;
+  private crearTarjeta(
+    solicitud: AdminSolicitud,
+    equipo: AdminSolicitud['equiposDetallados'][number]
+  ): EquipoTarjeta {
+    const pendientesRestantes = solicitud.equiposDetallados.filter((eq) => !eq.devuelto).length;
+    const devueltosTotales = solicitud.equiposDetallados.length - pendientesRestantes;
+
+    return { solicitud, equipo, pendientesRestantes, devueltosTotales };
+  }
+
+  private construirTarjetas(predicate: (equipo: AdminSolicitud['equiposDetallados'][number]) => boolean): EquipoTarjeta[] {
+    return this.solicitudesFiltradas.flatMap((solicitud) =>
+      solicitud.equiposDetallados
+        .filter(predicate)
+        .map((equipo) => this.crearTarjeta(solicitud, equipo))
+    );
+  }
+
+  get equiposPendientes(): EquipoTarjeta[] {
+    return this.construirTarjetas((equipo) => !equipo.devuelto);
+  }
+
+  get equiposDevueltos(): EquipoTarjeta[] {
+    return this.construirTarjetas((equipo) => equipo.devuelto);
+  }
+
+  get prestamosPendientes(): AdminSolicitud[] {
+    return this.solicitudesFiltradas.filter((solicitud) => solicitud.estado === 'ENTREGADO');
+  }
+
+  get prestamosDevueltos(): AdminSolicitud[] {
+    return this.solicitudesFiltradas.filter((solicitud) => solicitud.estado === 'DEVUELTO');
+  }
+
+  equiposPendientesDe(solicitud: AdminSolicitud): AdminSolicitud['equiposDetallados'] {
+    return solicitud.equiposDetallados.filter((equipo) => !equipo.devuelto);
+  }
+
+  equiposDevueltosDe(solicitud: AdminSolicitud): AdminSolicitud['equiposDetallados'] {
+    return solicitud.equiposDetallados.filter((equipo) => equipo.devuelto);
+  }
+
+  seleccionarEquipo(item: EquipoTarjeta): void {
+    this.solicitudSeleccionada = item.solicitud;
+    this.equipoSeleccionado = item;
+  }
+
+  seleccionarSolicitud(solicitud: AdminSolicitud): void {
+    this.solicitudSeleccionada = solicitud;
+    this.equipoSeleccionado = null;
+  }
+
+  cerrarDetalle(): void {
+    this.solicitudSeleccionada = null;
+    this.equipoSeleccionado = null;
+  }
+
+  resetFiltros(): void {
+    this.filtroBusqueda = '';
+    this.orden = 'recientes';
+    this.solicitudSeleccionada = null;
+    this.equipoSeleccionado = null;
   }
 
   irASanciones(prestamoId: number): void {
@@ -124,7 +224,35 @@ export class SolicitudesFinalizadasComponent implements OnInit {
   }
 
   abrirFinalizar(): void {
+    if (!this.solicitudSeleccionada) {
+      return;
+    }
+
+    if (!this.puedeDevolver(this.solicitudSeleccionada)) {
+      this.notify.info('Este préstamo ya fue devuelto completamente.');
+      return;
+    }
+
     this.mostrarModal = true;
+  }
+
+  abrirExtender(): void {
+    if (!this.solicitudSeleccionada) {
+      return;
+    }
+
+    if (!this.puedeExtender(this.solicitudSeleccionada)) {
+      this.notify.info('No hay equipos pendientes para extender.');
+      return;
+    }
+
+    this.extendModal = this.crearEstadoExtendModal(this.solicitudSeleccionada);
+    this.mostrarExtendModal = true;
+  }
+
+  cerrarExtendModal(): void {
+    this.mostrarExtendModal = false;
+    this.extendModal = this.crearEstadoExtendModal();
   }
 
   confirmarFinalizar(): void {
@@ -135,16 +263,93 @@ export class SolicitudesFinalizadasComponent implements OnInit {
       return;
     }
 
+    const prestamoId = this.solicitudSeleccionada.id;
+
     this.api.marcarDevuelto(
-      this.solicitudSeleccionada.id,
+      prestamoId,
       this.motivoFinalizar
     ).subscribe({
       next: () => {
+        const solicitud = this.solicitudes.find((s) => s.id === prestamoId) ?? null;
+
+        if (solicitud) {
+          solicitud.equiposDetallados = solicitud.equiposDetallados.map((equipo) => ({
+            ...equipo,
+            devuelto: true
+          }));
+
+          solicitud.estado = 'DEVUELTO';
+          this.solicitudes = [...this.solicitudes];
+
+          const primerDevuelto = solicitud.equiposDetallados.find((eq) => eq.devuelto) ?? null;
+          this.solicitudSeleccionada = solicitud;
+          this.equipoSeleccionado = primerDevuelto
+            ? this.crearTarjeta(solicitud, primerDevuelto)
+            : null;
+        } else {
+          this.solicitudSeleccionada = null;
+          this.equipoSeleccionado = null;
+        }
+
+        this.reselectPrestamoId = prestamoId;
         this.notify.success('Préstamo marcado como devuelto correctamente.');
-        this.cargarSolicitudes();
         this.cerrarModal();
+        this.cargarSolicitudes();
       },
       error: (err) => console.error('Error al finalizar préstamo:', err),
+    });
+  }
+
+  confirmarExtension(): void {
+    if (!this.solicitudSeleccionada) {
+      return;
+    }
+
+    const fecha = this.extendModal.fecha?.trim();
+    if (!fecha) {
+      this.notify.warning('Selecciona la nueva fecha límite.');
+      return;
+    }
+
+    const equiposDisponibles = this.solicitudSeleccionada.equiposDetallados.filter((eq) => !eq.devuelto);
+
+    if (equiposDisponibles.length === 0) {
+      this.notify.info('No quedan equipos pendientes para extender.');
+      this.cerrarExtendModal();
+      return;
+    }
+
+    let equiposIds: number[] = [];
+    if (this.extendModal.aplicarATodos) {
+      equiposIds = equiposDisponibles.map((eq) => eq.id);
+    } else {
+      equiposIds = equiposDisponibles
+        .filter((eq) => this.extendModal.equiposSeleccionados[eq.id])
+        .map((eq) => eq.id);
+
+      if (equiposIds.length === 0) {
+        this.notify.warning('Selecciona al menos un equipo para extender.');
+        return;
+      }
+    }
+
+    const payload = {
+      fecha: fecha,
+      comentario: this.extendModal.comentario?.trim() ?? '',
+      equiposIds
+    };
+
+    this.api.extenderPrestamo(this.solicitudSeleccionada.id, payload).subscribe({
+      next: () => {
+        this.notify.success('Plazo del préstamo extendido correctamente.');
+        this.reselectPrestamoId = this.solicitudSeleccionada?.id ?? null;
+        this.cerrarExtendModal();
+        this.cargarSolicitudes();
+      },
+      error: (err) => {
+        console.error('Error al extender préstamo:', err);
+        this.notify.error('No fue posible extender el préstamo.');
+      }
     });
   }
 
@@ -154,24 +359,31 @@ export class SolicitudesFinalizadasComponent implements OnInit {
   }
 
   devolverEquipo(idPrestamo: number, idEquipo: number): void {
+    const motivoPorDefecto = 'Devolución registrada desde el panel administrativo.';
 
-    const motivo = prompt('Motivo de devolución del equipo:');
+    // Aplicar optimismo: marcar como devuelto antes de la respuesta
+    const solicitudLocal = this.solicitudes.find((s) => s.id === idPrestamo);
+    let revertir = false;
 
-    if (!motivo || motivo.trim() === '') {
-      this.notify.warning('Debes ingresar un motivo para la devolución.');
-      return;
+    if (solicitudLocal) {
+      const equipoLocal = solicitudLocal.equiposDetallados.find((eq) => eq.id === idEquipo);
+      if (equipoLocal && !equipoLocal.devuelto) {
+        equipoLocal.devuelto = true;
+        revertir = true;
+      }
     }
 
-    this.api.devolverEquipo(idPrestamo, idEquipo, motivo).subscribe({
+    this.api.devolverEquipo(idPrestamo, idEquipo, motivoPorDefecto).subscribe({
       next: () => {
 
         // ✅ ACTUALIZAR EL EQUIPO EN FRONT
         const solicitud = this.solicitudes.find(s => s.id === idPrestamo);
+        let equipoActualizado: AdminSolicitud['equiposDetallados'][number] | undefined;
 
         if (solicitud) {
-          const equipo = solicitud.equiposDetallados.find(e => e.id === idEquipo);
-          if (equipo) {
-            equipo.devuelto = true;
+          equipoActualizado = solicitud.equiposDetallados.find(e => e.id === idEquipo);
+          if (equipoActualizado) {
+            equipoActualizado.devuelto = true;
           }
 
           // 🔥 si todos están devueltos → préstamo DEVUELTO
@@ -184,12 +396,57 @@ export class SolicitudesFinalizadasComponent implements OnInit {
         }
 
         this.notify.success('Equipo devuelto correctamente.');
+        this.solicitudSeleccionada = solicitud ?? this.solicitudSeleccionada;
+        this.solicitudes = [...this.solicitudes];
+
+        if (this.equipoSeleccionado) {
+          const actualizado = [...this.equiposPendientes, ...this.equiposDevueltos]
+            .find((item) => item.solicitud.id === idPrestamo && item.equipo.id === idEquipo);
+
+          this.equipoSeleccionado = actualizado ?? this.equipoSeleccionado;
+        }
       },
       error: (err) => {
         console.error('Error al devolver equipo:', err);
         this.notify.error('Ocurrió un error al devolver el equipo.');
+
+        if (revertir && solicitudLocal) {
+          const equipoLocal = solicitudLocal.equiposDetallados.find((eq) => eq.id === idEquipo);
+          if (equipoLocal) {
+            equipoLocal.devuelto = false;
+          }
+        }
       } 
     });
+  }
+
+  private crearEstadoExtendModal(solicitud?: AdminSolicitud): ExtendModalState {
+    const seleccion: Record<number, boolean> = {};
+
+    solicitud?.equiposDetallados
+      .filter((equipo) => !equipo.devuelto)
+      .forEach((equipo) => {
+        seleccion[equipo.id] = true;
+      });
+
+    return {
+      fecha: '',
+      comentario: '',
+      aplicarATodos: true,
+      equiposSeleccionados: seleccion
+    };
+  }
+
+  puedeDevolver(solicitud: AdminSolicitud): boolean {
+    return solicitud.estado === 'APROBADO' || solicitud.estado === 'ENTREGADO';
+  }
+
+  puedeExtender(solicitud: AdminSolicitud): boolean {
+    if (!(solicitud.estado === 'APROBADO' || solicitud.estado === 'ENTREGADO')) {
+      return false;
+    }
+
+    return solicitud.equiposDetallados.some((equipo) => !equipo.devuelto);
   }
 
 }
