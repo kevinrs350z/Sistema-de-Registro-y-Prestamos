@@ -63,6 +63,11 @@ export class NavbarAdminComponent {
         }, 100);
       });
     }
+      // Navegación directa para gestionar-grupos
+      if (seccion === 'gestionar-grupos') {
+        this.router.navigate(['/admin/gestionar-grupos']);
+        return;
+      }
   }
 
   /** 📊 IR A REPORTES (ruta real) */

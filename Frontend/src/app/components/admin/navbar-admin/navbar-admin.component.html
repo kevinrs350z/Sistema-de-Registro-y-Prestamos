@@ -39,7 +39,11 @@
         Asignaturas / Eventos
       </button>
 
-      <button (click)="irReportes()">
+        <button (click)="navegarInterno('gestionar-grupos')">
+          Gestionar grupos
+        </button>
+
+      <button *ngIf="auth.isAdmin()" (click)="irReportes()">
         Reportes
       </button>
 

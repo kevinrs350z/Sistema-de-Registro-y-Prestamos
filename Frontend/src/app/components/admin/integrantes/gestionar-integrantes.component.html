@@ -1,0 +1,38 @@
+<div class="gestionar-integrantes">
+  <h2>Gestión de Grupos e Integrantes</h2>
+
+  <div>
+    <label>Nombre del grupo:</label>
+    <input [(ngModel)]="nombreGrupo" placeholder="Nombre del grupo" />
+    <button (click)="crearGrupo()">Crear grupo</button>
+  </div>
+
+  <div>
+    <h3>Usuarios disponibles</h3>
+    <ul>
+      <li *ngFor="let usuario of usuariosDisponibles">
+        {{ usuario.nombre }} ({{ usuario.email }})
+        <button (click)="agregarIntegrante(usuario)">Agregar</button>
+      </li>
+    </ul>
+  </div>
+
+  <div>
+    <h3>Integrantes seleccionados</h3>
+    <ul>
+      <li *ngFor="let integrante of integrantes">
+        {{ integrante.nombre }} ({{ integrante.email }})
+        <button (click)="quitarIntegrante(integrante)">Quitar</button>
+      </li>
+    </ul>
+  </div>
+
+  <div>
+    <h3>Grupos existentes</h3>
+    <ul>
+      <li *ngFor="let grupo of grupos" (click)="seleccionarGrupo(grupo)">
+        {{ grupo.nombre }} ({{ grupo.usuarios?.length || 0 }} integrantes)
+      </li>
+    </ul>
+  </div>
+</div>

@@ -11,6 +11,7 @@ import Chart from 'chart.js/auto';
   styleUrls: ['./report-viewer.component.css']
 })
 export class ReportViewerComponent implements OnInit {
+  private auth = inject(AuthService);
 
   active = 'equipos';
 
@@ -52,6 +53,9 @@ export class ReportViewerComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
     this.cargarDatos();
   }
 

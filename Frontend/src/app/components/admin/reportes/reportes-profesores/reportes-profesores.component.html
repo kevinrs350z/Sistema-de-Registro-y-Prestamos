@@ -66,6 +66,19 @@
         <thead>
           <tr>
             <th class="th-numero">#</th>
+    <!-- Filtros de fecha -->
+    <div class="report-fecha-filtros">
+      <label>Desde:</label>
+      <input type="date" [(ngModel)]="fechaInicio" />
+      <label>Hasta:</label>
+      <input type="date" [(ngModel)]="fechaFin" />
+      <select [(ngModel)]="periodo">
+        <option value="dias">Días</option>
+        <option value="meses">Meses</option>
+        <option value="anios">Años</option>
+      </select>
+      <button (click)="filtrarPorFecha()">Filtrar</button>
+    </div>
             <th class="th-profesor">Profesor</th>
             <th class="th-equipo">Tipo de Equipo</th>
             <th class="th-total">Total Solicitudes</th>

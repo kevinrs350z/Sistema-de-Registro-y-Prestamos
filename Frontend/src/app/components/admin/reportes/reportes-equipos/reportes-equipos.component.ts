@@ -48,6 +48,9 @@ Chart.defaults.plugins.legend.display = false;
   providers: [DatePipe]
 })
 export class ReportesEquiposComponent implements OnInit, OnDestroy {
+  fechaInicio: string = '';
+  fechaFin: string = '';
+  periodo: string = 'dias';
 
   tituloActual = 'Estadísticas de equipos';
 
@@ -87,6 +90,21 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
     this.cargarDisponibilidad();
     this.cargarEquiposCriticos();
   }
+
+    filtrarPorFecha() {
+      // Aquí deberías llamar al backend con los parámetros de fecha y periodo
+      // Por ahora, solo actualiza el rango mostrado
+      let rango = '';
+      if (this.fechaInicio && this.fechaFin) {
+        rango = `Del ${this.datePipe.transform(this.fechaInicio, 'dd/MM/yyyy')} al ${this.datePipe.transform(this.fechaFin, 'dd/MM/yyyy')}`;
+      } else {
+        rango = 'Sin filtro';
+      }
+      this.rangoFechas = rango + (this.periodo ? ` (${this.periodo})` : '');
+      // Aquí deberías recargar los datos usando el filtro
+      // Ejemplo: this.reportesService.getEquiposMasSolicitados(this.fechaInicio, this.fechaFin, this.periodo).subscribe(...)
+      this.mostrarMensaje('Filtro aplicado.');
+    }
 
   ngOnDestroy(): void {
     this.chartEquipos?.destroy();

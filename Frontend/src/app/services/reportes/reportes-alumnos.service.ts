@@ -11,28 +11,43 @@ export class ReportesAlumnosService {
   constructor(private http: HttpClient) {}
 
   // Las rutas del backend están definidas en ReportesAlumnosAdminController
-  getKPIsAlumnos(): Observable<any> {
-    // GET /api/reportes/alumnos/kpis
-    return this.http.get<any>(`${this.baseUrl}/kpis`);
+  getKPIsAlumnos(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any>(`${this.baseUrl}/kpis`, { params });
   }
 
-  getPrestamosPorCarrera(): Observable<any[]> {
-    // GET /api/reportes/alumnos/prestamos-carrera
-    return this.http.get<any[]>(`${this.baseUrl}/prestamos-carrera`);
+  getPrestamosPorCarrera(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/prestamos-carrera`, { params });
   }
 
-  getSancionesPorNivel(): Observable<any[]> {
-    // GET /api/reportes/alumnos/sanciones-nivel
-    return this.http.get<any[]>(`${this.baseUrl}/sanciones-nivel`);
+  getSancionesPorNivel(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/sanciones-nivel`, { params });
   }
 
-  getEvolucionPrestamosAlumnos(): Observable<any[]> {
-    // GET /api/reportes/alumnos/evolucion-prestamos
-    return this.http.get<any[]>(`${this.baseUrl}/evolucion-prestamos`);
+  getEvolucionPrestamosAlumnos(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/evolucion-prestamos`, { params });
   }
 
-  getRankingAlumnos(): Observable<any[]> {
-    // GET /api/reportes/alumnos/ranking
-    return this.http.get<any[]>(`${this.baseUrl}/ranking`);
+  getRankingAlumnos(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/ranking`, { params });
   }
 }

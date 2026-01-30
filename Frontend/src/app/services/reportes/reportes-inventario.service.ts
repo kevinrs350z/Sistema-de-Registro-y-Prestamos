@@ -9,23 +9,43 @@ export class ReportesInventarioService {
 
   constructor(private http: HttpClient) {}
 
-  getEstado(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/estado`);
+  getEstado(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/estado`, { params });
   }
 
-  getCategorias(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/categorias`);
+  getCategorias(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/categorias`, { params });
   }
 
-  getAntiguedad(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/antiguedad`);
+  getAntiguedad(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/antiguedad`, { params });
   }
 
-  getTopUtilizados(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/top-utilizados`);
+  getTopUtilizados(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/top-utilizados`, { params });
   }
 
-  getSubutilizados(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/subutilizados`);
+  getSubutilizados(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/subutilizados`, { params });
   }
 }

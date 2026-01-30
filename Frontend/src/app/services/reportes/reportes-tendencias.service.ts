@@ -9,15 +9,27 @@ export class ReportesTendenciasService {
 
   constructor(private http: HttpClient) {}
 
-  getPrestamosMes(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/prestamos-mes`);
+  getPrestamosMes(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/prestamos-mes`, { params });
   }
 
-  getCategorias(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/categorias`);
+  getCategorias(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/categorias`, { params });
   }
 
-  getUsoTipoUsuario(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/uso-tipo-usuario`);
+  getUsoTipoUsuario(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/uso-tipo-usuario`, { params });
   }
 }

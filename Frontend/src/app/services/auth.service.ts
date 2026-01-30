@@ -20,6 +20,28 @@ interface LoginResponse {
   providedIn: 'root'
 })
 export class AuthService {
+    /** Devuelve el rol actual del usuario autenticado */
+    getRol(): string {
+      // Puede estar en localStorage como 'rol' o en el objeto 'user'
+      const rol = localStorage.getItem('rol');
+      if (rol) return rol;
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          const obj = JSON.parse(user);
+          if (obj.rol && obj.rol.nombre) return obj.rol.nombre;
+        } catch {}
+      }
+      return '';
+    }
+
+    isAdmin(): boolean {
+      return this.getRol().toUpperCase() === 'ADMIN';
+    }
+
+    isSuperUsuario(): boolean {
+      return this.getRol().toUpperCase() === 'SUPER_USUARIO';
+    }
   //private apiUrl = 'https://cofferlike-nonaseptic-stephen.ngrok-free.dev/api'; 
   private readonly apiUrl = `${environment.apiBaseUrl}/api`;
   //private apiUrl = 'http://192.168.1.83:8000/api';
@@ -79,6 +101,12 @@ export class AuthService {
     };
 
     return this.http.post(`${this.apiUrl}/prestamos`, payload, { headers });
+  }
+
+  validarMaximoPrestamo(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/prestamos/validar-maximo`, payload, {
+      headers: this.getHeaders()
+    });
   }
     getPrestamos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/admin/prestamos`, {

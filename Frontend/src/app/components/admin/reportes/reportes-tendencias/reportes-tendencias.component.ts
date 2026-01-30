@@ -17,6 +17,9 @@ export class ReportesTendenciasComponent implements OnInit, OnDestroy {
   @ViewChild('categoriasChart') categoriasChart?: ElementRef<HTMLCanvasElement>;
   @ViewChild('usuariosChart') usuariosChart?: ElementRef<HTMLCanvasElement>;
 
+    fechaInicio: string = '';
+    fechaFin: string = '';
+    periodo: string = 'dias';
   private chartPrestamos?: Chart;
   private chartCategorias?: Chart;
   private chartUsuarios?: Chart;
@@ -43,6 +46,19 @@ export class ReportesTendenciasComponent implements OnInit, OnDestroy {
     this.cargarCategorias();
     this.cargarUsoTipoUsuario();
   }
+
+    filtrarPorFecha() {
+      let rango = '';
+      if (this.fechaInicio && this.fechaFin) {
+        rango = `Del ${this.fechaInicio} al ${this.fechaFin}`;
+      } else {
+        rango = 'Sin filtro';
+      }
+      // Aquí deberías recargar los datos usando el filtro
+      // Ejemplo: this.reportesService.getTendencias(this.fechaInicio, this.fechaFin, this.periodo).subscribe(...)
+      // Mostrar mensaje de filtro aplicado
+      // this.mostrarMensaje('Filtro aplicado.');
+    }
 
   ngOnDestroy(): void {
     this.chartPrestamos?.destroy();

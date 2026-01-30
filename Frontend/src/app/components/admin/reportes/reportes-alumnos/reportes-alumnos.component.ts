@@ -72,6 +72,10 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
     private alumnosService: ReportesAlumnosService,
     private exportService: ExportService
   ) {}
+  
+   fechaInicio: string = '';
+   fechaFin: string = '';
+   periodo: string = 'dias';
 
   ngOnInit(): void {
     this.cargarUsuario();
@@ -80,6 +84,19 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
     this.cargarEvolucionPrestamos();
     this.cargarTopAlumnos();
   }
+
+   filtrarPorFecha() {
+     let rango = '';
+     if (this.fechaInicio && this.fechaFin) {
+       rango = `Del ${this.fechaInicio} al ${this.fechaFin}`;
+     } else {
+       rango = 'Sin filtro';
+     }
+     // Aquí deberías recargar los datos usando el filtro
+     // Ejemplo: this.reportesService.getAlumnos(this.fechaInicio, this.fechaFin, this.periodo).subscribe(...)
+     // Mostrar mensaje de filtro aplicado
+     // this.mostrarMensaje('Filtro aplicado.');
+   }
 
   ngOnDestroy(): void {
     this.destroyCharts();

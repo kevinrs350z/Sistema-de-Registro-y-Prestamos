@@ -1,0 +1,22 @@
+<div>
+  <label for="grupoSelect">Seleccionar grupo:</label>
+  <select id="grupoSelect" [formControl]="grupoForm.controls['grupo']" (change)="onGrupoChange($event.target.value)">
+    <option [ngValue]="null">-- Nuevo grupo --</option>
+    <option *ngFor="let grupo of grupos" [ngValue]="grupo.id">{{ grupo.nombre }}</option>
+  </select>
+</div>
+
+<div *ngIf="selectedGrupo">
+  <h4>Integrantes del grupo:</h4>
+  <ul>
+    <li *ngFor="let integrante of integrantes">{{ integrante.nombre }}</li>
+  </ul>
+</div>
+
+<div *ngIf="!selectedGrupo">
+  <h4>Crear nuevo grupo</h4>
+  <input type="text" placeholder="Nombre del grupo" #nombreGrupo>
+  <label>Integrantes:</label>
+  <input type="text" placeholder="IDs separados por coma" #idsIntegrantes>
+  <button (click)="crearGrupo(nombreGrupo.value, idsIntegrantes.value.split(',').map(x => +x.trim()))">Crear grupo</button>
+</div>

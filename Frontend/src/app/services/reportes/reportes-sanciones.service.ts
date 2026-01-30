@@ -9,23 +9,43 @@ export class ReportesSancionesService {
 
   constructor(private http: HttpClient) {}
 
-  getKpis(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/kpis`);
+  getKpis(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any>(`${this.baseUrl}/kpis`, { params });
   }
 
-  getMotivos(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/motivos`);
+  getMotivos(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/motivos`, { params });
   }
 
-  getReincidencia(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/reincidencia`);
+  getReincidencia(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/reincidencia`, { params });
   }
 
-  getBloqueos(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/bloqueos`);
+  getBloqueos(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/bloqueos`, { params });
   }
 
-  getRelacionAtrasos(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/relacion-atrasos`);
+  getRelacionAtrasos(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/relacion-atrasos`, { params });
   }
 }

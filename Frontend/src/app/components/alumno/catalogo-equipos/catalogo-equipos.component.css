@@ -135,6 +135,12 @@
   flex-direction: column;
 }
 
+.card-equipo.bloqueado {
+  opacity: 0.75;
+  border-color: #f0c2c2;
+  background: #fff8f8;
+}
+
 /* IMAGEN UNIFORME */
 .card-equipo img {
   width: 100%;

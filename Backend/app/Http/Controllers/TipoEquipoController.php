@@ -8,6 +8,7 @@ use App\Services\TipoEquipoService;
 use App\Http\Requests\TipoEquipo\UpdateTipoEquipoRequest;
 use App\Http\Requests\TipoEquipo\StoreTipoEquipoRequest;
 use App\Models\TipoEquipo;
+use App\Services\PrestamoService;
 
 class TipoEquipoController extends Controller
 {
@@ -54,6 +55,12 @@ class TipoEquipoController extends Controller
     public function update(UpdateTipoEquipoRequest $request, TipoEquipoService $service, $id)
     {
         $data = $request->validated();
+
+        if ($request->hasFile('imagen')) {
+            $ruta = $request->file('imagen')->store('tipo_equipos', 'public');
+            $data['imagen'] = $ruta;
+        }
+
         $tipoEquipo = $service->update($id, $data);
 
         return response()->json([
@@ -71,13 +78,14 @@ class TipoEquipoController extends Controller
 
         return response()->json($resultado, 200);
     }
-    public function catalogo()
+    public function catalogo(PrestamoService $prestamoService)
     {
         $tipos = TipoEquipo::select(
                 'tipo_equipos.id',
                 'tipo_equipos.nombre',
                 'tipo_equipos.descripcion',
                 'tipo_equipos.imagen',
+                'tipo_equipos.maximo_prestamo',
                 'categorias.nombre as categoria'
             )
             ->leftJoin('categorias', 'categorias.id', '=', 'tipo_equipos.categoria_id')
@@ -87,6 +95,28 @@ class TipoEquipoController extends Controller
                 }
             ])
             ->get();
+
+        $user = auth('sanctum')->user();
+        $bloqueos = [];
+
+        if ($user && $user->hasRole('ALUMNO')) {
+            $bloqueos = $prestamoService->obtenerBloqueoPorTipoUsuario($user->idUser);
+        }
+
+        $tipos = $tipos->map(function ($t) use ($bloqueos) {
+            $info = $bloqueos[$t->id] ?? null;
+            $bloqueado = (bool) ($info['bloqueado'] ?? false);
+            $grupoRelacionados = $info['grupo_relacionados'] ?? [$t->id];
+
+            return array_merge($t->toArray(), [
+                'prestamos_activos' => $info['activos'] ?? 0,
+                'bloqueado' => $bloqueado,
+                'bloqueo_motivo' => $bloqueado
+                    ? 'Límite alcanzado para este tipo de equipo (incluyendo relacionados).'
+                    : null,
+                'grupo_relacionados' => $grupoRelacionados,
+            ]);
+        });
 
         return response()->json($tipos, 200);
     }

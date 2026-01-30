@@ -7,6 +7,9 @@ import { startWith, map } from 'rxjs/operators';
 import { NotificationService } from '../../../services/notification.service';
 import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
 import { CarritoService } from '../../../services/carrito.service';
+import { UsuariosService } from '../../../services/usuarios.service';
+import { GrupoService } from '../../../services/grupo.service';
+import { Grupo } from '../../../models/grupo.model';
 
 /* =========================
    HELPERS
@@ -54,6 +57,8 @@ export class SolicitarReservaComponent {
   private api = inject(AuthService);
   private carritoSrv = inject(CarritoService);
   private cdr = inject(ChangeDetectorRef);
+  private usuariosSrv = inject(UsuariosService);
+  private grupoSrv = inject(GrupoService);
 
   usuarioActivo: any = null;
   bloqueado = false;
@@ -65,6 +70,13 @@ export class SolicitarReservaComponent {
 
   asignaturas = signal<{ idAsignatura: number; nombre: string }[]>([]);
   bloques: { id: number; texto: string }[] = [];
+
+  integrantes = signal<any[]>([]);
+  integrantesSeleccionados: number[] = [];
+  bloqueosIntegrantes: Record<number, string> = {};
+
+  grupos = signal<Grupo[]>([]);
+  grupoSeleccionado: Grupo | null = null;
 
   tipoSolicitud = signal<'DENTRO' | 'FUERA'>('DENTRO');
   mostrarMotivo = false;
@@ -230,17 +242,32 @@ export class SolicitarReservaComponent {
         telefono: data.persona?.telefono,
         email: data.Email,
       });
+
+      this.cargarIntegrantes();
+      this.cargarGrupos();
     });
 
-    this.api.getEquipos(token).subscribe(data => {
-      this.equipos.set(data);
-      this.cdr.detectChanges();
+  cargarGrupos(): void {
+    this.grupoSrv.getGrupos().subscribe({
+      next: (grupos: Grupo[]) => {
+        this.grupos.set(grupos);
+      },
+      error: (err: any) => console.error('Error cargando grupos', err)
     });
+  }
 
-    this.api.getAsignaturas(token).subscribe(data => {
-      // ✅ OJO: tu backend devuelve {idAsignatura, nombre}
-      // por eso tomamos idAsignatura, NO "id"
-      const normalizadas = (data ?? []).map((a: any) => ({
+  onGrupoChange(grupoId: string): void {
+    if (!grupoId || grupoId === 'nuevo') {
+      this.grupoSeleccionado = null;
+      this.integrantesSeleccionados = [];
+      return;
+    }
+    const grupo = this.grupos().find((g: Grupo) => g.id === +grupoId);
+    if (grupo) {
+      this.grupoSeleccionado = grupo;
+      this.integrantesSeleccionados = (grupo.usuarios || []).map((u: any) => u.id);
+    }
+  }
         idAsignatura: Number(a.idAsignatura),
         nombre: a.nombre
       }));
@@ -284,6 +311,85 @@ export class SolicitarReservaComponent {
       : this.f.bloques.setValue(arr.filter(x => x !== id));
   }
 
+  toggleIntegrante(id: number) {
+    if (this.bloqueosIntegrantes[id]) {
+      this.notify.warning(this.bloqueosIntegrantes[id]);
+      return;
+    }
+
+    if (this.integrantesSeleccionados.includes(id)) {
+      this.integrantesSeleccionados = this.integrantesSeleccionados.filter(x => x !== id);
+    } else {
+      this.integrantesSeleccionados = [...this.integrantesSeleccionados, id];
+    }
+
+    this.actualizarBloqueosIntegrantes();
+    this.grupoSeleccionado = null; // Si el usuario edita manualmente, deselecciona grupo
+  }
+
+  private cargarIntegrantes() {
+    this.usuariosSrv.obtenerUsuariosPorEstado(1, 'ACTIVO').subscribe({
+      next: resp => {
+        const lista = resp?.data ?? [];
+        const filtrados = lista
+          .filter((u: any) => String(u.rol || '').toUpperCase() === 'ALUMNO')
+          .filter((u: any) => u.id !== this.usuarioActivo?.idUser)
+          .map((u: any) => ({
+            id: u.id,
+            nombre: `${u.nombre} ${u.apellido1 ?? ''} ${u.apellido2 ?? ''}`.trim(),
+            email: u.email,
+          }));
+        this.integrantes.set(filtrados);
+      },
+      error: err => console.error('Error cargando integrantes', err)
+    });
+  }
+
+  private buildEquiposPayload() {
+    return this.carrito.map(c => {
+      if (c.tipo === 'pack') {
+        return {
+          idPack: c.idPack,
+          cantidad: 1
+        };
+      }
+      return {
+        idTipoEquipo: Number(c.idTipoEquipo),
+        cantidad: c.modo === 'especifico'
+          ? c.equiposSeleccionados.length
+          : Number(c.cantidad),
+        modo: c.modo,
+        equiposSeleccionados: c.equiposSeleccionados ?? []
+      };
+    });
+  }
+
+  private aplicarBloqueos(bloqueos: Record<number, any[]>) {
+    const map: Record<number, string> = {};
+    Object.keys(bloqueos || {}).forEach(id => {
+      const info = (bloqueos as any)[id];
+      map[Number(id)] = info?.usuario?.nombre
+        ? `${info.usuario.nombre} tiene el límite alcanzado para este tipo de equipo.`
+        : 'Límite alcanzado para este tipo de equipo.';
+    });
+    this.bloqueosIntegrantes = map;
+  }
+
+  private actualizarBloqueosIntegrantes() {
+    if (!this.integrantesSeleccionados.length) {
+      this.bloqueosIntegrantes = {};
+      return;
+    }
+
+    this.api.validarMaximoPrestamo({
+      equipos: this.buildEquiposPayload(),
+      integrantes: this.integrantesSeleccionados
+    }).subscribe({
+      next: res => this.aplicarBloqueos(res?.bloqueos || {}),
+      error: err => console.error('Error validando máximos', err)
+    });
+  }
+
   /* =========================
      SUBMIT
   ========================= */
@@ -306,57 +412,61 @@ export class SolicitarReservaComponent {
       return;
     }
 
-    const payload = {
+    const payload: any = {
       // OJO: el backend usa Auth::user() para idUser; no necesitamos mandarlo.
       tipo: this.f.tipo_solicitud.value,
-
-      // Backend espera la key "asignatura" (nullable) para DENTRO
       asignatura: asignaturaSel, // number | null
-
       motivo: asignaturaSel === null ? this.f.motivo.value : '',
       observacion: this.f.observacion.value,
       fecha_inicio: this.f.fecha_inicio.value,
       fecha_fin: this.f.fecha_fin.value,
       bloques: this.f.bloques.value,
-
-      equipos: this.carrito.map(c => {
-        if (c.tipo === 'pack') {
-          return {
-            idPack: c.idPack, // ✅ Enviar ID del pack
-            cantidad: 1       // Packs son únicos
-          };
-        }
-        return {
-          idTipoEquipo: Number(c.idTipoEquipo),
-          cantidad: c.modo === 'especifico'
-            ? c.equiposSeleccionados.length
-            : Number(c.cantidad),
-          modo: c.modo,
-          equiposSeleccionados: c.equiposSeleccionados ?? []
-        };
-      })
+      equipos: this.buildEquiposPayload(),
+      integrantes: this.integrantesSeleccionados
     };
+    if (this.grupoSeleccionado && this.grupoSeleccionado.id) {
+      payload.grupo_id = this.grupoSeleccionado.id;
+    }
 
     const token = localStorage.getItem('token') ?? '';
-    this.api.crearPrestamo(payload, token).subscribe({
-      next: () => {
-        this.notify.success('Solicitud enviada correctamente.');
-        this.limpiar();
-        // Limpiar también el carrito global para que el catálogo quede en blanco
-        this.carritoSrv.limpiar();
-      },
-      error: err => {
-        if (err?.status === 403) {
-          this.notify.error(
-            err?.error?.message || 'Tu cuenta está bloqueada.'
-          );
-          this.bloqueado = true;
-          this.bloqueadoMotivo = err?.error?.motivo ?? null;
-          this.bloqueadoFecha = err?.error?.fecha ?? null;
+    this.api.validarMaximoPrestamo({
+      equipos: payload.equipos,
+      integrantes: payload.integrantes
+    }).subscribe({
+      next: res => {
+        const bloqueos = res?.bloqueos || {};
+        if (Object.keys(bloqueos).length > 0) {
+          this.aplicarBloqueos(bloqueos);
+          this.notify.error('Hay integrantes bloqueados por límite de préstamos.');
           return;
         }
-        this.notify.error(err?.error?.error || 'Ocurrió un error al enviar la solicitud.');
-      }
+
+        this.api.crearPrestamo(payload, token).subscribe({
+          next: () => {
+            this.notify.success('Solicitud enviada correctamente.');
+            this.limpiar();
+            this.carritoSrv.limpiar();
+          },
+          error: err => {
+            if (err?.status === 403) {
+              this.notify.error(
+                err?.error?.message || 'Tu cuenta está bloqueada.'
+              );
+              this.bloqueado = true;
+              this.bloqueadoMotivo = err?.error?.motivo ?? null;
+              this.bloqueadoFecha = err?.error?.fecha ?? null;
+              return;
+            }
+            if (err?.status === 422 && err?.error?.bloqueos) {
+              this.aplicarBloqueos(err.error.bloqueos);
+              this.notify.error('Hay integrantes bloqueados por límite de préstamos.');
+              return;
+            }
+            this.notify.error(err?.error?.error || 'Ocurrió un error al enviar la solicitud.');
+          }
+        });
+      },
+      error: () => this.notify.error('No se pudo validar el máximo de préstamos.')
     });
   }
 
@@ -372,6 +482,8 @@ export class SolicitarReservaComponent {
     });
     this.tipoSolicitud.set('DENTRO');
     this.carrito = [];
+    this.integrantesSeleccionados = [];
+    this.bloqueosIntegrantes = {};
   }
 }
 

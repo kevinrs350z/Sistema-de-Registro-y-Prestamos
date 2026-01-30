@@ -139,6 +139,45 @@
 
     </div>
 
+    <!-- 4) Integrantes del grupo (opcional) -->
+
+    <div class="card">
+      <h2>Integrantes del grupo (opcional)</h2>
+      <p class="muted">Puedes seleccionar un grupo para precargar integrantes, o elegirlos manualmente.</p>
+
+      <div class="grupo-select">
+        <label>Grupo:
+          <select (change)="onGrupoChange($event.target.value)">
+            <option value="nuevo">-- Sin grupo / Manual --</option>
+            <option *ngFor="let grupo of grupos()" [value]="grupo.id">{{ grupo.nombre }}</option>
+          </select>
+        </label>
+        <span *ngIf="grupoSeleccionado">Integrantes precargados de grupo <b>{{ grupoSeleccionado.nombre }}</b>.</span>
+      </div>
+
+      <div class="integrantes-list" *ngIf="integrantes().length > 0; else sinIntegrantes">
+        <label class="integrante-item" *ngFor="let u of integrantes()">
+          <input
+            type="checkbox"
+            [checked]="integrantesSeleccionados.includes(u.id)"
+            [disabled]="!!bloqueosIntegrantes[u.id]"
+            (change)="toggleIntegrante(u.id)"
+          />
+          <div class="integrante-info">
+            <div class="integrante-nombre">{{ u.nombre }}</div>
+            <div class="integrante-email">{{ u.email }}</div>
+            <div class="integrante-bloqueo" *ngIf="bloqueosIntegrantes[u.id]">
+              {{ bloqueosIntegrantes[u.id] }}
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <ng-template #sinIntegrantes>
+        <div class="muted">No hay integrantes disponibles para seleccionar.</div>
+      </ng-template>
+    </div>
+
   </ng-container>
 
     <ng-template #sinEquipos>

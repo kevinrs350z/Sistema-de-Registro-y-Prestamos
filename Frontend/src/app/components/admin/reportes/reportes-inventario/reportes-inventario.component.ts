@@ -43,6 +43,9 @@ export class ReportesInventarioComponent implements OnInit, OnDestroy {
     private inventarioService: ReportesInventarioService,
     private exportService: ExportService
   ) {}
+  fechaInicio: string = '';
+  fechaFin: string = '';
+  periodo: string = 'dias';
 
   ngOnInit(): void {
     this.cargarUsuario();
@@ -51,6 +54,19 @@ export class ReportesInventarioComponent implements OnInit, OnDestroy {
     this.cargarTopUso();
     this.cargarAntiguedad();
     this.cargarSubutilizados();
+  }
+
+  filtrarPorFecha() {
+    let rango = '';
+    if (this.fechaInicio && this.fechaFin) {
+      rango = `Del ${this.fechaInicio} al ${this.fechaFin}`;
+    } else {
+      rango = 'Sin filtro';
+    }
+    // Aquí deberías recargar los datos usando el filtro
+    // Ejemplo: this.reportesService.getInventario(this.fechaInicio, this.fechaFin, this.periodo).subscribe(...)
+    // Mostrar mensaje de filtro aplicado
+    // this.mostrarMensaje('Filtro aplicado.');
   }
 
   ngOnDestroy(): void {

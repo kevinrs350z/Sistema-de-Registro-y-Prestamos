@@ -142,18 +142,21 @@ class EquipoController extends Controller
      * @param  EquipoService  $service   Servicio encargado de la eliminación.
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($idEquipo, EquipoService $service)
+    public function destroy($idEquipo, EquipoService $service, \Illuminate\Http\Request $request)
     {
+        $user = $request->user();
+        if (!$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para eliminar equipos.'
+            ], 403);
+        }
         try{
             $equipo = $service->delete($idEquipo);
-
             return response()->json([
                 'message' => 'Equipo eliminado correctamente.',
                 'equipo'  => $equipo,
             ], 200);
-
         }catch(\Exception $e){
-
             return response()->json([
                 'error'   => 'Error al eliminar el equipo.',
                 'message' => $e->getMessage(),

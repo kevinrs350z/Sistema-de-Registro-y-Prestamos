@@ -124,6 +124,19 @@ class Prestamo extends Model
     }
 
     /**
+     * Integrantes asociados al préstamo (grupo).
+     */
+    public function integrantes()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'prestamo_integrantes',
+            'idPrestamo',
+            'idUser'
+        );
+    }
+
+    /**
      * Historial de cambios de estado (auditoría).
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

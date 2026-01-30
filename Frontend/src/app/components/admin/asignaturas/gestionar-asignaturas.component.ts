@@ -41,13 +41,13 @@ interface ReservaUI {
 }
 
 @Component({
-  selector: 'app-gestionar-asignaturas',
+  selector: 'app-gestionar-reservas-admin',
   standalone: true,
   imports: [CommonModule, FormsModule, FiltroEquipoPipe],
-  templateUrl: './gestionar-asignaturas.component.html',
-  styleUrls: ['./gestionar-asignaturas.component.css']
+  templateUrl: './gestionar-reservas-admin.component.html',
+  styleUrls: ['./gestionar-reservas-admin.component.css']
 })
-export class GestionarAsignaturasComponent implements OnInit {
+export class GestionarReservasAdminComponent implements OnInit {
 
   /* ======================================
               DATOS DEL BACKEND

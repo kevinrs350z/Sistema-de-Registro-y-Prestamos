@@ -1,3 +1,15 @@
+    /**
+     * Asociar préstamo a un grupo (tabla grupo_prestamo)
+     */
+    public function asignarGrupoPrestamo(int $grupoId, int $prestamoId): void
+    {
+        DB::table('grupo_prestamo')->insert([
+            'grupo_id' => $grupoId,
+            'prestamo_id' => $prestamoId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
 <?php
 
 namespace App\Services;
@@ -5,7 +17,10 @@ namespace App\Services;
 use App\Models\Prestamo;
 use App\Models\BloquePrestamo;
 use App\Models\Pack;
+use App\Models\TipoEquipo;
+use App\Models\TipoEquipoRelacionado;
 use App\Models\User;
+use App\Enums\EstadoPrestamo;
 use Illuminate\Support\Facades\DB;
 
 class PrestamoService
@@ -136,5 +151,334 @@ class PrestamoService
         DB::table('equipos')
             ->where('id', $idEquipo)
             ->update(['estado' => 'PRESTADO']);
+    }
+
+    /**
+     * Registrar integrantes asociados a un préstamo.
+     */
+    public function asignarIntegrantes(int $idPrestamo, array $integrantes): void
+    {
+        $integrantes = array_values(array_unique(array_filter($integrantes)));
+
+        if (empty($integrantes)) {
+            return;
+        }
+
+        $rows = array_map(function ($idUser) use ($idPrestamo) {
+            return [
+                'idPrestamo' => $idPrestamo,
+                'idUser' => $idUser,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }, $integrantes);
+
+        DB::table('prestamo_integrantes')->insert($rows);
+    }
+
+    /**
+     * Obtener bloqueo por tipo para un usuario (catálogo).
+     * Considera tipos de equipo relacionados al calcular el límite máximo.
+     */
+    public function obtenerBloqueoPorTipoUsuario(int $userId): array
+    {
+        $tipos = TipoEquipo::select('id', 'maximo_prestamo')->get();
+        $activos = $this->obtenerConteosActivosPorUsuario([$userId]);
+        
+        // Obtener mapa de grupos relacionados
+        $gruposRelacionados = $this->obtenerGruposRelacionados();
+        
+        $resultado = [];
+
+        foreach ($tipos as $tipo) {
+            $maximo = (int) ($tipo->maximo_prestamo ?? 0);
+            
+            // Obtener el grupo de tipos relacionados (incluye a sí mismo)
+            $grupoIds = $gruposRelacionados[$tipo->id] ?? [$tipo->id];
+            
+            // Sumar préstamos activos de TODOS los tipos del grupo
+            $activosGrupo = 0;
+            foreach ($grupoIds as $tipoRelacionadoId) {
+                $activosGrupo += (int) ($activos[$userId][$tipoRelacionadoId] ?? 0);
+            }
+            
+            $bloqueado = $maximo === 0 ? true : $activosGrupo >= $maximo;
+
+            $resultado[$tipo->id] = [
+                'activos' => $activosGrupo,
+                'maximo' => $maximo,
+                'bloqueado' => $bloqueado,
+                'grupo_relacionados' => $grupoIds,
+            ];
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Validar máximo de préstamos activos por tipo (alumno + integrantes).
+     * Considera tipos de equipo relacionados al calcular el límite máximo.
+     */
+    public function validarMaximoPrestamo(array $userIds, array $equipos): array
+    {
+        $userIds = array_values(array_unique(array_filter($userIds)));
+        if (empty($userIds)) {
+            return [];
+        }
+
+        $solicitados = $this->construirConteoSolicitado($equipos);
+        if (empty($solicitados)) {
+            return [];
+        }
+
+        $activos = $this->obtenerConteosActivosPorUsuario($userIds);
+        
+        // Obtener todos los tipos involucrados (solicitados + relacionados)
+        $gruposRelacionados = $this->obtenerGruposRelacionados();
+        
+        $tiposIds = array_keys($solicitados);
+        $tipos = TipoEquipo::whereIn('id', $tiposIds)
+            ->get(['id', 'maximo_prestamo', 'nombre']);
+
+        $maximos = $tipos->mapWithKeys(fn ($t) => [
+            (int) $t->id => (int) ($t->maximo_prestamo ?? 0)
+        ])->toArray();
+        
+        $nombresEquipos = $tipos->mapWithKeys(fn ($t) => [
+            (int) $t->id => $t->nombre
+        ])->toArray();
+
+        $usuarios = User::with('persona')
+            ->whereIn('idUser', $userIds)
+            ->get()
+            ->keyBy('idUser');
+
+        $bloqueos = [];
+
+        foreach ($userIds as $uid) {
+            // Agrupar solicitados por grupo de relacionados
+            $solicitadosPorGrupo = $this->agruparSolicitadosPorGrupo($solicitados, $gruposRelacionados);
+            
+            foreach ($solicitados as $tipoId => $cantSolicitada) {
+                $maximo = $maximos[$tipoId] ?? 0;
+                
+                // Obtener grupo de tipos relacionados
+                $grupoIds = $gruposRelacionados[$tipoId] ?? [$tipoId];
+                
+                // Sumar préstamos activos de TODO el grupo
+                $cantActivaGrupo = 0;
+                foreach ($grupoIds as $tipoRelacionadoId) {
+                    $cantActivaGrupo += (int) ($activos[$uid][$tipoRelacionadoId] ?? 0);
+                }
+                
+                // Sumar lo solicitado de TODO el grupo
+                $cantSolicitadaGrupo = 0;
+                foreach ($grupoIds as $tipoRelacionadoId) {
+                    $cantSolicitadaGrupo += (int) ($solicitados[$tipoRelacionadoId] ?? 0);
+                }
+
+                $excede = $maximo === 0
+                    ? $cantSolicitadaGrupo > 0
+                    : ($cantActivaGrupo + $cantSolicitadaGrupo) > $maximo;
+
+                if ($excede) {
+                    if (!isset($bloqueos[$uid])) {
+                        $persona = $usuarios[$uid]->persona ?? null;
+                        $nombre = $persona
+                            ? trim(($persona->Nombre ?? '') . ' ' . ($persona->apellido1 ?? '') . ' ' . ($persona->apellido2 ?? ''))
+                            : ($usuarios[$uid]->Email ?? 'Usuario');
+
+                        $bloqueos[$uid] = [
+                            'usuario' => [
+                                'id' => $uid,
+                                'nombre' => $nombre,
+                            ],
+                            'tipos' => []
+                        ];
+                    }
+
+                    // Obtener nombres de equipos relacionados
+                    $nombresRelacionados = array_filter(array_map(
+                        fn($id) => $nombresEquipos[$id] ?? null,
+                        $grupoIds
+                    ));
+
+                    $bloqueos[$uid]['tipos'][] = [
+                        'tipo_id' => $tipoId,
+                        'activos' => $cantActivaGrupo,
+                        'solicitados' => $cantSolicitadaGrupo,
+                        'maximo' => $maximo,
+                        'grupo_relacionados' => $grupoIds,
+                        'nombres_relacionados' => $nombresRelacionados,
+                    ];
+                }
+            }
+        }
+
+        return $bloqueos;
+    }
+
+    private function construirConteoSolicitado(array $equipos): array
+    {
+        $conteo = [];
+
+        foreach ($equipos as $item) {
+            if (isset($item['idPack'])) {
+                $pack = Pack::with('equipos')->find($item['idPack']);
+                if (!$pack) {
+                    continue;
+                }
+
+                $multiplicador = (int) ($item['cantidad'] ?? 1);
+                foreach ($pack->equipos as $eq) {
+                    $tipoId = (int) $eq->tipo_equipo_id;
+                    $conteo[$tipoId] = ($conteo[$tipoId] ?? 0) + $multiplicador;
+                }
+                continue;
+            }
+
+            $tipoId = (int) ($item['idTipoEquipo'] ?? 0);
+            $cantidad = (int) ($item['cantidad'] ?? 0);
+            if ($tipoId && $cantidad > 0) {
+                $conteo[$tipoId] = ($conteo[$tipoId] ?? 0) + $cantidad;
+            }
+        }
+
+        return $conteo;
+    }
+
+    private function obtenerConteosActivosPorUsuario(array $userIds): array
+    {
+        $estadosActivos = [
+            EstadoPrestamo::PENDIENTE,
+            EstadoPrestamo::APROBADO,
+            EstadoPrestamo::PENDIENTE_ENTREGA,
+            EstadoPrestamo::ENTREGADO,
+        ];
+
+        $conteos = [];
+
+        $main = DB::table('prestamos as p')
+            ->join('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
+            ->join('equipos as e', 'e.id', '=', 'pe.idEquipo')
+            ->whereIn('p.estado', $estadosActivos)
+            ->whereIn('p.idUser', $userIds)
+            ->groupBy('p.idUser', 'e.tipo_equipo_id')
+            ->selectRaw('p.idUser as idUser, e.tipo_equipo_id as tipo_id, count(*) as total')
+            ->get();
+
+        foreach ($main as $row) {
+            $conteos[$row->idUser][(int) $row->tipo_id] = (int) $row->total;
+        }
+
+        $integrantes = DB::table('prestamo_integrantes as pi')
+            ->join('prestamos as p', 'p.idPrestamo', '=', 'pi.idPrestamo')
+            ->join('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
+            ->join('equipos as e', 'e.id', '=', 'pe.idEquipo')
+            ->whereIn('p.estado', $estadosActivos)
+            ->whereIn('pi.idUser', $userIds)
+            ->groupBy('pi.idUser', 'e.tipo_equipo_id')
+            ->selectRaw('pi.idUser as idUser, e.tipo_equipo_id as tipo_id, count(*) as total')
+            ->get();
+
+        foreach ($integrantes as $row) {
+            $actual = $conteos[$row->idUser][(int) $row->tipo_id] ?? 0;
+            $conteos[$row->idUser][(int) $row->tipo_id] = $actual + (int) $row->total;
+        }
+
+        return $conteos;
+    }
+
+    /**
+     * Obtener mapa de grupos de tipos de equipo relacionados.
+     * La relación es bidireccional: si A→B existe, B también pertenece al grupo de A.
+     * 
+     * @return array [tipo_id => [ids del grupo incluyendo a sí mismo]]
+     */
+    private function obtenerGruposRelacionados(): array
+    {
+        // Obtener todas las relaciones
+        $relaciones = DB::table('tipo_equipo_relacionados')
+            ->select('tipo_equipo_id', 'relacionado_id')
+            ->get();
+
+        // Construir grafo bidireccional
+        $grafo = [];
+        foreach ($relaciones as $rel) {
+            $a = (int) $rel->tipo_equipo_id;
+            $b = (int) $rel->relacionado_id;
+
+            $grafo[$a][] = $b;
+            $grafo[$b][] = $a;
+        }
+
+        // Para cada tipo, encontrar su grupo completo usando BFS/DFS
+        $grupos = [];
+        $todosLosTipos = TipoEquipo::pluck('id')->toArray();
+
+        foreach ($todosLosTipos as $tipoId) {
+            if (isset($grupos[$tipoId])) {
+                continue; // Ya procesado como parte de otro grupo
+            }
+
+            // BFS para encontrar todos los tipos conectados
+            $grupo = $this->encontrarGrupoConectado($tipoId, $grafo);
+            
+            // Asignar el mismo grupo a todos los miembros
+            foreach ($grupo as $miembro) {
+                $grupos[$miembro] = $grupo;
+            }
+        }
+
+        return $grupos;
+    }
+
+    /**
+     * Encontrar todos los tipos conectados a un tipo dado usando BFS.
+     */
+    private function encontrarGrupoConectado(int $inicio, array $grafo): array
+    {
+        $visitados = [$inicio => true];
+        $cola = [$inicio];
+        $grupo = [$inicio];
+
+        while (!empty($cola)) {
+            $actual = array_shift($cola);
+            $vecinos = $grafo[$actual] ?? [];
+
+            foreach ($vecinos as $vecino) {
+                if (!isset($visitados[$vecino])) {
+                    $visitados[$vecino] = true;
+                    $cola[] = $vecino;
+                    $grupo[] = $vecino;
+                }
+            }
+        }
+
+        return array_values(array_unique($grupo));
+    }
+
+    /**
+     * Agrupar cantidades solicitadas por grupo de tipos relacionados.
+     */
+    private function agruparSolicitadosPorGrupo(array $solicitados, array $gruposRelacionados): array
+    {
+        $resultado = [];
+
+        foreach ($solicitados as $tipoId => $cantidad) {
+            $grupoIds = $gruposRelacionados[$tipoId] ?? [$tipoId];
+            $grupoKey = implode('-', array_unique($grupoIds));
+
+            if (!isset($resultado[$grupoKey])) {
+                $resultado[$grupoKey] = [
+                    'tipos' => $grupoIds,
+                    'total' => 0,
+                ];
+            }
+
+            $resultado[$grupoKey]['total'] += $cantidad;
+        }
+
+        return $resultado;
     }
 }

@@ -9,19 +9,28 @@ export class ReportesAsignaturasService {
 
   constructor(private http: HttpClient) {}
 
-  getUso(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/uso`);
+  getUso(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/uso`, { params });
   }
 
-  getTendencia(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/tendencia`);
+  getTendencia(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get<any[]>(`${this.baseUrl}/tendencia`, { params });
   }
 
-  getEquiposPorAsignatura(page = 1, perPage = 10, search = ''): Observable<any> {
-    let params = new HttpParams().set('page', page).set('per_page', perPage);
-    if (search) {
-      params = params.set('search', search);
-    }
+  getEquiposPorAsignatura(page = 1, perPage = 10, search = '', fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any> {
+    let params: any = { page, per_page: perPage };
+    if (search) params.search = search;
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
     return this.http.get<any>(`${this.baseUrl}/equipos`, { params });
   }
 }

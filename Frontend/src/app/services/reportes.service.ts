@@ -12,19 +12,35 @@ export class ReportesService {
 
   constructor(private http: HttpClient) {}
 
-  getEquiposMasSolicitados(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/equipos-mas-solicitados`);
+  getEquiposMasSolicitados(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get(`${this.apiUrl}/equipos-mas-solicitados`, { params });
   }
-  getUsoInternoExterno():  Observable<any> {
-    return this.http.get(`${this.apiUrl}/uso-interno-externo`);
+  getUsoInternoExterno(fechaInicio?: string, fechaFin?: string, periodo?: string):  Observable<any> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get(`${this.apiUrl}/uso-interno-externo`, { params });
   }
 
-  getSancionesYRechazos(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/sanciones-rechazos`);
+  getSancionesYRechazos(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get(`${this.apiUrl}/sanciones-rechazos`, { params });
   }
 
-  getEquiposDadoDeBaja(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/equipos-baja`);
+  getEquiposDadoDeBaja(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any> {
+    const params: any = {};
+    if (fechaInicio) params.fecha_inicio = fechaInicio;
+    if (fechaFin) params.fecha_fin = fechaFin;
+    if (periodo) params.periodo = periodo;
+    return this.http.get(`${this.apiUrl}/equipos-baja`, { params });
   }
 
   // Operative endpoints (equipos)

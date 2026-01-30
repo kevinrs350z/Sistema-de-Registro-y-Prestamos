@@ -133,6 +133,29 @@ class UsuarioController extends Controller
     }
 
     /**
+    public function update(UpdateUsuarioRequest $request, $id, UsuarioService $service)
+    {
+        $user = $request->user();
+        $data = $request->validated();
+        // Solo ADMIN puede cambiar roles de otros usuarios
+        if (isset($data['rol']) && !$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para asignar roles.'
+            ], 403);
+        }
+        try {
+            $usuario = $service->actualizarUsuario($id, $data);
+            return response()->json([
+                'message' => 'Usuario actualizado correctamente',
+                'data' => $usuario
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar el usuario',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
      * Elimina un usuario del sistema.
      *
      * Este método solicita al UsuarioService la eliminación del usuario especificado.
@@ -160,6 +183,26 @@ class UsuarioController extends Controller
             ], 500);
         }
     }
+        public function destroy($id, UsuarioService $service, Request $request)
+        {
+            $user = $request->user();
+            if (!$user->hasRole('ADMIN')) {
+                return response()->json([
+                    'error' => 'No tienes permisos para eliminar usuarios.'
+                ], 403);
+            }
+            try {
+                $service->eliminarUsuario($id);
+                return response()->json([
+                    'message' => 'Usuario desactivado correctamente'
+                ], 200);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error'   => 'Error al eliminar el usuario',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        }
 
     /**
      * Reactiva un usuario previamente desactivado.
