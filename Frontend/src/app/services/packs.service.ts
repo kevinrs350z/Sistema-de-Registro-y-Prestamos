@@ -20,6 +20,19 @@ export class PacksService {
     });
   }
 
+  /**
+   * Headers para FormData (sin Content-Type, el navegador lo agrega automáticamente)
+   */
+  private getFormDataHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+
+    return new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Accept': 'application/json'
+      // NO incluir Content-Type, el navegador lo establece con el boundary correcto
+    });
+  }
+
 
   getPacks(page = 1, perPage = 10): Observable<any> {
     return this.http.get<any>(
@@ -39,7 +52,7 @@ export class PacksService {
     return this.http.post(
       `${this.baseUrl}/packs`,
       formData,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getFormDataHeaders() }
     );
   }
 
@@ -47,7 +60,7 @@ export class PacksService {
     return this.http.post(
       `${this.baseUrl}/packs/${id}?_method=PUT`,
       formData,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getFormDataHeaders() }
     );
   }
 

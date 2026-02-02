@@ -20,6 +20,18 @@ export class TipoEquipoService {
     });
   }
 
+  /**
+   * Headers específicos para FormData (sin Content-Type)
+   */
+  private getFormDataHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token') ?? '';
+    return new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json'
+      // NO incluir Content-Type, el browser lo agrega automáticamente con boundary
+    });
+  }
+
   // ============================================================
   // LISTAR TIPOS DE EQUIPO
   // ============================================================
@@ -43,7 +55,7 @@ export class TipoEquipoService {
     if (imagen) formData.append('imagen', imagen);
 
     return this.http.post(`${this.apiUrl}/tipoEquipo`, formData, {
-      headers: this.getHeaders()
+      headers: this.getFormDataHeaders()
     });
   }
 
