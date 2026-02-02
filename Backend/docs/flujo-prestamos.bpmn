@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                  id="Definitions_1" 
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  
+  <bpmn:collaboration id="Collaboration_SistemaReservas">
+    <bpmn:participant id="Participant_Alumno" name="Alumno/Usuario" processRef="Process_Alumno" />
+    <bpmn:participant id="Participant_Admin" name="Administrador/Responsable" processRef="Process_Admin" />
+    <bpmn:participant id="Participant_Sistema" name="Sistema" processRef="Process_Sistema" />
+    
+    <!-- Message Flows -->
+    <bpmn:messageFlow id="Flow_SolicitudEnviada" sourceRef="Task_EnviarSolicitud" targetRef="Event_RecibirSolicitud" name="Solicitud de Préstamo" />
+    <bpmn:messageFlow id="Flow_NotificacionAprobado" sourceRef="Task_EnviarNotificacionAprobado" targetRef="Event_RecibirAprobacion" name="Email: Préstamo Aprobado" />
+    <bpmn:messageFlow id="Flow_NotificacionRechazado" sourceRef="Task_EnviarNotificacionRechazado" targetRef="Event_RecibirRechazo" name="Email: Préstamo Rechazado" />
+    <bpmn:messageFlow id="Flow_RecogerEquipos" sourceRef="Task_RecogerEquipos" targetRef="Task_EntregarEquipos" name="Entrega física" />
+    <bpmn:messageFlow id="Flow_DevolverEquipos" sourceRef="Task_DevolverEquipos" targetRef="Task_RecibirDevolucion" name="Devolución física" />
+  </bpmn:collaboration>
+
+  <!-- ============================================ -->
+  <!-- PROCESO ALUMNO -->
+  <!-- ============================================ -->
+  <bpmn:process id="Process_Alumno" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Alumno">
+      <bpmn:lane id="Lane_Alumno" name="Alumno">
+        <bpmn:flowNodeRef>StartEvent_Alumno</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SeleccionarEquipos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SeleccionarTipo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TipoPrestamo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SeleccionarBloques</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SeleccionarFechas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AgregarMotivo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarSolicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EsperarRespuesta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Resultado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_RecibirAprobacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_RecibirRechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecogerEquipos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UsarEquipos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DevolverEquipos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_PrestamoCompletado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_SolicitudRechazada</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_Alumno" name="Necesita equipo">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:task id="Task_SeleccionarEquipos" name="Seleccionar equipos disponibles">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_SeleccionarTipo" name="Seleccionar tipo de préstamo">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_TipoPrestamo" name="¿Tipo de préstamo?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dentro</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Fuera</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_SeleccionarBloques" name="Seleccionar bloques horarios y asignatura">
+      <bpmn:incoming>Flow_Dentro</bpmn:incoming>
+      <bpmn:outgoing>Flow_4a</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_SeleccionarFechas" name="Seleccionar fecha inicio y fecha fin">
+      <bpmn:incoming>Flow_Fuera</bpmn:incoming>
+      <bpmn:outgoing>Flow_4b</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_AgregarMotivo" name="Agregar motivo/justificación">
+      <bpmn:incoming>Flow_4a</bpmn:incoming>
+      <bpmn:incoming>Flow_4b</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_EnviarSolicitud" name="Enviar solicitud de préstamo">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_EsperarRespuesta" name="Esperar respuesta del administrador">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_Resultado" name="¿Resultado?">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_Aprobado</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Rechazado</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:intermediateCatchEvent id="Event_RecibirAprobacion" name="Recibir notificación de aprobación">
+      <bpmn:incoming>Flow_Aprobado</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:intermediateCatchEvent id="Event_RecibirRechazo" name="Recibir notificación de rechazo">
+      <bpmn:incoming>Flow_Rechazado</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fin_Rechazo</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:task id="Task_RecogerEquipos" name="Recoger equipos físicamente">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_UsarEquipos" name="Usar equipos (según tipo préstamo)">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_DevolverEquipos" name="Devolver equipos físicamente">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:endEvent id="EndEvent_PrestamoCompletado" name="Préstamo completado exitosamente">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_SolicitudRechazada" name="Solicitud rechazada">
+      <bpmn:incoming>Flow_Fin_Rechazo</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_Alumno" targetRef="Task_SeleccionarEquipos" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_SeleccionarEquipos" targetRef="Task_SeleccionarTipo" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_SeleccionarTipo" targetRef="Gateway_TipoPrestamo" />
+    <bpmn:sequenceFlow id="Flow_Dentro" name="DENTRO" sourceRef="Gateway_TipoPrestamo" targetRef="Task_SeleccionarBloques" />
+    <bpmn:sequenceFlow id="Flow_Fuera" name="FUERA" sourceRef="Gateway_TipoPrestamo" targetRef="Task_SeleccionarFechas" />
+    <bpmn:sequenceFlow id="Flow_4a" sourceRef="Task_SeleccionarBloques" targetRef="Task_AgregarMotivo" />
+    <bpmn:sequenceFlow id="Flow_4b" sourceRef="Task_SeleccionarFechas" targetRef="Task_AgregarMotivo" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_AgregarMotivo" targetRef="Task_EnviarSolicitud" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_EnviarSolicitud" targetRef="Task_EsperarRespuesta" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Task_EsperarRespuesta" targetRef="Gateway_Resultado" />
+    <bpmn:sequenceFlow id="Flow_Aprobado" name="Aprobado" sourceRef="Gateway_Resultado" targetRef="Event_RecibirAprobacion" />
+    <bpmn:sequenceFlow id="Flow_Rechazado" name="Rechazado" sourceRef="Gateway_Resultado" targetRef="Event_RecibirRechazo" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Event_RecibirAprobacion" targetRef="Task_RecogerEquipos" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Task_RecogerEquipos" targetRef="Task_UsarEquipos" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_UsarEquipos" targetRef="Task_DevolverEquipos" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_DevolverEquipos" targetRef="EndEvent_PrestamoCompletado" />
+    <bpmn:sequenceFlow id="Flow_Fin_Rechazo" sourceRef="Event_RecibirRechazo" targetRef="EndEvent_SolicitudRechazada" />
+  </bpmn:process>
+
+  <!-- ============================================ -->
+  <!-- PROCESO ADMINISTRADOR -->
+  <!-- ============================================ -->
+  <bpmn:process id="Process_Admin" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Admin">
+      <bpmn:lane id="Lane_Admin" name="Administrador">
+        <bpmn:flowNodeRef>Event_RecibirSolicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisarSolicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarDisponibilidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarSanciones</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Sanciones</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DecisionAdmin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AprobarPrestamo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RechazarPrestamo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EntregarEquipos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_MarcarEntregado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirDevolucion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarEstadoEquipos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EstadoEquipos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_MarcarDevuelto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AplicarSancion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_MarcarDevueltoConSancion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_PrestamoFinalizado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Rechazado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RechazarPorSancion</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="Event_RecibirSolicitud" name="Recibir solicitud de préstamo">
+      <bpmn:outgoing>Flow_A1</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+
+    <bpmn:task id="Task_RevisarSolicitud" name="Revisar detalles de la solicitud">
+      <bpmn:incoming>Flow_A1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A2</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_VerificarDisponibilidad" name="Verificar disponibilidad de equipos">
+      <bpmn:incoming>Flow_A2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A3</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_VerificarSanciones" name="Verificar sanciones del alumno">
+      <bpmn:incoming>Flow_A3</bpmn:incoming>
+      <bpmn:outgoing>Flow_A4</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_Sanciones" name="¿Tiene sanciones activas?">
+      <bpmn:incoming>Flow_A4</bpmn:incoming>
+      <bpmn:outgoing>Flow_SinSanciones</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ConSanciones</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_RechazarPorSancion" name="Rechazar por sanción activa">
+      <bpmn:incoming>Flow_ConSanciones</bpmn:incoming>
+      <bpmn:outgoing>Flow_RechazadoSancion</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_DecisionAdmin" name="¿Aprobar solicitud?">
+      <bpmn:incoming>Flow_SinSanciones</bpmn:incoming>
+      <bpmn:outgoing>Flow_AdminAprueba</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AdminRechaza</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_AprobarPrestamo" name="Aprobar préstamo&#10;Estado: PENDIENTE → APROBADO">
+      <bpmn:incoming>Flow_AdminAprueba</bpmn:incoming>
+      <bpmn:outgoing>Flow_A5</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_RechazarPrestamo" name="Rechazar préstamo&#10;Estado: PENDIENTE → RECHAZADO&#10;Equipos → DISPONIBLE">
+      <bpmn:incoming>Flow_AdminRechaza</bpmn:incoming>
+      <bpmn:outgoing>Flow_A6</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_EntregarEquipos" name="Entregar equipos físicamente al alumno">
+      <bpmn:incoming>Flow_A5</bpmn:incoming>
+      <bpmn:outgoing>Flow_A7</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_MarcarEntregado" name="Marcar como ENTREGADO&#10;Estado: APROBADO → ENTREGADO&#10;Equipos → PRESTADO">
+      <bpmn:incoming>Flow_A7</bpmn:incoming>
+      <bpmn:outgoing>Flow_A8</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:intermediateCatchEvent id="Task_RecibirDevolucion" name="Recibir devolución de equipos">
+      <bpmn:incoming>Flow_A8</bpmn:incoming>
+      <bpmn:outgoing>Flow_A9</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:task id="Task_VerificarEstadoEquipos" name="Verificar estado de equipos devueltos">
+      <bpmn:incoming>Flow_A9</bpmn:incoming>
+      <bpmn:outgoing>Flow_A10</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_EstadoEquipos" name="¿Equipos en buen estado?">
+      <bpmn:incoming>Flow_A10</bpmn:incoming>
+      <bpmn:outgoing>Flow_EquiposBien</bpmn:outgoing>
+      <bpmn:outgoing>Flow_EquiposMal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_MarcarDevuelto" name="Marcar como DEVUELTO&#10;Estado: ENTREGADO → DEVUELTO&#10;Equipos → DISPONIBLE">
+      <bpmn:incoming>Flow_EquiposBien</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_AplicarSancion" name="Aplicar sanción al alumno&#10;(LEVE/MEDIA/GRAVE)">
+      <bpmn:incoming>Flow_EquiposMal</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_MarcarDevueltoConSancion" name="Marcar como DEVUELTO&#10;Estado: ENTREGADO → DEVUELTO&#10;Equipos → DISPONIBLE">
+      <bpmn:incoming>Flow_A12</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:endEvent id="EndEvent_PrestamoFinalizado" name="Préstamo finalizado">
+      <bpmn:incoming>Flow_A11</bpmn:incoming>
+      <bpmn:incoming>Flow_A13</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_Rechazado" name="Solicitud rechazada">
+      <bpmn:incoming>Flow_A6</bpmn:incoming>
+      <bpmn:incoming>Flow_RechazadoSancion</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows Admin -->
+    <bpmn:sequenceFlow id="Flow_A1" sourceRef="Event_RecibirSolicitud" targetRef="Task_RevisarSolicitud" />
+    <bpmn:sequenceFlow id="Flow_A2" sourceRef="Task_RevisarSolicitud" targetRef="Task_VerificarDisponibilidad" />
+    <bpmn:sequenceFlow id="Flow_A3" sourceRef="Task_VerificarDisponibilidad" targetRef="Task_VerificarSanciones" />
+    <bpmn:sequenceFlow id="Flow_A4" sourceRef="Task_VerificarSanciones" targetRef="Gateway_Sanciones" />
+    <bpmn:sequenceFlow id="Flow_SinSanciones" name="No" sourceRef="Gateway_Sanciones" targetRef="Gateway_DecisionAdmin" />
+    <bpmn:sequenceFlow id="Flow_ConSanciones" name="Sí" sourceRef="Gateway_Sanciones" targetRef="Task_RechazarPorSancion" />
+    <bpmn:sequenceFlow id="Flow_RechazadoSancion" sourceRef="Task_RechazarPorSancion" targetRef="EndEvent_Rechazado" />
+    <bpmn:sequenceFlow id="Flow_AdminAprueba" name="Sí" sourceRef="Gateway_DecisionAdmin" targetRef="Task_AprobarPrestamo" />
+    <bpmn:sequenceFlow id="Flow_AdminRechaza" name="No" sourceRef="Gateway_DecisionAdmin" targetRef="Task_RechazarPrestamo" />
+    <bpmn:sequenceFlow id="Flow_A5" sourceRef="Task_AprobarPrestamo" targetRef="Task_EntregarEquipos" />
+    <bpmn:sequenceFlow id="Flow_A6" sourceRef="Task_RechazarPrestamo" targetRef="EndEvent_Rechazado" />
+    <bpmn:sequenceFlow id="Flow_A7" sourceRef="Task_EntregarEquipos" targetRef="Task_MarcarEntregado" />
+    <bpmn:sequenceFlow id="Flow_A8" sourceRef="Task_MarcarEntregado" targetRef="Task_RecibirDevolucion" />
+    <bpmn:sequenceFlow id="Flow_A9" sourceRef="Task_RecibirDevolucion" targetRef="Task_VerificarEstadoEquipos" />
+    <bpmn:sequenceFlow id="Flow_A10" sourceRef="Task_VerificarEstadoEquipos" targetRef="Gateway_EstadoEquipos" />
+    <bpmn:sequenceFlow id="Flow_EquiposBien" name="Sí" sourceRef="Gateway_EstadoEquipos" targetRef="Task_MarcarDevuelto" />
+    <bpmn:sequenceFlow id="Flow_EquiposMal" name="No (daño/pérdida)" sourceRef="Gateway_EstadoEquipos" targetRef="Task_AplicarSancion" />
+    <bpmn:sequenceFlow id="Flow_A11" sourceRef="Task_MarcarDevuelto" targetRef="EndEvent_PrestamoFinalizado" />
+    <bpmn:sequenceFlow id="Flow_A12" sourceRef="Task_AplicarSancion" targetRef="Task_MarcarDevueltoConSancion" />
+    <bpmn:sequenceFlow id="Flow_A13" sourceRef="Task_MarcarDevueltoConSancion" targetRef="EndEvent_PrestamoFinalizado" />
+  </bpmn:process>
+
+  <!-- ============================================ -->
+  <!-- PROCESO SISTEMA (Notificaciones/Email) -->
+  <!-- ============================================ -->
+  <bpmn:process id="Process_Sistema" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Sistema">
+      <bpmn:lane id="Lane_Sistema" name="Sistema">
+        <bpmn:flowNodeRef>Task_EnviarNotificacionAprobado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarNotificacionRechazado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarHistorial</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActualizarEstadoEquipos</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:task id="Task_EnviarNotificacionAprobado" name="Enviar email: Préstamo Aprobado">
+    </bpmn:task>
+
+    <bpmn:task id="Task_EnviarNotificacionRechazado" name="Enviar email: Préstamo Rechazado">
+    </bpmn:task>
+
+    <bpmn:task id="Task_RegistrarHistorial" name="Registrar cambio en PrestamoHistorial">
+    </bpmn:task>
+
+    <bpmn:task id="Task_ActualizarEstadoEquipos" name="Actualizar estado de equipos">
+    </bpmn:task>
+  </bpmn:process>
+
+  <!-- ============================================ -->
+  <!-- DIAGRAMA BPMN (Layout Visual) -->
+  <!-- ============================================ -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_SistemaReservas">
+      
+      <!-- Pool Alumno -->
+      <bpmndi:BPMNShape id="Participant_Alumno_di" bpmnElement="Participant_Alumno" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1800" height="350" />
+      </bpmndi:BPMNShape>
+      
+      <!-- Pool Admin -->
+      <bpmndi:BPMNShape id="Participant_Admin_di" bpmnElement="Participant_Admin" isHorizontal="true">
+        <dc:Bounds x="160" y="480" width="1800" height="450" />
+      </bpmndi:BPMNShape>
+      
+      <!-- Pool Sistema -->
+      <bpmndi:BPMNShape id="Participant_Sistema_di" bpmnElement="Participant_Sistema" isHorizontal="true">
+        <dc:Bounds x="160" y="980" width="1800" height="150" />
+      </bpmndi:BPMNShape>
+
+      <!-- Alumno Elements -->
+      <bpmndi:BPMNShape id="StartEvent_Alumno_di" bpmnElement="StartEvent_Alumno">
+        <dc:Bounds x="220" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="200" y="265" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_SeleccionarEquipos_di" bpmnElement="Task_SeleccionarEquipos">
+        <dc:Bounds x="290" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_SeleccionarTipo_di" bpmnElement="Task_SeleccionarTipo">
+        <dc:Bounds x="420" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_TipoPrestamo_di" bpmnElement="Gateway_TipoPrestamo" isMarkerVisible="true">
+        <dc:Bounds x="555" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="537" y="185" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_SeleccionarBloques_di" bpmnElement="Task_SeleccionarBloques">
+        <dc:Bounds x="640" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_SeleccionarFechas_di" bpmnElement="Task_SeleccionarFechas">
+        <dc:Bounds x="640" y="280" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_AgregarMotivo_di" bpmnElement="Task_AgregarMotivo">
+        <dc:Bounds x="780" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_EnviarSolicitud_di" bpmnElement="Task_EnviarSolicitud">
+        <dc:Bounds x="910" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_EsperarRespuesta_di" bpmnElement="Task_EsperarRespuesta">
+        <dc:Bounds x="1040" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_Resultado_di" bpmnElement="Gateway_Resultado" isMarkerVisible="true">
+        <dc:Bounds x="1175" y="215" width="50" height="50" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Event_RecibirAprobacion_di" bpmnElement="Event_RecibirAprobacion">
+        <dc:Bounds x="1262" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Event_RecibirRechazo_di" bpmnElement="Event_RecibirRechazo">
+        <dc:Bounds x="1262" y="302" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_RecogerEquipos_di" bpmnElement="Task_RecogerEquipos">
+        <dc:Bounds x="1330" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_UsarEquipos_di" bpmnElement="Task_UsarEquipos">
+        <dc:Bounds x="1460" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_DevolverEquipos_di" bpmnElement="Task_DevolverEquipos">
+        <dc:Bounds x="1590" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_PrestamoCompletado_di" bpmnElement="EndEvent_PrestamoCompletado">
+        <dc:Bounds x="1722" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_SolicitudRechazada_di" bpmnElement="EndEvent_SolicitudRechazada">
+        <dc:Bounds x="1362" y="302" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- Admin Elements -->
+      <bpmndi:BPMNShape id="Event_RecibirSolicitud_di" bpmnElement="Event_RecibirSolicitud">
+        <dc:Bounds x="222" y="612" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_RevisarSolicitud_di" bpmnElement="Task_RevisarSolicitud">
+        <dc:Bounds x="290" y="590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_VerificarDisponibilidad_di" bpmnElement="Task_VerificarDisponibilidad">
+        <dc:Bounds x="420" y="590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_VerificarSanciones_di" bpmnElement="Task_VerificarSanciones">
+        <dc:Bounds x="550" y="590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_Sanciones_di" bpmnElement="Gateway_Sanciones" isMarkerVisible="true">
+        <dc:Bounds x="685" y="605" width="50" height="50" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_RechazarPorSancion_di" bpmnElement="Task_RechazarPorSancion">
+        <dc:Bounds x="760" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_DecisionAdmin_di" bpmnElement="Gateway_DecisionAdmin" isMarkerVisible="true">
+        <dc:Bounds x="785" y="605" width="50" height="50" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_AprobarPrestamo_di" bpmnElement="Task_AprobarPrestamo">
+        <dc:Bounds x="870" y="590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_RechazarPrestamo_di" bpmnElement="Task_RechazarPrestamo">
+        <dc:Bounds x="870" y="720" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_EntregarEquipos_di" bpmnElement="Task_EntregarEquipos">
+        <dc:Bounds x="1000" y="590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_MarcarEntregado_di" bpmnElement="Task_MarcarEntregado">
+        <dc:Bounds x="1130" y="590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_RecibirDevolucion_di" bpmnElement="Task_RecibirDevolucion">
+        <dc:Bounds x="1262" y="612" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_VerificarEstadoEquipos_di" bpmnElement="Task_VerificarEstadoEquipos">
+        <dc:Bounds x="1330" y="590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_EstadoEquipos_di" bpmnElement="Gateway_EstadoEquipos" isMarkerVisible="true">
+        <dc:Bounds x="1465" y="605" width="50" height="50" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_MarcarDevuelto_di" bpmnElement="Task_MarcarDevuelto">
+        <dc:Bounds x="1550" y="530" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_AplicarSancion_di" bpmnElement="Task_AplicarSancion">
+        <dc:Bounds x="1550" y="680" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_MarcarDevueltoConSancion_di" bpmnElement="Task_MarcarDevueltoConSancion">
+        <dc:Bounds x="1680" y="680" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_PrestamoFinalizado_di" bpmnElement="EndEvent_PrestamoFinalizado">
+        <dc:Bounds x="1812" y="612" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_Rechazado_di" bpmnElement="EndEvent_Rechazado">
+        <dc:Bounds x="1002" y="742" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- Sequence Flow Edges - Alumno -->
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="256" y="240" />
+        <di:waypoint x="290" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="390" y="240" />
+        <di:waypoint x="420" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="520" y="240" />
+        <di:waypoint x="555" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Dentro_di" bpmnElement="Flow_Dentro">
+        <di:waypoint x="580" y="215" />
+        <di:waypoint x="580" y="160" />
+        <di:waypoint x="640" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="565" y="143" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Fuera_di" bpmnElement="Flow_Fuera">
+        <di:waypoint x="580" y="265" />
+        <di:waypoint x="580" y="320" />
+        <di:waypoint x="640" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="567" y="323" width="38" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_4a_di" bpmnElement="Flow_4a">
+        <di:waypoint x="740" y="160" />
+        <di:waypoint x="760" y="160" />
+        <di:waypoint x="760" y="240" />
+        <di:waypoint x="780" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_4b_di" bpmnElement="Flow_4b">
+        <di:waypoint x="740" y="320" />
+        <di:waypoint x="760" y="320" />
+        <di:waypoint x="760" y="240" />
+        <di:waypoint x="780" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="880" y="240" />
+        <di:waypoint x="910" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="1010" y="240" />
+        <di:waypoint x="1040" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="1140" y="240" />
+        <di:waypoint x="1175" y="240" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Aprobado_di" bpmnElement="Flow_Aprobado">
+        <di:waypoint x="1200" y="215" />
+        <di:waypoint x="1200" y="160" />
+        <di:waypoint x="1262" y="160" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Rechazado_di" bpmnElement="Flow_Rechazado">
+        <di:waypoint x="1200" y="265" />
+        <di:waypoint x="1200" y="320" />
+        <di:waypoint x="1262" y="320" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="1298" y="160" />
+        <di:waypoint x="1330" y="160" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1430" y="160" />
+        <di:waypoint x="1460" y="160" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1560" y="160" />
+        <di:waypoint x="1590" y="160" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1690" y="160" />
+        <di:waypoint x="1722" y="160" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Fin_Rechazo_di" bpmnElement="Flow_Fin_Rechazo">
+        <di:waypoint x="1298" y="320" />
+        <di:waypoint x="1362" y="320" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Sequence Flow Edges - Admin -->
+      <bpmndi:BPMNEdge id="Flow_A1_di" bpmnElement="Flow_A1">
+        <di:waypoint x="258" y="630" />
+        <di:waypoint x="290" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A2_di" bpmnElement="Flow_A2">
+        <di:waypoint x="390" y="630" />
+        <di:waypoint x="420" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A3_di" bpmnElement="Flow_A3">
+        <di:waypoint x="520" y="630" />
+        <di:waypoint x="550" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A4_di" bpmnElement="Flow_A4">
+        <di:waypoint x="650" y="630" />
+        <di:waypoint x="685" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_SinSanciones_di" bpmnElement="Flow_SinSanciones">
+        <di:waypoint x="735" y="630" />
+        <di:waypoint x="785" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ConSanciones_di" bpmnElement="Flow_ConSanciones">
+        <di:waypoint x="710" y="605" />
+        <di:waypoint x="710" y="550" />
+        <di:waypoint x="760" y="550" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_RechazadoSancion_di" bpmnElement="Flow_RechazadoSancion">
+        <di:waypoint x="860" y="550" />
+        <di:waypoint x="1020" y="550" />
+        <di:waypoint x="1020" y="742" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_AdminAprueba_di" bpmnElement="Flow_AdminAprueba">
+        <di:waypoint x="835" y="630" />
+        <di:waypoint x="870" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_AdminRechaza_di" bpmnElement="Flow_AdminRechaza">
+        <di:waypoint x="810" y="655" />
+        <di:waypoint x="810" y="760" />
+        <di:waypoint x="870" y="760" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A5_di" bpmnElement="Flow_A5">
+        <di:waypoint x="970" y="630" />
+        <di:waypoint x="1000" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A6_di" bpmnElement="Flow_A6">
+        <di:waypoint x="970" y="760" />
+        <di:waypoint x="1002" y="760" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A7_di" bpmnElement="Flow_A7">
+        <di:waypoint x="1100" y="630" />
+        <di:waypoint x="1130" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A8_di" bpmnElement="Flow_A8">
+        <di:waypoint x="1230" y="630" />
+        <di:waypoint x="1262" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A9_di" bpmnElement="Flow_A9">
+        <di:waypoint x="1298" y="630" />
+        <di:waypoint x="1330" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A10_di" bpmnElement="Flow_A10">
+        <di:waypoint x="1430" y="630" />
+        <di:waypoint x="1465" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_EquiposBien_di" bpmnElement="Flow_EquiposBien">
+        <di:waypoint x="1490" y="605" />
+        <di:waypoint x="1490" y="570" />
+        <di:waypoint x="1550" y="570" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_EquiposMal_di" bpmnElement="Flow_EquiposMal">
+        <di:waypoint x="1490" y="655" />
+        <di:waypoint x="1490" y="720" />
+        <di:waypoint x="1550" y="720" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A11_di" bpmnElement="Flow_A11">
+        <di:waypoint x="1650" y="570" />
+        <di:waypoint x="1830" y="570" />
+        <di:waypoint x="1830" y="612" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A12_di" bpmnElement="Flow_A12">
+        <di:waypoint x="1650" y="720" />
+        <di:waypoint x="1680" y="720" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_A13_di" bpmnElement="Flow_A13">
+        <di:waypoint x="1780" y="720" />
+        <di:waypoint x="1830" y="720" />
+        <di:waypoint x="1830" y="648" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Message Flows -->
+      <bpmndi:BPMNEdge id="Flow_SolicitudEnviada_di" bpmnElement="Flow_SolicitudEnviada">
+        <di:waypoint x="960" y="280" />
+        <di:waypoint x="960" y="446" />
+        <di:waypoint x="240" y="446" />
+        <di:waypoint x="240" y="612" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

@@ -32,7 +32,7 @@ class ReporteProfesorController extends Controller
     public function equipos(Request $request)
     {
         $page = $request->get('page', 1);
-        $pageSize = $request->get('pageSize', 10);
+        $pageSize = $request->get('per_page', $request->get('pageSize', 10));
 
         return response()->json(
             $this->service->getEquiposPorProfesor($page, $pageSize)

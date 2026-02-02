@@ -13,6 +13,12 @@
         <option value="INACTIVO">Inactivos</option>
       </select>
 
+      <select [(ngModel)]="filtroBloqueo">
+        <option value="todos">Todos</option>
+        <option value="BLOQUEADO">Bloqueados</option>
+        <option value="NO_BLOQUEADO">No bloqueados</option>
+      </select>
+
       <input
         type="text"
         class="buscador"
@@ -30,7 +36,11 @@
         [class.activo]="a === alumnoSeleccionado"
         [class.inactivo]="a.estado === 'INACTIVO'"
       >
-        <h4>{{ a.nombre }} <span *ngIf="a.estado === 'INACTIVO'" style="color:#b00; font-weight:600; font-size:0.9rem">(desactivado)</span></h4>
+        <h4>
+          {{ a.nombre }}
+          <span *ngIf="a.estado === 'INACTIVO'" class="badge badge-inactivo">INACTIVO</span>
+          <span *ngIf="a.bloqueado" class="badge badge-bloqueado">BLOQUEADO</span>
+        </h4>
         <p>{{ a.email }}</p>
       </div>
     </div>
@@ -126,6 +136,16 @@
     <div *ngIf="alumnoSeleccionado && !creando">
       <h3>Datos del Usuario</h3>
 
+      <div class="alert-bloqueo" *ngIf="alumnoSeleccionado?.bloqueado">
+        <strong>Cuenta bloqueada</strong>
+        <div *ngIf="alumnoSeleccionado?.bloqueado_motivo">
+          <b>Motivo:</b> {{ alumnoSeleccionado.bloqueado_motivo }}
+        </div>
+        <div *ngIf="alumnoSeleccionado?.bloqueado_fecha">
+          <b>Desde:</b> {{ alumnoSeleccionado.bloqueado_fecha | date:'dd MMM yyyy · HH:mm' }}
+        </div>
+      </div>
+
       <label>Nombre:</label>
       <input type="text" [(ngModel)]="alumnoSeleccionado.nombre" [disabled]="!editMode" />
       <small class="error"
@@ -211,6 +231,22 @@
           Desactivar cuenta
         </button>
 
+        <button
+          class="btn-bloquear"
+          *ngIf="!editMode && alumnoSeleccionado?.bloqueado !== true"
+          (click)="abrirBloqueo()"
+        >
+          Bloquear
+        </button>
+
+        <button
+          class="btn-bloquear"
+          *ngIf="!editMode && alumnoSeleccionado?.bloqueado === true"
+          (click)="abrirDesbloqueo()"
+        >
+          Desbloquear
+        </button>
+
         <button class="btn-guardar" *ngIf="!editMode && alumnoSeleccionado?.estado === 'INACTIVO'" (click)="reactivarCuenta()">
           Reactivar cuenta
         </button>
@@ -221,5 +257,31 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL BLOQUEO -->
+<div class="modal-fondo" *ngIf="mostrarModalBloqueo">
+  <div class="modal">
+    <h3>Bloquear alumno</h3>
+    <p class="modal-sub">Ingresa el motivo del bloqueo (obligatorio).</p>
+    <textarea [(ngModel)]="motivoBloqueo" rows="3" placeholder="Ej: pérdida de equipo"></textarea>
+    <div class="modal-acciones">
+      <button class="btn-azul" (click)="confirmarBloqueo()">Confirmar bloqueo</button>
+      <button class="btn-cancelar" (click)="cerrarBloqueo()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DESBLOQUEO -->
+<div class="modal-fondo" *ngIf="mostrarModalDesbloqueo">
+  <div class="modal">
+    <h3>Desbloquear alumno</h3>
+    <p class="modal-sub">Motivo (opcional).</p>
+    <textarea [(ngModel)]="motivoDesbloqueo" rows="3" placeholder="Ej: incidente resuelto"></textarea>
+    <div class="modal-acciones">
+      <button class="btn-azul" (click)="confirmarDesbloqueo()">Confirmar desbloqueo</button>
+      <button class="btn-cancelar" (click)="cerrarDesbloqueo()">Cancelar</button>
+    </div>
   </div>
 </div>

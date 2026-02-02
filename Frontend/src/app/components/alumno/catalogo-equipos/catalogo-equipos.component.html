@@ -72,6 +72,7 @@
       *ngFor="let e of tiposFiltrados()"
       class="card-equipo"
       [class.selected]="estaEnCarrito(e.id)"
+      [class.bloqueado]="e.bloqueado"
     >
 
       <!-- IMAGEN -->
@@ -94,15 +95,19 @@
         <div class="cantidad-contenedor">
           <button (click)="cambiarCantidad(e.id, -1)">−</button>
           <span>{{ getCantidad(e.id) }}</span>
-          <button (click)="cambiarCantidad(e.id, 1)">+</button>
+          <button (click)="cambiarCantidad(e.id, 1)" [disabled]="e.bloqueado">+</button>
         </div>
 
         <p class="stock">Stock: {{ e.stock }}</p>
 
+        <span class="badge bg-danger" *ngIf="e.bloqueado">
+          Límite alcanzado
+        </span>
+
       </div>
 
       <!-- BOTÓN -->
-      <button class="btn-principal" (click)="toggleProducto(e.id)">
+      <button class="btn-principal" (click)="toggleProducto(e.id)" [disabled]="e.bloqueado">
         {{ estaEnCarrito(e.id) ? 'Quitar de la solicitud' : 'Agregar a la solicitud' }}
       </button>
 

@@ -8,6 +8,9 @@ interface Alumno {
   id: number;
   nombre: string;
   estado?: string;
+  bloqueado?: boolean;
+  bloqueado_motivo?: string;
+  bloqueado_fecha?: string;
   apellido1?: string;
   apellido2?: string;
   email: string;
@@ -33,8 +36,14 @@ export class CuentasComponent implements OnInit {
 
   filtro = '';
   filtroEstado: 'todos' | 'ACTIVO' | 'INACTIVO' = 'todos';
+  filtroBloqueo: 'todos' | 'BLOQUEADO' | 'NO_BLOQUEADO' = 'todos';
   editMode = false;
   creando = false;
+
+  mostrarModalBloqueo = false;
+  mostrarModalDesbloqueo = false;
+  motivoBloqueo = '';
+  motivoDesbloqueo = '';
 
   nuevoAlumno: Alumno = this.resetNuevoAlumno();
 
@@ -89,10 +98,18 @@ export class CuentasComponent implements OnInit {
   get alumnosFiltrados() {
     if (!this.filtro.trim()) return this.alumnos;
     const f = this.filtro.toLowerCase();
-    return this.alumnos.filter(a =>
-      (a.nombre || '').toLowerCase().includes(f) ||
-      (a.email || '').toLowerCase().includes(f)
-    );
+    return this.alumnos.filter(a => {
+      const matchTexto =
+        (a.nombre || '').toLowerCase().includes(f) ||
+        (a.email || '').toLowerCase().includes(f);
+
+      const matchBloqueo =
+        this.filtroBloqueo === 'todos' ||
+        (this.filtroBloqueo === 'BLOQUEADO' && a.bloqueado) ||
+        (this.filtroBloqueo === 'NO_BLOQUEADO' && !a.bloqueado);
+
+      return matchTexto && matchBloqueo;
+    });
   }
 
   reactivarCuenta() {
@@ -125,6 +142,68 @@ export class CuentasComponent implements OnInit {
     this.alumnoSeleccionado = { ...a, password: '' };
     this.editMode = false;
     this.creando = false;
+  }
+
+  abrirBloqueo(): void {
+    if (!this.alumnoSeleccionado) return;
+    this.motivoBloqueo = '';
+    this.mostrarModalBloqueo = true;
+  }
+
+  cerrarBloqueo(): void {
+    this.mostrarModalBloqueo = false;
+    this.motivoBloqueo = '';
+  }
+
+  confirmarBloqueo(): void {
+    const a = this.alumnoSeleccionado;
+    if (!a?.id) return;
+    if (!this.motivoBloqueo.trim()) {
+      this.notify.warning('Debes ingresar un motivo para bloquear.');
+      return;
+    }
+
+    this.usuariosService.bloquearAlumno(a.id, this.motivoBloqueo.trim()).subscribe({
+      next: (res) => {
+        this.notify.success('Alumno bloqueado correctamente.');
+        a.bloqueado = true;
+        a.bloqueado_motivo = res.bloqueado_motivo;
+        a.bloqueado_fecha = res.bloqueado_fecha;
+        this.cerrarBloqueo();
+      },
+      error: () => {
+        this.notify.error('No se pudo bloquear al alumno.');
+      }
+    });
+  }
+
+  abrirDesbloqueo(): void {
+    if (!this.alumnoSeleccionado) return;
+    this.motivoDesbloqueo = '';
+    this.mostrarModalDesbloqueo = true;
+  }
+
+  cerrarDesbloqueo(): void {
+    this.mostrarModalDesbloqueo = false;
+    this.motivoDesbloqueo = '';
+  }
+
+  confirmarDesbloqueo(): void {
+    const a = this.alumnoSeleccionado;
+    if (!a?.id) return;
+
+    this.usuariosService.desbloquearAlumno(a.id, this.motivoDesbloqueo.trim()).subscribe({
+      next: () => {
+        this.notify.success('Alumno desbloqueado correctamente.');
+        a.bloqueado = false;
+        a.bloqueado_motivo = undefined;
+        a.bloqueado_fecha = undefined;
+        this.cerrarDesbloqueo();
+      },
+      error: () => {
+        this.notify.error('No se pudo desbloquear al alumno.');
+      }
+    });
   }
 
   comenzarCrear() {

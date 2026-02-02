@@ -1,19 +1,18 @@
-<div id="profesoresReport" class="report-section container-fluid py-4">
+<div class="report-page report-animate">
+<div id="profesoresReport" class="reportes-wrapper container report-surface py-4">
 
   <!-- HEADER -->
-  <div class="report-header">
+  <div class="report-header report-section-header">
     <div class="header-content">
-      <h2 class="report-main-title">Análisis de Profesores</h2>
-      <p class="report-subtitle">Estadísticas de préstamos y equipos por docente</p>
+      <h2 class="report-main-title report-section-title">Análisis de Profesores</h2>
+      <p class="report-subtitle report-section-subtitle">Estadísticas de préstamos y equipos por docente</p>
     </div>
 
-    <div class="export-actions">
-      <button class="btn-export pdf-btn" (click)="onExportPDF()">
-        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
-      </button>
-      <button class="btn-export excel-btn" (click)="onExportExcel()">
-        <i class="bi bi-file-earmark-excel-fill"></i> Excel
-      </button>
+    <div class="export-actions report-section-actions">
+      <app-export-buttons
+        [onExportPDF]="onExportPDF.bind(this)"
+        [onExportExcel]="onExportExcel.bind(this)">
+      </app-export-buttons>
     </div>
   </div>
 
@@ -55,85 +54,113 @@
   <!-- ===================== -->
   <!-- TABLA -->
   <!-- ===================== -->
-  <div class="chart-card table-card">
+  <div class="tabla-pro-card table-card">
 
-    <div class="chart-header">
-      <div>
-        <h5 class="chart-title">Equipos más utilizados por profesor</h5>
-        <small class="chart-subtitle">Detalle de solicitudes</small>
-      </div>
+    <div class="tabla-pro-header bg-primary-pro">
+      <h2 class="tabla-pro-title">Tipos de Equipo más Utilizados por Profesor</h2>
+      <p class="tabla-pro-subtitle">Detalle de solicitudes por docente y tipo de equipo</p>
     </div>
 
-    <div class="table-wrapper">
-
-      <div class="custom-table-header">
-        <div>Profesor</div>
-        <div>Equipo</div>
-        <div class="text-end">Solicitudes</div>
-      </div>
-
-      <div
-        class="row-card"
-        *ngFor="let e of equiposProfesor">
-
-        <!-- Profesor -->
-        <div class="col-profesor">
-          <div class="profesor-wrapper">
-            <div class="profesor-avatar">
-              <i class="bi bi-person-fill"></i>
-            </div>
-            <span class="profesor-name">{{ e.profesor }}</span>
-          </div>
-        </div>
-
-        <!-- Equipo -->
-        <div class="col-equipo">
-          <div class="equipo-wrapper">
-            <div class="equipo-icon">
-              <i class="bi" [ngClass]="getEquipoIconClass(e.equipo)"></i>
-            </div>
-            <span class="equipo-name">{{ e.equipo }}</span>
-          </div>
-        </div>
-
-        <!-- Total -->
-        <div class="col-count">
-          <div class="count-wrapper">
-            <div class="mini-progress">
-              <div
-                class="progress-bar"
-                [style.width.%]="getProgressPercent(e.total)">
+    <div class="tabla-pro-container">
+      <table class="tabla-pro">
+        <thead>
+          <tr>
+            <th class="th-numero">#</th>
+    <!-- Filtros de fecha -->
+    <div class="report-fecha-filtros">
+      <label>Desde:</label>
+      <input type="date" [(ngModel)]="fechaInicio" />
+      <label>Hasta:</label>
+      <input type="date" [(ngModel)]="fechaFin" />
+      <select [(ngModel)]="periodo">
+        <option value="dias">Días</option>
+        <option value="meses">Meses</option>
+        <option value="anios">Años</option>
+      </select>
+      <button (click)="filtrarPorFecha()">Filtrar</button>
+    </div>
+            <th class="th-profesor">Profesor</th>
+            <th class="th-equipo">Tipo de Equipo</th>
+            <th class="th-total">Total Solicitudes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of equiposProfesor; let i = index" class="tabla-pro-row">
+            <td><span class="numero-fila">{{ (currentPage - 1) * 10 + i + 1 }}</span></td>
+            <td class="td-profesor">
+              <div class="profesor-info-pro">
+                <div class="profesor-avatar-pro">{{ e.profesor?.charAt(0) || 'P' }}</div>
+                <span class="texto-principal">{{ e.profesor }}</span>
               </div>
-            </div>
-            <span class="tag-count">{{ e.total }}</span>
-          </div>
-        </div>
-      </div>
+            </td>
+            <td class="td-equipo">
+              <div class="equipo-info-pro">
+                <div class="equipo-icon-pro">
+                  <i class="bi" [ngClass]="getEquipoIconClass(e.equipo)"></i>
+                </div>
+                <span class="texto-equipo">{{ e.equipo }}</span>
+              </div>
+            </td>
+            <td class="td-total">
+              <div class="total-wrapper">
+                <div class="progress-bar-pro">
+                  <div class="progress-fill" [style.width.%]="getProgressPercent(e.total)"></div>
+                </div>
+                <span class="total-badge-pro">{{ e.total }}</span>
+              </div>
+            </td>
+          </tr>
 
-      <div *ngIf="loadingEquipos" class="empty-state">
-        <p>Cargando datos…</p>
-      </div>
+          <tr *ngIf="loadingEquipos">
+            <td colspan="4" class="tabla-pro-empty">
+              <div class="empty-state-pro">
+                <span>Cargando datos...</span>
+              </div>
+            </td>
+          </tr>
 
-      <div *ngIf="!loadingEquipos && !equiposProfesor.length" class="empty-state">
-        <p>Sin datos disponibles</p>
-      </div>
-
+          <tr *ngIf="!loadingEquipos && !equiposProfesor.length">
+            <td colspan="4" class="tabla-pro-empty">
+              <div class="empty-state-pro">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>Sin datos disponibles</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- PAGINACIÓN -->
-    <div class="pagination-wrapper" *ngIf="totalPages > 1">
-      <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">‹</button>
-
-      <button
-        class="page-btn"
-        *ngFor="let p of pages"
-        (click)="goToPage(p)"
-        [class.active]="p === currentPage">
-        {{ p }}
+    <div class="tabla-pro-pagination" *ngIf="totalPages > 1">
+      <button class="pagination-btn-pro" (click)="prevPage()" [disabled]="currentPage === 1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Anterior
       </button>
-
-      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">›</button>
+      <div class="pagination-pages-pro">
+        <button
+          class="page-num-btn"
+          *ngFor="let p of pages"
+          (click)="goToPage(p)"
+          [class.active]="p === currentPage">
+          {{ p }}
+        </button>
+      </div>
+      <button class="pagination-btn-pro" (click)="nextPage()" [disabled]="currentPage === totalPages">
+        Siguiente
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
     </div>
 
   </div>
+</div>
 </div>

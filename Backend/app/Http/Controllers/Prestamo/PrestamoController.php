@@ -53,6 +53,29 @@ class PrestamoController extends Controller
 
         try {
             $user = Auth::user();
+            $integrantes = array_values(array_unique($request->input('integrantes', [])));
+            $integrantes = array_filter($integrantes, fn ($id) => $id !== ($user?->idUser));
+
+            if ($user?->bloqueado) {
+                return response()->json([
+                    'message' => 'Alumno bloqueado. No puedes solicitar equipos hasta resolver el incidente.',
+                    'motivo' => $user->bloqueado_motivo,
+                    'fecha' => $user->bloqueado_fecha
+                ], 403);
+            }
+
+            if ($user && $user->hasRole('ALUMNO')) {
+                $usuariosValidar = array_merge([$user->idUser], $integrantes);
+                $bloqueos = $service->validarMaximoPrestamo($usuariosValidar, $request->equipos);
+
+                if (!empty($bloqueos)) {
+                    return response()->json([
+                        'error' => 'MAXIMO_PRESTAMO_EXCEDIDO',
+                        'message' => 'Se alcanzó el máximo permitido para uno o más integrantes.',
+                        'bloqueos' => $bloqueos,
+                    ], 422);
+                }
+            }
 
             $prestamo = $service->crearPrestamo([
                 'idUser'       => $user->idUser,
@@ -63,6 +86,11 @@ class PrestamoController extends Controller
                 'estado'       => 'PENDIENTE',
                 'observacion'  => $request->observacion,
             ]);
+
+            // Si se envía grupo_id, asociar el préstamo al grupo
+            if ($request->filled('grupo_id')) {
+                $service->asignarGrupoPrestamo($request->grupo_id, $prestamo->idPrestamo);
+            }
 
             if ($request->tipo === 'DENTRO') {
                 $service->asignarBloques(
@@ -80,6 +108,10 @@ class PrestamoController extends Controller
                 );
             }
 
+            if (!empty($integrantes)) {
+                $service->asignarIntegrantes($prestamo->idPrestamo, $integrantes);
+            }
+
             DB::commit();
 
             return response()->json([
@@ -89,8 +121,42 @@ class PrestamoController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            if ($e->getCode() === 403 && $e->getMessage() === 'ALUMNO_BLOQUEADO') {
+                return response()->json([
+                    'message' => 'Alumno bloqueado. No puedes solicitar equipos hasta resolver el incidente.',
+                    'motivo' => $user->bloqueado_motivo ?? null,
+                    'fecha' => $user->bloqueado_fecha ?? null
+                ], 403);
+            }
             return response()->json(['error' => $e->getMessage()], 400);
         }
+    }
+
+    // =========================================================
+    // VALIDAR MÁXIMO POR TIPO (ALUMNO + INTEGRANTES)
+    // =========================================================
+    public function validarMaximo(Request $request, PrestamoService $service)
+    {
+        $request->validate([
+            'equipos' => 'required|array|min:1',
+            'integrantes' => 'nullable|array',
+            'integrantes.*' => 'integer|distinct|exists:users,idUser',
+        ]);
+
+        $user = Auth::user();
+        if (!$user || !$user->hasRole('ALUMNO')) {
+            return response()->json(['bloqueos' => []], 200);
+        }
+
+        $integrantes = array_values(array_unique($request->input('integrantes', [])));
+        $integrantes = array_filter($integrantes, fn ($id) => $id !== ($user->idUser));
+        $usuariosValidar = array_merge([$user->idUser], $integrantes);
+
+        $bloqueos = $service->validarMaximoPrestamo($usuariosValidar, $request->equipos);
+
+        return response()->json([
+            'bloqueos' => $bloqueos
+        ], 200);
     }
 
 

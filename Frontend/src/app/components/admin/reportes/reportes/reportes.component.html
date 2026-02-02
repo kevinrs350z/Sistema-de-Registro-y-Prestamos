@@ -1,7 +1,19 @@
-<div class="reportes-wrapper container py-4">
+<div class="reportes-page">
+  <div class="reportes-wrapper container">
 
-  <!-- Barra de navegación profesional -->
-  <nav class="reportes-nav d-flex flex-wrap gap-2 justify-content-center mb-4">
+    <section class="reportes-header">
+      <div>
+        <h1 class="reportes-title">Panel de Reportes</h1>
+        <p class="reportes-subtitle">Análisis institucional y visualización de indicadores clave.</p>
+      </div>
+      <div class="reportes-badges">
+        <span class="reportes-badge">Actualizado en tiempo real</span>
+        <span class="reportes-badge">Exportación PDF/Excel</span>
+      </div>
+    </section>
+
+    <!-- Barra de navegación profesional -->
+    <nav class="reportes-nav d-flex flex-wrap gap-2 justify-content-center">
 
     <a routerLink="dashboard" routerLinkActive="active" class="nav-btn">
       Dashboard
@@ -19,14 +31,35 @@
       Profesores
     </a>
 
+    <a routerLink="asignaturas" routerLinkActive="active" class="nav-btn">
+      Asignaturas
+    </a>
+
+    <a routerLink="inventario" routerLinkActive="active" class="nav-btn">
+      Inventario
+    </a>
+
+    <a routerLink="sanciones" routerLinkActive="active" class="nav-btn">
+      Sanciones
+    </a>
+
+    <a routerLink="mantenimientos" routerLinkActive="active" class="nav-btn">
+      Mantenimientos
+    </a>
+
+    <a routerLink="tendencias" routerLinkActive="active" class="nav-btn">
+      Tendencias
+    </a>
+
   
 
    
 
 
-  </nav>
+    </nav>
 
-  <!-- Contenedor de los subcomponentes -->
-  <router-outlet></router-outlet>
+    <!-- Contenedor de los subcomponentes -->
+    <router-outlet></router-outlet>
 
+  </div>
 </div>

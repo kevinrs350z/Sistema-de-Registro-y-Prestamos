@@ -41,4 +41,301 @@
 canvas {
   width: 100% !important;
   height: 100% !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Asegurar que chart-area sea visible */
+.chart-area,
+.chart-area-sm {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  overflow: visible;
+}
+
+/* Animaciones de carga más suaves */
+.card.fade-in {
+  animation: slideInUp 0.55s ease both;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   RANKING DE ALUMNOS - ESTILO ACADÉMICO PROFESIONAL
+   ============================================================ */
+
+.ranking-card-pro {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.ranking-header-pro {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  padding: 24px 32px;
+  text-align: center;
+}
+
+.ranking-title-pro {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.025em;
+}
+
+.ranking-subtitle-pro {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.ranking-chart-area {
+  padding: 24px 32px;
+  height: 280px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ranking-table-wrapper {
+  padding: 0 24px 24px;
+}
+
+.ranking-table-pro {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 0;
+}
+
+.ranking-table-pro thead tr {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.ranking-table-pro th {
+  padding: 16px 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.th-pos { width: 80px; }
+.th-estudiante { width: 30%; text-align: left !important; }
+.th-correo { width: 30%; }
+.th-prestamos { width: 15%; }
+.th-sanciones { width: 15%; }
+
+.ranking-row-pro {
+  transition: all 0.2s ease;
+}
+
+.ranking-row-pro:hover {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.ranking-row-pro:not(:last-child) td {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ranking-row-pro.top-3 {
+  background: linear-gradient(90deg, rgba(30, 58, 95, 0.03) 0%, transparent 100%);
+}
+
+.ranking-table-pro td {
+  padding: 16px 20px;
+  text-align: center;
+  vertical-align: middle;
+  color: #334155;
+}
+
+.td-estudiante {
+  text-align: left !important;
+}
+
+/* Posición Badge */
+.pos-badge-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #475569;
+}
+
+.pos-badge-pro.pos-1 {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+.pos-badge-pro.pos-2 {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(156, 163, 175, 0.4);
+}
+
+.pos-badge-pro.pos-3 {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+}
+
+/* Info estudiante */
+.estudiante-info-pro {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.estudiante-avatar-pro {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.estudiante-nombre-pro {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.correo-texto {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* Badges de préstamos y sanciones */
+.prestamos-badge-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  color: #ffffff;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.25);
+}
+
+.sanciones-badge-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #64748b;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.sanciones-badge-pro.con-sanciones {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+/* Estado vacío */
+.td-empty-ranking {
+  padding: 48px 24px !important;
+}
+
+.empty-ranking-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #94a3b8;
+}
+
+.empty-ranking-state svg {
+  opacity: 0.5;
+}
+
+.empty-ranking-state span {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+  .ranking-header-pro {
+    padding: 20px 16px;
+  }
+  
+  .ranking-title-pro {
+    font-size: 1.25rem;
+  }
+  
+  .ranking-chart-area {
+    padding: 16px;
+    height: 220px;
+  }
+  
+  .ranking-table-wrapper {
+    padding: 0 8px 16px;
+    overflow-x: auto;
+  }
+  
+  .ranking-table-pro th,
+  .ranking-table-pro td {
+    padding: 12px 8px;
+    font-size: 0.8rem;
+  }
+  
+  .pos-badge-pro {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+  
+  .estudiante-avatar-pro {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+  
+  .estudiante-nombre-pro {
+    font-size: 0.85rem;
+  }
+  
+  .th-correo {
+    display: none;
+  }
+  
+  .td-correo {
+    display: none;
+  }
 }

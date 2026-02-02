@@ -29,6 +29,10 @@ class User extends Authenticatable implements CanResetPasswordContract
         'estadoSancion',
         'Email',
         'estado',
+        'bloqueado',
+        'bloqueado_motivo',
+        'bloqueado_fecha',
+        'bloqueado_por',
     ];
 
     /**
@@ -79,7 +83,9 @@ class User extends Authenticatable implements CanResetPasswordContract
     }
     public function sanciones()
     {
-        return $this->belongsToMany(Sancion::class, 'user_sancion', 'idUser', 'idSancion');
+        return $this->belongsToMany(Sancion::class, 'user_sancion', 'idUser', 'idSancion')
+            ->withPivot(['assigned_by', 'prestamo_id', 'descripcion', 'accion', 'created_at'])
+            ->withTimestamps();
     }
 
      // Verifica si el usuario tiene un rol específico
@@ -114,6 +120,8 @@ class User extends Authenticatable implements CanResetPasswordContract
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'bloqueado' => 'boolean',
+        'bloqueado_fecha' => 'datetime',
     ];
 
 }

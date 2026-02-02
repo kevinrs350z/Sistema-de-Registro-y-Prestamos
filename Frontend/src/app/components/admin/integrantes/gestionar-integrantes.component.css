@@ -1,0 +1,26 @@
+.gestionar-integrantes {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+.gestionar-integrantes h2 {
+  margin-bottom: 1rem;
+}
+.gestionar-integrantes ul {
+  list-style: none;
+  padding: 0;
+}
+.gestionar-integrantes li {
+  margin-bottom: 0.5rem;
+  background: #fff;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.gestionar-integrantes button {
+  margin-left: 1rem;
+}

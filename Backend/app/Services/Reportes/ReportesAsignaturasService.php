@@ -55,7 +55,14 @@ class ReportesAsignaturasService
         }
 
         // 📌 paginar el resultado final
-        return $query->paginate($perPage);
+        $page = $query->paginate($perPage);
+
+        return [
+            'data' => $page->items(),
+            'page' => $page->currentPage(),
+            'totalPages' => $page->lastPage(),
+            'total' => $page->total()
+        ];
     }
 
     /* ============================================================

@@ -20,9 +20,11 @@ class  UpdateTipoEquipoRequest extends FormRequest
 
                     'nombre'       => 'sometimes|required|string|max:255|unique:tipo_equipos,nombre,' . $id,
 
-                    'imagen'       => 'sometimes|nullable|string',
+                    'imagen'       => 'sometimes|nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
 
-                    'descripcion'  => 'sometimes|nullable|string'
+                    'descripcion'  => 'sometimes|nullable|string',
+
+                    'maximo_prestamo' => 'sometimes|required|integer|min:0'
                 ];
     }
 }

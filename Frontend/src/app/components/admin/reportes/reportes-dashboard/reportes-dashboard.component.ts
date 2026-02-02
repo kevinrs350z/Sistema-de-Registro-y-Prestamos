@@ -20,11 +20,18 @@ export class ReportesDashboardComponent implements OnInit, OnDestroy {
 
   today = new Date();
   mensaje: string | null = null;
+  universidad = 'Universidad de Tarapacá';
+  departamento = 'Departamento de Diseño Multimedia';
+  reporteTitulo = 'Dashboard general';
+  rangoFechas = 'Últimos 12 meses';
+  usuarioGenera = '—';
+  fechaGeneracion = new Date();
 
   kpis = [
     { label: 'Préstamos del mes', value: 0, detail: '' },
     { label: 'Equipos disponibles', value: 0 },
-   
+    { label: 'Usuarios activos', value: 0 },
+    { label: 'Sanciones activas', value: 0 },
   ];
 
   resumenUso = { interno: 0, externo: 0 };
@@ -46,6 +53,7 @@ export class ReportesDashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.cargarUsuario();
     this.cargarKPIs();
     this.cargarSolicitudesPorDia();
     this.cargarUsoGlobal();
@@ -256,6 +264,17 @@ export class ReportesDashboardComponent implements OnInit, OnDestroy {
     this.exportService.exportarExcel(sheets, `Dashboard_UTA_${Date.now()}.xlsx`)
       .then(() => this.mostrarMensaje('Excel exportado correctamente.'))
       .catch(() => this.mostrarMensaje('Ocurrió un error al exportar el Excel.'));
+  }
+
+  private cargarUsuario(): void {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return;
+      const u = JSON.parse(raw);
+      this.usuarioGenera = u?.nombre || u?.email || '—';
+    } catch {
+      this.usuarioGenera = '—';
+    }
   }
 
 }

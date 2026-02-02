@@ -1,0 +1,11 @@
+/* Estilos básicos para el selector y la lista de integrantes */
+div {
+  margin-bottom: 1rem;
+}
+select, input[type="text"] {
+  margin-right: 0.5rem;
+}
+ul {
+  list-style: disc;
+  margin-left: 2rem;
+}

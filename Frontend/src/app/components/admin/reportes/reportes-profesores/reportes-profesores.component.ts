@@ -1,12 +1,15 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
 import * as echarts from "echarts";
 import { ReportesProfesoresService } from "../../../../services/reportes/reportes-profesores.service";
+import { ExportService, ReporteData } from "../../../../services/export.service";
+import { ExportButtonsComponent } from "../export-buttons/export-buttons.component";
 
 @Component({
   selector: "app-reportes-profesores",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ExportButtonsComponent, FormsModule],
   templateUrl: "./reportes-profesores.component.html",
   styleUrls: ["./reportes-profesores.component.css"], // 👈 OBLIGATORIO (plural)
 })
@@ -17,6 +20,9 @@ export class ReportesProfesoresComponent
   // TABLA
   // =========================
   equiposProfesor: any[] = [];
+    fechaInicio: string = '';
+    fechaFin: string = '';
+    periodo: string = 'dias';
 
   currentPage = 1;
   pageSize = 10;
@@ -34,11 +40,18 @@ export class ReportesProfesoresComponent
   chartPrestamos!: echarts.ECharts;
   chartTendencia!: echarts.ECharts;
 
+  prestamosPorProfesorData: { profesor: string; total: number }[] = [];
+  tendenciaMeses: string[] = [];
+  tendenciaSeries: any[] = [];
+
   // Resize handlers so we can remove listeners later
   private onResizePrestamos = () => { if (this.chartPrestamos) this.chartPrestamos.resize(); };
   private onResizeTendencia = () => { if (this.chartTendencia) this.chartTendencia.resize(); };
 
-  constructor(private reportesService: ReportesProfesoresService) {}
+  constructor(
+    private reportesService: ReportesProfesoresService,
+    private exportService: ExportService
+  ) {}
 
   // =============================================================
   // CICLO DE VIDA
@@ -65,6 +78,18 @@ export class ReportesProfesoresComponent
     }
   }
 
+    filtrarPorFecha() {
+      let rango = '';
+      if (this.fechaInicio && this.fechaFin) {
+        rango = `Del ${this.fechaInicio} al ${this.fechaFin}`;
+      } else {
+        rango = 'Sin filtro';
+      }
+      // Aquí deberías recargar los datos usando el filtro
+      // Ejemplo: this.reportesService.getProfesores(this.fechaInicio, this.fechaFin, this.periodo).subscribe(...)
+      // Mostrar mensaje de filtro aplicado
+      // this.mostrarMensaje('Filtro aplicado.');
+    }
   // =============================================================
   // TABLA – Equipos por profesor
   // =============================================================
@@ -147,18 +172,28 @@ export class ReportesProfesoresComponent
   }
 
   loadGraficoPrestamos(): void {
-    this.reportesService.getPrestamosPorProfesor().subscribe((data) => {
-      const profesores = data.map((x: any) => x.profesor);
-      const totales = data.map((x: any) => x.total);
+    this.reportesService.getPrestamosPorProfesor().subscribe({
+      next: (data) => {
+        const safe = Array.isArray(data) ? data : [];
+        const profesores = safe.map((x: any) => x.profesor);
+        const totales = safe.map((x: any) => x.total);
 
-      // marcar como cargado para que el DOM del chart se muestre
-      this.loadingPrestamos = false;
+        this.prestamosPorProfesorData = safe.map((x: any) => ({
+          profesor: x.profesor,
+          total: Number(x.total ?? 0)
+        }));
 
-      // inicializar el chart cuando el DOM ya esté en el documento
-      requestAnimationFrame(() => {
-        this.initPrestamoChart();
-        this.setPrestamoChartOptions(profesores, totales);
-      });
+        this.loadingPrestamos = false;
+
+        requestAnimationFrame(() => {
+          this.initPrestamoChart();
+          this.setPrestamoChartOptions(profesores, totales);
+        });
+      },
+      error: () => {
+        this.loadingPrestamos = false;
+        this.prestamosPorProfesorData = [];
+      }
     });
   }
 
@@ -215,12 +250,21 @@ export class ReportesProfesoresComponent
   }
 
   loadGraficoTendencia(): void {
-    this.reportesService.getTendenciaPrestamos().subscribe((res) => {
-      this.loadingTendencia = false;
-      requestAnimationFrame(() => {
-        this.initTendenciaChart();
-        this.setTendenciaChartOptions(res.meses, res.series);
-      });
+    this.reportesService.getTendenciaPrestamos().subscribe({
+      next: (res) => {
+        this.tendenciaMeses = Array.isArray(res?.meses) ? res.meses : [];
+        this.tendenciaSeries = Array.isArray(res?.series) ? res.series : [];
+        this.loadingTendencia = false;
+        requestAnimationFrame(() => {
+          this.initTendenciaChart();
+          this.setTendenciaChartOptions(this.tendenciaMeses, this.tendenciaSeries);
+        });
+      },
+      error: () => {
+        this.loadingTendencia = false;
+        this.tendenciaMeses = [];
+        this.tendenciaSeries = [];
+      }
     });
   }
 
@@ -274,10 +318,74 @@ export class ReportesProfesoresComponent
   // EXPORTACIÓN
   // =============================================================
   onExportPDF(): void {
-    console.log("Exportando profesores a PDF...");
+    const reporteData: ReporteData = {
+      titulo: 'Reporte de Profesores',
+      subtitulo: 'Estadísticas de préstamos y equipos por docente',
+      fechaGeneracion: new Date(),
+      usuario: '—',
+      periodo: 'Últimos 12 meses',
+      secciones: [
+        {
+          tipo: 'tabla',
+          titulo: 'Préstamos por Profesor',
+          subtitulo: 'Ranking de solicitudes por docente',
+          datos: {
+            columnas: ['Profesor', 'Total Préstamos'],
+            filas: this.prestamosPorProfesorData.map(p => [p.profesor, p.total]),
+            anchos: ['*', 120]
+          }
+        },
+        {
+          tipo: 'tabla',
+          titulo: 'Equipos más Utilizados por Profesor',
+          subtitulo: 'Detalle de solicitudes por docente',
+          datos: {
+            columnas: ['Profesor', 'Equipo', 'Total Solicitudes'],
+            filas: this.equiposProfesor.map(e => [e.profesor, e.equipo, e.total]),
+            anchos: ['*', '*', 100]
+          }
+        }
+      ]
+    };
+
+    this.exportService.exportarPDFInstitucional(reporteData, 'Reporte_Profesores_UTA.pdf');
   }
 
   onExportExcel(): void {
-    console.log("Exportando profesores a Excel...");
+    const sheets = [
+      {
+        name: 'Prestamos_Profesor',
+        data: this.prestamosPorProfesorData.length
+          ? this.prestamosPorProfesorData.map((p) => ({
+              Profesor: p.profesor,
+              Total: p.total
+            }))
+          : [{ Mensaje: 'No hay datos disponibles' }]
+      },
+      {
+        name: 'Tendencia',
+        data: this.tendenciaMeses.length && this.tendenciaSeries.length
+          ? this.tendenciaMeses.map((mes, idx) => {
+              const row: any = { Mes: mes };
+              this.tendenciaSeries.forEach((s: any) => {
+                row[s.name ?? 'Serie'] = s.data?.[idx] ?? 0;
+              });
+              return row;
+            })
+          : [{ Mensaje: 'No hay datos disponibles' }]
+      },
+      {
+        name: 'Equipos_Profesor',
+        data: this.equiposProfesor.length
+          ? this.equiposProfesor.map((e: any) => ({
+              Profesor: e.profesor,
+              Equipo: e.equipo,
+              Total: e.total
+            }))
+          : [{ Mensaje: 'No hay datos disponibles' }]
+      }
+    ];
+
+    this.exportService.exportarExcel(sheets, `Reporte_Profesores_UTA_${Date.now()}.xlsx`);
   }
 }

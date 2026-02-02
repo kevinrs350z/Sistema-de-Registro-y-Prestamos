@@ -6,16 +6,14 @@ import { environment } from '../../environments/environment';
 })
 export class ImagenService {
 
-  // Imagen por defecto (cuando no hay imagen en backend)
-  private readonly DEFAULT_IMAGE = 'assets/equipos/lampara.jpg';
-
   /**
    * Construye la URL pública a una imagen almacenada en Laravel (storage)
    * @param path Ruta relativa guardada en BD (ej: tipos_equipo/camara.webp)
+   * @returns URL completa del backend o null si no hay imagen
    */
-  getStorageImage(path?: string | null): string {
+  getStorageImage(path?: string | null): string | null {
     if (!path) {
-      return this.DEFAULT_IMAGE;
+      return null;
     }
 
     return `${environment.apiBaseUrl}/storage/${path}`;
@@ -24,21 +22,14 @@ export class ImagenService {
   
   /**
    * Resolver final de imagen para un tipo de equipo
-   * Prioridad:
-   * 1 Imagen desde backend
-   * 2 Fallback por nombre
-   * 3 Imagen default
+   * Solo devuelve imágenes del backend, nunca del frontend
+   * @returns URL del backend o null si no hay imagen
    */
-  resolveTipoEquipoImage(tipo: { imagen?: string; nombre?: string }): string {
+  resolveTipoEquipoImage(tipo: { imagen?: string; nombre?: string }): string | null {
     if (tipo?.imagen) {
       return this.getStorageImage(tipo.imagen);
     }
 
-    // Fallback por nombre
-    if (tipo?.nombre) {
-      const nombreLower = tipo.nombre.toLowerCase();
-    }
-
-    return this.DEFAULT_IMAGE;
+    return null;
   }
 }

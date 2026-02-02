@@ -112,6 +112,13 @@ export const routes: Routes = [
         .then(m => m.GestionarPacksComponent)
   },
 
+    {
+      path: 'admin/gestionar-grupos',
+      loadComponent: () =>
+        import('./components/admin/integrantes/gestionar-integrantes.component')
+          .then(m => m.GestionarIntegrantesComponent)
+    },
+
   {
   path: 'admin/preguntas-frecuentes',
   loadComponent: () =>

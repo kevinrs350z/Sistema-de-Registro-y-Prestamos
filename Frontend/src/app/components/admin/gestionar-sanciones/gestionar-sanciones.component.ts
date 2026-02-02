@@ -6,6 +6,7 @@ import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 import { SancionesService } from '../../../services/sanciones.service';
 import { NotificationService } from '../../../services/notification.service';
 import { UsuariosService } from '../../../services/usuarios.service';
+import * as XLSX from 'xlsx';
 
 interface Sancion {
   id: number;
@@ -64,6 +65,10 @@ export class GestionarSancionesComponent implements OnInit {
   sanciones: Sancion[] = [];
   sancionSeleccionada: Sancion | null = null;
   filtro = '';
+  cargandoSanciones = false;
+  errorSanciones: string | null = null;
+  page = 1;
+  pageSize = 8;
   // Autocomplete usuarios
   usuariosSugeridos: any[] = [];
   private buscarTimeout: any = null;
@@ -159,6 +164,7 @@ export class GestionarSancionesComponent implements OnInit {
         this.asignarUsuario = usuario.email || usuario.rut || usuario.idUser || '';
         this.asignarInicio = prestamo.fecha_inicio || '';
         this.asignarFin = prestamo.fecha_fin || '';
+        this.asignarDescripcion = '';
 
         this.prefillData = { usuario, prestamo };
 
@@ -179,6 +185,8 @@ export class GestionarSancionesComponent implements OnInit {
 
 
   cargarDatosReales(): void {
+    this.cargandoSanciones = true;
+    this.errorSanciones = null;
     this.sancionesService.getSanciones().subscribe({
       next: (resp) => {
         this.sanciones = resp.sanciones.map((s: any) => {
@@ -215,9 +223,13 @@ export class GestionarSancionesComponent implements OnInit {
         });
 
       this.sancionSeleccionada = this.sanciones[0] || null;
+      this.page = 1;
+      this.cargandoSanciones = false;
     },
     error: (err) => {
       console.error('Error cargando sanciones', err);
+      this.errorSanciones = 'No se pudieron cargar las sanciones.';
+      this.cargandoSanciones = false;
     }
   });
 }
@@ -231,6 +243,82 @@ export class GestionarSancionesComponent implements OnInit {
       s.usuario.toLowerCase().includes(f) ||
       s.motivo.toLowerCase().includes(f)
     );
+  }
+
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.sancionesFiltradas.length / this.pageSize));
+  }
+
+  get sancionesPaginadas(): Sancion[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.sancionesFiltradas.slice(start, start + this.pageSize);
+  }
+
+  cambiarPagina(delta: number): void {
+    const next = this.page + delta;
+    if (next < 1 || next > this.totalPaginas) return;
+    this.page = next;
+  }
+
+  onFiltroChange(): void {
+    this.page = 1;
+  }
+
+  exportarCsv(): void {
+    const filas = this.buildExportRows();
+    if (filas.length === 0) {
+      this.notify.warning('No hay datos para exportar.');
+      return;
+    }
+
+    const headers = Object.keys(filas[0]);
+    const csv = [
+      headers.join(','),
+      ...filas.map((row) => headers.map((h) => this.csvEscape(row[h as keyof typeof row])).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `sanciones_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  exportarExcel(): void {
+    const filas = this.buildExportRows();
+    if (filas.length === 0) {
+      this.notify.warning('No hay datos para exportar.');
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(filas);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sanciones');
+    XLSX.writeFile(workbook, `sanciones_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
+  private buildExportRows(): Array<Record<string, string>> {
+    return this.sancionesFiltradas.map((s) => ({
+      usuario: s.usuario,
+      correo: s.correo,
+      rut: s.rut,
+      motivo: s.motivo,
+      descripcion: s.descripcion || '',
+      fecha_inicio: s.fecha_inicio,
+      fecha_fin: s.fecha_fin,
+      estado: s.estado,
+      asignada_por: s.asignada_por || '',
+      asignada_en: s.asignada_en || ''
+    }));
+  }
+
+  private csvEscape(value: string): string {
+    const v = value ?? '';
+    const needsQuotes = /[",\n]/.test(v);
+    const escaped = v.replace(/"/g, '""');
+    return needsQuotes ? `"${escaped}"` : escaped;
   }
 
  
@@ -297,6 +385,7 @@ export class GestionarSancionesComponent implements OnInit {
     if (this.formularioAsignar) {
       this.formularioVisible = false;
       this.sancionSeleccionada = null;
+    } else {
       // Resetear campos del formulario
       this.resetFormularioAsignar();
     }
@@ -322,6 +411,7 @@ export class GestionarSancionesComponent implements OnInit {
     this.mostrarModalAmpliar = false;
     this.motivoAmpliacion = '';
   }
+
 
 confirmarAmpliacion() {
   if (!this.motivoAmpliacion.trim()) {
@@ -416,6 +506,13 @@ asignarSancion(): void {
     return;
   }
 
+  const inicio = new Date(this.asignarInicio);
+  const fin = new Date(this.asignarFin);
+  if (inicio > fin) {
+    this.notify.warning('La fecha de fin no puede ser menor que la fecha de inicio.');
+    return;
+  }
+
   const payload = {
     usuario: this.asignarUsuario.trim(), // id, correo o rut
       idSancion: this.asignarTipo,
@@ -428,6 +525,7 @@ asignarSancion(): void {
     next: () => {
       this.notify.success('Sanción asignada correctamente.');
       this.cargarDatosReales();
+      this.resetFormularioAsignar();
       this.formularioAsignar = false;
     },
     error: (err) => {

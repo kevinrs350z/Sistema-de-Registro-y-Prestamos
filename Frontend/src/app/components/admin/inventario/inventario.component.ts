@@ -6,6 +6,7 @@ import { ImagenService } from '../../../services/image.service';
 import { EquiposService } from '../../../services/equipos.service';
 import { CategoriaService } from '../../../services/categoria.service';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { TipoEquipoRelacionadoService, TipoRelacionado } from '../../../services/tipoEquipoRelacionado.service';
 import { NotificationService } from '../../../services/notification.service';
 
 @Component({
@@ -18,6 +19,7 @@ import { NotificationService } from '../../../services/notification.service';
 export class InventarioComponent implements OnInit {
 
   private notify = inject(NotificationService);
+  private relacionadosSrv = inject(TipoEquipoRelacionadoService);
 
   equipos: any[] = [];
   equiposFiltrados: any[] = [];
@@ -31,6 +33,9 @@ export class InventarioComponent implements OnInit {
 
   archivoImagen: File | null = null;
   previewImagen: string | null = null;
+
+  archivoImagenTipo: File | null = null;
+  previewImagenTipo: string | null = null;
 
   busqueda = '';
   filtroArea = '';
@@ -50,8 +55,26 @@ export class InventarioComponent implements OnInit {
     tipo_equipo_id: '',
     nuevoModelo: '',
     codigo: '',
-    estado: 'DISPONIBLE'
+    estado: 'DISPONIBLE',
+    maximo_prestamo: 1
   };
+
+  // =====================================================
+  // EQUIPOS RELACIONADOS
+  // =====================================================
+  relacionadosDelModelo: TipoRelacionado[] = [];
+  sugerenciasRelacionados: TipoRelacionado[] = [];
+  tipoRelacionadoSeleccionado: number | null = null;
+  
+  // Para crear nuevo tipo con relación
+  relacionarConTipoId: number | null = null;
+  tiposParaRelacionar: any[] = [];
+  
+  // Confirmación de modificación
+  mostrarConfirmacionModificar = false;
+
+  private readonly MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2MB
+  private readonly ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
   constructor(
     private equiposService: EquiposService,
@@ -107,16 +130,55 @@ export class InventarioComponent implements OnInit {
   cargarModelosPorCategoria() {
     this.modelosDeCategoria = this.todosTipos
       .filter(t => t.categoria_id == this.nuevoEquipo.categoria_id);
+    
+    // También cargar tipos disponibles para relacionar (misma categoría)
+    this.tiposParaRelacionar = this.todosTipos
+      .filter(t => t.categoria_id == this.nuevoEquipo.categoria_id);
+    this.relacionarConTipoId = null;
   }
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
 
+    if (!this.validarImagen(file)) {
+      event.target.value = '';
+      return;
+    }
+
     this.archivoImagen = file;
     const reader = new FileReader();
     reader.onload = () => this.previewImagen = reader.result as string;
     reader.readAsDataURL(file);
+  }
+
+  onTipoImagenSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!this.validarImagen(file)) {
+      event.target.value = '';
+      return;
+    }
+
+    this.archivoImagenTipo = file;
+    const reader = new FileReader();
+    reader.onload = () => this.previewImagenTipo = reader.result as string;
+    reader.readAsDataURL(file);
+  }
+
+  private validarImagen(file: File): boolean {
+    if (!this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      this.notify.error('Formato no permitido. Usa JPG, PNG o WEBP.');
+      return false;
+    }
+
+    if (file.size > this.MAX_IMAGE_BYTES) {
+      this.notify.error('La imagen supera el tamaño máximo permitido (2MB).');
+      return false;
+    }
+
+    return true;
   }
 
   guardarNuevoEquipo() {
@@ -131,14 +193,45 @@ export class InventarioComponent implements OnInit {
         return;
       }
 
+      if (this.nuevoEquipo.maximo_prestamo === null || this.nuevoEquipo.maximo_prestamo === undefined || this.nuevoEquipo.maximo_prestamo === '') {
+        this.notify.warning('Debes definir el máximo de préstamo para ALUMNO.');
+        return;
+      }
+
+      if (Number(this.nuevoEquipo.maximo_prestamo) < 0) {
+        this.notify.warning('El máximo de préstamo no puede ser negativo.');
+        return;
+      }
+
       this.tipoEquipoService.crearTipo(
         {
           nombre: this.nuevoEquipo.nuevoModelo,
-          categoria_id: this.nuevoEquipo.categoria_id
+          categoria_id: this.nuevoEquipo.categoria_id,
+          maximo_prestamo: Number(this.nuevoEquipo.maximo_prestamo)
         },
         this.archivoImagen ?? undefined
       ).subscribe({
-        next: res => this.crearEquipoFinal(res.tipoEquipo.id),
+        next: res => {
+          const nuevoTipoId = res.tipoEquipo.id;
+          
+          // Si se seleccionó relacionar con otro tipo, crear la relación
+          if (this.relacionarConTipoId) {
+            this.relacionadosSrv.crearRelacion(nuevoTipoId, this.relacionarConTipoId)
+              .subscribe({
+                next: () => {
+                  this.notify.info('Relación creada con el tipo seleccionado.');
+                  this.crearEquipoFinal(nuevoTipoId);
+                },
+                error: (err) => {
+                  console.error('Error creando relación', err);
+                  // Continuar aunque falle la relación
+                  this.crearEquipoFinal(nuevoTipoId);
+                }
+              });
+          } else {
+            this.crearEquipoFinal(nuevoTipoId);
+          }
+        },
         error: err => console.error('Error creando tipo', err)
       });
 
@@ -168,11 +261,14 @@ export class InventarioComponent implements OnInit {
       tipo_equipo_id: '',
       nuevoModelo: '',
       codigo: '',
-      estado: 'DISPONIBLE'
+      estado: 'DISPONIBLE',
+      maximo_prestamo: 1
     };
     this.archivoImagen = null;
     this.previewImagen = null;
     this.modo = 'existente';
+    this.relacionarConTipoId = null;
+    this.tiposParaRelacionar = [];
   }
 
   filtrar() {
@@ -200,12 +296,94 @@ export class InventarioComponent implements OnInit {
   }
 
   editarModelo(grupo: any) {
+    const tipo = this.todosTipos.find((t: any) =>
+      (t.nombre ?? '').toLowerCase() === (grupo.modelo ?? '').toLowerCase()
+    ) ?? null;
+
     this.modeloSeleccionado = {
       nombre: grupo.modelo,
       categoria: grupo.equipos[0].categoria,
-      equipos: grupo.equipos
+      equipos: grupo.equipos,
+      tipoId: tipo?.id ?? null,
+      maximo_prestamo: tipo?.maximo_prestamo ?? 1,
+      imagen: tipo?.imagen ?? null
     };
     this.equipoSeleccionado = null;
+    this.editandoModelo = false;
+    this.archivoImagenTipo = null;
+    this.previewImagenTipo = null;
+    
+    // Cargar relaciones del tipo
+    this.relacionadosDelModelo = [];
+    this.sugerenciasRelacionados = [];
+    if (tipo?.id) {
+      this.cargarRelacionesDelTipo(tipo.id);
+    }
+  }
+
+  /**
+   * Cargar los tipos relacionados de un tipo de equipo
+   */
+  cargarRelacionesDelTipo(tipoId: number) {
+    this.relacionadosSrv.getRelaciones(tipoId).subscribe({
+      next: (data) => {
+        this.relacionadosDelModelo = data.relacionados || [];
+      },
+      error: (err) => console.error('Error cargando relaciones', err)
+    });
+  }
+
+  /**
+   * Cargar sugerencias de tipos para relacionar
+   */
+  cargarSugerenciasRelacionados(tipoId: number) {
+    this.relacionadosSrv.getSugerencias(tipoId).subscribe({
+      next: (data) => {
+        this.sugerenciasRelacionados = data || [];
+      },
+      error: (err) => console.error('Error cargando sugerencias', err)
+    });
+  }
+
+  /**
+   * Agregar una relación entre tipos de equipo
+   */
+  agregarRelacion(relacionadoId: number) {
+    if (!this.modeloSeleccionado?.tipoId || !relacionadoId) return;
+
+    this.relacionadosSrv.crearRelacion(this.modeloSeleccionado.tipoId, relacionadoId)
+      .subscribe({
+        next: () => {
+          this.notify.success('Relación agregada correctamente.');
+          this.cargarRelacionesDelTipo(this.modeloSeleccionado.tipoId);
+          this.cargarSugerenciasRelacionados(this.modeloSeleccionado.tipoId);
+          this.tipoRelacionadoSeleccionado = null;
+        },
+        error: (err) => {
+          console.error(err);
+          this.notify.error(err.error?.error || 'Error al agregar relación.');
+        }
+      });
+  }
+
+  /**
+   * Eliminar una relación entre tipos de equipo
+   */
+  eliminarRelacion(relacionadoId: number) {
+    if (!this.modeloSeleccionado?.tipoId || !relacionadoId) return;
+
+    this.relacionadosSrv.eliminarRelacion(this.modeloSeleccionado.tipoId, relacionadoId)
+      .subscribe({
+        next: () => {
+          this.notify.success('Relación eliminada correctamente.');
+          this.cargarRelacionesDelTipo(this.modeloSeleccionado.tipoId);
+          this.cargarSugerenciasRelacionados(this.modeloSeleccionado.tipoId);
+        },
+        error: (err) => {
+          console.error(err);
+          this.notify.error('Error al eliminar relación.');
+        }
+      });
   }
 
   verDetalle(eq: any) {
@@ -215,6 +393,81 @@ export class InventarioComponent implements OnInit {
 
   cerrarPanel() {
     this.equipoSeleccionado = null;
+  }
+
+  iniciarEdicionModelo() {
+    if (!this.modeloSeleccionado?.tipoId) return;
+    this.editandoModelo = true;
+    this.cargarSugerenciasRelacionados(this.modeloSeleccionado.tipoId);
+  }
+
+  cancelarEdicionModelo() {
+    this.editandoModelo = false;
+    this.archivoImagenTipo = null;
+    this.previewImagenTipo = null;
+  }
+
+  /**
+   * Mostrar confirmación antes de guardar si hay relacionados
+   */
+  confirmarGuardarCambiosModelo() {
+    if (!this.modeloSeleccionado?.tipoId) return;
+
+    const maximo = Number(this.modeloSeleccionado.maximo_prestamo);
+    if (isNaN(maximo) || maximo < 0) {
+      this.notify.warning('El máximo de préstamo no puede ser negativo.');
+      return;
+    }
+
+    // Si hay relacionados, mostrar confirmación
+    if (this.relacionadosDelModelo.length > 0) {
+      this.mostrarConfirmacionModificar = true;
+    } else {
+      this.guardarCambiosModelo();
+    }
+  }
+
+  /**
+   * Cancelar la confirmación de modificación
+   */
+  cancelarConfirmacionModificar() {
+    this.mostrarConfirmacionModificar = false;
+  }
+
+  guardarCambiosModelo() {
+    this.mostrarConfirmacionModificar = false;
+    
+    if (!this.modeloSeleccionado?.tipoId) return;
+
+    const maximo = Number(this.modeloSeleccionado.maximo_prestamo);
+    if (isNaN(maximo) || maximo < 0) {
+      this.notify.warning('El máximo de préstamo no puede ser negativo.');
+      return;
+    }
+
+    const payload: any = {
+      maximo_prestamo: maximo
+    };
+
+    if (this.archivoImagenTipo) {
+      payload.imagen = this.archivoImagenTipo;
+    }
+
+    this.tipoEquipoService.actualizarTipo(this.modeloSeleccionado.tipoId, payload)
+      .subscribe({
+        next: () => {
+          this.notify.success('Tipo de equipo actualizado correctamente.');
+          this.cargarTipos();
+          this.cargarEquipos();
+          this.editandoModelo = false;
+          this.archivoImagenTipo = null;
+          this.previewImagenTipo = null;
+        },
+        error: err => {
+          console.error(err);
+          this.notify.error('Ocurrió un error al actualizar el tipo de equipo.');
+        }
+      });
   }
 
 guardarCambiosEquipo() {
@@ -272,13 +525,13 @@ private getTipoEquipoById(tipoId: number): any | null {
   /**
    * Imagen para EQUIPO FÍSICO (detalle derecho)
    * Usa tipo_equipo_id -> busca el tipo -> usa ImagenService (backend)
+   * Solo devuelve imágenes del backend, null si no hay
    */
-  getImagenEquipo(equipo: any): string {
+  getImagenEquipo(equipo: any): string | null {
     const tipo = equipo?.tipo_equipo_id
       ? this.getTipoEquipoById(equipo.tipo_equipo_id)
       : null;
 
-    // resolveTipoEquipoImage prioriza backend (tipo.imagen) y cae a default/fallback
     return this.imagenSrv.resolveTipoEquipoImage({
       imagen: tipo?.imagen,
       nombre: tipo?.nombre ?? equipo?.nombre
@@ -287,8 +540,9 @@ private getTipoEquipoById(tipoId: number): any | null {
 
   /**
    * Imagen para MODELO (panel derecho cuando seleccionas grupo)
+   * Solo devuelve imágenes del backend, null si no hay
    */
-  getImagenModelo(modeloSeleccionado: any): string {
+  getImagenModelo(modeloSeleccionado: any): string | null {
     const tipo = this.todosTipos.find((t: any) =>
       (t.nombre ?? '').toLowerCase() === (modeloSeleccionado?.nombre ?? '').toLowerCase()
     ) ?? null;

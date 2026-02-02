@@ -1,5 +1,6 @@
 <!-- reportes-dashboard.component.html -->
-<div class="reportes-wrapper container py-4">
+<div class="report-page report-animate">
+  <div class="reportes-wrapper container report-surface py-4">
 
   <!-- Mensaje flotante -->
   <div *ngIf="mensaje" class="msg-box">
@@ -7,14 +8,14 @@
   </div>
 
   <!-- Título general -->
-  <div class="text-center mb-4">
-    <h2 class="fw-bold text-primary">Dashboard general</h2>
-    <p class="text-muted mb-1">
-      Vista resumida del sistema de préstamos de equipos.
-    </p>
-    <p class="text-muted small">
-      Fecha de reporte: {{ today | date:'dd/MM/yyyy' }}
-    </p>
+  <div class="report-section-header">
+    <div>
+      <h2 class="report-section-title">Dashboard general</h2>
+      <p class="report-section-subtitle">
+        Vista resumida del sistema de préstamos de equipos · Fecha de reporte: {{ today | date:'dd/MM/yyyy' }}
+      </p>
+    </div>
+    <div class="report-section-actions"></div>
   </div>
 
   <!-- Botones exportación -->
@@ -26,22 +27,19 @@
   <!-- CONTENIDO QUE VA AL PDF -->
   <div id="contenidoPDFDashboard" class="page-wrapper">
 
-    <!-- Encabezado solo para PDF (logo, texto institucional) 
-    <div class="pdf-header fade-in solo-pdf">
-      <img src="assets/logo-uta.png" class="uta-logo" alt="Logo UTA" />
-
-      <div class="pdf-header-text">
-        <h1 class="pdf-title">Universidad de Tarapacá</h1>
-        <p class="pdf-subtitle">Sistema de Préstamos de Equipos</p>
-        <p class="pdf-date">
-          Fecha de reporte: {{ today | date:'dd/MM/yyyy' }}
-        </p>
-        <p class="pdf-section">
-          Sección: Dashboard general
-        </p>
+    <div class="inst-header">
+      <img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
+      <div>
+        <h1 class="inst-title">{{ universidad }}</h1>
+        <p class="inst-subtitle">{{ departamento }}</p>
+        <p class="inst-report">{{ reporteTitulo }}</p>
+        <div class="inst-info">
+          <span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span>Usuario: {{ usuarioGenera }}</span>
+          <span>Rango: {{ rangoFechas }}</span>
+        </div>
       </div>
     </div>
-    -->
 
     <hr class="pdf-divider fade-in" />
 
@@ -140,39 +138,54 @@
     </div>
 
     <!-- ===================== FILA 3: TOP ALUMNOS ===================== -->
-    <div class="card fade-in">
-      <h2 class="card-title">Top alumnos por solicitudes</h2>
-      <p class="card-subtitle">
-        Ranking de estudiantes según la cantidad de solicitudes realizadas.
-      </p>
+    <div class="tabla-pro-card fade-in">
+      <div class="tabla-pro-header bg-primary-pro">
+        <h2 class="tabla-pro-title">Top Alumnos por Solicitudes</h2>
+        <p class="tabla-pro-subtitle">Ranking de estudiantes según cantidad de solicitudes realizadas</p>
+      </div>
 
       <!-- gráfico -->
-      <div class="chart-area-sm mb-3">
+      <div class="chart-area-dashboard">
         <canvas id="chartTopAlumnos"></canvas>
       </div>
 
       <!-- tabla -->
-      <div class="table-responsive">
-        <table class="styled-table">
+      <div class="tabla-pro-container">
+        <table class="tabla-pro">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Solicitudes</th>
+              <th class="th-pos">Posición</th>
+              <th class="th-nombre">Estudiante</th>
+              <th class="th-email">Correo Institucional</th>
+              <th class="th-total">Total Solicitudes</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let a of topAlumnos; let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>{{ a.nombre }}</td>
-              <td>{{ a.email }}</td>
-              <td>{{ a.total_solicitudes }}</td>
+            <tr *ngFor="let a of topAlumnos; let i = index" class="tabla-pro-row" [class.top-3]="i < 3">
+              <td>
+                <span class="pos-badge-pro" [class]="'pos-' + (i + 1)">{{ i + 1 }}</span>
+              </td>
+              <td class="td-nombre">
+                <div class="estudiante-info-pro">
+                  <div class="estudiante-avatar-pro">{{ a.nombre?.charAt(0) || 'U' }}</div>
+                  <span class="texto-principal">{{ a.nombre }}</span>
+                </div>
+              </td>
+              <td><span class="texto-secundario">{{ a.email }}</span></td>
+              <td><span class="total-badge-pro">{{ a.total_solicitudes }}</span></td>
             </tr>
 
             <tr *ngIf="topAlumnos.length === 0">
-              <td colspan="4" class="text-center text-muted">
-                No hay datos disponibles para el ranking de alumnos.
+              <td colspan="4" class="tabla-pro-empty">
+                <div class="empty-state-pro">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  <span>No hay datos disponibles para el ranking</span>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -181,4 +194,5 @@
     </div>
 
   </div> <!-- /contenidoPDFDashboard -->
+  </div>
 </div>

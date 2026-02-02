@@ -12,52 +12,73 @@ class ReportesController extends Controller
      *
      * Devuelve el nombre del tipo de equipo y cuántas veces ha sido solicitado.
      */
-    public function equiposMasSolicitados()
+    public function equiposMasSolicitados(Request $request)
     {
-        $data = DB::table('prestamo_equipo as pe')
-            ->join('equipos as e', 'pe.idEquipo', '=', 'e.id')
-            ->join('tipo_equipos as t', 'e.tipo_equipo_id', '=', 't.id')
-            ->select(
-                't.nombre as equipo',
-                DB::raw('COUNT(*) as total_solicitudes')
-            )
-            ->groupBy('t.nombre')
-            ->orderByDesc('total_solicitudes')
-            ->limit(10) // opcional: mostrar solo los 10 equipos más usados
-            ->get();
-
+        $user = $request->user();
+        if (!$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para ver reportes.'
+            ], 403);
+        }
+        $inicio = $request->input('fechaInicio');
+        $fin = $request->input('fechaFin');
+        $periodo = $request->input('periodo');
+        $service = app(\App\Services\Reportes\ReportesInventarioService::class);
+        $data = $service->topUtilizados($inicio, $fin, 10);
         return response()->json($data);
     }
 
-    public function usoInternoExterno()
+    public function usoInternoExterno(Request $request)
     {
-        $data = DB::table('prestamos')
-            ->select(
-                'tipo',
-                DB::raw('COUNT(*) as total')
-            )
-            ->groupBy('tipo')
-            ->get();
-
+        $user = $request->user();
+        if (!$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para ver reportes.'
+            ], 403);
+        }
+        $inicio = $request->input('fechaInicio');
+        $fin = $request->input('fechaFin');
+        $periodo = $request->input('periodo');
+        $service = app(\App\Services\Reportes\ReportesTendenciasService::class);
+        $data = $service->usoPorTipoUsuario($inicio, $fin);
         return response()->json($data);
     }
 
-    public function sancionesYRechazos()
+    public function sancionesYRechazos(Request $request)
     {
-        $sanciones = DB::table('user_sancion')->count();
-
+        $user = $request->user();
+        if (!$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para ver reportes.'
+            ], 403);
+        }
+        $inicio = $request->input('fechaInicio');
+        $fin = $request->input('fechaFin');
+        $periodo = $request->input('periodo');
+        $service = app(\App\Services\Reportes\ReportesSancionesService::class);
+        $sanciones = $service->motivosFrecuentes($inicio, $fin);
         $rechazos = DB::table('prestamos')
-            ->where('estado', 'rechazado')
+            ->whereRaw('LOWER(estado) = ?', ['rechazado'])
+            ->whereBetween('created_at', [$inicio, $fin])
             ->count();
-
         return response()->json([
             "total_sanciones" => $sanciones,
             "total_rechazos" => $rechazos
         ]);
     }
 
-    public function equiposDadoDeBaja()
+    public function equiposDadoDeBaja(Request $request)
     {
+        $user = $request->user();
+        if (!$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para ver reportes.'
+            ], 403);
+        }
+        $inicio = $request->input('fechaInicio');
+        $fin = $request->input('fechaFin');
+        $periodo = $request->input('periodo');
+        $service = app(\App\Services\Reportes\ReportesInventarioService::class);
         $data = DB::table('equipos as e')
             ->join('tipo_equipos as t', 'e.tipo_equipo_id', '=', 't.id')
             ->select(
@@ -69,9 +90,9 @@ class ReportesController extends Controller
                 't.descripcion as descripcion_tipo'
             )
             ->where('e.estado', 'baja')
+            ->whereBetween('e.created_at', [$inicio, $fin])
             ->orderBy('e.created_at', 'desc') 
             ->get();
-
         return response()->json($data);
     }
 

@@ -1,12 +1,29 @@
-<div class="reportes-wrapper container py-4">
+<div class="report-page report-animate">
+<div class="reportes-wrapper container report-surface py-4">
 
   <!-- Mensaje flotante -->
   <div *ngIf="mensaje" class="msg-box">{{ mensaje }}</div>
 
   <!-- Título general -->
-  <div class="text-center mb-4">
-    <h2 class="fw-bold text-primary">Reportes de Equipos</h2>
-    <p class="text-muted">Estadísticas del Sistema de Préstamos de Equipos</p>
+  <div class="report-section-header">
+    <div>
+      <h2 class="report-section-title">Reportes de Equipos</h2>
+      <p class="report-section-subtitle">Estadísticas del Sistema de Préstamos de Equipos</p>
+    </div>
+    <div class="report-section-actions"></div>
+      <!-- Filtros de fecha -->
+      <div class="report-fecha-filtros">
+        <label>Desde:</label>
+        <input type="date" [(ngModel)]="fechaInicio" />
+        <label>Hasta:</label>
+        <input type="date" [(ngModel)]="fechaFin" />
+        <select [(ngModel)]="periodo">
+          <option value="dias">Días</option>
+          <option value="meses">Meses</option>
+          <option value="anios">Años</option>
+        </select>
+        <button (click)="filtrarPorFecha()">Filtrar</button>
+      </div>
   </div>
 
   <!-- Botones de exportación -->
@@ -18,15 +35,18 @@
   <!-- CONTENIDO EXPORTABLE A PDF -->
   <div id="contenidoPDF" class="page-wrapper">
 
-    <!-- ENCABEZADO INSTITUCIONAL (solo PDF) -->
-    <div id="logoPDF" class="pdf-header solo-pdf fade-in">
-      <img src="assets/logo-uta.png" class="uta-logo" alt="Logo UTA" />
-
-      <div class="pdf-header-text">
-        <h1 class="pdf-title">Universidad de Tarapacá</h1>
-        <p class="pdf-subtitle">Departamento de Diseño Multimedia / Sistema de Préstamos</p>
-        <p class="pdf-date">Fecha de reporte: {{ today | date:'dd/MM/yyyy' }}</p>
-        <p class="pdf-section">Sección: {{ tituloActual }}</p>
+    <!-- ENCABEZADO INSTITUCIONAL -->
+    <div class="inst-header">
+      <img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
+      <div>
+        <h1 class="inst-title">{{ universidad }}</h1>
+        <p class="inst-subtitle">{{ departamento }}</p>
+        <p class="inst-report">{{ reporteTitulo }}</p>
+        <div class="inst-info">
+          <span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span>Usuario: {{ usuarioGenera }}</span>
+          <span>Rango: {{ rangoFechas }}</span>
+        </div>
       </div>
     </div>
 
@@ -81,41 +101,110 @@
     <!-- SECCIÓN OPERATIVA: Disponibilidad y equipos críticos -->
     <div class="two-cols" style="margin-top:20px">
 
-      <div class="card fade-in">
-        <h2 class="card-title">Disponibilidad inmediata</h2>
-        <p class="card-subtitle">Estado actual por equipo</p>
-        <div class="table-wrapper">
-          <table class="styled-table">
+      <div class="disponibilidad-card fade-in">
+        <div class="disponibilidad-header">
+          <h2 class="disponibilidad-title">Disponibilidad Inmediata</h2>
+          <p class="disponibilidad-subtitle">Estado operativo actual de equipos del sistema</p>
+        </div>
+
+        <div class="disponibilidad-table-container">
+          <table class="disponibilidad-table">
             <thead>
-              <tr><th>Código</th><th>Tipo</th><th>Estado</th><th>Ubicación</th><th>Último evento</th></tr>
+              <tr>
+                <th class="th-codigo">Código</th>
+                <th class="th-tipo">Tipo de Equipo</th>
+                <th class="th-estado">Estado</th>
+                <th class="th-ubicacion">Ubicación</th>
+                <th class="th-evento">Último Evento</th>
+              </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let d of disponibilidadEquipos">
-                <td>{{ d.codigo }}</td>
-                <td>{{ d.tipo }}</td>
-                <td>{{ d.estado }}</td>
-                <td>{{ d.ubicacion }}</td>
-                <td>{{ d.ultimo_evento | date:'dd/MM HH:mm' }}</td>
+              <tr *ngFor="let d of disponibilidadPaginada; let i = index" class="disponibilidad-row">
+                <td class="td-codigo">
+                  <span class="codigo-badge">{{ d.codigo }}</span>
+                </td>
+                <td class="td-tipo">
+                  <span class="tipo-texto">{{ d.tipo }}</span>
+                </td>
+                <td class="td-estado">
+                  <span class="estado-badge" [ngClass]="'estado-' + (d.estado || '').toLowerCase()">
+                    {{ d.estado }}
+                  </span>
+                </td>
+                <td class="td-ubicacion">
+                  <span class="ubicacion-texto">{{ d.ubicacion }}</span>
+                </td>
+                <td class="td-evento">
+                  <span class="evento-fecha">{{ d.ultimo_evento | date:'dd/MM/yyyy HH:mm' }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="disponibilidadPaginada.length === 0">
+                <td colspan="5" class="td-empty">
+                  <div class="empty-state-disp">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>No hay equipos registrados</span>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <div class="disponibilidad-pagination" *ngIf="disponibilidadTotalPages > 1">
+          <button class="disp-pagination-btn" (click)="cambiarPaginaDisponibilidad(-1)" [disabled]="disponibilidadPage === 1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Anterior
+          </button>
+          <div class="disp-pagination-pages">
+            <span class="disp-page-current">{{ disponibilidadPage }}</span>
+            <span class="disp-page-sep">de</span>
+            <span class="disp-page-total">{{ disponibilidadTotalPages }}</span>
+          </div>
+          <button class="disp-pagination-btn" (click)="cambiarPaginaDisponibilidad(1)" [disabled]="disponibilidadPage === disponibilidadTotalPages">
+            Siguiente
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <div class="card fade-in">
-        <h2 class="card-title">Equipos críticos / bloqueados</h2>
-        <p class="card-subtitle">Equipos que requieren atención operativa</p>
-        <div *ngIf="equiposCriticos.length; else noCriticos">
-          <div class="alerta-item" *ngFor="let c of equiposCriticos">
-            <div class="alerta-content">
-              <p class="alerta-titulo">{{ c.codigo }} — {{ c.tipo }}</p>
-              <p class="alerta-desc">{{ c.estado }} • {{ c.observacion || 'Sin detalle' }}</p>
+      <div class="criticos-card fade-in">
+        <div class="criticos-header">
+          <h2 class="criticos-title">Equipos Críticos</h2>
+          <p class="criticos-subtitle">Equipos que requieren atención operativa inmediata</p>
+        </div>
+
+        <div class="criticos-content">
+          <div *ngIf="equiposCriticos.length; else noCriticos" class="criticos-list">
+            <div class="critico-item" *ngFor="let c of equiposCriticos; let i = index">
+              <div class="critico-numero">{{ i + 1 }}</div>
+              <div class="critico-info">
+                <p class="critico-codigo">{{ c.codigo }}</p>
+                <p class="critico-tipo">{{ c.tipo }}</p>
+              </div>
+              <div class="critico-estado">
+                <span class="critico-estado-badge">{{ c.estado }}</span>
+                <span class="critico-obs">{{ c.observacion || 'Sin observaciones' }}</span>
+              </div>
             </div>
           </div>
+          <ng-template #noCriticos>
+            <div class="criticos-empty">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>Todos los equipos operan con normalidad</span>
+            </div>
+          </ng-template>
         </div>
-        <ng-template #noCriticos>
-          <p class="text-muted">No hay equipos críticos en este momento.</p>
-        </ng-template>
       </div>
 
     </div>
@@ -150,4 +239,5 @@
 
   </div> <!-- FIN contenidoPDF -->
 
+</div>
 </div>

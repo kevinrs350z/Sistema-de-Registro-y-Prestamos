@@ -18,6 +18,7 @@ use App\Http\Controllers\UserSancionController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EquipoRelacionadoController;
 use App\Http\Controllers\TipoEquipoController;
+use App\Http\Controllers\TipoEquipoRelacionadoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\Prestamo\DevolucionAdminController;
 use App\Http\Controllers\ReportesController;
@@ -27,6 +28,11 @@ use App\Http\Controllers\Reportes\ReporteProfesorController;
 use App\Http\Controllers\PackController;
 use App\Http\Controllers\Reportes\ReportesAlumnosAdminController;
 use App\Http\Controllers\Reportes\Dashboard\DashboardOperationalController;
+use App\Http\Controllers\Reportes\ReportesInventarioController;
+use App\Http\Controllers\Reportes\ReportesSancionesController;
+use App\Http\Controllers\Reportes\ReportesMantenimientosController;
+use App\Http\Controllers\Reportes\ReportesTendenciasController;
+use App\Http\Controllers\Reportes\ReportesAsignaturasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,6 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/prestamos', [PrestamoController::class, 'store']);
+    Route::post('/prestamos/validar-maximo', [PrestamoController::class, 'validarMaximo']);
     Route::get('/prestamos', [PrestamoController::class, 'index']);
     Route::get('/prestamos/{id}', [PrestamoController::class, 'show']);
     Route::delete('/prestamos/{id}', [PrestamoController::class, 'destroy']);
@@ -113,6 +120,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::patch('/admin/sanciones/{id}/ampliar', [UserSancionController::class, 'ampliarSancion']);
     Route::patch('/admin/sanciones/{id}/quitar', [UserSancionController::class, 'quitarSancion']);
     Route::post('/admin/devolucion', [DevolucionAdminController::class, 'devolverEquipo']);
+
+    Route::patch('/admin/alumnos/{id}/bloquear', [UsuarioController::class, 'bloquear']);
+    Route::patch('/admin/alumnos/{id}/desbloquear', [UsuarioController::class, 'desbloquear']);
     
 });
 
@@ -160,8 +170,27 @@ Route::put('/tipoEquipo/{id}', [TipoEquipoController::class, 'update']);
 Route::delete('/tipoEquipo/{id}', [TipoEquipoController::class, 'destroy']);
 Route::get('/tipoEquipo/{id}/equipos-disponibles', [TipoEquipoController::class, 'equiposDisponibles']);
 
+// Rutas para relaciones entre tipos de equipo (límite compartido)
+Route::get('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'index']);
+Route::get('/tipoEquipo-relacionados/{id}', [TipoEquipoRelacionadoController::class, 'show']);
+Route::post('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'store']);
+Route::delete('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'destroy']);
+Route::get('/tipoEquipo-relacionados/{id}/sugerencias', [TipoEquipoRelacionadoController::class, 'sugerencias']);
+
 Route::get('/catalogo-equipos', [TipoEquipoController::class, 'catalogo']);
 
+
+// Rutas para gestión de grupos
+use App\Http\Controllers\GrupoController;
+Route::get('/grupos', [GrupoController::class, 'index']);
+Route::get('/grupos/{id}', [GrupoController::class, 'show']);
+Route::post('/grupos', [GrupoController::class, 'store']);
+Route::put('/grupos/{id}', [GrupoController::class, 'update']);
+Route::delete('/grupos/{id}', [GrupoController::class, 'destroy']);
+Route::post('/grupos/{id}/add-usuario', [GrupoController::class, 'addUsuario']);
+Route::post('/grupos/{id}/remove-usuario', [GrupoController::class, 'removeUsuario']);
+Route::post('/grupos/{id}/asignar-prestamo', [GrupoController::class, 'asignarPrestamo']);
+Route::post('/grupos/{id}/quitar-prestamo', [GrupoController::class, 'quitarPrestamo']);
 
 Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
 Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
@@ -234,6 +263,51 @@ Route::prefix('reportes/dashboard')->group(function () {
           Route::get('/heatmap', [ReportesAlumnosAdminController::class, 'heatmap']);
           Route::get('/riesgo', [ReportesAlumnosAdminController::class, 'riesgo']);
       });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/asignaturas')
+            ->group(function () {
+                    Route::get('/uso', [ReportesAsignaturasController::class, 'getUsoAsignaturas']);
+                    Route::get('/tendencia', [ReportesAsignaturasController::class, 'getTendencia']);
+                    Route::get('/equipos', [ReportesAsignaturasController::class, 'getEquiposPorAsignatura']);
+            });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/inventario')
+            ->group(function () {
+                    Route::get('/estado', [ReportesInventarioController::class, 'estado']);
+                    Route::get('/categorias', [ReportesInventarioController::class, 'categorias']);
+                    Route::get('/antiguedad', [ReportesInventarioController::class, 'antiguedad']);
+                    Route::get('/top-utilizados', [ReportesInventarioController::class, 'topUtilizados']);
+                    Route::get('/subutilizados', [ReportesInventarioController::class, 'subUtilizados']);
+            });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/sanciones')
+            ->group(function () {
+                    Route::get('/kpis', [ReportesSancionesController::class, 'kpis']);
+                    Route::get('/motivos', [ReportesSancionesController::class, 'motivos']);
+                    Route::get('/reincidencia', [ReportesSancionesController::class, 'reincidencia']);
+                    Route::get('/bloqueos', [ReportesSancionesController::class, 'bloqueos']);
+                    Route::get('/relacion-atrasos', [ReportesSancionesController::class, 'relacionAtrasos']);
+            });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/mantenimientos')
+            ->group(function () {
+                    Route::get('/atrasos', [ReportesMantenimientosController::class, 'atrasos']);
+                    Route::get('/incidentes', [ReportesMantenimientosController::class, 'incidentes']);
+                    Route::get('/incidentes-equipo', [ReportesMantenimientosController::class, 'incidentesEquipo']);
+                    Route::get('/equipos-mantenimiento', [ReportesMantenimientosController::class, 'equiposMantenimiento']);
+            });
+
+        Route::middleware(['auth:sanctum'])
+            ->prefix('reportes/tendencias')
+            ->group(function () {
+                    Route::get('/prestamos-mes', [ReportesTendenciasController::class, 'prestamosPorMes']);
+                    Route::get('/categorias', [ReportesTendenciasController::class, 'categorias']);
+                    Route::get('/uso-tipo-usuario', [ReportesTendenciasController::class, 'usoPorTipo']);
+            });
 
     // Dashboard operacional (estado actual del sistema)
     Route::middleware(['auth:sanctum'])

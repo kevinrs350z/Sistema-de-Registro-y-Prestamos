@@ -1,1 +1,139 @@
-<p>reportes-asignaturas works!</p>
+<div class="report-page report-animate">
+<div class="reportes-wrapper container report-surface py-4">
+
+	<div class="report-section-header">
+		<div>
+			<h2 class="report-section-title">Reporte de Asignaturas</h2>
+			<p class="report-section-subtitle">Uso académico de equipos por asignatura</p>
+		</div>
+		<div class="report-section-actions"></div>
+	</div>
+
+	<app-export-buttons
+		[onExportPDF]="exportarPDF.bind(this)"
+		[onExportExcel]="exportarExcel.bind(this)">
+	</app-export-buttons>
+
+	<div id="contenidoPDFAsignaturas" class="page-wrapper">
+
+		<div class="inst-header">
+			<img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
+			<div>
+				<h1 class="inst-title">{{ universidad }}</h1>
+				<p class="inst-subtitle">{{ departamento }}</p>
+				<p class="inst-report">{{ reporteTitulo }}</p>
+				<div class="inst-info">
+					<span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
+					<span>Usuario: {{ usuarioGenera }}</span>
+					<span>Rango: {{ rangoFechas }}</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="two-cols mb-4">
+			<div class="card fade-in">
+				<h2 class="card-title">Uso por asignatura</h2>
+				<p class="card-subtitle">Ranking de préstamos por asignatura</p>
+				<div class="chart-area">
+					<canvas #usoChart></canvas>
+				</div>
+			</div>
+
+			<div class="card fade-in">
+				<h2 class="card-title">Tendencia anual</h2>
+				<p class="card-subtitle">Evolución de préstamos por año</p>
+				<div class="chart-area">
+					<canvas #tendenciaChart></canvas>
+				</div>
+			</div>
+		</div>
+
+		<div class="equipos-asignatura-card fade-in">
+			<div class="equipos-card-header">
+				<h2 class="equipos-card-title">Equipos por Asignatura</h2>
+				<p class="equipos-card-subtitle">Detalle del uso de equipos en el contexto académico</p>
+			</div>
+
+			<div class="equipos-search-container">
+				<div class="equipos-search-wrapper">
+					<svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="11" cy="11" r="8"></circle>
+						<path d="m21 21-4.3-4.3"></path>
+					</svg>
+					<input type="text" class="equipos-search-input" placeholder="Buscar por asignatura o equipo..." [(ngModel)]="search" (keyup.enter)="buscar()" />
+					<button class="equipos-search-btn" (click)="buscar()">Buscar</button>
+				</div>
+			</div>
+
+			<div class="equipos-table-container">
+				<table class="equipos-table">
+					<thead>
+						<tr>
+							<th class="th-numero">#</th>
+							<th class="th-asignatura">Asignatura</th>
+							<th class="th-equipo">Equipo</th>
+							<th class="th-total">Total Préstamos</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let e of equiposAsignatura; let i = index" class="equipos-row">
+							<td class="td-numero">
+								<span class="row-number">{{ (page - 1) * perPage + i + 1 }}</span>
+							</td>
+							<td class="td-asignatura">
+								<div class="asignatura-info">
+									<span class="asignatura-nombre">{{ e.asignatura }}</span>
+								</div>
+							</td>
+							<td class="td-equipo">
+								<div class="equipo-info">
+									<span class="equipo-nombre">{{ e.equipo }}</span>
+								</div>
+							</td>
+							<td class="td-total">
+								<span class="total-badge">{{ e.total }}</span>
+							</td>
+						</tr>
+						<tr *ngIf="equiposAsignatura.length === 0">
+							<td colspan="4" class="td-empty">
+								<div class="empty-state">
+									<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+										<polyline points="14 2 14 8 20 8"></polyline>
+										<line x1="16" y1="13" x2="8" y2="13"></line>
+										<line x1="16" y1="17" x2="8" y2="17"></line>
+										<polyline points="10 9 9 9 8 9"></polyline>
+									</svg>
+									<span>No se encontraron registros</span>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="equipos-pagination" *ngIf="totalPages > 1">
+				<button class="pagination-btn" (click)="cambiarPagina(-1)" [disabled]="page === 1">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="15 18 9 12 15 6"></polyline>
+					</svg>
+					Anterior
+				</button>
+				<div class="pagination-pages">
+					<span class="pagination-current">{{ page }}</span>
+					<span class="pagination-separator">de</span>
+					<span class="pagination-total">{{ totalPages }}</span>
+				</div>
+				<button class="pagination-btn" (click)="cambiarPagina(1)" [disabled]="page === totalPages">
+					Siguiente
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="9 18 15 12 9 6"></polyline>
+					</svg>
+				</button>
+			</div>
+		</div>
+
+	</div>
+
+</div>
+</div>

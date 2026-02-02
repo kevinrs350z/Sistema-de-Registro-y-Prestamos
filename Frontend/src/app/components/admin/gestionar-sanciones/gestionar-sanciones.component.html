@@ -11,16 +11,37 @@
       <h3>Sanciones</h3>
 
       <div class="botones-header">
-        <button class="btn-crear" (click)="toggleRegistrar()">Registrar sanción</button>
+        <button class="btn-crear" type="button" (click)="toggleAsignar()">Asignar sanción</button>
+        <button class="btn-crear" type="button" (click)="toggleRegistrar()">Registrar sanción</button>
+        <button class="btn-outline" type="button" (click)="exportarCsv()">Exportar CSV</button>
+        <button class="btn-outline" type="button" (click)="exportarExcel()">Exportar Excel</button>
       </div>
     </div>
 
-    <input class="buscador" type="text" placeholder="Buscar..."
-           [(ngModel)]="filtro">
+        <input class="buscador" type="text" placeholder="Buscar..."
+          [(ngModel)]="filtro" (ngModelChange)="onFiltroChange()">
+
+    <div class="estado-carga" *ngIf="cargandoSanciones">Cargando sanciones...</div>
+    <div class="skeleton-list" *ngIf="cargandoSanciones">
+      <div class="skeleton-item" *ngFor="let _ of [1,2,3,4]">
+        <div class="skeleton-line w-60"></div>
+        <div class="skeleton-line w-40"></div>
+        <div class="skeleton-line w-50"></div>
+      </div>
+    </div>
+    <div class="estado-error" *ngIf="errorSanciones">{{ errorSanciones }}</div>
+    <div class="estado-vacio" *ngIf="!cargandoSanciones && sancionesFiltradas.length === 0">
+      No hay sanciones para mostrar.
+    </div>
+
+    <div class="lista-resumen" *ngIf="!cargandoSanciones && sancionesFiltradas.length > 0">
+      Mostrando {{ sancionesPaginadas.length }} de {{ sancionesFiltradas.length }} sanciones
+    </div>
+
 
     <!-- GRID DE ITEMS (2 columnas) -->
-    <div class="items-grid">
-      <div *ngFor="let s of sancionesFiltradas"
+    <div class="items-grid" *ngIf="!cargandoSanciones">
+      <div *ngFor="let s of sancionesPaginadas"
            class="item"
            [class.activo]="sancionSeleccionada?.id === s.id"
            (click)="seleccionar(s)">
@@ -37,6 +58,23 @@
           {{ s.estado }}
         </p>
       </div>
+    </div>
+
+    <div class="paginacion" *ngIf="!cargandoSanciones && sancionesFiltradas.length > pageSize">
+      <button class="btn-paginacion" type="button" (click)="cambiarPagina(-1)" [disabled]="page === 1">Anterior</button>
+      <span class="paginacion-info">Página {{ page }} de {{ totalPaginas }}</span>
+      <button class="btn-paginacion" type="button" (click)="cambiarPagina(1)" [disabled]="page === totalPaginas">Siguiente</button>
+    </div>
+  </div>
+
+  <div class="detalle" *ngIf="cargandoSanciones && !formularioVisible && !formularioAsignar && !sancionSeleccionada">
+    <h2>Cargando detalle...</h2>
+    <div class="skeleton-detail">
+      <div class="skeleton-line w-70"></div>
+      <div class="skeleton-line w-50"></div>
+      <div class="skeleton-line w-80"></div>
+      <div class="skeleton-line w-60"></div>
+      <div class="skeleton-line w-90"></div>
     </div>
   </div>
 
@@ -63,8 +101,8 @@
 
 
     <div class="acciones-detalle">
-      <button class="btn-azul" (click)="toggleEditarSancion()">Editar sanción</button>
-      <button class="btn-eliminar" (click)="quitarSancion()">Quitar sanción</button>
+      <button class="btn-azul" type="button" (click)="toggleEditarSancion()">Editar sanción</button>
+      <button class="btn-eliminar" type="button" (click)="quitarSancion()">Quitar sanción</button>
     </div>
 
     <!-- FORMULARIO DE EDICIÓN RÁPIDA -->
@@ -84,8 +122,8 @@
       </div>
 
       <div style="margin-top:10px; display:flex; gap:8px">
-        <button class="btn-azul" (click)="guardarEdicion()">Guardar</button>
-        <button class="btn-cancelar" (click)="toggleEditarSancion()">Cancelar</button>
+        <button class="btn-azul" type="button" (click)="guardarEdicion()">Guardar</button>
+        <button class="btn-cancelar" type="button" (click)="toggleEditarSancion()">Cancelar</button>
       </div>
     </div>
   </div>
@@ -102,7 +140,7 @@
     </div>
 
     <div style="display:flex; gap:8px; align-items:center">
-      <button class="btn-azul" (click)="registrarTipo()">Registrar</button>
+      <button class="btn-azul" type="button" (click)="registrarTipo()">Registrar</button>
       <button type="button" class="btn-cancelar" (click)="cancelarRegistrar()">Cancelar</button>
     </div>
   </div>
@@ -136,6 +174,15 @@
       <div class="prefill-grid">
         <div>
           <label>Alumno</label>
+        <!-- MODAL EXPORTAR -->
+
+        <button class="btn-crear fab-assign"
+                type="button"
+                *ngIf="!formularioAsignar"
+                (click)="toggleAsignar()">
+          Asignar sanción
+        </button>
+
           <p>{{ prefillData.usuario.nombre }} {{ prefillData.usuario.apellido }}</p>
         </div>
         <div>
@@ -170,6 +217,10 @@
       </div>
     </div>
 
+    <div class="alerta-catalogo" *ngIf="tiposSancion.length === 0">
+      No hay catálogo de sanciones disponible. Contacta al administrador del sistema.
+    </div>
+
     <div class="detalle-grid">
 
       <div class="col-100" style="position:relative;">
@@ -186,7 +237,7 @@
 
       <div class="col-100">
         <label>Tipo de sanción</label>
-        <select [(ngModel)]="asignarTipo">
+        <select [(ngModel)]="asignarTipo" [disabled]="tiposSancion.length === 0">
           <option [ngValue]="0" disabled>Selecciona un tipo</option>
           <option *ngFor="let t of tiposSancion" [ngValue]="t.id">
             {{ t.nivel }}
@@ -206,13 +257,17 @@
 
       <div>
         <label>Fecha fin</label>
-        <input type="date" [(ngModel)]="asignarFin">
+        <input type="date" [(ngModel)]="asignarFin" [min]="asignarInicio">
       </div>
 
     </div>
 
     <div class="acciones-asignar">
-      <button class="btn-azul" (click)="asignarSancion()">Asignar sanción</button>
+      <button class="btn-azul" type="button"
+              [disabled]="!asignarUsuario.trim() || !asignarTipo || !asignarInicio || !asignarFin || tiposSancion.length === 0"
+              (click)="asignarSancion()">
+        Asignar sanción
+      </button>
       <button type="button" class="btn-cancelar" (click)="toggleAsignar()">Cancelar</button>
     </div>
   </div>
@@ -229,8 +284,8 @@
     <textarea [(ngModel)]="motivoAmpliacion"></textarea>
 
     <div class="modal-acciones">
-      <button class="btn-azul" (click)="confirmarAmpliacion()">Confirmar</button>
-      <button class="btn-rojo" (click)="cancelarAmpliacion()">Cancelar</button>
+      <button class="btn-azul" type="button" (click)="confirmarAmpliacion()">Confirmar</button>
+      <button class="btn-rojo" type="button" (click)="cancelarAmpliacion()">Cancelar</button>
     </div>
   </div>
 </div>

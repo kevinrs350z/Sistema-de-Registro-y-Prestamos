@@ -138,6 +138,50 @@ input[disabled] {
   margin-top: 0.5rem;
 }
 
+.muted {
+  color: rgba(52, 81, 178, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+}
+
+.integrantes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.8rem;
+}
+
+.integrante-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #d9e1ff;
+  border-radius: 10px;
+  background: #fdfdff;
+}
+
+.integrante-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.integrante-nombre {
+  font-weight: 600;
+  color: #2e3f8a;
+}
+
+.integrante-email {
+  font-size: 0.82rem;
+  color: rgba(52, 81, 178, 0.7);
+}
+
+.integrante-bloqueo {
+  font-size: 0.82rem;
+  color: #b85450;
+  font-weight: 600;
+}
+
 /* === BOTONES === */
 .actions {
   display: flex;
@@ -244,6 +288,23 @@ button.ghost {
 
 .overlay-close {
   background: #f2f4ff;
+.alert-bloqueo {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.alert-detalle {
+  font-size: 0.85rem;
+  color: #7f1d1d;
+}
   color: var(--azul);
   border: 1px solid var(--borde);
   width: 40px;

@@ -1,1 +1,62 @@
-<p>reportes-tendencias works!</p>
+<div class="report-page report-animate">
+<div class="reportes-wrapper container report-surface py-4">
+
+	<div class="report-section-header">
+		<div>
+			<h2 class="report-section-title">Reporte de Tendencias</h2>
+			<p class="report-section-subtitle">Evolución temporal y demanda por categorías</p>
+		</div>
+		<div class="report-section-actions"></div>
+	</div>
+
+	<app-export-buttons
+		[onExportPDF]="exportarPDF.bind(this)"
+		[onExportExcel]="exportarExcel.bind(this)">
+	</app-export-buttons>
+
+	<div id="contenidoPDFTendencias" class="page-wrapper">
+
+		<div class="inst-header">
+			<img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
+			<div>
+				<h1 class="inst-title">{{ universidad }}</h1>
+				<p class="inst-subtitle">{{ departamento }}</p>
+				<p class="inst-report">{{ reporteTitulo }}</p>
+				<div class="inst-info">
+					<span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
+					<span>Usuario: {{ usuarioGenera }}</span>
+					<span>Rango: {{ rangoFechas }}</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="card fade-in mb-4">
+			<h2 class="card-title">Préstamos por mes</h2>
+			<p class="card-subtitle">Comportamiento histórico de la demanda</p>
+			<div class="chart-area">
+				<canvas #prestamosChart></canvas>
+			</div>
+		</div>
+
+		<div class="two-cols">
+			<div class="card fade-in">
+				<h2 class="card-title">Categorías más demandadas</h2>
+				<p class="card-subtitle">Uso acumulado por categoría</p>
+				<div class="chart-area">
+					<canvas #categoriasChart></canvas>
+				</div>
+			</div>
+
+			<div class="card fade-in">
+				<h2 class="card-title">Uso por tipo de usuario</h2>
+				<p class="card-subtitle">Distribución por rol</p>
+				<div class="chart-area">
+					<canvas #usuariosChart></canvas>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+</div>
+</div>

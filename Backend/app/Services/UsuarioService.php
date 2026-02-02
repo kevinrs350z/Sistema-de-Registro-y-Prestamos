@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\Persona;
 use App\Models\User;
 use App\Models\Rol;
+use App\Models\Sancion;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Servicio encargado de gestionar las operaciones de negocio relacionadas con los usuarios.
@@ -52,7 +54,11 @@ class UsuarioService
                 'persona.telefono',
                 'persona.celular',
                 'rol.Nombre as rol',
-                'users.estado as estado'
+            'users.estado as estado',
+            'users.bloqueado as bloqueado',
+            'users.bloqueado_motivo as bloqueado_motivo',
+            'users.bloqueado_fecha as bloqueado_fecha',
+            'users.bloqueado_por as bloqueado_por'
             )
             ->join('persona', 'persona.idPersona', '=', 'users.idPersona')
             ->leftJoin('rol_user', 'rol_user.idUser', '=', 'users.idUser')
@@ -106,13 +112,77 @@ class UsuarioService
                 'persona.telefono',
                 'persona.celular',
                 'rol.Nombre as rol',
-                'users.estado as estado'
+                'users.estado as estado',
+                'users.bloqueado as bloqueado',
+                'users.bloqueado_motivo as bloqueado_motivo',
+                'users.bloqueado_fecha as bloqueado_fecha',
+                'users.bloqueado_por as bloqueado_por'
             )
             ->join('persona', 'persona.idPersona', '=', 'users.idPersona')
             ->leftJoin('rol_user', 'rol_user.idUser', '=', 'users.idUser')
             ->leftJoin('rol', 'rol.idRol', '=', 'rol_user.idRol')
             ->where('users.idUser', $id)
             ->firstOrFail();
+    }
+
+    public function bloquearUsuario(int $idAlumno, string $motivo, ?string $fecha, int $adminId)
+    {
+        if ($idAlumno === $adminId) {
+            throw new \Exception('Un administrador no puede bloquearse a sí mismo.', 403);
+        }
+
+        return DB::transaction(function () use ($idAlumno, $motivo, $fecha, $adminId) {
+            $user = User::findOrFail($idAlumno);
+
+            $user->bloqueado = true;
+            $user->bloqueado_motivo = $motivo;
+            $user->bloqueado_fecha = $fecha ? now()->parse($fecha) : now();
+            $user->bloqueado_por = $adminId;
+            $user->save();
+
+            $sancion = Sancion::firstOrCreate(
+                ['nivel' => 'BLOQUEO_ADMIN'],
+                ['descripcion' => 'Bloqueo administrativo', 'estado' => 'ACTIVA']
+            );
+
+            $user->sanciones()->attach($sancion->idSancion, [
+                'assigned_by' => $adminId,
+                'descripcion' => $motivo,
+                'accion' => 'BLOQUEO',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return $user;
+        });
+    }
+
+    public function desbloquearUsuario(int $idAlumno, ?string $motivo, int $adminId)
+    {
+        return DB::transaction(function () use ($idAlumno, $motivo, $adminId) {
+            $user = User::findOrFail($idAlumno);
+
+            $user->bloqueado = false;
+            $user->bloqueado_motivo = null;
+            $user->bloqueado_fecha = null;
+            $user->bloqueado_por = null;
+            $user->save();
+
+            $sancion = Sancion::firstOrCreate(
+                ['nivel' => 'BLOQUEO_ADMIN'],
+                ['descripcion' => 'Bloqueo administrativo', 'estado' => 'ACTIVA']
+            );
+
+            $user->sanciones()->attach($sancion->idSancion, [
+                'assigned_by' => $adminId,
+                'descripcion' => $motivo,
+                'accion' => 'DESBLOQUEO',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return $user;
+        });
     }
 
 

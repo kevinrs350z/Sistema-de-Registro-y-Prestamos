@@ -69,6 +69,206 @@
 }
 
 /* ============================================================
+   TABLA PROFESIONAL DASHBOARD
+   ============================================================ */
+
+.tabla-pro-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.tabla-pro-header {
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.tabla-pro-header.bg-primary-pro {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+}
+
+.tabla-pro-title {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.025em;
+}
+
+.tabla-pro-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.chart-area-dashboard {
+  height: 260px;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tabla-pro-container {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.tabla-pro {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tabla-pro thead tr {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.tabla-pro th {
+  padding: 14px 16px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.th-pos { width: 80px; }
+.th-nombre { width: 35%; text-align: left !important; }
+.th-email { width: 35%; }
+.th-total { width: 15%; }
+
+.tabla-pro-row {
+  transition: all 0.2s ease;
+}
+
+.tabla-pro-row:hover {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.tabla-pro-row:not(:last-child) td {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tabla-pro-row.top-3 {
+  background: linear-gradient(90deg, rgba(30, 58, 95, 0.03) 0%, transparent 100%);
+}
+
+.tabla-pro td {
+  padding: 14px 16px;
+  text-align: center;
+  vertical-align: middle;
+  color: #334155;
+}
+
+.td-nombre {
+  text-align: left !important;
+}
+
+/* Posición Badge */
+.pos-badge-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #475569;
+}
+
+.pos-badge-pro.pos-1 {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+.pos-badge-pro.pos-2 {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(156, 163, 175, 0.4);
+}
+
+.pos-badge-pro.pos-3 {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+}
+
+/* Info estudiante */
+.estudiante-info-pro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.estudiante-avatar-pro {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.texto-principal {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.texto-secundario {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.total-badge-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+  color: #ffffff;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.25);
+}
+
+/* Estado vacío */
+.tabla-pro-empty {
+  padding: 40px 20px !important;
+}
+
+.empty-state-pro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+}
+
+.empty-state-pro svg {
+  opacity: 0.5;
+}
+
+.empty-state-pro span {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* ============================================================
    KPIs DEL DASHBOARD
 ============================================================ */
 .kpi-grid {
@@ -85,7 +285,13 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   border-left: 4px solid #0d6efd;
   transition: 0.2s ease;
+  animation: kpiRise 0.6s ease both;
 }
+
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.12s; }
+.kpi-card:nth-child(3) { animation-delay: 0.19s; }
+.kpi-card:nth-child(4) { animation-delay: 0.26s; }
 
 .kpi-card:hover {
   transform: translateY(-3px);
@@ -108,6 +314,23 @@
   font-size: 0.8rem;
   color: #7d8ca3;
   margin-top: 3px;
+}
+
+@keyframes kpiRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kpi-card {
+    animation: none;
+  }
 }
 
 /* ============================================================

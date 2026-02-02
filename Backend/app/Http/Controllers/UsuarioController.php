@@ -133,27 +133,52 @@ class UsuarioController extends Controller
     }
 
     /**
+    public function update(UpdateUsuarioRequest $request, $id, UsuarioService $service)
+    {
+        $user = $request->user();
+        $data = $request->validated();
+        // Solo ADMIN puede cambiar roles de otros usuarios
+        if (isset($data['rol']) && !$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para asignar roles.'
+            ], 403);
+        }
+        try {
+            $usuario = $service->actualizarUsuario($id, $data);
+            return response()->json([
+                'message' => 'Usuario actualizado correctamente',
+                'data' => $usuario
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar el usuario',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Elimina un usuario del sistema.
-     *
-     * Este método solicita al UsuarioService la eliminación del usuario especificado.
-     * En caso de error, retorna una respuesta controlada para mantener consistencia
-     * en las respuestas de la API.
      *
      * @param  int             $id       Identificador del usuario a eliminar.
      * @param  UsuarioService  $service  Servicio encargado de la eliminación.
+     * @param  Request         $request  Request para verificar permisos.
      * @return \Illuminate\Http\JsonResponse  Respuesta JSON confirmando la operación.
      */
-    public function destroy($id, UsuarioService $service)
+    public function destroy($id, UsuarioService $service, Request $request)
     {
+        $user = $request->user();
+        if ($user && method_exists($user, 'hasRole') && !$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para eliminar usuarios.'
+            ], 403);
+        }
         try {
             $service->eliminarUsuario($id);
-
             return response()->json([
                 'message' => 'Usuario desactivado correctamente'
             ], 200);
-
         } catch (\Exception $e) {
-
             return response()->json([
                 'error'   => 'Error al eliminar el usuario',
                 'message' => $e->getMessage()
@@ -180,6 +205,61 @@ class UsuarioController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Error al reactivar el usuario',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bloquear alumno por incidente grave.
+     */
+    public function bloquear($id, Request $request, UsuarioService $service)
+    {
+        $request->validate([
+            'motivo' => 'required|string|min:5|max:500',
+            'fecha'  => 'nullable|date'
+        ]);
+
+        try {
+            $adminId = $request->user()->idUser;
+            $user = $service->bloquearUsuario($id, $request->motivo, $request->fecha, $adminId);
+
+            return response()->json([
+                'message' => 'Alumno bloqueado correctamente.',
+                'bloqueado' => $user->bloqueado,
+                'bloqueado_motivo' => $user->bloqueado_motivo,
+                'bloqueado_fecha' => $user->bloqueado_fecha,
+                'bloqueado_por' => $user->bloqueado_por,
+            ], 200);
+        } catch (\Exception $e) {
+            $code = $e->getCode() === 403 ? 403 : 500;
+            return response()->json([
+                'error' => 'No se pudo bloquear al alumno',
+                'message' => $e->getMessage()
+            ], $code);
+        }
+    }
+
+    /**
+     * Desbloquear alumno.
+     */
+    public function desbloquear($id, Request $request, UsuarioService $service)
+    {
+        $request->validate([
+            'motivo' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            $adminId = $request->user()->idUser;
+            $user = $service->desbloquearUsuario($id, $request->motivo, $adminId);
+
+            return response()->json([
+                'message' => 'Alumno desbloqueado correctamente.',
+                'bloqueado' => $user->bloqueado,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'No se pudo desbloquear al alumno',
                 'message' => $e->getMessage()
             ], 500);
         }

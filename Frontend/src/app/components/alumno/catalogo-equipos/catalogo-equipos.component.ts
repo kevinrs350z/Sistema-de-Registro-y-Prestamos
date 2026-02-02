@@ -132,6 +132,10 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
+    if (e.bloqueado && delta > 0) {
+      this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
+      return;
+    }
     if (e.stock <= 0 && delta > 0) {
       this.notify.warning('Este equipo está agotado.');
       return;
@@ -182,6 +186,10 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
+    if (e.bloqueado) {
+      this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
+      return;
+    }
     if (e.stock <= 0) {
       this.notify.warning('Este equipo está agotado.');
       return;
@@ -316,6 +324,10 @@ interface TipoEquipo {
   categoria?: string;
   imagen?: string;
   stock: number;
+  maximo_prestamo?: number;
+  prestamos_activos?: number;
+  bloqueado?: boolean;
+  bloqueo_motivo?: string | null;
 }
 
 interface EquipoFisico {
