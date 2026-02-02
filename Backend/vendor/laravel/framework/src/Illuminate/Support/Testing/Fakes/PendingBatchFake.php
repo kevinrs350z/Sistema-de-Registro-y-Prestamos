@@ -19,12 +19,11 @@ class PendingBatchFake extends PendingBatch
      *
      * @param  \Illuminate\Support\Testing\Fakes\BusFake  $bus
      * @param  \Illuminate\Support\Collection  $jobs
-     * @return void
      */
     public function __construct(BusFake $bus, Collection $jobs)
     {
         $this->bus = $bus;
-        $this->jobs = $jobs;
+        $this->jobs = $jobs->filter()->values();
     }
 
     /**
@@ -33,6 +32,16 @@ class PendingBatchFake extends PendingBatch
      * @return \Illuminate\Bus\Batch
      */
     public function dispatch()
+    {
+        return $this->bus->recordPendingBatch($this);
+    }
+
+    /**
+     * Dispatch the batch after the response is sent to the browser.
+     *
+     * @return \Illuminate\Bus\Batch
+     */
+    public function dispatchAfterResponse()
     {
         return $this->bus->recordPendingBatch($this);
     }
