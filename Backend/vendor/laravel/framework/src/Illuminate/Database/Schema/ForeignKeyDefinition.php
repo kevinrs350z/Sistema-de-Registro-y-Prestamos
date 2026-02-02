@@ -7,6 +7,7 @@ use Illuminate\Support\Fluent;
 /**
  * @method ForeignKeyDefinition deferrable(bool $value = true) Set the foreign key as deferrable (PostgreSQL)
  * @method ForeignKeyDefinition initiallyImmediate(bool $value = true) Set the default time to check the constraint (PostgreSQL)
+ * @method ForeignKeyDefinition lock(string $value) Specify the DDL lock mode for the foreign key operation (MySQL)
  * @method ForeignKeyDefinition on(string $table) Specify the referenced table
  * @method ForeignKeyDefinition onDelete(string $action) Add an ON DELETE action
  * @method ForeignKeyDefinition onUpdate(string $action) Add an ON UPDATE action
@@ -32,6 +33,26 @@ class ForeignKeyDefinition extends Fluent
     public function restrictOnUpdate()
     {
         return $this->onUpdate('restrict');
+    }
+
+    /**
+     * Indicate that updates should set the foreign key value to null.
+     *
+     * @return $this
+     */
+    public function nullOnUpdate()
+    {
+        return $this->onUpdate('set null');
+    }
+
+    /**
+     * Indicate that updates should have "no action".
+     *
+     * @return $this
+     */
+    public function noActionOnUpdate()
+    {
+        return $this->onUpdate('no action');
     }
 
     /**
@@ -62,5 +83,15 @@ class ForeignKeyDefinition extends Fluent
     public function nullOnDelete()
     {
         return $this->onDelete('set null');
+    }
+
+    /**
+     * Indicate that deletes should have "no action".
+     *
+     * @return $this
+     */
+    public function noActionOnDelete()
+    {
+        return $this->onDelete('no action');
     }
 }

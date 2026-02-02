@@ -30,7 +30,6 @@ class SqsJob extends Job implements JobContract
      * @param  array  $job
      * @param  string  $connectionName
      * @param  string  $queue
-     * @return void
      */
     public function __construct(Container $container, SqsClient $sqs, array $job, $connectionName, $queue)
     {
@@ -42,7 +41,7 @@ class SqsJob extends Job implements JobContract
     }
 
     /**
-     * Release the job back into the queue.
+     * Release the job back into the queue after (n) seconds.
      *
      * @param  int  $delay
      * @return void

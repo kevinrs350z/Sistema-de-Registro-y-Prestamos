@@ -6,6 +6,7 @@ use ArrayIterator;
 use Countable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use IteratorAggregate;
 use LogicException;
@@ -13,6 +14,7 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Matcher\Dumper\CompiledUrlMatcherDumper;
 use Symfony\Component\Routing\RouteCollection as SymfonyRouteCollection;
+use Traversable;
 
 abstract class AbstractRouteCollection implements Countable, IteratorAggregate, RouteCollectionInterface
 {
@@ -40,7 +42,10 @@ abstract class AbstractRouteCollection implements Countable, IteratorAggregate, 
             return $this->getRouteForMethods($request, $others);
         }
 
-        throw new NotFoundHttpException;
+        throw new NotFoundHttpException(sprintf(
+            'The route %s could not be found.',
+            $request->path()
+        ));
     }
 
     /**
@@ -74,13 +79,21 @@ abstract class AbstractRouteCollection implements Countable, IteratorAggregate, 
      */
     protected function matchAgainstRoutes(array $routes, $request, $includingMethod = true)
     {
-        [$fallbacks, $routes] = collect($routes)->partition(function ($route) {
-            return $route->isFallback;
-        });
+        $fallbackRoute = null;
 
-        return $routes->merge($fallbacks)->first(function (Route $route) use ($request, $includingMethod) {
-            return $route->matches($request, $includingMethod);
-        });
+        foreach ($routes as $route) {
+            if ($route->matches($request, $includingMethod)) {
+                if ($route->isFallback) {
+                    $fallbackRoute ??= $route;
+
+                    continue;
+                }
+
+                return $route;
+            }
+        }
+
+        return $fallbackRoute;
     }
 
     /**
@@ -94,13 +107,36 @@ abstract class AbstractRouteCollection implements Countable, IteratorAggregate, 
      */
     protected function getRouteForMethods($request, array $methods)
     {
-        if ($request->method() === 'OPTIONS') {
+        if ($request->isMethod('OPTIONS')) {
             return (new Route('OPTIONS', $request->path(), function () use ($methods) {
                 return new Response('', 200, ['Allow' => implode(',', $methods)]);
             }))->bind($request);
         }
 
-        $this->methodNotAllowed($methods, $request->method());
+        $this->requestMethodNotAllowed($request, $methods, $request->method());
+    }
+
+    /**
+     * Throw a method not allowed HTTP exception.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  array  $others
+     * @param  string  $method
+     * @return never
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException
+     */
+    protected function requestMethodNotAllowed($request, array $others, $method)
+    {
+        throw new MethodNotAllowedHttpException(
+            $others,
+            sprintf(
+                'The %s method is not supported for route %s. Supported methods: %s.',
+                $method,
+                $request->path(),
+                implode(', ', $others)
+            )
+        );
     }
 
     /**
@@ -109,6 +145,8 @@ abstract class AbstractRouteCollection implements Countable, IteratorAggregate, 
      * @param  array  $others
      * @param  string  $method
      * @return void
+     *
+     * @deprecated use requestMethodNotAllowed
      *
      * @throws \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException
      */
@@ -172,18 +210,20 @@ abstract class AbstractRouteCollection implements Countable, IteratorAggregate, 
     {
         $symfonyRoutes = new SymfonyRouteCollection;
 
-        $routes = $this->getRoutes();
+        $fallbackRoutes = [];
 
-        foreach ($routes as $route) {
-            if (! $route->isFallback) {
-                $symfonyRoutes = $this->addToSymfonyRoutesCollection($symfonyRoutes, $route);
+        foreach ($this->getRoutes() as $route) {
+            if ($route->isFallback) {
+                $fallbackRoutes[] = $route;
+
+                continue;
             }
+
+            $symfonyRoutes = $this->addToSymfonyRoutesCollection($symfonyRoutes, $route);
         }
 
-        foreach ($routes as $route) {
-            if ($route->isFallback) {
-                $symfonyRoutes = $this->addToSymfonyRoutesCollection($symfonyRoutes, $route);
-            }
+        foreach ($fallbackRoutes as $route) {
+            $symfonyRoutes = $this->addToSymfonyRoutesCollection($symfonyRoutes, $route);
         }
 
         return $symfonyRoutes;
@@ -204,14 +244,14 @@ abstract class AbstractRouteCollection implements Countable, IteratorAggregate, 
 
         if (
             ! is_null($name)
-            && Str::endsWith($name, '.')
+            && str_ends_with($name, '.')
             && ! is_null($symfonyRoutes->get($name))
         ) {
             $name = null;
         }
 
         if (! $name) {
-            $route->name($name = $this->generateRouteName());
+            $route->name($this->generateRouteName());
 
             $this->add($route);
         } elseif (! is_null($symfonyRoutes->get($name))) {
@@ -238,8 +278,7 @@ abstract class AbstractRouteCollection implements Countable, IteratorAggregate, 
      *
      * @return \ArrayIterator
      */
-    #[\ReturnTypeWillChange]
-    public function getIterator()
+    public function getIterator(): Traversable
     {
         return new ArrayIterator($this->getRoutes());
     }
@@ -249,8 +288,7 @@ abstract class AbstractRouteCollection implements Countable, IteratorAggregate, 
      *
      * @return int
      */
-    #[\ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
         return count($this->getRoutes());
     }
