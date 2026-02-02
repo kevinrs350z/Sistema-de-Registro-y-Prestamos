@@ -156,53 +156,35 @@ class UsuarioController extends Controller
             ], 500);
         }
     }
+
+    /**
      * Elimina un usuario del sistema.
-     *
-     * Este método solicita al UsuarioService la eliminación del usuario especificado.
-     * En caso de error, retorna una respuesta controlada para mantener consistencia
-     * en las respuestas de la API.
      *
      * @param  int             $id       Identificador del usuario a eliminar.
      * @param  UsuarioService  $service  Servicio encargado de la eliminación.
+     * @param  Request         $request  Request para verificar permisos.
      * @return \Illuminate\Http\JsonResponse  Respuesta JSON confirmando la operación.
      */
-    public function destroy($id, UsuarioService $service)
+    public function destroy($id, UsuarioService $service, Request $request)
     {
+        $user = $request->user();
+        if ($user && method_exists($user, 'hasRole') && !$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para eliminar usuarios.'
+            ], 403);
+        }
         try {
             $service->eliminarUsuario($id);
-
             return response()->json([
                 'message' => 'Usuario desactivado correctamente'
             ], 200);
-
         } catch (\Exception $e) {
-
             return response()->json([
                 'error'   => 'Error al eliminar el usuario',
                 'message' => $e->getMessage()
             ], 500);
         }
     }
-        public function destroy($id, UsuarioService $service, Request $request)
-        {
-            $user = $request->user();
-            if (!$user->hasRole('ADMIN')) {
-                return response()->json([
-                    'error' => 'No tienes permisos para eliminar usuarios.'
-                ], 403);
-            }
-            try {
-                $service->eliminarUsuario($id);
-                return response()->json([
-                    'message' => 'Usuario desactivado correctamente'
-                ], 200);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'error'   => 'Error al eliminar el usuario',
-                    'message' => $e->getMessage()
-                ], 500);
-            }
-        }
 
     /**
      * Reactiva un usuario previamente desactivado.

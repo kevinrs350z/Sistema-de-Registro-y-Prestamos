@@ -1,10 +1,10 @@
 <?php
-
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+
 
 class PrestamoSeeder extends Seeder
 {
@@ -23,7 +23,7 @@ class PrestamoSeeder extends Seeder
             'fecha_fin'    => null,
             'estado'       => 'PENDIENTE',
             'tipo'         => 'DENTRO',
-            'otra_motivo'  => 'Uso en laboratorio',
+            'otra_motivo'  => 'Clase práctica',
             'observacion'  => null,
             'created_at'   => $now,
             'updated_at'   => $now,

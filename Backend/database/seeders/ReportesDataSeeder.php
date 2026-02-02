@@ -1,15 +1,15 @@
 <?php
-
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 /**
  * Seeder para generar datos masivos para los reportes.
  * Genera préstamos, sanciones y relaciones variadas para que los gráficos se vean completos.
  */
+
 class ReportesDataSeeder extends Seeder
 {
     public function run(): void

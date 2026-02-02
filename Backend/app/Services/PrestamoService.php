@@ -1,17 +1,4 @@
-    /**
-     * Asociar préstamo a un grupo (tabla grupo_prestamo)
-     */
-    public function asignarGrupoPrestamo(int $grupoId, int $prestamoId): void
-    {
-        DB::table('grupo_prestamo')->insert([
-            'grupo_id' => $grupoId,
-            'prestamo_id' => $prestamoId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
 <?php
-
 namespace App\Services;
 
 use App\Models\Prestamo;
@@ -60,7 +47,6 @@ class PrestamoService
     {
         foreach ($equipos as $item) {
 
-            // ✅ LÓGICA DE PACKS
             if (isset($item['idPack'])) {
                 $this->asignarPack($idPrestamo, $item['idPack']);
                 continue;
@@ -88,8 +74,6 @@ class PrestamoService
         }
 
         foreach ($pack->equipos as $equipo) {
-            // Verificar disponibilidad del equipo específico del pack
-            // Como es un pack físico pre-definido, validamos ESE equipo exacto
             if ($equipo->estado !== 'DISPONIBLE') {
                 throw new \Exception("El equipo '{$equipo->codigo}' del pack no está disponible.");
             }
@@ -177,15 +161,26 @@ class PrestamoService
     }
 
     /**
+     * Asociar préstamo a un grupo (tabla grupo_prestamo)
+     */
+    public function asignarGrupoPrestamo(int $grupoId, int $prestamoId): void
+    {
+        DB::table('grupo_prestamo')->insert([
+            'grupo_id' => $grupoId,
+            'prestamo_id' => $prestamoId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    /**
      * Obtener bloqueo por tipo para un usuario (catálogo).
-     * Considera tipos de equipo relacionados al calcular el límite máximo.
      */
     public function obtenerBloqueoPorTipoUsuario(int $userId): array
     {
         $tipos = TipoEquipo::select('id', 'maximo_prestamo')->get();
         $activos = $this->obtenerConteosActivosPorUsuario([$userId]);
         
-        // Obtener mapa de grupos relacionados
         $gruposRelacionados = $this->obtenerGruposRelacionados();
         
         $resultado = [];
@@ -193,10 +188,8 @@ class PrestamoService
         foreach ($tipos as $tipo) {
             $maximo = (int) ($tipo->maximo_prestamo ?? 0);
             
-            // Obtener el grupo de tipos relacionados (incluye a sí mismo)
             $grupoIds = $gruposRelacionados[$tipo->id] ?? [$tipo->id];
             
-            // Sumar préstamos activos de TODOS los tipos del grupo
             $activosGrupo = 0;
             foreach ($grupoIds as $tipoRelacionadoId) {
                 $activosGrupo += (int) ($activos[$userId][$tipoRelacionadoId] ?? 0);
@@ -217,7 +210,6 @@ class PrestamoService
 
     /**
      * Validar máximo de préstamos activos por tipo (alumno + integrantes).
-     * Considera tipos de equipo relacionados al calcular el límite máximo.
      */
     public function validarMaximoPrestamo(array $userIds, array $equipos): array
     {
@@ -233,7 +225,6 @@ class PrestamoService
 
         $activos = $this->obtenerConteosActivosPorUsuario($userIds);
         
-        // Obtener todos los tipos involucrados (solicitados + relacionados)
         $gruposRelacionados = $this->obtenerGruposRelacionados();
         
         $tiposIds = array_keys($solicitados);
@@ -256,22 +247,16 @@ class PrestamoService
         $bloqueos = [];
 
         foreach ($userIds as $uid) {
-            // Agrupar solicitados por grupo de relacionados
-            $solicitadosPorGrupo = $this->agruparSolicitadosPorGrupo($solicitados, $gruposRelacionados);
-            
             foreach ($solicitados as $tipoId => $cantSolicitada) {
                 $maximo = $maximos[$tipoId] ?? 0;
                 
-                // Obtener grupo de tipos relacionados
                 $grupoIds = $gruposRelacionados[$tipoId] ?? [$tipoId];
                 
-                // Sumar préstamos activos de TODO el grupo
                 $cantActivaGrupo = 0;
                 foreach ($grupoIds as $tipoRelacionadoId) {
                     $cantActivaGrupo += (int) ($activos[$uid][$tipoRelacionadoId] ?? 0);
                 }
                 
-                // Sumar lo solicitado de TODO el grupo
                 $cantSolicitadaGrupo = 0;
                 foreach ($grupoIds as $tipoRelacionadoId) {
                     $cantSolicitadaGrupo += (int) ($solicitados[$tipoRelacionadoId] ?? 0);
@@ -297,7 +282,6 @@ class PrestamoService
                         ];
                     }
 
-                    // Obtener nombres de equipos relacionados
                     $nombresRelacionados = array_filter(array_map(
                         fn($id) => $nombresEquipos[$id] ?? null,
                         $grupoIds
@@ -389,20 +373,12 @@ class PrestamoService
         return $conteos;
     }
 
-    /**
-     * Obtener mapa de grupos de tipos de equipo relacionados.
-     * La relación es bidireccional: si A→B existe, B también pertenece al grupo de A.
-     * 
-     * @return array [tipo_id => [ids del grupo incluyendo a sí mismo]]
-     */
     private function obtenerGruposRelacionados(): array
     {
-        // Obtener todas las relaciones
         $relaciones = DB::table('tipo_equipo_relacionados')
             ->select('tipo_equipo_id', 'relacionado_id')
             ->get();
 
-        // Construir grafo bidireccional
         $grafo = [];
         foreach ($relaciones as $rel) {
             $a = (int) $rel->tipo_equipo_id;
@@ -412,19 +388,16 @@ class PrestamoService
             $grafo[$b][] = $a;
         }
 
-        // Para cada tipo, encontrar su grupo completo usando BFS/DFS
         $grupos = [];
         $todosLosTipos = TipoEquipo::pluck('id')->toArray();
 
         foreach ($todosLosTipos as $tipoId) {
             if (isset($grupos[$tipoId])) {
-                continue; // Ya procesado como parte de otro grupo
+                continue;
             }
 
-            // BFS para encontrar todos los tipos conectados
             $grupo = $this->encontrarGrupoConectado($tipoId, $grafo);
             
-            // Asignar el mismo grupo a todos los miembros
             foreach ($grupo as $miembro) {
                 $grupos[$miembro] = $grupo;
             }
@@ -433,9 +406,6 @@ class PrestamoService
         return $grupos;
     }
 
-    /**
-     * Encontrar todos los tipos conectados a un tipo dado usando BFS.
-     */
     private function encontrarGrupoConectado(int $inicio, array $grafo): array
     {
         $visitados = [$inicio => true];
@@ -458,9 +428,6 @@ class PrestamoService
         return array_values(array_unique($grupo));
     }
 
-    /**
-     * Agrupar cantidades solicitadas por grupo de tipos relacionados.
-     */
     private function agruparSolicitadosPorGrupo(array $solicitados, array $gruposRelacionados): array
     {
         $resultado = [];

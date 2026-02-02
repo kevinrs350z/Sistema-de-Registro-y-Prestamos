@@ -8,6 +8,10 @@ class CreateGruposTable extends Migration
 {
     public function up()
     {
+        if (Schema::hasTable('grupos')) {
+            return;
+        }
+        
         Schema::create('grupos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
@@ -15,7 +19,7 @@ class CreateGruposTable extends Migration
             $table->unsignedBigInteger('docente_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('asignatura_id')->references('id')->on('asignaturas')->nullOnDelete();
+            $table->foreign('asignatura_id')->references('idAsignatura')->on('asignaturas')->nullOnDelete();
             $table->foreign('docente_id')->references('idUser')->on('users')->nullOnDelete();
         });
     }

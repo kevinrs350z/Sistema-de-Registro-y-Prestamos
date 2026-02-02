@@ -1,5 +1,6 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
 import * as echarts from "echarts";
 import { ReportesProfesoresService } from "../../../../services/reportes/reportes-profesores.service";
 import { ExportService, ReporteData } from "../../../../services/export.service";
@@ -8,7 +9,7 @@ import { ExportButtonsComponent } from "../export-buttons/export-buttons.compone
 @Component({
   selector: "app-reportes-profesores",
   standalone: true,
-  imports: [CommonModule, ExportButtonsComponent],
+  imports: [CommonModule, ExportButtonsComponent, FormsModule],
   templateUrl: "./reportes-profesores.component.html",
   styleUrls: ["./reportes-profesores.component.css"], // 👈 OBLIGATORIO (plural)
 })

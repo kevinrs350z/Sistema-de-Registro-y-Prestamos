@@ -1,16 +1,11 @@
 <?php
-
 namespace App\Services\Reportes;
 
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ReportesAlumnosAdminService
 {
-    /* ============================================================
-       UTILIDAD: rango temporal para analítica
-       (usa created_at)
-    ============================================================ */
     private function getRange($months = 6)
     {
         $end = Carbon::now()->endOfDay();
@@ -18,9 +13,6 @@ class ReportesAlumnosAdminService
         return [$start, $end];
     }
 
-    /* ============================================================
-       SOLO USUARIOS ALUMNOS
-    ============================================================ */
     private function alumnosUserIds()
     {
         return DB::table('rol_user as ru')
@@ -30,15 +22,11 @@ class ReportesAlumnosAdminService
             ->toArray();
     }
 
-    /* ============================================================
-       0) KPIs DASHBOARD
-    ============================================================ */
     public function getKPIs($months = 1)
     {
         [$start, $end] = $this->getRange($months);
         $alumnos = $this->alumnosUserIds();
 
-        // solicitudes creadas en el rango
         $totalLoans = DB::table('prestamos')
             ->whereIn('idUser', $alumnos)
             ->whereBetween('created_at', [$start, $end])
@@ -64,14 +52,12 @@ class ReportesAlumnosAdminService
             ->where('estado', 'APROBADO')
             ->count();
 
-        // ATRASO DERIVADO
         $late = DB::table('prestamos')
             ->whereIn('idUser', $alumnos)
             ->where('estado', 'APROBADO')
             ->where('fecha_fin', '<', now())
             ->count();
 
-        // tiempo real de resolución (updated_at - created_at)
         $avgResolutionDays = DB::table('prestamos')
             ->whereIn('idUser', $alumnos)
             ->whereIn('estado', ['DEVUELTO'])
@@ -86,19 +72,16 @@ class ReportesAlumnosAdminService
             ->distinct('pe.idEquipo')
             ->count('pe.idEquipo');
 
-        // alumnos con sanciones (user_sancion no tiene timestamps)
         $alumnosConSanciones = DB::table('user_sancion')
             ->whereIn('idUser', $alumnos)
             ->distinct('idUser')
             ->count('idUser');
 
-        // nuevos alumnos en el rango (según users.created_at)
         $nuevosSemestre = DB::table('users')
             ->whereIn('idUser', $alumnos)
             ->whereBetween('created_at', [$start, $end])
             ->count();
 
-        // variación de préstamos vs periodo anterior
         [$prevStart, $prevEnd] = $this->getRange($months);
         $prevStart = $prevStart->copy()->subMonths($months);
         $prevEnd = $prevEnd->copy()->subMonths($months);
@@ -110,13 +93,11 @@ class ReportesAlumnosAdminService
         $variacionPrestamos = $totalLoans - $prestamosPrevios;
 
         return [
-            // campos esperados por frontend
             'alumnosConPrestamos' => $alumnosConPrestamos,
             'prestamosPromedio' => $prestamosPromedio,
             'alumnosConSanciones' => $alumnosConSanciones,
             'nuevosSemestre' => $nuevosSemestre,
             'variacionPrestamos' => $variacionPrestamos,
-
             'totalLoans' => $totalLoans,
             'pendingApprovals' => $pending,
             'activeLoans' => $active,
@@ -128,9 +109,6 @@ class ReportesAlumnosAdminService
         ];
     }
 
-    /* ============================================================
-       1) CUELLO DE BOTELLA (ESTADOS)
-    ============================================================ */
     public function getWorkflowEstados()
     {
         return DB::table('prestamos')
@@ -141,9 +119,6 @@ class ReportesAlumnosAdminService
             ->get();
     }
 
-    /* ============================================================
-       2) TIEMPO PROMEDIO DE RESOLUCIÓN (por mes)
-    ============================================================ */
     public function getTiempoResolucion($months = 6)
     {
         [$start, $end] = $this->getRange($months);
@@ -159,9 +134,6 @@ class ReportesAlumnosAdminService
             ->get();
     }
 
-    /* ============================================================
-       3) EQUIPOS CRÍTICOS (scatter)
-    ============================================================ */
     public function getEquiposCriticos($months = 6)
     {
         [$start, $end] = $this->getRange($months);
@@ -213,9 +185,6 @@ class ReportesAlumnosAdminService
         return $out;
     }
 
-    /* ============================================================
-       4) EVOLUCIÓN INVENTARIO (por mes)
-    ============================================================ */
     public function getInventarioEvolucion($months = 6)
     {
         [$start, $end] = $this->getRange($months);
@@ -246,22 +215,16 @@ class ReportesAlumnosAdminService
         ]);
     }
 
-    /* ============================================================
-       5) HEATMAP (día / hora) → created_at
-    ============================================================ */
     public function getHeatmapSolicitudes($months = 3)
     {
         [$start, $end] = $this->getRange($months);
 
-        // Días laborales (ordenados para el heatmap)
         $dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
-        // Horas de atención (08:00 a 20:00)
         $horas = collect(range(8, 20))
             ->map(fn($h) => str_pad($h, 2, '0', STR_PAD_LEFT) . ':00')
             ->values();
 
-        // Datos base desde la BD
         $rows = DB::table('prestamos')
             ->whereIn('idUser', $this->alumnosUserIds())
             ->whereBetween('created_at', [$start, $end])
@@ -271,16 +234,6 @@ class ReportesAlumnosAdminService
             ->groupBy('dow', 'hour')
             ->get();
 
-        /**
-         * Mapeo de DAYOFWEEK (MySQL)
-         * 1 = Domingo (no se usa)
-         * 2 = Lunes    -> índice 0
-         * 3 = Martes   -> índice 1
-         * 4 = Miércoles-> índice 2
-         * 5 = Jueves   -> índice 3
-         * 6 = Viernes  -> índice 4
-         * 7 = Sábado   (no se usa)
-         */
         $dowMap = [
             2 => 0,
             3 => 1,
@@ -292,21 +245,18 @@ class ReportesAlumnosAdminService
         $data = [];
 
         foreach ($rows as $r) {
-            // Ignorar fines de semana
             if (!isset($dowMap[$r->dow])) {
                 continue;
             }
 
-            // Ignorar horas fuera del rango
             if ($r->hour < 8 || $r->hour > 20) {
                 continue;
             }
 
-            // Formato esperado por ECharts: [x, y, valor]
             $data[] = [
-                $r->hour - 8,          // índice hora (0 = 08:00)
-                $dowMap[$r->dow],      // índice día
-                (int) $r->total        // cantidad de solicitudes
+                $r->hour - 8,
+                $dowMap[$r->dow],
+                (int) $r->total
             ];
         }
 
@@ -317,142 +267,113 @@ class ReportesAlumnosAdminService
         ];
     }
 
-
-    /* ============================================================
-       6) RIESGO POR ALUMNO
-    ============================================================ */
     public function getRiesgoPorAlumno($months = 6)
-{
-    [$start, $end] = $this->getRange($months);
-    $alumnos = $this->alumnosUserIds();
-
-    // ===============================
-    // 1) Estadísticas base
-    // ===============================
-    $stats = DB::table('prestamos as p')
-        ->join('users as u', 'u.idUser', '=', 'p.idUser')
-        ->join('persona as per', 'per.idPersona', '=', 'u.idPersona')
-        ->whereBetween('p.created_at', [$start, $end])
-        ->whereIn('p.idUser', $alumnos)
-        ->select(
-            'u.idUser as id',
-            DB::raw("CONCAT(per.Nombre,' ',per.apellido1) as name"),
-            'u.Email as email',
-            DB::raw('COUNT(*) as totalLoans'),
-            DB::raw("
-                SUM(
-                    CASE
-                        WHEN p.estado = 'APROBADO'
-                         AND p.fecha_fin < NOW()
-                        THEN 1
-                        ELSE 0
-                    END
-                ) as lateLoans
-            ")
-        )
-        ->groupBy('u.idUser','per.Nombre','per.apellido1','u.Email')
-        ->get();
-
-    // ===============================
-    // 2) Sanciones activas por alumno
-    // ===============================
-    $sanctions = DB::table('user_sancion as us')
-        ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
-        ->where('s.estado', 'ACTIVA')
-        ->select('us.idUser', DB::raw('COUNT(*) as total'))
-        ->groupBy('us.idUser')
-        ->get()
-        ->keyBy('idUser');
-
-    // ===============================
-    // 3) Construcción del resultado final
-    // ===============================
-    $out = [];
-
-    foreach ($stats as $u) {
-
-        $totalLoans = (int) $u->totalLoans;
-        $lateLoans  = (int) $u->lateLoans;
-
-        $lateRate = $totalLoans > 0
-            ? round(($lateLoans / $totalLoans) * 100, 1)
-            : 0;
-
-        $activeSanctions = isset($sanctions[$u->id])
-            ? (int) $sanctions[$u->id]->total
-            : 0;
-
-        // Regla de riesgo (simple y clara)
-        $riskScore = ($lateRate * 0.7) + ($activeSanctions * 15);
-
-        if ($riskScore >= 40) {
-            $riskLevel = 'high';
-        } elseif ($riskScore >= 20) {
-            $riskLevel = 'medium';
-        } else {
-            $riskLevel = 'low';
-        }
-
-        $out[] = [
-            'id' => (int) $u->id,
-            'name' => $u->name,
-            'email' => $u->email,
-            'totalLoans' => $totalLoans,
-            'lateReturnRate' => $lateRate,
-            'activeSanctions' => $activeSanctions,
-            'riskLevel' => $riskLevel
-        ];
-    }
-
-    return $out;
-}
-
-/* ============================================================
-   7) PRÉSTAMOS POR CARRERA  (para Chart.js)
-   Retorna: [{ carrera, total_prestamos }]
-   Nota: Para una sola carrera
-============================================================ */
-public function getPrestamosPorCarrera($months = 12)
-{
-    [$start, $end] = $this->getRange($months);
-    $alumnos = $this->alumnosUserIds();
-
-    return DB::table('prestamos as p')
-        ->whereIn('p.idUser', $alumnos)
-        ->whereBetween('p.created_at', [$start, $end])
-        ->selectRaw("'Sin carrera' as carrera, COUNT(*) as total_prestamos")
-        ->groupBy('carrera')
-        ->get();
-}
-
-/* ============================================================
-   8) EVOLUCIÓN PRÉSTAMOS ALUMNOS (línea)
-   Retorna: [{ periodo: 'YYYY-MM', total_prestamos }]
-============================================================ */
-public function getEvolucionPrestamosAlumnos($months = 6)
-{
-    [$start, $end] = $this->getRange($months);
-    $alumnos = $this->alumnosUserIds();
-
-    return DB::table('prestamos as p')
-        ->whereIn('p.idUser', $alumnos)
-        ->whereBetween('p.created_at', [$start, $end])
-        ->selectRaw("DATE_FORMAT(p.created_at, '%Y-%m') as periodo, COUNT(*) as total_prestamos")
-        ->groupBy('periodo')
-        ->orderBy('periodo')
-        ->get();
-}
-
-/* ============================================================
-   9) SANCIONES POR NIVEL (doughnut)
-   Retorna: [{ nivel: 'LEVE'|'MEDIA'|'GRAVE', total }]
-   OJO: en tu DB se llama 'sancions' y pivote 'user_sancion'
-============================================================ */
-public function getSancionesPorNivel($months = 12)
-{
+    {
+        [$start, $end] = $this->getRange($months);
         $alumnos = $this->alumnosUserIds();
 
-        // user_sancion no tiene timestamps, por lo tanto no filtrar por fecha aquí
+        $stats = DB::table('prestamos as p')
+            ->join('users as u', 'u.idUser', '=', 'p.idUser')
+            ->join('persona as per', 'per.idPersona', '=', 'u.idPersona')
+            ->whereBetween('p.created_at', [$start, $end])
+            ->whereIn('p.idUser', $alumnos)
+            ->select(
+                'u.idUser as id',
+                DB::raw("CONCAT(per.Nombre,' ',per.apellido1) as name"),
+                'u.Email as email',
+                DB::raw('COUNT(*) as totalLoans'),
+                DB::raw("
+                    SUM(
+                        CASE
+                            WHEN p.estado = 'APROBADO'
+                             AND p.fecha_fin < NOW()
+                            THEN 1
+                            ELSE 0
+                        END
+                    ) as lateLoans
+                ")
+            )
+            ->groupBy('u.idUser','per.Nombre','per.apellido1','u.Email')
+            ->get();
+
+        $sanctions = DB::table('user_sancion as us')
+            ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
+            ->where('s.estado', 'ACTIVA')
+            ->select('us.idUser', DB::raw('COUNT(*) as total'))
+            ->groupBy('us.idUser')
+            ->get()
+            ->keyBy('idUser');
+
+        $out = [];
+
+        foreach ($stats as $u) {
+
+            $totalLoans = (int) $u->totalLoans;
+            $lateLoans  = (int) $u->lateLoans;
+
+            $lateRate = $totalLoans > 0
+                ? round(($lateLoans / $totalLoans) * 100, 1)
+                : 0;
+
+            $activeSanctions = isset($sanctions[$u->id])
+                ? (int) $sanctions[$u->id]->total
+                : 0;
+
+            $riskScore = ($lateRate * 0.7) + ($activeSanctions * 15);
+
+            if ($riskScore >= 40) {
+                $riskLevel = 'high';
+            } elseif ($riskScore >= 20) {
+                $riskLevel = 'medium';
+            } else {
+                $riskLevel = 'low';
+            }
+
+            $out[] = [
+                'id' => (int) $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'totalLoans' => $totalLoans,
+                'lateReturnRate' => $lateRate,
+                'activeSanctions' => $activeSanctions,
+                'riskLevel' => $riskLevel
+            ];
+        }
+
+        return $out;
+    }
+
+    public function getPrestamosPorCarrera($months = 12)
+    {
+        [$start, $end] = $this->getRange($months);
+        $alumnos = $this->alumnosUserIds();
+
+        return DB::table('prestamos as p')
+            ->whereIn('p.idUser', $alumnos)
+            ->whereBetween('p.created_at', [$start, $end])
+            ->selectRaw("'Sin carrera' as carrera, COUNT(*) as total_prestamos")
+            ->groupBy('carrera')
+            ->get();
+    }
+
+    public function getEvolucionPrestamosAlumnos($months = 6)
+    {
+        [$start, $end] = $this->getRange($months);
+        $alumnos = $this->alumnosUserIds();
+
+        return DB::table('prestamos as p')
+            ->whereIn('p.idUser', $alumnos)
+            ->whereBetween('p.created_at', [$start, $end])
+            ->selectRaw("DATE_FORMAT(p.created_at, '%Y-%m') as periodo, COUNT(*) as total_prestamos")
+            ->groupBy('periodo')
+            ->orderBy('periodo')
+            ->get();
+    }
+
+    public function getSancionesPorNivel($months = 12)
+    {
+        $alumnos = $this->alumnosUserIds();
+
         return DB::table('user_sancion as us')
             ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
             ->whereIn('us.idUser', $alumnos)
@@ -460,18 +381,13 @@ public function getSancionesPorNivel($months = 12)
             ->groupBy(DB::raw("UPPER(s.nivel)"))
             ->orderByDesc('total')
             ->get();
-}
+    }
 
-/* ============================================================
-   10) RANKING ALUMNOS (bar + tabla)
-   Retorna: [{ nombre, email, carrera, total_prestamos, sanciones }]
-============================================================ */
     public function getRankingAlumnos($limit = 10, $months = 12)
     {
         [$start, $end] = $this->getRange($months);
         $alumnos = $this->alumnosUserIds();
 
-        // Prestamos por alumno
         $prestamos = DB::table('prestamos as p')
             ->join('users as u', 'u.idUser', '=', 'p.idUser')
             ->join('persona as per', 'per.idPersona', '=', 'u.idPersona')
@@ -486,7 +402,6 @@ public function getSancionesPorNivel($months = 12)
             ")
             ->groupBy('u.idUser','per.Nombre','per.apellido1','per.apellido2','u.Email');
 
-        // Sanciones por alumno
         $sanciones = DB::table('user_sancion as us')
             ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
             ->whereIn('us.idUser', $alumnos)
@@ -501,6 +416,4 @@ public function getSancionesPorNivel($months = 12)
             ->limit($limit)
             ->get();
     }
-
-
 }

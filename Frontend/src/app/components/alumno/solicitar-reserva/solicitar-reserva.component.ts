@@ -247,6 +247,29 @@ export class SolicitarReservaComponent {
       this.cargarGrupos();
     });
 
+    this.api.getAsignaturas(token).subscribe((data: any[]) => {
+      const normalizadas = data.map((a: any) => ({
+        idAsignatura: Number(a.idAsignatura),
+        nombre: a.nombre
+      }));
+      this.asignaturas.set(normalizadas);
+    });
+
+    this.api.getBloques(token).subscribe(data => {
+      this.bloques = data
+        .filter((b: any) => b.idBloque <= 5)
+        .map((b: any) => ({
+          id: b.idBloque,
+          texto: `Bloque ${b.idBloque} (${cortarHora(b.hora_inicio)} – ${cortarHora(b.hora_fin)})`
+        }));
+    });
+
+    this.form.get('tipo_solicitud')!.valueChanges.subscribe(v => {
+      this.tipoSolicitud.set(v as any);
+      this.minFechaInicio = this.calcularMinFecha(v as any);
+    });
+  }
+
   cargarGrupos(): void {
     this.grupoSrv.getGrupos().subscribe({
       next: (grupos: Grupo[]) => {
@@ -267,26 +290,6 @@ export class SolicitarReservaComponent {
       this.grupoSeleccionado = grupo;
       this.integrantesSeleccionados = (grupo.usuarios || []).map((u: any) => u.id);
     }
-  }
-        idAsignatura: Number(a.idAsignatura),
-        nombre: a.nombre
-      }));
-      this.asignaturas.set(normalizadas);
-    });
-
-    this.api.getBloques(token).subscribe(data => {
-      this.bloques = data
-        .filter((b: any) => b.idBloque <= 5)
-        .map((b: any) => ({
-          id: b.idBloque,
-          texto: `Bloque ${b.idBloque} (${cortarHora(b.hora_inicio)} – ${cortarHora(b.hora_fin)})`
-        }));
-    });
-
-    this.form.get('tipo_solicitud')!.valueChanges.subscribe(v => {
-      this.tipoSolicitud.set(v as any);
-      this.minFechaInicio = this.calcularMinFecha(v as any);
-    });
   }
 
   // ✅ ahora OTROS es null

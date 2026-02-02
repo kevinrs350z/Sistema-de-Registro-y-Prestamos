@@ -147,7 +147,7 @@
 
       <div class="grupo-select">
         <label>Grupo:
-          <select (change)="onGrupoChange($event.target.value)">
+          <select #grupoSelect (change)="onGrupoChange(grupoSelect.value)">
             <option value="nuevo">-- Sin grupo / Manual --</option>
             <option *ngFor="let grupo of grupos()" [value]="grupo.id">{{ grupo.nombre }}</option>
           </select>

@@ -17,7 +17,7 @@ export class NavbarAdminComponent {
   navbarVisible = true;
   private lastScrollTop = 0;
 
-  private auth = inject(AuthService);
+  public auth = inject(AuthService);
   private notify = inject(NotificationService);
 
   constructor(private router: Router) {}

@@ -8,6 +8,10 @@ class CreateGrupoUsuarioTable extends Migration
 {
     public function up()
     {
+        if (Schema::hasTable('grupo_usuario')) {
+            return;
+        }
+        
         Schema::create('grupo_usuario', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('grupo_id');

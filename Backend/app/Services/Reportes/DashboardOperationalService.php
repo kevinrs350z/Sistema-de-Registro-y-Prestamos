@@ -1,9 +1,8 @@
 <?php
-
 namespace App\Services\Reportes;
 
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardOperationalService
 {

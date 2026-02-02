@@ -98,7 +98,7 @@
               </td>
               <td class="td-estudiante">
                 <div class="estudiante-info-pro">
-                  <div class="estudiante-avatar-pro">{{ a.nombre?.charAt(0) || 'U' }}</div>
+                  <div class="estudiante-avatar-pro">{{ a.nombre ? a.nombre.charAt(0) : 'U' }}</div>
                   <span class="estudiante-nombre-pro">{{ a.nombre }}</span>
                 </div>
               </td>

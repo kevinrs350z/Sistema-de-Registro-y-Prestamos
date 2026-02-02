@@ -8,6 +8,10 @@ class CreateGrupoPrestamoTable extends Migration
 {
     public function up()
     {
+        if (Schema::hasTable('grupo_prestamo')) {
+            return;
+        }
+        
         Schema::create('grupo_prestamo', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('grupo_id');
@@ -15,7 +19,7 @@ class CreateGrupoPrestamoTable extends Migration
             $table->timestamps();
 
             $table->foreign('grupo_id')->references('id')->on('grupos')->onDelete('cascade');
-            $table->foreign('prestamo_id')->references('id')->on('prestamos')->onDelete('cascade');
+            $table->foreign('prestamo_id')->references('idPrestamo')->on('prestamos')->onDelete('cascade');
             $table->unique(['grupo_id', 'prestamo_id']);
         });
     }

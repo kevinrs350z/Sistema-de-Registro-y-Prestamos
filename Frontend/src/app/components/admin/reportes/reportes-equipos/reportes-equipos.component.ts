@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { Chart } from 'chart.js/auto';
 import { ReportesService } from '../../../../services/reportes.service';
 import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ExportButtonsComponent } from '../export-buttons/export-buttons.component';
 import { ExportService, ReporteData } from '../../../../services/export.service';
 
@@ -44,7 +45,7 @@ Chart.defaults.plugins.legend.display = false;
   standalone: true,
   templateUrl: './reportes-equipos.component.html',
   styleUrls: ['./reportes-equipos.component.css'],
-  imports: [CommonModule, DatePipe, ExportButtonsComponent],
+  imports: [CommonModule, DatePipe, ExportButtonsComponent, FormsModule],
   providers: [DatePipe]
 })
 export class ReportesEquiposComponent implements OnInit, OnDestroy {
