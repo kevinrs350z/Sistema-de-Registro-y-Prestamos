@@ -1,4 +1,4 @@
-import { Component, inject, HostListener, HostBinding } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
@@ -14,30 +14,11 @@ import { NotificationService } from '../../../services/notification.service';
 export class NavbarAdminComponent {
 
   menuAbierto = false;
-  navbarVisible = true;
-  private lastScrollTop = 0;
 
   public auth = inject(AuthService);
   private notify = inject(NotificationService);
 
   constructor(private router: Router) {}
-
-  @HostBinding('class.navbar-hidden')
-  get isHidden() { return !this.navbarVisible; }
-
-  @HostListener('window:scroll', [])
-  onScroll() {
-    const st = window.pageYOffset || document.documentElement.scrollTop;
-    if (st > this.lastScrollTop && st > 100) {
-      // Scroll hacia abajo y pasó 100px
-      this.navbarVisible = false;
-      this.menuAbierto = false; // Cerrar menú si está abierto
-    } else {
-      // Scroll hacia arriba
-      this.navbarVisible = true;
-    }
-    this.lastScrollTop = st <= 0 ? 0 : st;
-  }
 
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;

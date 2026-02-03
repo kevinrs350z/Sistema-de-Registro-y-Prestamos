@@ -9,6 +9,9 @@ use App\Http\Requests\TipoEquipo\UpdateTipoEquipoRequest;
 use App\Http\Requests\TipoEquipo\StoreTipoEquipoRequest;
 use App\Models\TipoEquipo;
 use App\Services\PrestamoService;
+use App\Enums\EstadoPrestamo;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class TipoEquipoController extends Controller
 {
@@ -96,6 +99,33 @@ class TipoEquipoController extends Controller
             ])
             ->get();
 
+        $estadosActivos = [
+            EstadoPrestamo::PENDIENTE,
+            EstadoPrestamo::APROBADO,
+            EstadoPrestamo::PENDIENTE_ENTREGA,
+            EstadoPrestamo::ENTREGADO,
+        ];
+
+        $proximas = DB::table('prestamo_equipo as pe')
+            ->join('equipos as e', 'e.id', '=', 'pe.idEquipo')
+            ->join('prestamos as p', 'p.idPrestamo', '=', 'pe.idPrestamo')
+            ->whereNull('e.deleted_at')
+            ->where('pe.devuelto', false)
+            ->whereIn('p.estado', $estadosActivos)
+            ->whereNotNull('p.fecha_fin')
+            ->groupBy('e.tipo_equipo_id')
+            ->select('e.tipo_equipo_id', DB::raw('MIN(p.fecha_fin) as proxima_fecha'))
+            ->pluck('proxima_fecha', 'e.tipo_equipo_id')
+            ->map(function ($fecha) {
+                try {
+                    return Carbon::parse($fecha)->toIso8601String();
+                } catch (\Throwable $e) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->toArray();
+
         $user = auth('sanctum')->user();
         $bloqueos = [];
 
@@ -103,7 +133,7 @@ class TipoEquipoController extends Controller
             $bloqueos = $prestamoService->obtenerBloqueoPorTipoUsuario($user->idUser);
         }
 
-        $tipos = $tipos->map(function ($t) use ($bloqueos) {
+        $tipos = $tipos->map(function ($t) use ($bloqueos, $proximas) {
             $info = $bloqueos[$t->id] ?? null;
             $bloqueado = (bool) ($info['bloqueado'] ?? false);
             $grupoRelacionados = $info['grupo_relacionados'] ?? [$t->id];
@@ -115,6 +145,7 @@ class TipoEquipoController extends Controller
                     ? 'Límite alcanzado para este tipo de equipo (incluyendo relacionados).'
                     : null,
                 'grupo_relacionados' => $grupoRelacionados,
+                'proxima_disponibilidad' => $proximas[$t->id] ?? null,
             ]);
         });
 

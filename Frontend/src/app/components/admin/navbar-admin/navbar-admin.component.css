@@ -1,25 +1,18 @@
 /* ======== NAVBAR GENERAL ======== */
 .navbar-admin {
   width: 100%;
-  height: 130px;
   background-color: #446BA9; /* Azul institucional */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 50px;
+  padding: 12px 40px;
   position: fixed;
   top: 0;
   left: 0;
   z-index: 1100;
-  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.25);
-  border-bottom: 2px solid rgba(145, 181, 232, 0.3);
+  box-shadow: 0 8px 22px rgba(2, 6, 23, 0.22);
+  border-bottom: 1px solid rgba(145, 181, 232, 0.24);
   font-family: "Poppins", sans-serif;
-  transition: transform 0.3s ease;
-}
-
-/* ======== HOST OCULTO ======== */
-:host(.navbar-hidden) .navbar-admin {
-  transform: translateY(-100%);
 }
 
 /* ======== LADO IZQUIERDO ======== */
@@ -32,8 +25,8 @@
 
 /* Botón hamburguesa */
 .icon-btn {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -78,8 +71,8 @@
 }
 
 .home-btn {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.12);
@@ -125,8 +118,8 @@
 
 .brand {
   color: #fff;
-  font-weight: 800;
-  font-size: 24px;
+  font-weight: 700;
+  font-size: 20px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
@@ -140,10 +133,10 @@
   background-color: #F5A474;
   color: white;
   border: none;
-  font-weight: 700;
-  padding: 12px 26px;
-  border-radius: 14px;
-  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 12px;
+  font-size: 15px;
   cursor: pointer;
   transition: all 0.25s ease;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
@@ -158,8 +151,7 @@
 @media (max-width: 768px) {
   .navbar-admin {
     flex-direction: column;
-    padding: 20px;
-    height: auto;
+    padding: 16px 20px;
     gap: 10px;
   }
 
@@ -168,11 +160,11 @@
   }
 
   .brand {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .btn-logout {
-    padding: 10px 20px;
-    font-size: 15px;
+    padding: 9px 18px;
+    font-size: 14px;
   }
 }

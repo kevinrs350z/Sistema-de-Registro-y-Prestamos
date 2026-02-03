@@ -12,6 +12,8 @@
         <option value="PENDIENTE">Pendiente</option>
         <option value="APROBADO">Aprobado</option>
         <option value="RECHAZADO">Rechazado</option>
+        <option value="ENTREGADO">Entregado</option>
+        <option value="DEVUELTO">Devuelto</option>
       </select>
 
       <select (change)="ordenarPorFecha($event)">
@@ -37,6 +39,7 @@
         </div>
 
         <div class="detalle">
+          <p><b>Asignatura:</b> {{ solicitudSeleccionada().asignatura }}</p>
           <p><b>Tipo:</b> {{ solicitudSeleccionada().tipo }}</p>
 
           <p>
@@ -60,7 +63,6 @@
             *ngIf="solicitudSeleccionada().equipos.length > 0"
           >
             <li *ngFor="let eq of solicitudSeleccionada().equipos">
-              <i class="bi bi-box-seam icono-equipo"></i>
               {{ eq.codigo }} — {{ eq.nombre }}
             </li>
           </ul>
@@ -76,12 +78,12 @@
     <div class="lista-solicitudes">
       <div
         class="solicitud-card"
-        *ngFor="let s of solicitudesFiltradas()"
+        *ngFor="let s of solicitudesPaginadas()"
         [class.active]="solicitudSeleccionada() === s"
         (click)="seleccionarSolicitud(s)"
       >
         <div class="card-header">
-          <h3>Solicitud #{{ s.id }} — {{ s.tipo }}</h3>
+          <h3>Solicitud #{{ s.id }} — {{ s.asignatura }}</h3>
 
           <!-- 🔥 ESTADO -->
           <span class="estado" [ngClass]="getEstadoClass(s.estado)">
@@ -90,15 +92,24 @@
         </div>
 
         <div class="card-body">
+          <div class="detalle-row">
+            <span class="detalle-item">{{ s.tipo }}</span>
+            <span class="detalle-item">{{ s.bloqueTxt || '—' }}</span>
+          </div>
           <p class="fecha">
-            📅
             {{
               s.fecha_fin && s.fecha_inicio !== s.fecha_fin
-                ? (s.fecha_inicio | date : 'dd/MM') +
+                ? 'Periodo: ' + (s.fecha_inicio | date : 'dd/MM') +
                   ' - ' +
                   (s.fecha_fin | date : 'dd/MM')
-                : (s.fecha_inicio | date : 'dd/MM')
+                : 'Fecha: ' + (s.fecha_inicio | date : 'dd/MM')
             }}
+          </p>
+          <p class="fecha" *ngIf="s.created_at">
+            Solicitado: {{ s.created_at | date : 'dd/MM/yyyy' }}
+          </p>
+          <p class="extension-badge" *ngIf="s.tieneExtension">
+            Plazo extendido
           </p>
         </div>
       </div>
@@ -106,6 +117,16 @@
       <p *ngIf="solicitudesFiltradas().length === 0" class="vacio">
         No hay solicitudes con esos filtros.
       </p>
+
+      <div class="paginacion" *ngIf="solicitudesFiltradas().length > pageSize">
+        <button type="button" (click)="cambiarPagina(-1)" [disabled]="currentPage() === 1">
+          Anterior
+        </button>
+        <span>Página {{ currentPage() }} de {{ totalPages() }}</span>
+        <button type="button" (click)="cambiarPagina(1)" [disabled]="currentPage() === totalPages()">
+          Siguiente
+        </button>
+      </div>
     </div>
 
     <!-- ================= DETALLE DESKTOP ================= -->
@@ -117,6 +138,7 @@
       <h2>Detalle de la solicitud</h2>
 
       <div class="detalle">
+        <p><b>Asignatura:</b> {{ solicitudSeleccionada().asignatura }}</p>
         <p><b>Tipo:</b> {{ solicitudSeleccionada().tipo }}</p>
 
         <p>
@@ -140,7 +162,6 @@
           *ngIf="solicitudSeleccionada().equipos.length > 0; else sinEquipos"
         >
           <li *ngFor="let eq of solicitudSeleccionada().equipos">
-            <i class="bi bi-box-seam icono-equipo"></i>
             {{ eq.codigo }} — {{ eq.nombre }}
           </li>
         </ul>

@@ -5,9 +5,10 @@
       type="text"
       placeholder="Buscar por nombre, equipo u observación..."
       [(ngModel)]="filtroBusqueda"
+      (ngModelChange)="resetPaginacion()"
     />
 
-    <select [(ngModel)]="orden">
+    <select [(ngModel)]="orden" (ngModelChange)="resetPaginacion()">
       <option value="recientes">Más recientes</option>
       <option value="antiguas">Más antiguas</option>
     </select>
@@ -28,7 +29,7 @@
       <div class="lista-solicitudes scroll-columna">
         <div
           class="solicitud-card"
-          *ngFor="let solicitud of prestamosPendientes"
+          *ngFor="let solicitud of paginaPendientesLista"
           (click)="seleccionarSolicitud(solicitud)"
           [class.activa]="solicitudSeleccionada?.id === solicitud.id"
         >
@@ -41,7 +42,7 @@
             }">{{ solicitud.estado }}</span>
           </div>
 
-          <p class="detalle">{{ solicitud.fechaSolicitud | date:'mediumDate' }}</p>
+          <p class="detalle">{{ formatearFecha(solicitud.fechaSolicitud) }}</p>
 
           <p class="resumen" *ngIf="equiposPendientesDe(solicitud).length">
             Restan {{ equiposPendientesDe(solicitud).length }} equipos por devolver.
@@ -51,6 +52,28 @@
         <p *ngIf="prestamosPendientes.length === 0" class="sin-solicitudes">
           No hay solicitudes pendientes para los filtros aplicados.
         </p>
+      </div>
+
+      <div class="paginacion" *ngIf="prestamosPendientes.length > tamanioPagina">
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaPendientes(paginaPendientes - 1)"
+          [disabled]="paginaPendientes === 1"
+        >
+          Anterior
+        </button>
+
+        <span class="paginacion-info">
+          Página {{ paginaPendientes }} de {{ totalPaginasPendientes }}
+        </span>
+
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaPendientes(paginaPendientes + 1)"
+          [disabled]="paginaPendientes === totalPaginasPendientes"
+        >
+          Siguiente
+        </button>
       </div>
     </div>
 
@@ -63,7 +86,7 @@
       <div class="lista-solicitudes scroll-columna">
         <div
           class="solicitud-card devuelto"
-          *ngFor="let solicitud of prestamosDevueltos"
+          *ngFor="let solicitud of paginaDevueltosLista"
           (click)="seleccionarSolicitud(solicitud)"
           [class.activa]="solicitudSeleccionada?.id === solicitud.id"
         >
@@ -72,13 +95,35 @@
             <span class="estado devuelto">Devuelto</span>
           </div>
 
-          <p class="detalle">{{ solicitud.fechaSolicitud | date:'mediumDate' }}</p>
+          <p class="detalle">{{ formatearFecha(solicitud.fechaSolicitud) }}</p>
           <p class="codigo">{{ solicitud.equiposDetallados.length }} equipos devueltos</p>
         </div>
 
         <p *ngIf="prestamosDevueltos.length === 0" class="sin-solicitudes">
           No hay solicitudes devueltas para los filtros aplicados.
         </p>
+      </div>
+
+      <div class="paginacion" *ngIf="prestamosDevueltos.length > tamanioPagina">
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaDevueltos(paginaDevueltos - 1)"
+          [disabled]="paginaDevueltos === 1"
+        >
+          Anterior
+        </button>
+
+        <span class="paginacion-info">
+          Página {{ paginaDevueltos }} de {{ totalPaginasDevueltos }}
+        </span>
+
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaDevueltos(paginaDevueltos + 1)"
+          [disabled]="paginaDevueltos === totalPaginasDevueltos"
+        >
+          Siguiente
+        </button>
       </div>
     </div>
   </div>
@@ -117,36 +162,35 @@
         <ng-container *ngIf="sel.tipo === 'FUERA'">
           <div class="detalle-item meta">
             <span class="label">Periodo</span>
-            <span class="valor">{{ sel.periodo || '—' }}</span>
+            <span class="valor">{{ formatearPeriodo(sel.fechaInicio, sel.fechaFin) }}</span>
           </div>
         </ng-container>
       </div>
 
       <div class="equipos-columns">
+        <!-- Solo mostrar pendientes si hay equipos pendientes -->
         <div class="equipos-list" *ngIf="equiposPendientesDe(sel) as pendientes">
-          <div class="equipos-list-header">
-            <h4>Pendientes de devolución</h4>
-            <span class="contador" *ngIf="pendientes.length">{{ pendientes.length }}</span>
-          </div>
-
-          <div
-            class="equipo-item"
-            *ngFor="let eq of pendientes"
-            [class.activa]="equipoSeleccionado?.equipo?.id === eq.id"
-          >
-            <div>
-              <p class="nombre">{{ eq.nombre }}</p>
-              <p class="codigo">Código: {{ eq.codigoActivo }}</p>
+          <ng-container *ngIf="pendientes.length > 0">
+            <div class="equipos-list-header">
+              <h4>Pendientes de devolución</h4>
+              <span class="contador">{{ pendientes.length }}</span>
             </div>
 
-            <button class="btn-devolver-equipo" (click)="devolverEquipo(sel.id, eq.id)">
-              Marcar devuelto
-            </button>
-          </div>
+            <div
+              class="equipo-item"
+              *ngFor="let eq of pendientes"
+              [class.activa]="equipoSeleccionado?.equipo?.id === eq.id"
+            >
+              <div>
+                <p class="nombre">{{ eq.nombre }}</p>
+                <p class="codigo">Código: {{ eq.codigoActivo }}</p>
+              </div>
 
-          <p class="sin-equipos" *ngIf="pendientes.length === 0">
-            Todos los equipos fueron devueltos.
-          </p>
+              <button class="btn-devolver-equipo" (click)="devolverEquipo(sel.id, eq.id)">
+                Marcar devuelto
+              </button>
+            </div>
+          </ng-container>
         </div>
 
         <div class="equipos-list" *ngIf="equiposDevueltosDe(sel) as devueltos">

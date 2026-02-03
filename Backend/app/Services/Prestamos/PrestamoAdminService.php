@@ -326,7 +326,8 @@ class PrestamoAdminService
         return Prestamo::with([
             'user.persona',
             'equipos.tipo',
-            'bloquePrestamo.bloque'
+            'bloquePrestamo.bloque',
+            'integrantes.persona'
         ])
         ->whereIn('estado', [
             EstadoPrestamo::PENDIENTE,
@@ -344,6 +345,18 @@ class PrestamoAdminService
                         return optional($bp->bloque)->nombre ?? "Bloque {$bp->idBloque}";
                     })
                     ->join(', ');
+            }
+
+            // Mapear integrantes del equipo
+            $integrantesData = [];
+            if ($p->integrantes && $p->integrantes->count() > 0) {
+                $integrantesData = $p->integrantes->map(function ($integrante) {
+                    return [
+                        'idUser' => $integrante->idUser,
+                        'nombre' => $integrante->persona?->Nombre ?? 'Sin nombre',
+                        'email' => $integrante->persona?->Email ?? '',
+                    ];
+                })->toArray();
             }
 
             return [
@@ -370,6 +383,8 @@ class PrestamoAdminService
                         'devuelto' => (bool) ($e->pivot->devuelto ?? false),
                     ];
                 }),
+
+                'integrantes' => $integrantesData,
             ];
         });
 

@@ -233,15 +233,15 @@ h2 {
 }
 
 .estado-entregado {
-  background: #e8f5e9;
-  border: 2px solid #4caf50;
+  background: #c8d2e1;
+  border: 2px solid #a8b5c8;
   border-radius: 12px;
   padding: 15px;
   text-align: center;
 }
 
 .estado-entregado p {
-  color: #2e7d32;
+  color: #1f2a37;
   font-weight: 700;
   margin: 0;
 }
@@ -537,4 +537,85 @@ h2 {
   margin: 0;
   color: #374151;
   font-size: 0.9rem;
+}
+
+/* ================================
+   INTEGRANTES DEL EQUIPO
+================================ */
+.integrantes-box {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 20px;
+}
+
+.integrantes-box h4 {
+  color: #0369a1;
+  font-size: 1rem;
+  margin: 0 0 12px 0;
+}
+
+.integrantes-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.integrante-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #e0f2fe;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: 0.2s ease;
+}
+
+.integrante-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.integrante-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.integrante-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.integrante-nombre {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.integrante-email {
+  color: #6b7280;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -29,6 +29,8 @@ export class MisSolicitudesComponent implements OnInit {
   estadoFiltro = signal('');
   orden = signal<'asc' | 'desc'>('desc');
   solicitudSeleccionada = signal<any | null>(null);
+  pageSize = 10;
+  currentPage = signal(1);
 
   bloques = [
     { id: 1, texto: 'Bloque 1 (08:15 – 09:45)' },
@@ -50,13 +52,27 @@ export class MisSolicitudesComponent implements OnInit {
       lista = lista.filter(s => s.estado === filtro);
     }
 
+    const toTime = (s: any) => {
+      const base = s.created_at || s.fecha_inicio || s.fecha_fin || null;
+      return base ? new Date(base).getTime() : 0;
+    };
+
     lista.sort((a, b) =>
-      orden === 'asc'
-        ? (a.fecha_inicio || '').localeCompare(b.fecha_inicio || '')
-        : (b.fecha_inicio || '').localeCompare(a.fecha_inicio || '')
+      orden === 'asc' ? toTime(a) - toTime(b) : toTime(b) - toTime(a)
     );
 
     return lista;
+  });
+
+  totalPages = computed(() => {
+    const total = this.solicitudesFiltradas().length;
+    return Math.max(1, Math.ceil(total / this.pageSize));
+  });
+
+  solicitudesPaginadas = computed(() => {
+    const page = this.currentPage();
+    const start = (page - 1) * this.pageSize;
+    return this.solicitudesFiltradas().slice(start, start + this.pageSize);
   });
 
   ngOnInit(): void {
@@ -76,7 +92,12 @@ export class MisSolicitudesComponent implements OnInit {
           const bloqueTxt =
             s.bloque_prestamo?.length > 0
               ? s.bloque_prestamo
-                  .map((bp: any) => bp.bloque?.nombre || `Bloque ${bp.idBloque}`)
+                  .map((bp: any) => {
+                    const nombre = bp.bloque?.nombre || `Bloque ${bp.idBloque}`;
+                    const inicio = bp.bloque?.hora_inicio?.slice(0, 5);
+                    const fin = bp.bloque?.hora_fin?.slice(0, 5);
+                    return inicio && fin ? `${nombre} (${inicio}–${fin})` : nombre;
+                  })
                   .join(', ')
               : '—';
 
@@ -94,11 +115,19 @@ export class MisSolicitudesComponent implements OnInit {
           return {
             id: s.idPrestamo,
             tipo: s.tipo === 'DENTRO' ? 'Laboratorio' : 'Externo',
+            asignatura:
+              s.asignatura_nombre ||
+              s.asignaturaNombre ||
+              s.bloque_prestamo?.[0]?.asignatura?.nombre ||
+              (s.otra_motivo ? `OTROS: ${s.otra_motivo}` : '—'),
             fecha_inicio: s.fecha_inicio || null,
             fecha_fin: s.fecha_fin || null,
+            created_at: s.created_at || null,
             bloqueTxt,
             equipos,
             observacion: s.observacion ?? 'Sin observación',
+            tieneExtension: s.tiene_extension ?? false,
+            ultimaExtension: s.ultima_extension ?? null,
 
             // 🔥 NORMALIZACIÓN CLAVE
             estado: (s.estado ?? 'PENDIENTE').toUpperCase(),
@@ -106,6 +135,7 @@ export class MisSolicitudesComponent implements OnInit {
         });
 
         this.solicitudes.set(solicitudesMapeadas);
+        this.currentPage.set(1);
       },
       error: (err) => console.error('Error al cargar solicitudes:', err),
     });
@@ -130,6 +160,10 @@ export class MisSolicitudesComponent implements OnInit {
         return 'rechazada';
       case 'DEVUELTO':
         return 'devuelto';
+      case 'ENTREGADO':
+        return 'entregado';
+      case 'PENDIENTE_ENTREGA':
+        return 'pendiente-entrega';
       default:
         return '';
     }
@@ -141,11 +175,20 @@ export class MisSolicitudesComponent implements OnInit {
   filtrarEstado(event: Event) {
     const value = (event.target as HTMLSelectElement).value;
     this.estadoFiltro.set(value);
+    this.currentPage.set(1);
   }
 
   ordenarPorFecha(event: Event) {
     const value = (event.target as HTMLSelectElement).value as 'asc' | 'desc';
     this.orden.set(value);
+    this.currentPage.set(1);
+  }
+
+  cambiarPagina(delta: number) {
+    const next = this.currentPage() + delta;
+    const total = this.totalPages();
+    if (next < 1 || next > total) return;
+    this.currentPage.set(next);
   }
 
   seleccionarSolicitud(s: any) {

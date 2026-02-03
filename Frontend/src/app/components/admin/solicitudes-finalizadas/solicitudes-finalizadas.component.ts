@@ -13,6 +13,8 @@ type AdminSolicitud = {
   tipo: 'DENTRO' | 'FUERA';
   bloque: string;
   periodo: string;
+  fechaInicio: string | null;
+  fechaFin: string | null;
   observacion: string;
 
   equiposDetallados: {
@@ -57,6 +59,11 @@ export class SolicitudesFinalizadasComponent implements OnInit {
 
   filtroBusqueda = '';
   orden: 'recientes' | 'antiguas' = 'recientes';
+  
+  // Paginación
+  paginaPendientes = 1;
+  paginaDevueltos = 1;
+  tamanioPagina = 6;
 
   mostrarModal = false;
   motivoFinalizar = '';
@@ -81,12 +88,15 @@ export class SolicitudesFinalizadasComponent implements OnInit {
       next: (data: any[]) => {
         this.solicitudes = data.map((p): AdminSolicitud => {
 
+          // Si el estado es DEVUELTO, todos los equipos se consideran devueltos
+          const esDevuelto = p.estado === 'DEVUELTO';
+
           const equiposDetallados = Array.isArray(p.equipos)
             ? p.equipos.map((eq: any) => ({
                 id: eq.id,
                 nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
                 codigoActivo: eq.codigo_activo ?? eq.codigo ?? '—',
-                devuelto: Boolean(eq.devuelto)
+                devuelto: esDevuelto ? true : Boolean(eq.devuelto)
 
               }))
             : [];
@@ -98,6 +108,8 @@ export class SolicitudesFinalizadasComponent implements OnInit {
             tipo: p.tipo,
             bloque: p.bloquePrestamo ?? '—',
             periodo: `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}`,
+            fechaInicio: p.fecha_inicio ?? null,
+            fechaFin: p.fecha_fin ?? null,
             equiposDetallados,
             observacion: p.observacion ?? 'Sin observación',
             fechaSolicitud: p.created_at ?? '',
@@ -185,6 +197,60 @@ export class SolicitudesFinalizadasComponent implements OnInit {
 
   get prestamosDevueltos(): AdminSolicitud[] {
     return this.solicitudesFiltradas.filter((solicitud) => solicitud.estado === 'DEVUELTO');
+  }
+
+  // === Paginación ===
+  get totalPaginasPendientes(): number {
+    return Math.max(1, Math.ceil(this.prestamosPendientes.length / this.tamanioPagina));
+  }
+
+  get totalPaginasDevueltos(): number {
+    return Math.max(1, Math.ceil(this.prestamosDevueltos.length / this.tamanioPagina));
+  }
+
+  get paginaPendientesLista(): AdminSolicitud[] {
+    const inicio = (this.paginaPendientes - 1) * this.tamanioPagina;
+    return this.prestamosPendientes.slice(inicio, inicio + this.tamanioPagina);
+  }
+
+  get paginaDevueltosLista(): AdminSolicitud[] {
+    const inicio = (this.paginaDevueltos - 1) * this.tamanioPagina;
+    return this.prestamosDevueltos.slice(inicio, inicio + this.tamanioPagina);
+  }
+
+  irPaginaPendientes(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginasPendientes) return;
+    this.paginaPendientes = pagina;
+  }
+
+  irPaginaDevueltos(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginasDevueltos) return;
+    this.paginaDevueltos = pagina;
+  }
+
+  resetPaginacion(): void {
+    this.paginaPendientes = 1;
+    this.paginaDevueltos = 1;
+  }
+
+  // Formatear fecha para mostrar dd/MM/yyyy
+  formatearFecha(fecha: string | null): string {
+    if (!fecha) return '—';
+    const d = new Date(fecha);
+    if (isNaN(d.getTime())) return '—';
+    const dia = d.getDate().toString().padStart(2, '0');
+    const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+    const anio = d.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
+
+  // Formatear periodo con fechas legibles
+  formatearPeriodo(fechaInicio: string | null, fechaFin: string | null): string {
+    const inicio = this.formatearFecha(fechaInicio);
+    const fin = this.formatearFecha(fechaFin);
+    if (inicio === '—' && fin === '—') return '—';
+    if (inicio === fin) return inicio;
+    return `${inicio} - ${fin}`;
   }
 
   equiposPendientesDe(solicitud: AdminSolicitud): AdminSolicitud['equiposDetallados'] {
