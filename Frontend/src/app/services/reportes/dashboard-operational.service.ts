@@ -28,4 +28,17 @@ export class DashboardOperationalService {
   getSaludSistema(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/salud`);
   }
+
+  // KPIs de inventario, mantenimientos y sanciones
+  getKPIsInventario(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/kpis-inventario`);
+  }
+
+  getKPIsMantenimientos(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/kpis-mantenimientos`);
+  }
+
+  getKPIsSanciones(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/kpis-sanciones`);
+  }
 }

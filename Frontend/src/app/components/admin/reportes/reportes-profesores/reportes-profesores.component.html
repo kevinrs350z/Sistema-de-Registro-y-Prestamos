@@ -1,20 +1,12 @@
 <div class="report-page report-animate">
 <div id="profesoresReport" class="reportes-wrapper container report-surface py-4">
 
-  <!-- HEADER -->
-  <div class="report-header report-section-header">
-    <div class="header-content">
-      <h2 class="report-main-title report-section-title">Análisis de Profesores</h2>
-      <p class="report-subtitle report-section-subtitle">Estadísticas de préstamos y equipos por docente</p>
-    </div>
+  <!-- Filtros BI con exportación integrada -->
+  <app-report-filters
+    [onExportPDF]="onExportPDF.bind(this)"
+    [onExportExcel]="onExportExcel.bind(this)">
+  </app-report-filters>
 
-    <div class="export-actions report-section-actions">
-      <app-export-buttons
-        [onExportPDF]="onExportPDF.bind(this)"
-        [onExportExcel]="onExportExcel.bind(this)">
-      </app-export-buttons>
-    </div>
-  </div>
 
   <!-- ===================== -->
   <!-- GRÁFICOS -->
@@ -30,8 +22,24 @@
         </div>
       </div>
       <div class="chart-body">
-        <div *ngIf="loadingPrestamos" class="chart-loading">Cargando gráfico…</div>
-        <div *ngIf="!loadingPrestamos" id="profesorPrestamoChart" class="echart"></div>
+        <!-- Skeleton Loading -->
+        <div *ngIf="loadingPrestamos && !errorPrestamos" class="skeleton-container">
+          <div class="skeleton-bar-chart">
+            <div class="skeleton-bar" style="width: 85%"></div>
+            <div class="skeleton-bar" style="width: 70%"></div>
+            <div class="skeleton-bar" style="width: 60%"></div>
+            <div class="skeleton-bar" style="width: 50%"></div>
+            <div class="skeleton-bar" style="width: 40%"></div>
+          </div>
+        </div>
+        <!-- Error State -->
+        <div *ngIf="errorPrestamos" class="error-state">
+          <i class="bi bi-exclamation-triangle"></i>
+          <p>{{ errorPrestamos }}</p>
+          <button class="retry-btn" (click)="cargarGraficoPrestamos()">Reintentar</button>
+        </div>
+        <!-- Chart -->
+        <div *ngIf="!loadingPrestamos && !errorPrestamos" id="profesorPrestamoChart" class="echart"></div>
       </div>
     </div>
 
@@ -44,8 +52,23 @@
         </div>
       </div>
       <div class="chart-body">
-        <div *ngIf="loadingTendencia" class="chart-loading">Cargando gráfico…</div>
-        <div *ngIf="!loadingTendencia" id="profesorTendenciaChart" class="echart"></div>
+        <!-- Skeleton Loading -->
+        <div *ngIf="loadingTendencia && !errorTendencia" class="skeleton-container">
+          <div class="skeleton-line-chart">
+            <svg viewBox="0 0 400 200" class="skeleton-svg">
+              <polyline points="0,180 50,150 100,160 150,100 200,120 250,80 300,90 350,60 400,70" 
+                        fill="none" stroke="#e2e8f0" stroke-width="3"/>
+            </svg>
+          </div>
+        </div>
+        <!-- Error State -->
+        <div *ngIf="errorTendencia" class="error-state">
+          <i class="bi bi-exclamation-triangle"></i>
+          <p>{{ errorTendencia }}</p>
+          <button class="retry-btn" (click)="cargarGraficoTendencia()">Reintentar</button>
+        </div>
+        <!-- Chart -->
+        <div *ngIf="!loadingTendencia && !errorTendencia" id="profesorTendenciaChart" class="echart"></div>
       </div>
     </div>
 
@@ -61,77 +84,76 @@
       <p class="tabla-pro-subtitle">Detalle de solicitudes por docente y tipo de equipo</p>
     </div>
 
-    <div class="tabla-pro-container">
+    <!-- Error State para tabla -->
+    <div *ngIf="errorEquipos" class="error-state" style="padding: 2rem;">
+      <i class="bi bi-exclamation-triangle"></i>
+      <p>{{ errorEquipos }}</p>
+      <button class="retry-btn" (click)="cargarEquiposProfesor()">Reintentar</button>
+    </div>
+
+    <div class="tabla-pro-container" *ngIf="!errorEquipos">
       <table class="tabla-pro">
         <thead>
           <tr>
             <th class="th-numero">#</th>
-    <!-- Filtros de fecha -->
-    <div class="report-fecha-filtros">
-      <label>Desde:</label>
-      <input type="date" [(ngModel)]="fechaInicio" />
-      <label>Hasta:</label>
-      <input type="date" [(ngModel)]="fechaFin" />
-      <select [(ngModel)]="periodo">
-        <option value="dias">Días</option>
-        <option value="meses">Meses</option>
-        <option value="anios">Años</option>
-      </select>
-      <button (click)="filtrarPorFecha()">Filtrar</button>
-    </div>
             <th class="th-profesor">Profesor</th>
             <th class="th-equipo">Tipo de Equipo</th>
             <th class="th-total">Total Solicitudes</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let e of equiposProfesor; let i = index" class="tabla-pro-row">
-            <td><span class="numero-fila">{{ (currentPage - 1) * 10 + i + 1 }}</span></td>
-            <td class="td-profesor">
-              <div class="profesor-info-pro">
-                <div class="profesor-avatar-pro">{{ e.profesor?.charAt(0) || 'P' }}</div>
-                <span class="texto-principal">{{ e.profesor }}</span>
-              </div>
-            </td>
-            <td class="td-equipo">
-              <div class="equipo-info-pro">
-                <div class="equipo-icon-pro">
-                  <i class="bi" [ngClass]="getEquipoIconClass(e.equipo)"></i>
-                </div>
-                <span class="texto-equipo">{{ e.equipo }}</span>
-              </div>
-            </td>
-            <td class="td-total">
-              <div class="total-wrapper">
-                <div class="progress-bar-pro">
-                  <div class="progress-fill" [style.width.%]="getProgressPercent(e.total)"></div>
-                </div>
-                <span class="total-badge-pro">{{ e.total }}</span>
-              </div>
-            </td>
-          </tr>
+          <!-- Skeleton rows -->
+          <ng-container *ngIf="loadingEquipos">
+            <tr *ngFor="let i of [1,2,3,4,5]" class="tabla-pro-row skeleton-row">
+              <td><div class="skeleton-cell skeleton-num"></div></td>
+              <td><div class="skeleton-cell skeleton-text"></div></td>
+              <td><div class="skeleton-cell skeleton-text"></div></td>
+              <td><div class="skeleton-cell skeleton-badge"></div></td>
+            </tr>
+          </ng-container>
 
-          <tr *ngIf="loadingEquipos">
-            <td colspan="4" class="tabla-pro-empty">
-              <div class="empty-state-pro">
-                <span>Cargando datos...</span>
-              </div>
-            </td>
-          </tr>
+          <!-- Data rows -->
+          <ng-container *ngIf="!loadingEquipos">
+            <tr *ngFor="let e of equiposProfesor; let i = index" class="tabla-pro-row">
+              <td><span class="numero-fila">{{ (currentPage - 1) * 10 + i + 1 }}</span></td>
+              <td class="td-profesor">
+                <div class="profesor-info-pro">
+                  <div class="profesor-avatar-pro">{{ e.profesor?.charAt(0) || 'P' }}</div>
+                  <span class="texto-principal">{{ e.profesor }}</span>
+                </div>
+              </td>
+              <td class="td-equipo">
+                <div class="equipo-info-pro">
+                  <div class="equipo-icon-pro">
+                    <i class="bi" [ngClass]="getEquipoIconClass(e.equipo)"></i>
+                  </div>
+                  <span class="texto-equipo">{{ e.equipo }}</span>
+                </div>
+              </td>
+              <td class="td-total">
+                <div class="total-wrapper">
+                  <div class="progress-bar-pro">
+                    <div class="progress-fill" [style.width.%]="getProgressPercent(e.total)"></div>
+                  </div>
+                  <span class="total-badge-pro">{{ e.total }}</span>
+                </div>
+              </td>
+            </tr>
 
-          <tr *ngIf="!loadingEquipos && !equiposProfesor.length">
-            <td colspan="4" class="tabla-pro-empty">
-              <div class="empty-state-pro">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                <span>Sin datos disponibles</span>
-              </div>
-            </td>
-          </tr>
+            <tr *ngIf="!equiposProfesor.length">
+              <td colspan="4" class="tabla-pro-empty">
+                <div class="empty-state-pro">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  <span>Sin datos disponibles</span>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
         </tbody>
       </table>
     </div>

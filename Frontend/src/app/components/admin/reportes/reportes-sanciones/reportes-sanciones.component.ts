@@ -1,20 +1,41 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
 import Chart from 'chart.js/auto';
 import { ExportButtonsComponent } from '../export-buttons/export-buttons.component';
 import { ReportesSancionesService } from '../../../../services/reportes/reportes-sanciones.service';
 import { ExportService, ReporteData } from '../../../../services/export.service';
+import { ReportFiltersComponent } from '../report-filters/report-filters.component';
+import { ReportFiltersService, ReportFilter } from '../../../../services/report-filters.service';
 
 @Component({
   selector: 'app-reportes-sanciones',
   standalone: true,
-  imports: [CommonModule, ExportButtonsComponent],
+  imports: [CommonModule, ExportButtonsComponent, ReportFiltersComponent],
   templateUrl: './reportes-sanciones.component.html',
   styleUrls: ['./reportes-sanciones.component.css']
 })
 export class ReportesSancionesComponent implements OnInit, OnDestroy {
   @ViewChild('motivosChart') motivosChart?: ElementRef<HTMLCanvasElement>;
   @ViewChild('reincidenciaChart') reincidenciaChart?: ElementRef<HTMLCanvasElement>;
+
+  // Subject para cleanup
+  private destroy$ = new Subject<void>();
+  currentFilter: ReportFilter | null = null;
+
+  // Loading states
+  loadingKpis = true;
+  loadingMotivos = true;
+  loadingReincidencia = true;
+  loadingBloqueos = true;
+  loadingRelacionAtrasos = true;
+
+  // Error states
+  errorKpis: string | null = null;
+  errorMotivos: string | null = null;
+  errorReincidencia: string | null = null;
+  errorBloqueos: string | null = null;
+  errorRelacionAtrasos: string | null = null;
 
   kpis = {
     sancionesActivas: 0,
@@ -38,14 +59,23 @@ export class ReportesSancionesComponent implements OnInit, OnDestroy {
 
   constructor(
     private sancionesService: ReportesSancionesService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private filterService: ReportFiltersService
   ) {}
-  fechaInicio: string = '';
-  fechaFin: string = '';
-  periodo: string = 'dias';
 
   ngOnInit(): void {
     this.cargarUsuario();
+    
+    // Suscribirse a cambios del filtro centralizado
+    this.filterService.filter$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((filter: ReportFilter) => {
+        this.currentFilter = filter;
+        this.cargarTodosLosDatos();
+      });
+  }
+
+  cargarTodosLosDatos(): void {
     this.cargarKPIs();
     this.cargarMotivos();
     this.cargarReincidencia();
@@ -53,73 +83,129 @@ export class ReportesSancionesComponent implements OnInit, OnDestroy {
     this.cargarRelacionAtrasos();
   }
 
-  filtrarPorFecha() {
-    let rango = '';
-    if (this.fechaInicio && this.fechaFin) {
-      rango = `Del ${this.fechaInicio} al ${this.fechaFin}`;
-    } else {
-      rango = 'Sin filtro';
-    }
-    // Aquí deberías recargar los datos usando el filtro
-    // Ejemplo: this.reportesService.getSanciones(this.fechaInicio, this.fechaFin, this.periodo).subscribe(...)
-    // Mostrar mensaje de filtro aplicado
-    // this.mostrarMensaje('Filtro aplicado.');
-  }
-
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.chartMotivos?.destroy();
     this.chartReincidencia?.destroy();
   }
 
-  private cargarKPIs(): void {
-    this.sancionesService.getKpis().subscribe((data) => {
-      this.kpis = data;
+  cargarKPIs(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingKpis = true;
+    this.errorKpis = null;
+    
+    this.sancionesService.getKpisWithFilter(this.currentFilter).subscribe({
+      next: (data) => {
+        this.kpis = data;
+        this.loadingKpis = false;
+      },
+      error: (err) => {
+        this.loadingKpis = false;
+        this.errorKpis = 'Error al cargar KPIs';
+        console.error('Error KPIs:', err);
+      }
     });
   }
 
-  private cargarMotivos(): void {
-    this.sancionesService.getMotivos().subscribe((data) => {
-      const labels = data.map((d: any) => d.motivo);
-      const valores = data.map((d: any) => d.total);
+  cargarMotivos(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingMotivos = true;
+    this.errorMotivos = null;
+    
+    this.sancionesService.getMotivosWithFilter(this.currentFilter).subscribe({
+      next: (data) => {
+        const labels = data.map((d: any) => d.motivo);
+        const valores = data.map((d: any) => d.total);
 
-      const ctx = this.motivosChart?.nativeElement.getContext('2d');
-      if (!ctx) return;
-
-      this.chartMotivos?.destroy();
-      this.chartMotivos = new Chart(ctx, {
-        type: 'bar',
-        data: { labels, datasets: [{ data: valores, backgroundColor: '#ef4444' }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+        const ctx = this.motivosChart?.nativeElement.getContext('2d');
+        if (ctx) {
+          this.chartMotivos?.destroy();
+          this.chartMotivos = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ data: valores, backgroundColor: '#ef4444' }] },
+            options: { responsive: true, maintainAspectRatio: false }
+          });
+        }
+        this.loadingMotivos = false;
+      },
+      error: (err) => {
+        this.loadingMotivos = false;
+        this.errorMotivos = 'Error al cargar motivos';
+        console.error('Error motivos:', err);
+      }
     });
   }
 
-  private cargarReincidencia(): void {
-    this.sancionesService.getReincidencia().subscribe((data) => {
-      const labels = data.map((d: any) => d.usuario);
-      const valores = data.map((d: any) => d.total);
+  cargarReincidencia(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingReincidencia = true;
+    this.errorReincidencia = null;
+    
+    this.sancionesService.getReincidenciaWithFilter(this.currentFilter).subscribe({
+      next: (data) => {
+        const labels = data.map((d: any) => d.usuario);
+        const valores = data.map((d: any) => d.total);
 
-      const ctx = this.reincidenciaChart?.nativeElement.getContext('2d');
-      if (!ctx) return;
-
-      this.chartReincidencia?.destroy();
-      this.chartReincidencia = new Chart(ctx, {
-        type: 'bar',
-        data: { labels, datasets: [{ data: valores, backgroundColor: '#f59e0b' }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+        const ctx = this.reincidenciaChart?.nativeElement.getContext('2d');
+        if (ctx) {
+          this.chartReincidencia?.destroy();
+          this.chartReincidencia = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ data: valores, backgroundColor: '#f59e0b' }] },
+            options: { responsive: true, maintainAspectRatio: false }
+          });
+        }
+        this.loadingReincidencia = false;
+      },
+      error: (err) => {
+        this.loadingReincidencia = false;
+        this.errorReincidencia = 'Error al cargar reincidencia';
+        console.error('Error reincidencia:', err);
+      }
     });
   }
 
-  private cargarBloqueos(): void {
-    this.sancionesService.getBloqueos().subscribe((data) => {
-      this.bloqueos = data || [];
+  cargarBloqueos(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingBloqueos = true;
+    this.errorBloqueos = null;
+    
+    this.sancionesService.getBloqueosWithFilter(this.currentFilter).subscribe({
+      next: (data) => {
+        this.bloqueos = data || [];
+        this.loadingBloqueos = false;
+      },
+      error: (err) => {
+        this.bloqueos = [];
+        this.loadingBloqueos = false;
+        this.errorBloqueos = 'Error al cargar bloqueos';
+        console.error('Error bloqueos:', err);
+      }
     });
   }
 
-  private cargarRelacionAtrasos(): void {
-    this.sancionesService.getRelacionAtrasos().subscribe((data) => {
-      this.relacionAtrasos = data || [];
+  cargarRelacionAtrasos(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingRelacionAtrasos = true;
+    this.errorRelacionAtrasos = null;
+    
+    this.sancionesService.getRelacionAtrasosWithFilter(this.currentFilter).subscribe({
+      next: (data) => {
+        this.relacionAtrasos = data || [];
+        this.loadingRelacionAtrasos = false;
+      },
+      error: (err) => {
+        this.relacionAtrasos = [];
+        this.loadingRelacionAtrasos = false;
+        this.errorRelacionAtrasos = 'Error al cargar relación atrasos';
+        console.error('Error relación atrasos:', err);
+      }
     });
   }
 

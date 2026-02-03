@@ -1,0 +1,919 @@
+/* ============================================================
+   POWER BI / SUPERSET PROFESSIONAL DASHBOARD STYLES
+   Sistema de Reserva - Universidad de Tarapacá
+   ============================================================ */
+
+/* ===== PALETA POWER BI PROFESIONAL ===== */
+:root {
+  /* Colores primarios BI */
+  --bi-primary: #118dff;
+  --bi-primary-dark: #0d6efd;
+  --bi-primary-light: #4dabf5;
+  --bi-accent: #12239e;
+  --bi-accent-light: #5f6caf;
+  
+  /* Gradientes BI */
+  --bi-gradient-primary: linear-gradient(135deg, #118dff 0%, #12239e 100%);
+  --bi-gradient-accent: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bi-gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --bi-gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --bi-gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --bi-gradient-info: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  --bi-gradient-purple: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  --bi-gradient-pink: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  --bi-gradient-dark: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  
+  /* Backgrounds */
+  --bi-bg-page: #f8fafc;
+  --bi-bg-card: #ffffff;
+  --bi-bg-elevated: #fafbfc;
+  --bi-bg-dark: #1e293b;
+  --bi-bg-darker: #0f172a;
+  
+  /* Textos */
+  --bi-text-primary: #1e293b;
+  --bi-text-secondary: #64748b;
+  --bi-text-muted: #94a3b8;
+  --bi-text-light: #f8fafc;
+  
+  /* Bordes y sombras - Minimalista */
+  --bi-border: #e2e8f0;
+  --bi-border-light: #f1f5f9;
+  --bi-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --bi-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --bi-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --bi-shadow-glow: 0 0 12px rgba(17, 141, 255, 0.15);
+  
+  /* Radios - más conservadores */
+  --bi-radius-sm: 6px;
+  --bi-radius-md: 8px;
+  --bi-radius-lg: 12px;
+  --bi-radius-xl: 16px;
+  
+  /* Transiciones */
+  --bi-transition-fast: 0.15s ease;
+  --bi-transition-normal: 0.2s ease;
+  --bi-transition-slow: 0.3s ease;
+}
+
+/* ===== FONDO DE PÁGINA BI - Minimalista ===== */
+.report-page {
+  background: var(--bi-bg-page);
+  min-height: calc(100vh - 140px);
+  padding: 0;
+}
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+.report-surface {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.reportes-wrapper.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-top: 0;
+}
+
+/* ===== HEADER COMPACTO (para páginas individuales) ===== */
+.compact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--bi-border);
+}
+
+.compact-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--bi-text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.compact-subtitle {
+  font-size: 0.8125rem;
+  color: var(--bi-text-secondary);
+  margin: 4px 0 0;
+}
+
+.compact-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.75rem;
+  color: var(--bi-text-muted);
+}
+
+.compact-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.compact-meta i {
+  font-size: 0.875rem;
+}
+
+/* ===== HEADER SECTION MINIMALISTA ===== */
+.report-section-header {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 16px 0;
+  margin-bottom: 16px;
+  box-shadow: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--bi-border);
+}
+
+.report-section-header::before,
+.report-section-header::after {
+  display: none;
+}
+
+.report-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--bi-text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.report-section-subtitle {
+  color: var(--bi-text-secondary);
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+}
+
+/* ===== HEADER INSTITUCIONAL COMPACTO ===== */
+.inst-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--bi-bg-card);
+  border-radius: var(--bi-radius-md);
+  border: 1px solid var(--bi-border);
+  box-shadow: var(--bi-shadow-sm);
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.inst-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--bi-primary);
+  border-radius: var(--bi-radius-md) 0 0 var(--bi-radius-md);
+}
+
+.inst-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.inst-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--bi-text-primary);
+}
+
+.inst-subtitle {
+  margin: 2px 0 4px;
+  font-size: 0.8125rem;
+  color: var(--bi-text-secondary);
+}
+
+.inst-report {
+  margin: 0 0 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--bi-primary);
+}
+
+.inst-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--bi-text-muted);
+}
+
+.inst-info span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===== CARDS BI MINIMALISTAS ===== */
+.card,
+.report-card,
+.r-card {
+  background: var(--bi-bg-card);
+  border-radius: var(--bi-radius-md);
+  padding: 0;
+  margin-bottom: 16px;
+  box-shadow: var(--bi-shadow-sm);
+  border: 1px solid var(--bi-border);
+  overflow: hidden;
+  transition: all var(--bi-transition-fast);
+  position: relative;
+}
+
+.card::before,
+.report-card::before,
+.r-card::before {
+  display: none;
+}
+
+.card:hover,
+.report-card:hover,
+.r-card:hover {
+  box-shadow: var(--bi-shadow-md);
+  border-color: #cbd5e1;
+}
+
+/* Card Content Padding - Compacto */
+.card > :not(.chart-area):not(.chart-area-sm):not(.ranking-chart-area):not(.skeleton-container):not(.error-state) {
+  padding: 0 20px;
+}
+
+.card > :first-child:not(.chart-area):not(.chart-area-sm) {
+  padding-top: 16px;
+}
+
+.card > :last-child:not(.chart-area):not(.chart-area-sm) {
+  padding-bottom: 16px;
+}
+
+/* ===== TÍTULOS DE CARDS BI ===== */
+.card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--bi-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding: 0;
+  position: relative;
+}
+
+.card-title::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--bi-primary);
+  flex-shrink: 0;
+}
+
+.card-title::after {
+  display: none;
+}
+
+.card-subtitle {
+  font-size: 0.8125rem;
+  color: var(--bi-text-secondary);
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+/* ===== KPI CARDS BI - Compactos ===== */
+.kpi-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi-item {
+  background: var(--bi-bg-card);
+  border: 1px solid var(--bi-border);
+  padding: 16px;
+  border-radius: var(--bi-radius-md);
+  text-align: left;
+  transition: all var(--bi-transition-fast);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--bi-shadow-sm);
+}
+
+.kpi-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #118dff;
+}
+
+.kpi-item:nth-child(1)::before { background: #118dff; }
+.kpi-item:nth-child(2)::before { background: #10b981; }
+.kpi-item:nth-child(3)::before { background: #f59e0b; }
+.kpi-item:nth-child(4)::before { background: #ef4444; }
+.kpi-item:nth-child(5)::before { background: #8b5cf6; }
+.kpi-item:nth-child(6)::before { background: #06b6d4; }
+
+.kpi-item:hover {
+  box-shadow: var(--bi-shadow-md);
+  border-color: #cbd5e1;
+}
+
+.kpi-item h3 {
+  margin: 0 0 4px;
+  font-weight: 700;
+  font-size: 1.75rem;
+  color: var(--bi-text-primary);
+  line-height: 1;
+}
+
+.kpi-item span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--bi-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ===== CHART AREAS BI - Compactos ===== */
+.chart-area {
+  height: 300px;
+  padding: 12px 16px 16px;
+  margin: 0;
+  background: transparent;
+  border-radius: 0 0 var(--bi-radius-md) var(--bi-radius-md);
+  position: relative;
+}
+
+.chart-area-sm {
+  height: 240px;
+  padding: 12px 16px 16px;
+  background: transparent;
+}
+
+.chart-area::before,
+.chart-area-sm::before {
+  display: none;
+}
+
+.chart-area canvas,
+.chart-area-sm canvas {
+  width: 100% !important;
+  height: 100% !important;
+  transition: opacity var(--bi-transition-fast);
+}
+
+/* ===== LAYOUT 2 COLUMNAS BI ===== */
+.two-cols {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .two-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== TABLAS BI - Minimalistas ===== */
+.styled-table,
+.tabla-pro {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.styled-table thead th,
+.tabla-pro thead th {
+  background: #f8fafc;
+  padding: 12px 14px;
+  font-size: 0.6875rem;
+  color: var(--bi-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--bi-border);
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.styled-table tbody td,
+.tabla-pro tbody td {
+  padding: 12px 14px;
+  color: var(--bi-text-primary);
+  border-bottom: 1px solid var(--bi-border-light);
+  font-size: 0.875rem;
+}
+
+.styled-table tbody tr:hover td,
+.tabla-pro tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.table-wrapper {
+  background: var(--bi-bg-card);
+  border: 1px solid var(--bi-border);
+  border-radius: var(--bi-radius-md);
+  overflow: hidden;
+  box-shadow: var(--bi-shadow-sm);
+}
+
+/* ===== SKELETON LOADERS BI ===== */
+.skeleton-container {
+  padding: 20px;
+}
+
+@keyframes bi-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-circle,
+.skeleton-bar,
+.skeleton-line-chart,
+.skeleton-row,
+.skeleton-kpi {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: bi-shimmer 1.5s infinite;
+  border-radius: var(--bi-radius-sm);
+}
+
+.skeleton-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  margin: 16px auto;
+}
+
+.skeleton-bar {
+  height: 160px;
+  margin: 16px 0;
+}
+
+.skeleton-line-chart {
+  height: 200px;
+  margin: 16px 0;
+}
+
+.skeleton-row {
+  height: 40px;
+  margin-bottom: 6px;
+}
+
+.skeleton-kpi {
+  height: 80px;
+}
+
+.skeleton-kpi-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ===== ERROR STATES BI ===== */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  text-align: center;
+  background: #fef2f2;
+  border-radius: var(--bi-radius-sm);
+  margin: 12px;
+}
+
+.error-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.error-state p {
+  color: var(--bi-text-secondary);
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+}
+
+.retry-btn,
+.btn-retry {
+  background: var(--bi-primary);
+  border: none;
+  padding: 8px 20px;
+  border-radius: var(--bi-radius-sm);
+  color: white;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all var(--bi-transition-fast);
+}
+
+.retry-btn:hover,
+.btn-retry:hover {
+  background: var(--bi-primary-dark);
+}
+
+/* ===== RANKINGS BI - Minimalistas ===== */
+.ranking-card-pro {
+  background: var(--bi-bg-card);
+  border-radius: var(--bi-radius-md);
+  overflow: hidden;
+  box-shadow: var(--bi-shadow-sm);
+  border: 1px solid var(--bi-border);
+  margin-bottom: 16px;
+}
+
+.ranking-header-pro {
+  background: #1e293b;
+  padding: 16px 20px;
+  text-align: center;
+  position: relative;
+}
+
+.ranking-header-pro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--bi-primary);
+}
+
+.ranking-title-pro {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--bi-text-light);
+  margin: 0 0 4px;
+}
+
+.ranking-subtitle-pro {
+  color: var(--bi-text-muted);
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.ranking-chart-area {
+  padding: 16px;
+  height: 280px;
+  background: transparent;
+}
+
+.ranking-table-wrapper {
+  padding: 0 16px 16px;
+}
+
+.ranking-table-pro {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.ranking-table-pro thead th {
+  background: transparent;
+  padding: 10px 12px;
+  font-size: 0.6875rem;
+  color: var(--bi-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.ranking-table-pro tbody tr {
+  background: #f8fafc;
+  border-radius: var(--bi-radius-sm);
+}
+
+.ranking-table-pro tbody tr:hover {
+  background: #f1f5f9;
+}
+
+.ranking-table-pro tbody td {
+  padding: 12px;
+  color: var(--bi-text-primary);
+  font-size: 0.875rem;
+}
+
+/* ===== POSICIÓN BADGES - Compactos ===== */
+.pos-badge-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.pos-badge-pro.pos-1 {
+  background: #fbbf24;
+  color: #78350f;
+}
+
+.pos-badge-pro.pos-2 {
+  background: #9ca3af;
+  color: #ffffff;
+}
+
+.pos-badge-pro.pos-3 {
+  background: #d97706;
+  color: #ffffff;
+}
+
+.ranking-row-pro {
+  transition: all var(--bi-transition-fast);
+}
+
+.ranking-row-pro td {
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-top: 1px solid var(--bi-border-light);
+  border-bottom: 1px solid var(--bi-border-light);
+}
+
+.ranking-row-pro td:first-child {
+  border-left: 1px solid var(--bi-border-light);
+  border-radius: var(--bi-radius-sm) 0 0 var(--bi-radius-sm);
+}
+
+.ranking-row-pro td:last-child {
+  border-right: 1px solid var(--bi-border-light);
+  border-radius: 0 var(--bi-radius-sm) var(--bi-radius-sm) 0;
+}
+
+.ranking-row-pro:hover td {
+  background: linear-gradient(90deg, rgba(17, 141, 255, 0.05) 0%, rgba(17, 141, 255, 0.1) 100%);
+  border-color: rgba(17, 141, 255, 0.2);
+}
+
+.ranking-row-pro.top-3 td {
+  background: linear-gradient(90deg, rgba(17, 141, 255, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+}
+
+.pos-badge-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 0.95rem;
+  background: var(--bi-bg-elevated);
+  color: var(--bi-text-secondary);
+  border: 2px solid var(--bi-border);
+}
+
+.pos-badge-pro.pos-1 {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.pos-badge-pro.pos-2 {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  color: white;
+  border: none;
+}
+
+.pos-badge-pro.pos-3 {
+  background: linear-gradient(135deg, #cd7c32 0%, #b45309 100%);
+  color: white;
+  border: none;
+}
+
+.estudiante-info-pro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.estudiante-avatar-pro {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--bi-gradient-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.estudiante-nombre-pro {
+  font-weight: 600;
+  color: var(--bi-text-primary);
+}
+
+.correo-texto {
+  color: var(--bi-text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ===== BADGES BI ===== */
+.badge-prestamos {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bi-gradient-primary);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(17, 141, 255, 0.3);
+}
+
+.badge-sanciones {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bi-gradient-danger);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.badge-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bi-gradient-success);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* ===== STATUS PILLS BI ===== */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-disponible {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+}
+
+.status-prestado {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+}
+
+.status-mantenimiento {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+}
+
+.status-baja {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+}
+
+/* ===== DIVIDERS ===== */
+.pdf-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--bi-border) 20%, var(--bi-border) 80%, transparent 100%);
+  margin: 24px 0;
+}
+
+/* ===== LOADING STATE ===== */
+.card.loading,
+.ranking-card-pro.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ===== HIDDEN UTILITY ===== */
+.hidden {
+  display: none !important;
+}
+
+/* ===== ANIMACIONES BI ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes softPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.report-animate {
+  animation: pageFadeIn 0.4s ease forwards;
+}
+
+.fade-in {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .report-page {
+    padding: 16px;
+  }
+  
+  .report-section-header {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .report-section-title {
+    font-size: 1.4rem;
+  }
+  
+  .kpi-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .kpi-item {
+    padding: 16px;
+  }
+  
+  .kpi-item h3 {
+    font-size: 1.8rem;
+  }
+  
+  .chart-area {
+    height: 280px;
+  }
+  
+  .ranking-chart-area {
+    height: 250px;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .report-page {
+    background: white !important;
+    padding: 0 !important;
+  }
+  
+  .card, .ranking-card-pro {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+  }
+  
+  .report-section-header {
+    background: #1e293b !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

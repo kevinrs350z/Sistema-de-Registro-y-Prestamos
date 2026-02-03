@@ -353,4 +353,57 @@ class DashboardOperationalService
             'color' => $color,
         ];
     }
+
+    /**
+     * KPIs DE INVENTARIO
+     * Total equipos, disponibles, en mantenimiento, dados de baja
+     */
+    public function getKPIsInventario()
+    {
+        return [
+            'total' => DB::table('equipos')->count(),
+            'disponibles' => DB::table('equipos')->where('estado', 'DISPONIBLE')->count(),
+            'mantenimiento' => DB::table('equipos')->where('estado', 'MANTENIMIENTO')->count(),
+            'baja' => DB::table('equipos')->where('estado', 'BAJA')->count(),
+        ];
+    }
+
+    /**
+     * KPIs DE MANTENIMIENTOS
+     * Atrasos actuales, incidentes reportados, equipos en mantenimiento
+     */
+    public function getKPIsMantenimientos()
+    {
+        $atrasosCount = DB::table('prestamos')
+            ->where('estado', 'APROBADO')
+            ->whereNotNull('fecha_fin')
+            ->where('fecha_fin', '<', Carbon::now())
+            ->count();
+
+        $incidentesCount = DB::table('observaciones')->count();
+
+        $equiposMantenimientoCount = DB::table('equipos')
+            ->whereIn('estado', ['MANTENIMIENTO', 'BAJA'])
+            ->count();
+
+        return [
+            'atrasos' => $atrasosCount,
+            'incidentes' => $incidentesCount,
+            'equiposMantenimiento' => $equiposMantenimientoCount,
+        ];
+    }
+
+    /**
+     * KPIs DE SANCIONES
+     * Sanciones activas, total histórico, bloqueos activos, bloqueos históricos
+     */
+    public function getKPIsSanciones()
+    {
+        return [
+            'sancionesActivas' => DB::table('sancions')->where('estado', 'ACTIVA')->count(),
+            'sancionesTotal' => DB::table('user_sancion')->count(),
+            'bloqueosActivos' => DB::table('users')->where('bloqueado', true)->count(),
+            'bloqueosHistoricos' => DB::table('user_sancion')->where('accion', 'BLOQUEO')->count(),
+        ];
+    }
 }

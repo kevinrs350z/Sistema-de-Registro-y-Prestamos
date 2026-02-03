@@ -1,14 +1,17 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
 import Chart from 'chart.js/auto';
 import { ExportButtonsComponent } from '../export-buttons/export-buttons.component';
 import { ReportesTendenciasService } from '../../../../services/reportes/reportes-tendencias.service';
 import { ExportService, ReporteData } from '../../../../services/export.service';
+import { ReportFiltersComponent } from '../report-filters/report-filters.component';
+import { ReportFiltersService, ReportFilter } from '../../../../services/report-filters.service';
 
 @Component({
   selector: 'app-reportes-tendencias',
   standalone: true,
-  imports: [CommonModule, ExportButtonsComponent],
+  imports: [CommonModule, ExportButtonsComponent, ReportFiltersComponent],
   templateUrl: './reportes-tendencias.component.html',
   styleUrls: ['./reportes-tendencias.component.css']
 })
@@ -17,9 +20,20 @@ export class ReportesTendenciasComponent implements OnInit, OnDestroy {
   @ViewChild('categoriasChart') categoriasChart?: ElementRef<HTMLCanvasElement>;
   @ViewChild('usuariosChart') usuariosChart?: ElementRef<HTMLCanvasElement>;
 
-    fechaInicio: string = '';
-    fechaFin: string = '';
-    periodo: string = 'dias';
+  // Subject para cleanup
+  private destroy$ = new Subject<void>();
+  currentFilter: ReportFilter | null = null;
+
+  // Loading states
+  loadingPrestamosMes = true;
+  loadingCategorias = true;
+  loadingUsoTipoUsuario = true;
+
+  // Error states
+  errorPrestamosMes: string | null = null;
+  errorCategorias: string | null = null;
+  errorUsoTipoUsuario: string | null = null;
+
   private chartPrestamos?: Chart;
   private chartCategorias?: Chart;
   private chartUsuarios?: Chart;
@@ -37,86 +51,129 @@ export class ReportesTendenciasComponent implements OnInit, OnDestroy {
 
   constructor(
     private tendenciasService: ReportesTendenciasService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private filterService: ReportFiltersService
   ) {}
 
   ngOnInit(): void {
     this.cargarUsuario();
+    
+    // Suscribirse a cambios del filtro centralizado
+    this.filterService.filter$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((filter: ReportFilter) => {
+        this.currentFilter = filter;
+        this.cargarTodosLosDatos();
+      });
+  }
+
+  cargarTodosLosDatos(): void {
     this.cargarPrestamosMes();
     this.cargarCategorias();
     this.cargarUsoTipoUsuario();
   }
 
-    filtrarPorFecha() {
-      let rango = '';
-      if (this.fechaInicio && this.fechaFin) {
-        rango = `Del ${this.fechaInicio} al ${this.fechaFin}`;
-      } else {
-        rango = 'Sin filtro';
-      }
-      // Aquí deberías recargar los datos usando el filtro
-      // Ejemplo: this.reportesService.getTendencias(this.fechaInicio, this.fechaFin, this.periodo).subscribe(...)
-      // Mostrar mensaje de filtro aplicado
-      // this.mostrarMensaje('Filtro aplicado.');
-    }
-
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.chartPrestamos?.destroy();
     this.chartCategorias?.destroy();
     this.chartUsuarios?.destroy();
   }
 
-  private cargarPrestamosMes(): void {
-    this.tendenciasService.getPrestamosMes().subscribe((data) => {
-      this.prestamosMes = data || [];
-      const labels = data.map((d: any) => d.mes);
-      const valores = data.map((d: any) => d.total);
+  cargarPrestamosMes(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingPrestamosMes = true;
+    this.errorPrestamosMes = null;
+    
+    this.tendenciasService.getPrestamosMesWithFilter(this.currentFilter).subscribe({
+      next: (data) => {
+        this.prestamosMes = data || [];
+        const labels = data.map((d: any) => d.mes ?? d.fecha ?? d.semana ?? d.trimestre ?? d.semestre ?? d['año'] ?? d.label ?? '');
+        const valores = data.map((d: any) => Number(d.total ?? 0));
 
-      const ctx = this.prestamosChart?.nativeElement.getContext('2d');
-      if (!ctx) return;
-
-      this.chartPrestamos?.destroy();
-      this.chartPrestamos = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets: [{ data: valores, borderColor: '#1f78ff', backgroundColor: 'rgba(31,120,255,0.2)', fill: true }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+        const ctx = this.prestamosChart?.nativeElement.getContext('2d');
+        if (ctx) {
+          this.chartPrestamos?.destroy();
+          this.chartPrestamos = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ data: valores, borderColor: '#1f78ff', backgroundColor: 'rgba(31,120,255,0.2)', fill: true }] },
+            options: { responsive: true, maintainAspectRatio: false }
+          });
+        }
+        this.loadingPrestamosMes = false;
+      },
+      error: (err) => {
+        this.prestamosMes = [];
+        this.loadingPrestamosMes = false;
+        this.errorPrestamosMes = 'Error al cargar préstamos por mes';
+        console.error('Error préstamos mes:', err);
+      }
     });
   }
 
-  private cargarCategorias(): void {
-    this.tendenciasService.getCategorias().subscribe((data) => {
-      this.categorias = data || [];
-      const labels = data.map((d: any) => d.categoria);
-      const valores = data.map((d: any) => d.total);
+  cargarCategorias(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingCategorias = true;
+    this.errorCategorias = null;
+    
+    this.tendenciasService.getCategoriasWithFilter(this.currentFilter).subscribe({
+      next: (data) => {
+        this.categorias = data || [];
+        const labels = data.map((d: any) => d.categoria);
+        const valores = data.map((d: any) => d.total);
 
-      const ctx = this.categoriasChart?.nativeElement.getContext('2d');
-      if (!ctx) return;
-
-      this.chartCategorias?.destroy();
-      this.chartCategorias = new Chart(ctx, {
-        type: 'bar',
-        data: { labels, datasets: [{ data: valores, backgroundColor: '#10b981' }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+        const ctx = this.categoriasChart?.nativeElement.getContext('2d');
+        if (ctx) {
+          this.chartCategorias?.destroy();
+          this.chartCategorias = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ data: valores, backgroundColor: '#10b981' }] },
+            options: { responsive: true, maintainAspectRatio: false }
+          });
+        }
+        this.loadingCategorias = false;
+      },
+      error: (err) => {
+        this.categorias = [];
+        this.loadingCategorias = false;
+        this.errorCategorias = 'Error al cargar categorías';
+        console.error('Error categorías:', err);
+      }
     });
   }
 
-  private cargarUsoTipoUsuario(): void {
-    this.tendenciasService.getUsoTipoUsuario().subscribe((data) => {
-      this.usoTipoUsuario = data || [];
-      const labels = data.map((d: any) => d.rol);
-      const valores = data.map((d: any) => d.total);
+  cargarUsoTipoUsuario(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingUsoTipoUsuario = true;
+    this.errorUsoTipoUsuario = null;
+    
+    this.tendenciasService.getUsoTipoUsuarioWithFilter(this.currentFilter).subscribe({
+      next: (data) => {
+        this.usoTipoUsuario = data || [];
+        const labels = data.map((d: any) => d.rol ?? d.tipo ?? 'Sin rol');
+        const valores = data.map((d: any) => Number(d.total ?? 0));
 
-      const ctx = this.usuariosChart?.nativeElement.getContext('2d');
-      if (!ctx) return;
-
-      this.chartUsuarios?.destroy();
-      this.chartUsuarios = new Chart(ctx, {
-        type: 'bar',
-        data: { labels, datasets: [{ data: valores, backgroundColor: '#f59e0b' }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+        const ctx = this.usuariosChart?.nativeElement.getContext('2d');
+        if (ctx) {
+          this.chartUsuarios?.destroy();
+          this.chartUsuarios = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ data: valores, backgroundColor: '#f59e0b' }] },
+            options: { responsive: true, maintainAspectRatio: false }
+          });
+        }
+        this.loadingUsoTipoUsuario = false;
+      },
+      error: (err) => {
+        this.usoTipoUsuario = [];
+        this.loadingUsoTipoUsuario = false;
+        this.errorUsoTipoUsuario = 'Error al cargar uso por tipo de usuario';
+        console.error('Error uso tipo usuario:', err);
+      }
     });
   }
 
@@ -133,8 +190,8 @@ export class ReportesTendenciasComponent implements OnInit, OnDestroy {
           titulo: 'Préstamos por Mes',
           subtitulo: 'Comportamiento histórico de la demanda',
           datos: {
-            columnas: ['Mes', 'Total Préstamos'],
-            filas: this.prestamosMes.map(d => [d.mes, d.total]),
+            columnas: ['Período', 'Total Préstamos'],
+            filas: this.prestamosMes.map(d => [d.mes ?? d.fecha ?? d.label ?? '', d.total]),
             anchos: ['*', 120]
           }
         },

@@ -1,45 +1,44 @@
 .kpi-wrapper {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 12px;
+	gap: 10px;
 }
 
 /* ============================================================
-   TABLAS PROFESIONALES ACADÉMICAS - SANCIONES
+   TABLAS PROFESIONALES - SANCIONES - Minimalista
    ============================================================ */
 
 .tabla-pro-card {
-	background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-	border-radius: 16px;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+	background: #ffffff;
+	border-radius: 8px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 	overflow: hidden;
-	border: 1px solid rgba(226, 232, 240, 0.8);
+	border: 1px solid #e2e8f0;
 }
 
 .tabla-pro-header {
-	padding: 20px 24px;
+	padding: 16px 20px;
 	text-align: center;
 }
 
 .tabla-pro-header.bg-danger-pro {
-	background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+	background: #dc2626;
 }
 
 .tabla-pro-header.bg-primary-pro {
-	background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+	background: #1e293b;
 }
 
 .tabla-pro-title {
 	color: #ffffff;
-	font-size: 1.2rem;
-	font-weight: 700;
-	margin: 0 0 4px 0;
-	letter-spacing: -0.025em;
+	font-size: 1rem;
+	font-weight: 600;
+	margin: 0 0 2px 0;
 }
 
 .tabla-pro-subtitle {
-	color: rgba(255, 255, 255, 0.85);
-	font-size: 0.85rem;
+	color: rgba(255, 255, 255, 0.75);
+	font-size: 0.8125rem;
 	margin: 0;
 	font-weight: 400;
 }
@@ -56,26 +55,26 @@
 }
 
 .tabla-pro thead tr {
-	background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+	background: #f8fafc;
 }
 
 .tabla-pro th {
-	padding: 14px 16px;
+	padding: 12px 14px;
 	text-align: center;
-	font-weight: 700;
-	font-size: 0.8rem;
+	font-weight: 600;
+	font-size: 0.6875rem;
 	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	color: #475569;
-	border-bottom: 2px solid #cbd5e1;
+	letter-spacing: 0.5px;
+	color: #64748b;
+	border-bottom: 1px solid #e2e8f0;
 }
 
 .tabla-pro-row {
-	transition: all 0.2s ease;
+	transition: background 0.15s ease;
 }
 
 .tabla-pro-row:hover {
-	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	background: #f8fafc;
 }
 
 .tabla-pro-row:not(:last-child) td {
@@ -83,35 +82,36 @@
 }
 
 .tabla-pro td {
-	padding: 14px 16px;
+	padding: 12px 14px;
 	text-align: center;
 	vertical-align: middle;
 	color: #334155;
+	font-size: 0.875rem;
 }
 
 /* Usuario info */
 .usuario-info-pro {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 10px;
 	justify-content: flex-start;
 }
 
 .usuario-avatar-pro {
-	width: 36px;
-	height: 36px;
-	border-radius: 8px;
-	background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	background: #1e293b;
 	color: #ffffff;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-weight: 700;
-	font-size: 0.9rem;
+	font-weight: 600;
+	font-size: 0.8125rem;
 }
 
 .usuario-avatar-pro.danger {
-	background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+	background: #dc2626;
 }
 
 .texto-principal {
@@ -121,19 +121,19 @@
 
 .texto-secundario {
 	color: #64748b;
-	font-size: 0.9rem;
+	font-size: 0.8125rem;
 }
 
 .fecha-texto {
 	color: #64748b;
-	font-size: 0.85rem;
+	font-size: 0.8125rem;
 	font-family: 'Monaco', 'Consolas', monospace;
 }
 
 .motivo-texto {
 	color: #64748b;
-	font-size: 0.85rem;
-	max-width: 180px;
+	font-size: 0.8125rem;
+	max-width: 160px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -142,12 +142,12 @@
 
 .admin-badge {
 	display: inline-block;
-	padding: 4px 10px;
-	background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+	padding: 3px 8px;
+	background: #f1f5f9;
 	color: #475569;
-	border-radius: 6px;
+	border-radius: 4px;
 	font-weight: 500;
-	font-size: 0.8rem;
+	font-size: 0.75rem;
 }
 
 /* Contadores */
@@ -155,35 +155,33 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 40px;
-	padding: 6px 14px;
-	border-radius: 20px;
-	font-weight: 700;
-	font-size: 0.9rem;
+	min-width: 36px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-weight: 600;
+	font-size: 0.8125rem;
 }
 
 .contador-badge.sanciones {
-	background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+	background: #dc2626;
 	color: #ffffff;
-	box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
 }
 
 .contador-badge.atrasos {
-	background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+	background: #d97706;
 	color: #ffffff;
-	box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
 }
 
 /* Estado vacío */
 .tabla-pro-empty {
-	padding: 40px 20px !important;
+	padding: 32px 16px !important;
 }
 
 .empty-state-pro {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 12px;
+	gap: 10px;
 	color: #94a3b8;
 }
 
@@ -192,7 +190,7 @@
 }
 
 .empty-state-pro span {
-	font-size: 0.95rem;
+	font-size: 0.875rem;
 	font-weight: 500;
 }
 
@@ -224,4 +222,168 @@
 		flex-direction: column;
 		gap: 4px;
 	}
+}
+
+/* ============================================================
+   SKELETON LOADERS & ERROR STATES - SANCIONES
+   ============================================================ */
+
+@keyframes shimmer {
+	0% { background-position: -200% 0; }
+	100% { background-position: 200% 0; }
+}
+
+/* Skeleton KPIs */
+.skeleton-kpi {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 16px;
+	background: #f8fafc;
+	border-radius: 12px;
+}
+
+.skeleton-value {
+	width: 60px;
+	height: 32px;
+	background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s infinite;
+	border-radius: 6px;
+}
+
+.skeleton-label {
+	width: 80px;
+	height: 14px;
+	background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s infinite;
+	border-radius: 4px;
+}
+
+/* Skeleton Charts */
+.skeleton-chart {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 250px;
+}
+
+.skeleton-donut {
+	width: 180px;
+	height: 180px;
+	border-radius: 50%;
+	background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s infinite;
+	position: relative;
+}
+
+.skeleton-donut::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 80px;
+	height: 80px;
+	background: white;
+	border-radius: 50%;
+}
+
+/* Skeleton Barras Horizontales */
+.skeleton-bar-group {
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	gap: 16px;
+	height: 200px;
+	padding: 20px;
+}
+
+.skeleton-bar-group.horizontal {
+	flex-direction: column;
+	align-items: flex-start;
+	height: auto;
+	gap: 12px;
+}
+
+.skeleton-bar-h {
+	width: 100%;
+	height: 28px;
+	background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s infinite;
+	border-radius: 6px;
+}
+
+/* Skeleton Table */
+.skeleton-table {
+	padding: 16px;
+}
+
+.skeleton-row {
+	display: flex;
+	gap: 16px;
+	padding: 12px 0;
+	border-bottom: 1px solid #f1f5f9;
+}
+
+.skeleton-cell {
+	height: 20px;
+	background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s infinite;
+	border-radius: 4px;
+}
+
+.skeleton-cell.small { width: 50px; }
+.skeleton-cell.medium { width: 100px; }
+.skeleton-cell.large { flex: 1; }
+
+/* Error States */
+.error-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 32px;
+	text-align: center;
+	color: #64748b;
+	min-height: 200px;
+}
+
+.error-state.table-error {
+	min-height: 150px;
+	background: #fef2f2;
+	border-radius: 8px;
+	margin: 16px;
+}
+
+.error-icon {
+	font-size: 2rem;
+}
+
+.btn-retry {
+	margin-top: 8px;
+	padding: 8px 20px;
+	background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+	color: white;
+	border: none;
+	border-radius: 8px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.btn-retry:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Hidden utility */
+.hidden {
+	display: none !important;
 }

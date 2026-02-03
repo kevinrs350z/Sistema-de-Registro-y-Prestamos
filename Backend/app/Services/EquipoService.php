@@ -2,6 +2,8 @@
 namespace App\Services;
 
 use App\Models\Equipo;
+use App\Models\EquipoHistorial;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Servicio encargado de gestionar las operaciones de negocio relacionadas con Equipos.
@@ -125,22 +127,50 @@ class EquipoService
 
     
     /**
-     * Elimina un equipo del sistema.
+     * Dar de baja un equipo (soft delete + estado BAJA + auditoría).
      *
-     * Dependiendo de la implementación del modelo Equipo, esta operación puede
-     * corresponder a un borrado lógico (`softDelete`) o físico. El método retorna
-     * el registro eliminado para fines de auditoría o visualización en el frontend.
+     * Este método implementa el flujo profesional completo:
+     * 1. Cambia el estado a 'BAJA' para reportes y trazabilidad.
+     * 2. Aplica SoftDelete (deleted_at) para excluirlo de queries normales.
+     * 3. Registra la acción en el historial de auditoría.
      *
-     * @param  int  $id  Identificador del equipo a eliminar.
-     * @return Equipo     Registro eliminado.
+     * El equipo NO se elimina físicamente, permitiendo:
+     * - Consultas históricas con withTrashed()
+     * - Reportes de equipos dados de baja
+     * - Recuperación si fuera necesario (restore)
+     *
+     * @param  int  $id  Identificador del equipo.
+     * @param  int  $adminId  Identificador del administrador que ejecuta la acción.
+     * @return Equipo
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function delete($id)
+    public function darDeBaja($id, $adminId)
     {
-        $equipo = Equipo::findOrFail($id);
-        $equipo->delete();
+        return DB::transaction(function () use ($id, $adminId) {
+            $equipo = Equipo::findOrFail($id);
+            $estadoAnterior = $equipo->estado;
 
-        return $equipo;
+            // 1. Cambiar estado a BAJA
+            $equipo->estado = 'BAJA';
+            $equipo->save();
+
+            // 2. Registrar en historial de auditoría
+            EquipoHistorial::create([
+                'equipo_id' => $equipo->id,
+                'admin_id'  => $adminId,
+                'accion'    => 'BAJA',
+                'detalle'   => json_encode([
+                    'estado_anterior' => $estadoAnterior,
+                    'estado_nuevo' => 'BAJA',
+                    'motivo' => 'Dado de baja por administrador',
+                ]),
+            ]);
+
+            // 3. Aplicar SoftDelete (establece deleted_at)
+            $equipo->delete();
+
+            return $equipo;
+        });
     }
 }

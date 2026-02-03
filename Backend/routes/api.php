@@ -33,6 +33,7 @@ use App\Http\Controllers\Reportes\ReportesSancionesController;
 use App\Http\Controllers\Reportes\ReportesMantenimientosController;
 use App\Http\Controllers\Reportes\ReportesTendenciasController;
 use App\Http\Controllers\Reportes\ReportesAsignaturasController;
+use App\Http\Controllers\ReportesEquiposNormalizadosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -108,6 +109,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
    # Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
     Route::post('/admin/prestamos/aprobar/{id}',[PrestamoAdminController::class, 'aprobar']);
     Route::post('/admin/prestamos/rechazar/{id}',[PrestamoAdminController::class, 'rechazar']);
+    Route::get('/equipos/{idEquipo}/historial', [EquipoController::class, 'historial']);
     Route::get('/admin/prestamos/pendientes', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
     Route::patch('/admin/prestamos/{idPrestamo}/equipos/{idEquipo}/devolver',[PrestamoAdminController::class, 'devolverEquipo']);
     Route::post('/admin/prestamos/{id}/entregar', [PrestamoAdminController::class, 'marcarEntregado']);
@@ -204,10 +206,18 @@ Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class,
 // Registro de ruta para la creación de equipos
 // ---------------------------------------------------------------
 Route::post('/equipos', [EquipoController::class, 'store']);
-Route::get('/reportes/equipos-mas-solicitados', [ReportesController::class, 'equiposMasSolicitados']);
-Route::get('/reportes/uso-interno-externo', [ReportesController::class, 'usoInternoExterno']);
-Route::get('/reportes/sanciones-rechazos', [ReportesController::class, 'sancionesYRechazos']);
-Route::get('/reportes/equipos-baja', [ReportesController::class, 'equiposDadoDeBaja']);
+
+// ---------------------------------------------------------------
+// Rutas de reportes (requieren autenticación)
+// ---------------------------------------------------------------
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/reportes/equipos-mas-solicitados', [ReportesController::class, 'equiposMasSolicitados']);
+    Route::get('/reportes/uso-interno-externo', [ReportesController::class, 'usoInternoExterno']);
+    Route::get('/reportes/sanciones-rechazos', [ReportesController::class, 'sancionesYRechazos']);
+    Route::get('/reportes/equipos-baja', [ReportesController::class, 'equiposDadoDeBaja']);
+    Route::get('/reportes/prestamos-periodo', [ReportesController::class, 'prestamosPorPeriodo']);
+    Route::get('/reportes/categorias-demandadas', [ReportesController::class, 'categoriasMasDemandadas']);
+});
 
 
 Route::prefix('reportes/dashboard')->group(function () {
@@ -218,6 +228,20 @@ Route::prefix('reportes/dashboard')->group(function () {
     Route::get('/sanciones-rechazos', [DashboardReportesController::class, 'getSancionesYRechazos']);
     Route::get('/top-alumnos', [DashboardReportesController::class, 'getTopAlumnos']);
 });
+
+// ---------------------------------------------------------------
+// Rutas de reportes de equipos normalizados (métricas BI)
+// ---------------------------------------------------------------
+Route::middleware(['auth:sanctum'])
+    ->prefix('reportes/equipos-normalizados')
+    ->group(function () {
+        Route::get('/kpis', [ReportesEquiposNormalizadosController::class, 'kpis']);
+        Route::get('/lista', [ReportesEquiposNormalizadosController::class, 'lista']);
+        Route::get('/top-por-mes', [ReportesEquiposNormalizadosController::class, 'topPorMes']);
+        Route::get('/evolucion', [ReportesEquiposNormalizadosController::class, 'evolucion']);
+        Route::get('/categorias', [ReportesEquiposNormalizadosController::class, 'categorias']);
+        Route::get('/comparacion-antiguedad', [ReportesEquiposNormalizadosController::class, 'comparacionAntiguedad']);
+    });
 
 
 
@@ -230,7 +254,12 @@ Route::prefix('reportes/dashboard')->group(function () {
         Route::get('/tendencia', [ReporteProfesorController::class, 'tendencia']);
 
     });
-    Route::put('/equipos/{id}', [EquipoController::class, 'update']);
+    
+    // Rutas de equipos que requieren autenticación
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::put('/equipos/{id}', [EquipoController::class, 'update']);
+        Route::delete('/equipos/{id}', [EquipoController::class, 'destroy']);
+    });
 
 
     Route::prefix('packs')->group(function () {
@@ -278,6 +307,7 @@ Route::prefix('reportes/dashboard')->group(function () {
                     Route::get('/antiguedad', [ReportesInventarioController::class, 'antiguedad']);
                     Route::get('/top-utilizados', [ReportesInventarioController::class, 'topUtilizados']);
                     Route::get('/subutilizados', [ReportesInventarioController::class, 'subUtilizados']);
+                    Route::get('/demanda-vs-disponibilidad', [ReportesInventarioController::class, 'demandaVsDisponibilidad']);
             });
 
         Route::middleware(['auth:sanctum'])
@@ -325,4 +355,8 @@ Route::prefix('reportes/dashboard')->group(function () {
           Route::get('/alertas', [DashboardOperationalController::class, 'getAlertasCriticas']);
           Route::get('/actividad-reciente', [DashboardOperationalController::class, 'getActividadReciente']);
           Route::get('/salud', [DashboardOperationalController::class, 'getSaludSistema']);
+          // KPIs de inventario, mantenimientos y sanciones
+          Route::get('/kpis-inventario', [DashboardOperationalController::class, 'getKPIsInventario']);
+          Route::get('/kpis-mantenimientos', [DashboardOperationalController::class, 'getKPIsMantenimientos']);
+          Route::get('/kpis-sanciones', [DashboardOperationalController::class, 'getKPIsSanciones']);
       });

@@ -44,4 +44,23 @@ class ReportesInventarioController extends Controller
             )
         );
     }
+
+    public function demandaVsDisponibilidad(Request $request)
+    {
+        $inicio = $request->query('fecha_inicio') ?? $request->query('inicio');
+        $fin = $request->query('fecha_fin') ?? $request->query('fin');
+        $granularidad = $request->query('granularidad') ?? $request->query('granularity');
+        $tipoUso = $request->query('tipo_uso') ?? $request->query('tipoUso') ?? 'ambos';
+        $tipoEquipoId = $request->query('tipo_equipo_id') ? (int) $request->query('tipo_equipo_id') : null;
+
+        return response()->json(
+            $this->service->demandaVsDisponibilidad(
+                $inicio,
+                $fin,
+                $granularidad,
+                $tipoUso,
+                $tipoEquipoId
+            )
+        );
+    }
 }

@@ -1,10 +1,13 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { Chart } from 'chart.js/auto';
-import { ReportesService } from '../../../../services/reportes.service';
+import { ReportesService, FiltroReporte } from '../../../../services/reportes.service';
+import { ReportFiltersService, ReportFilter } from '../../../../services/report-filters.service';
+import { ReportFiltersComponent } from '../report-filters/report-filters.component';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExportButtonsComponent } from '../export-buttons/export-buttons.component';
 import { ExportService, ReporteData } from '../../../../services/export.service';
+import { Subject, takeUntil } from 'rxjs';
 
 /* ============================================================
    PLUGIN BARRAS REDONDEADAS CON SOMBRA
@@ -40,18 +43,65 @@ Chart.defaults.color = '#444';
 Chart.defaults.font.family = "'Inter', sans-serif";
 Chart.defaults.plugins.legend.display = false;
 
+type PeriodoPreset = 'mes' | 'trimestre' | 'semestre' | 'anio' | 'personalizado';
+
+interface FiltroGrafico {
+  periodo: PeriodoPreset;
+  fechaInicio: string;
+  fechaFin: string;
+}
+
 @Component({
   selector: 'app-reportes-equipos',
   standalone: true,
   templateUrl: './reportes-equipos.component.html',
   styleUrls: ['./reportes-equipos.component.css'],
-  imports: [CommonModule, DatePipe, ExportButtonsComponent, FormsModule],
+  imports: [CommonModule, DatePipe, ExportButtonsComponent, FormsModule, ReportFiltersComponent],
   providers: [DatePipe]
 })
 export class ReportesEquiposComponent implements OnInit, OnDestroy {
-  fechaInicio: string = '';
-  fechaFin: string = '';
-  periodo: string = 'dias';
+  // Nuevo: Subject para cleanup
+  private destroy$ = new Subject<void>();
+  
+  // Nuevo: Filtro centralizado actual
+  currentFilter: ReportFilter | null = null;
+  
+  // Loading states por sección
+  loadingEquipos = false;
+  loadingUso = false;
+  loadingSanciones = false;
+  loadingBaja = false;
+  loadingDisponibilidad = false;
+  loadingCriticos = false;
+  
+  // Error states
+  errorEquipos: string | null = null;
+  errorUso: string | null = null;
+  errorSanciones: string | null = null;
+
+  // Modo de filtro: global o individual
+  modoFiltro: 'global' | 'individual' = 'global';
+
+  // Filtro global
+  filtroGlobal: FiltroGrafico = {
+    periodo: 'anio',
+    fechaInicio: '',
+    fechaFin: ''
+  };
+
+  // Filtros individuales por gráfico
+  filtroUso: FiltroGrafico = { periodo: 'anio', fechaInicio: '', fechaFin: '' };
+  filtroSanciones: FiltroGrafico = { periodo: 'anio', fechaInicio: '', fechaFin: '' };
+  filtroDisponibilidad: FiltroGrafico = { periodo: 'anio', fechaInicio: '', fechaFin: '' };
+
+  // Presets de período disponibles
+  periodosDisponibles: { valor: PeriodoPreset; label: string }[] = [
+    { valor: 'mes', label: 'Último Mes' },
+    { valor: 'trimestre', label: 'Último Trimestre' },
+    { valor: 'semestre', label: 'Último Semestre' },
+    { valor: 'anio', label: 'Último Año' },
+    { valor: 'personalizado', label: 'Personalizado' }
+  ];
 
   tituloActual = 'Estadísticas de equipos';
 
@@ -71,6 +121,11 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
   usuarioGenera = '—';
   fechaGeneracion = new Date();
 
+  // Legacy compatibility
+  fechaInicio: string = '';
+  fechaFin: string = '';
+  periodo: string = 'dias';
+
   private datePipe = inject(DatePipe);
 
   private chartEquipos!: Chart;
@@ -79,35 +134,153 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
 
   constructor(
     private reportesService: ReportesService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private filterService: ReportFiltersService
   ) {}
 
   ngOnInit(): void {
+    this.inicializarFiltrosConFechasDefault();
     this.cargarUsuario();
+    
+    // Suscribirse al servicio de filtros centralizado
+    this.filterService.filter$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(filter => {
+        this.currentFilter = filter;
+        if (this.modoFiltro === 'global') {
+          this.cargarTodosLosDatos();
+        }
+      });
+
+    // Suscribirse al modo
+    this.filterService.mode$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(mode => {
+        this.modoFiltro = mode;
+      });
+  }
+
+  inicializarFiltrosConFechasDefault(): void {
+    const hoy = new Date();
+    const fechaFin = this.formatDate(hoy);
+    const hace1Anio = new Date(hoy);
+    hace1Anio.setFullYear(hace1Anio.getFullYear() - 1);
+    const fechaInicio = this.formatDate(hace1Anio);
+
+    this.filtroGlobal = { periodo: 'anio', fechaInicio, fechaFin };
+    this.filtroUso = { ...this.filtroGlobal };
+    this.filtroSanciones = { ...this.filtroGlobal };
+    this.filtroDisponibilidad = { ...this.filtroGlobal };
+  }
+
+  private formatDate(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+
+  // Calcula las fechas según el período seleccionado
+  calcularFechasPorPeriodo(filtro: FiltroGrafico): { inicio: string; fin: string } {
+    const hoy = new Date();
+    const fin = this.formatDate(hoy);
+    let inicio: Date;
+
+    switch (filtro.periodo) {
+      case 'mes':
+        inicio = new Date(hoy);
+        inicio.setMonth(inicio.getMonth() - 1);
+        break;
+      case 'trimestre':
+        inicio = new Date(hoy);
+        inicio.setMonth(inicio.getMonth() - 3);
+        break;
+      case 'semestre':
+        inicio = new Date(hoy);
+        inicio.setMonth(inicio.getMonth() - 6);
+        break;
+      case 'anio':
+        inicio = new Date(hoy);
+        inicio.setFullYear(inicio.getFullYear() - 1);
+        break;
+      case 'personalizado':
+        return { inicio: filtro.fechaInicio, fin: filtro.fechaFin };
+      default:
+        inicio = new Date(hoy);
+        inicio.setFullYear(inicio.getFullYear() - 1);
+    }
+
+    return { inicio: this.formatDate(inicio), fin };
+  }
+
+  // Obtiene el filtro correcto según el modo
+  getFiltroParaGrafico(tipo: 'uso' | 'sanciones' | 'disponibilidad'): FiltroReporte {
+    const filtro = this.modoFiltro === 'global' ? this.filtroGlobal : 
+      (tipo === 'uso' ? this.filtroUso : 
+       tipo === 'sanciones' ? this.filtroSanciones : this.filtroDisponibilidad);
+    
+    const { inicio, fin } = this.calcularFechasPorPeriodo(filtro);
+    return { fechaInicio: inicio, fechaFin: fin, periodo: filtro.periodo };
+  }
+
+  // Cambia el modo de filtro
+  cambiarModoFiltro(modo: 'global' | 'individual'): void {
+    this.modoFiltro = modo;
+    if (modo === 'global') {
+      this.cargarTodosLosDatos();
+    }
+  }
+
+  // Aplica filtro global a todos los gráficos
+  aplicarFiltroGlobal(): void {
+    this.actualizarRangoFechas();
+    this.cargarTodosLosDatos();
+    this.mostrarMensaje('Filtro global aplicado');
+  }
+
+  // Aplica filtro individual a un gráfico específico
+  aplicarFiltroIndividual(tipo: 'uso' | 'sanciones' | 'disponibilidad'): void {
+    switch (tipo) {
+      case 'uso':
+        this.cargarUsoInternoExterno();
+        break;
+      case 'sanciones':
+        this.cargarSancionesYRechazos();
+        break;
+      case 'disponibilidad':
+        this.cargarDisponibilidad();
+        break;
+    }
+    this.mostrarMensaje(`Filtro aplicado a ${tipo}`);
+  }
+
+  cargarTodosLosDatos(): void {
+    this.filterService.setLoading(true);
     this.cargarEquiposMasSolicitados();
     this.cargarUsoInternoExterno();
     this.cargarSancionesYRechazos();
     this.cargarEquiposDadoDeBaja();
     this.cargarDisponibilidad();
     this.cargarEquiposCriticos();
+    this.actualizarRangoFechas();
+    
+    // Terminar loading después de un momento
+    setTimeout(() => this.filterService.setLoading(false), 1500);
   }
 
-    filtrarPorFecha() {
-      // Aquí deberías llamar al backend con los parámetros de fecha y periodo
-      // Por ahora, solo actualiza el rango mostrado
-      let rango = '';
-      if (this.fechaInicio && this.fechaFin) {
-        rango = `Del ${this.datePipe.transform(this.fechaInicio, 'dd/MM/yyyy')} al ${this.datePipe.transform(this.fechaFin, 'dd/MM/yyyy')}`;
-      } else {
-        rango = 'Sin filtro';
-      }
-      this.rangoFechas = rango + (this.periodo ? ` (${this.periodo})` : '');
-      // Aquí deberías recargar los datos usando el filtro
-      // Ejemplo: this.reportesService.getEquiposMasSolicitados(this.fechaInicio, this.fechaFin, this.periodo).subscribe(...)
-      this.mostrarMensaje('Filtro aplicado.');
-    }
+  actualizarRangoFechas(): void {
+    const { inicio, fin } = this.calcularFechasPorPeriodo(this.filtroGlobal);
+    this.rangoFechas = `Del ${this.datePipe.transform(inicio, 'dd/MM/yyyy')} al ${this.datePipe.transform(fin, 'dd/MM/yyyy')}`;
+  }
+
+  filtrarPorFecha() {
+    // Legacy: sincroniza con el nuevo sistema
+    this.filtroGlobal.fechaInicio = this.fechaInicio;
+    this.filtroGlobal.fechaFin = this.fechaFin;
+    this.filtroGlobal.periodo = 'personalizado';
+    this.aplicarFiltroGlobal();
+  }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.chartEquipos?.destroy();
     this.chartUso?.destroy();
     this.chartSanciones?.destroy();
@@ -131,43 +304,60 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
      GRAFICO 1 – Equipos más solicitados
   ============================================================= */
   cargarEquiposMasSolicitados() {
-    this.reportesService.getEquiposMasSolicitados().subscribe((data) => {
-      const labels = data.map((x: any) => x.equipo);
-      const valores = data.map((x: any) => x.total_solicitudes);
+    this.loadingEquipos = true;
+    this.errorEquipos = null;
+    
+    // Usar filtro centralizado si está disponible
+    const filtro = this.currentFilter 
+      ? { fechaInicio: this.currentFilter.from, fechaFin: this.currentFilter.to }
+      : this.getFiltroParaGrafico('uso');
+      
+    this.reportesService.getEquiposMasSolicitados(filtro).subscribe({
+      next: (data) => {
+        this.loadingEquipos = false;
+        const items = Array.isArray(data) ? data : (data?.data || []);
+        const labels = items.map((x: any) => x.equipo);
+        const valores = items.map((x: any) => x.total || x.total_solicitudes);
 
-      this.chartEquipos?.destroy();
+        this.chartEquipos?.destroy();
 
-      const canvas = document.getElementById('graficoEquipos') as HTMLCanvasElement | null;
-      const ctx = canvas?.getContext('2d');
-      if (!ctx) return;
+        const canvas = document.getElementById('graficoEquipos') as HTMLCanvasElement | null;
+        const ctx = canvas?.getContext('2d');
+        if (!ctx) return;
 
-      const grad = ctx.createLinearGradient(0, 0, 0, 240);
-      grad.addColorStop(0, '#3b82f6');
-      grad.addColorStop(1, '#60a5fa');
+        const grad = ctx.createLinearGradient(0, 0, 0, 240);
+        grad.addColorStop(0, '#3b82f6');
+        grad.addColorStop(1, '#60a5fa');
 
-      this.chartEquipos = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            data: valores,
-            backgroundColor: grad,
-            borderRadius: 10,
-            borderSkipped: false,
-            barThickness: 22
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { ...this.animationConfig, duration: 900 },
-          scales: {
-            x: { grid: { display: false } },
-            y: { beginAtZero: true, grid: { color: 'rgba(15,23,42,0.06)' } }
+        this.chartEquipos = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              data: valores,
+              backgroundColor: grad,
+              borderRadius: 10,
+              borderSkipped: false,
+              barThickness: 22
+            }]
           },
-          plugins: { legend: { display: false } }
-        }
-      });
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { ...this.animationConfig, duration: 900 },
+            scales: {
+              x: { grid: { display: false } },
+              y: { beginAtZero: true, grid: { color: 'rgba(15,23,42,0.06)' } }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      },
+      error: (err) => {
+        this.loadingEquipos = false;
+        this.errorEquipos = 'Error cargando equipos más solicitados';
+        console.error(err);
+      }
     });
   }
 
@@ -175,40 +365,56 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
      GRAFICO 2 – Pie interno/externo
   ============================================================= */
   cargarUsoInternoExterno() {
-    this.reportesService.getUsoInternoExterno().subscribe((data) => {
-      const labels = data.map((x: any) => x.tipo);
-      const valores = data.map((x: any) => x.total);
+    this.loadingUso = true;
+    this.errorUso = null;
+    
+    const filtro = this.currentFilter 
+      ? { fechaInicio: this.currentFilter.from, fechaFin: this.currentFilter.to }
+      : this.getFiltroParaGrafico('uso');
+      
+    this.reportesService.getUsoInternoExterno(filtro).subscribe({
+      next: (data) => {
+        this.loadingUso = false;
+        const items = Array.isArray(data) ? data : (data?.data || []);
+        const labels = items.map((x: any) => x.tipo);
+        const valores = items.map((x: any) => x.total);
 
-      this.chartUso?.destroy();
+        this.chartUso?.destroy();
 
-      const canvas = document.getElementById('graficoUso') as HTMLCanvasElement | null;
-      const ctx = canvas?.getContext('2d');
-      if (!ctx) return;
+        const canvas = document.getElementById('graficoUso') as HTMLCanvasElement | null;
+        const ctx = canvas?.getContext('2d');
+        if (!ctx) return;
 
-      this.chartUso = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels,
-          datasets: [{
-            data: valores,
-            backgroundColor: ['#3b82f6', '#ef4444'],
-            borderColor: '#ffffff',
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { ...this.animationConfig, duration: 800 },
-          plugins: {
-            legend: {
-              display: true,
-              position: 'bottom',
-              labels: { boxWidth: 12, usePointStyle: true }
+        this.chartUso = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels,
+            datasets: [{
+              data: valores,
+              backgroundColor: ['#3b82f6', '#ef4444', '#8b5cf6'],
+              borderColor: '#ffffff',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { ...this.animationConfig, duration: 800 },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                labels: { boxWidth: 12, usePointStyle: true }
+              }
             }
           }
-        }
-      });
+        });
+      },
+      error: (error) => {
+        this.loadingUso = false;
+        this.errorUso = 'Error cargando uso interno/externo';
+        console.error('Error cargando uso interno/externo:', error);
+      }
     });
   }
 
@@ -216,38 +422,54 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
      GRAFICO 3 – Sanciones y Rechazos
   ============================================================= */
   cargarSancionesYRechazos() {
-    this.reportesService.getSancionesYRechazos().subscribe((data) => {
-      this.sanciones = data.total_sanciones;
-      this.rechazos = data.total_rechazos;
+    this.loadingSanciones = true;
+    this.errorSanciones = null;
+    
+    const filtro = this.currentFilter 
+      ? { fechaInicio: this.currentFilter.from, fechaFin: this.currentFilter.to }
+      : this.getFiltroParaGrafico('sanciones');
+      
+    this.reportesService.getSancionesYRechazos(filtro).subscribe({
+      next: (data) => {
+        this.loadingSanciones = false;
+        const result = data?.data || data;
+        this.sanciones = result.total_sanciones || 0;
+        this.rechazos = result.total_rechazos || 0;
 
-      this.chartSanciones?.destroy();
+        this.chartSanciones?.destroy();
 
-      const canvas = document.getElementById('graficoSanciones') as HTMLCanvasElement | null;
-      const ctx = canvas?.getContext('2d');
-      if (!ctx) return;
+        const canvas = document.getElementById('graficoSanciones') as HTMLCanvasElement | null;
+        const ctx = canvas?.getContext('2d');
+        if (!ctx) return;
 
-      this.chartSanciones = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Sanciones', 'Rechazos'],
-          datasets: [{
-            data: [this.sanciones, this.rechazos],
-            backgroundColor: ['#ef4444', '#f59e0b'],
-            borderRadius: 10,
-            borderSkipped: false,
-            barThickness: 26
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { ...this.animationConfig, duration: 850 },
-          scales: {
-            x: { grid: { display: false } },
-            y: { beginAtZero: true, grid: { color: 'rgba(15,23,42,0.06)' } }
+        this.chartSanciones = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Sanciones', 'Rechazos'],
+            datasets: [{
+              data: [this.sanciones, this.rechazos],
+              backgroundColor: ['#ef4444', '#f59e0b'],
+              borderRadius: 10,
+              borderSkipped: false,
+              barThickness: 26
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { ...this.animationConfig, duration: 850 },
+            scales: {
+              x: { grid: { display: false } },
+              y: { beginAtZero: true, grid: { color: 'rgba(15,23,42,0.06)' } }
+            }
           }
-        }
-      });
+        });
+      },
+      error: (error) => {
+        this.loadingSanciones = false;
+        this.errorSanciones = 'Error cargando sanciones y rechazos';
+        console.error('Error cargando sanciones:', error);
+      }
     });
   }
 
@@ -255,8 +477,21 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
      TABLA – Equipos dados de baja
   ============================================================= */
   cargarEquiposDadoDeBaja() {
-    this.reportesService.getEquiposDadoDeBaja().subscribe((data) => {
-      this.equiposBaja = data;
+    this.loadingBaja = true;
+    
+    const filtro = this.currentFilter 
+      ? { fechaInicio: this.currentFilter.from, fechaFin: this.currentFilter.to }
+      : this.getFiltroParaGrafico('disponibilidad');
+      
+    this.reportesService.getEquiposDadoDeBaja(filtro).subscribe({
+      next: (data) => {
+        this.loadingBaja = false;
+        this.equiposBaja = Array.isArray(data) ? data : (data?.data || []);
+      },
+      error: (err) => {
+        this.loadingBaja = false;
+        console.error('Error cargando equipos de baja:', err);
+      }
     });
   }
 

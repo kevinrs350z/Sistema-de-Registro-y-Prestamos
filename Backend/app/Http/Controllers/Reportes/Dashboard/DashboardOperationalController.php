@@ -80,4 +80,20 @@ class DashboardOperationalController extends Controller
     {
         return response()->json($this->service->getAlertasPorProfesor((int)$id));
     }
+
+    // KPIs de inventario, mantenimientos y sanciones
+    public function getKPIsInventario()
+    {
+        return response()->json($this->service->getKPIsInventario());
+    }
+
+    public function getKPIsMantenimientos()
+    {
+        return response()->json($this->service->getKPIsMantenimientos());
+    }
+
+    public function getKPIsSanciones()
+    {
+        return response()->json($this->service->getKPIsSanciones());
+    }
 }

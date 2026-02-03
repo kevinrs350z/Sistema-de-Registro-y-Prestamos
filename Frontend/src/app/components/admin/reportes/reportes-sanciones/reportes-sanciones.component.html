@@ -1,39 +1,33 @@
 <div class="report-page report-animate">
 <div class="reportes-wrapper container report-surface py-4">
 
-	<div class="report-section-header">
-		<div>
-			<h2 class="report-section-title">Reporte de Sanciones y Bloqueos</h2>
-			<p class="report-section-subtitle">Indicadores disciplinarios y reincidencia</p>
-		</div>
-		<div class="report-section-actions"></div>
-	</div>
-
-	<app-export-buttons
+	<!-- Filtros BI con exportación integrada -->
+	<app-report-filters
 		[onExportPDF]="exportarPDF.bind(this)"
 		[onExportExcel]="exportarExcel.bind(this)">
-	</app-export-buttons>
+	</app-report-filters>
 
 	<div id="contenidoPDFSanciones" class="page-wrapper">
 
-		<div class="inst-header">
-			<img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
-			<div>
-				<h1 class="inst-title">{{ universidad }}</h1>
-				<p class="inst-subtitle">{{ departamento }}</p>
-				<p class="inst-report">{{ reporteTitulo }}</p>
-				<div class="inst-info">
-					<span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
-					<span>Usuario: {{ usuarioGenera }}</span>
-					<span>Rango: {{ rangoFechas }}</span>
-				</div>
-			</div>
-		</div>
-
 		<div class="two-cols mb-4">
+			<!-- KPIs Card -->
 			<div class="card fade-in">
 				<h2 class="card-title">KPIs disciplinarios</h2>
-				<div class="kpi-wrapper">
+				<!-- Skeleton KPIs -->
+				<div *ngIf="loadingKpis" class="kpi-wrapper">
+					<div class="kpi-item skeleton-kpi"><div class="skeleton-value"></div><div class="skeleton-label"></div></div>
+					<div class="kpi-item skeleton-kpi"><div class="skeleton-value"></div><div class="skeleton-label"></div></div>
+					<div class="kpi-item skeleton-kpi"><div class="skeleton-value"></div><div class="skeleton-label"></div></div>
+					<div class="kpi-item skeleton-kpi"><div class="skeleton-value"></div><div class="skeleton-label"></div></div>
+				</div>
+				<!-- Error KPIs -->
+				<div *ngIf="!loadingKpis && errorKpis" class="error-state">
+					<span class="error-icon">⚠️</span>
+					<span>{{ errorKpis }}</span>
+					<button class="btn-retry" (click)="cargarKPIs()">Reintentar</button>
+				</div>
+				<!-- Content KPIs -->
+				<div *ngIf="!loadingKpis && !errorKpis" class="kpi-wrapper">
 					<div class="kpi-item"><h3>{{ kpis.sancionesActivas }}</h3><span>Sanciones activas</span></div>
 					<div class="kpi-item"><h3>{{ kpis.sancionesTotal }}</h3><span>Total sanciones</span></div>
 					<div class="kpi-item"><h3>{{ kpis.bloqueosActivos }}</h3><span>Bloqueos activos</span></div>
@@ -41,31 +35,78 @@
 				</div>
 			</div>
 
+			<!-- Motivos Chart -->
 			<div class="card fade-in">
 				<h2 class="card-title">Motivos más frecuentes</h2>
 				<p class="card-subtitle">Distribución de sanciones por motivo</p>
-				<div class="chart-area">
+				<!-- Skeleton -->
+				<div *ngIf="loadingMotivos" class="chart-area skeleton-chart">
+					<div class="skeleton-donut"></div>
+				</div>
+				<!-- Error -->
+				<div *ngIf="!loadingMotivos && errorMotivos" class="chart-area error-state">
+					<span class="error-icon">⚠️</span>
+					<span>{{ errorMotivos }}</span>
+					<button class="btn-retry" (click)="cargarMotivos()">Reintentar</button>
+				</div>
+				<!-- Content -->
+				<div class="chart-area" [class.hidden]="loadingMotivos || errorMotivos">
 					<canvas #motivosChart></canvas>
 				</div>
 			</div>
 		</div>
 
+		<!-- Reincidencia Chart -->
 		<div class="card fade-in mb-4">
 			<h2 class="card-title">Reincidencia de usuarios</h2>
 			<p class="card-subtitle">Usuarios con mayor número de sanciones</p>
-			<div class="chart-area">
+			<!-- Skeleton -->
+			<div *ngIf="loadingReincidencia" class="chart-area skeleton-chart">
+				<div class="skeleton-bar-group horizontal">
+					<div class="skeleton-bar-h"></div>
+					<div class="skeleton-bar-h" style="width: 85%"></div>
+					<div class="skeleton-bar-h" style="width: 70%"></div>
+					<div class="skeleton-bar-h" style="width: 55%"></div>
+					<div class="skeleton-bar-h" style="width: 40%"></div>
+				</div>
+			</div>
+			<!-- Error -->
+			<div *ngIf="!loadingReincidencia && errorReincidencia" class="chart-area error-state">
+				<span class="error-icon">⚠️</span>
+				<span>{{ errorReincidencia }}</span>
+				<button class="btn-retry" (click)="cargarReincidencia()">Reintentar</button>
+			</div>
+			<!-- Content -->
+			<div class="chart-area" [class.hidden]="loadingReincidencia || errorReincidencia">
 				<canvas #reincidenciaChart></canvas>
 			</div>
 		</div>
 
 		<div class="two-cols">
+			<!-- Tabla Bloqueos Activos -->
 			<div class="tabla-pro-card fade-in">
 				<div class="tabla-pro-header bg-danger-pro">
 					<h2 class="tabla-pro-title">Bloqueos Activos</h2>
 					<p class="tabla-pro-subtitle">Usuarios con restricción de acceso al sistema</p>
 				</div>
 				<div class="tabla-pro-container">
-					<table class="tabla-pro">
+					<!-- Skeleton Table -->
+					<div *ngIf="loadingBloqueos" class="skeleton-table">
+						<div class="skeleton-row" *ngFor="let i of [1,2,3,4]">
+							<div class="skeleton-cell medium"></div>
+							<div class="skeleton-cell large"></div>
+							<div class="skeleton-cell medium"></div>
+							<div class="skeleton-cell small"></div>
+						</div>
+					</div>
+					<!-- Error -->
+					<div *ngIf="!loadingBloqueos && errorBloqueos" class="error-state table-error">
+						<span class="error-icon">⚠️</span>
+						<span>{{ errorBloqueos }}</span>
+						<button class="btn-retry" (click)="cargarBloqueos()">Reintentar</button>
+					</div>
+					<!-- Content -->
+					<table class="tabla-pro" [class.hidden]="loadingBloqueos || errorBloqueos">
 						<thead>
 							<tr>
 								<th>Usuario</th>
@@ -101,13 +142,30 @@
 				</div>
 			</div>
 
+			<!-- Tabla Relación Atrasos -->
 			<div class="tabla-pro-card fade-in">
 				<div class="tabla-pro-header bg-primary-pro">
 					<h2 class="tabla-pro-title">Relación Sanciones / Atrasos</h2>
 					<p class="tabla-pro-subtitle">Análisis comparativo de incidentes por usuario</p>
 				</div>
 				<div class="tabla-pro-container">
-					<table class="tabla-pro">
+					<!-- Skeleton Table -->
+					<div *ngIf="loadingRelacionAtrasos" class="skeleton-table">
+						<div class="skeleton-row" *ngFor="let i of [1,2,3,4]">
+							<div class="skeleton-cell medium"></div>
+							<div class="skeleton-cell large"></div>
+							<div class="skeleton-cell small"></div>
+							<div class="skeleton-cell small"></div>
+						</div>
+					</div>
+					<!-- Error -->
+					<div *ngIf="!loadingRelacionAtrasos && errorRelacionAtrasos" class="error-state table-error">
+						<span class="error-icon">⚠️</span>
+						<span>{{ errorRelacionAtrasos }}</span>
+						<button class="btn-retry" (click)="cargarRelacionAtrasos()">Reintentar</button>
+					</div>
+					<!-- Content -->
+					<table class="tabla-pro" [class.hidden]="loadingRelacionAtrasos || errorRelacionAtrasos">
 						<thead>
 							<tr>
 								<th>Usuario</th>

@@ -475,19 +475,19 @@ guardarCambiosEquipo() {
 
   this.guardando = true;
 
-  // ELIMINAR
-  if (this.equipoSeleccionado.estado === 'ELIMINAR') {
+  // DAR DE BAJA
+  if (this.equipoSeleccionado.estado === 'BAJA') {
     this.equiposService.eliminarEquipo(this.equipoSeleccionado.id)
       .subscribe({
         next: () => {
-          this.notify.success('Equipo eliminado correctamente.');
+          this.notify.success('Equipo dado de baja correctamente.');
           this.cargarEquipos();
           this.cerrarPanel();
           this.guardando = false;
         },
         error: err => {
           console.error(err);
-          this.notify.error('Ocurrió un error al eliminar el equipo.');
+          this.notify.error('Ocurrió un error al dar de baja el equipo.');
           this.guardando = false;
         }
       });
@@ -533,6 +533,7 @@ private getTipoEquipoById(tipoId: number): any | null {
       : null;
 
     return this.imagenSrv.resolveTipoEquipoImage({
+      imagen_url: tipo?.imagen_url,
       imagen: tipo?.imagen,
       nombre: tipo?.nombre ?? equipo?.nombre
     });
@@ -548,6 +549,7 @@ private getTipoEquipoById(tipoId: number): any | null {
     ) ?? null;
 
     return this.imagenSrv.resolveTipoEquipoImage({
+      imagen_url: tipo?.imagen_url,
       imagen: tipo?.imagen,
       nombre: tipo?.nombre ?? modeloSeleccionado?.nombre
     });

@@ -1,6 +1,6 @@
 /* ===== Global base (tipografía + paleta naranja-azul pastel) ===== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-@import url('../src/app/components/admin/reportes/styles/reportes.css');
+@import url('../src/app/components/admin/reportes/styles/reportes-bi.css');
 :root {
   --bg: #ffffff;          /* fondo general */
   --bg-elev: #dbe8fa;     /* navbar y secciones elevadas */

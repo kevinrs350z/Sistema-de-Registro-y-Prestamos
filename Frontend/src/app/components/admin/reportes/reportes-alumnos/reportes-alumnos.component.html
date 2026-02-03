@@ -1,135 +1,178 @@
 <div class="report-page report-animate">
 <div class="reportes-wrapper container report-surface py-4">
 
-  <div class="report-section-header">
-    <div>
-      <h2 class="report-section-title">Reporte de Alumnos</h2>
-      <p class="report-section-subtitle">Comportamiento, sanciones y uso del sistema</p>
-    </div>
-    <div class="report-section-actions"></div>
-  </div>
+  
 
-
-
-  <!-- Botones de exportación -->
-  <app-export-buttons
+  <!-- Componente de filtros BI con exportación integrada -->
+  <app-report-filters 
+    [showAnioIngreso]="true"
     [onExportPDF]="exportarPDF.bind(this)"
     [onExportExcel]="exportarExcel.bind(this)">
-  </app-export-buttons>
+  </app-report-filters>
 
   <!-- CONTENIDO EXPORTABLE A PDF -->
   <div id="contenidoPDFAlumnos" class="page-wrapper">
 
-    <div class="inst-header">
-      <img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
+    <!-- Header compacto minimalista -->
+    <header class="compact-header">
       <div>
-        <h1 class="inst-title">{{ universidad }}</h1>
-        <p class="inst-subtitle">{{ departamento }}</p>
-        <p class="inst-report">{{ reporteTitulo }}</p>
-        <div class="inst-info">
-          <span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
-          <span>Usuario: {{ usuarioGenera }}</span>
-          <span>Rango: {{ rangoFechas }}</span>
-        </div>
+        <h4 class="compact-title">Reporte de Alumnos</h4>
+        <p class="compact-subtitle">Comportamiento, sanciones y uso del sistema</p>
       </div>
-    </div>
-
- 
-
-    <hr class="pdf-divider fade-in" />
+      <div class="compact-meta">
+        <span><i class="bi bi-calendar3"></i> {{ rangoFechas }}</span>
+      </div>
+    </header>
 
     
 
     <!-- ============== Fila 1: evolución de préstamos ============== -->
     <div class="two-cols mb-4">
       <!-- Evolución de préstamos (línea) -->
-      <div class="card fade-in">
+      <div class="card fade-in" [class.loading]="loadingEvolucion">
         <h2 class="card-title">Evolución de préstamos</h2>
         <p class="card-subtitle">
           Tendencia temporal de los préstamos realizados por alumnos.
         </p>
-        <div class="chart-area">
+        
+        <!-- Skeleton loader -->
+        <div *ngIf="loadingEvolucion" class="skeleton-container">
+          <div class="skeleton-line-chart"></div>
+        </div>
+        
+        <!-- Error state -->
+        <div *ngIf="errorEvolucion && !loadingEvolucion" class="error-state">
+          <span class="error-icon">⚠️</span>
+          <p>{{ errorEvolucion }}</p>
+          <button class="retry-btn" (click)="cargarEvolucionPrestamos()">Reintentar</button>
+        </div>
+        
+        <div class="chart-area" [class.hidden]="loadingEvolucion || errorEvolucion">
           <canvas #evolucionPrestamosCanvas></canvas>
         </div>
       </div>
 
       <!-- Gráfico sanciones por nivel -->
-      <div class="card fade-in">
+      <div class="card fade-in" [class.loading]="loadingSanciones">
         <h2 class="card-title">Sanciones por nivel</h2>
         <p class="card-subtitle">
           Distribución de sanciones leves, medias y graves.
         </p>
-        <div class="chart-area">
+        
+        <!-- Skeleton loader -->
+        <div *ngIf="loadingSanciones" class="skeleton-container">
+          <div class="skeleton-circle"></div>
+        </div>
+        
+        <!-- Error state -->
+        <div *ngIf="errorSanciones && !loadingSanciones" class="error-state">
+          <span class="error-icon">⚠️</span>
+          <p>{{ errorSanciones }}</p>
+          <button class="retry-btn" (click)="cargarSancionesPorNivel()">Reintentar</button>
+        </div>
+        
+        <div class="chart-area" [class.hidden]="loadingSanciones || errorSanciones">
           <canvas #sancionesNivelCanvas></canvas>
         </div>
       </div>
     </div>
 
-    <!-- ============== Ranking de alumnos ============== -->
-    <div class="ranking-card-pro fade-in">
+    <!-- ============== Top alumnos (uso) ============== -->
+    <div class="ranking-card-pro fade-in" [class.loading]="loadingRanking">
       <div class="ranking-header-pro">
-        <h2 class="ranking-title-pro">Ranking de Alumnos</h2>
-        <p class="ranking-subtitle-pro">Estudiantes destacados por uso del sistema de préstamos</p>
+        <h2 class="ranking-title-pro">Alumnos con más uso</h2>
+        <p class="ranking-subtitle-pro">Estudiantes que más solicitan y usan préstamos</p>
       </div>
 
-      <!-- Gráfico -->
-      <div class="ranking-chart-area">
-        <canvas #topAlumnosCanvas></canvas>
+      <!-- Skeleton loader -->
+      <div *ngIf="loadingRanking" class="skeleton-container" style="padding: 40px;">
+        <div class="skeleton-bar" style="height: 200px; margin-bottom: 20px;"></div>
+        <div class="skeleton-table">
+          <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+        </div>
+      </div>
+      
+      <!-- Error state -->
+      <div *ngIf="errorRanking && !loadingRanking" class="error-state" style="padding: 60px;">
+        <span class="error-icon">⚠️</span>
+        <p>{{ errorRanking }}</p>
+        <button class="retry-btn" (click)="cargarTopAlumnos()">Reintentar</button>
       </div>
 
-      <!-- Tabla -->
-      <div class="ranking-table-wrapper">
-        <table class="ranking-table-pro">
-          <thead>
-            <tr>
-              <th class="th-pos">Posición</th>
-              <th class="th-estudiante">Estudiante</th>
-              <th class="th-correo">Correo Institucional</th>
-              <th class="th-prestamos">Total Préstamos</th>
-              <th class="th-sanciones">Sanciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let a of topAlumnos; let i = index" class="ranking-row-pro" [class.top-3]="i < 3">
-              <td class="td-pos">
-                <span class="pos-badge-pro" [class]="'pos-' + (i + 1)">
-                  {{ i + 1 }}
-                </span>
-              </td>
-              <td class="td-estudiante">
-                <div class="estudiante-info-pro">
-                  <div class="estudiante-avatar-pro">{{ a.nombre ? a.nombre.charAt(0) : 'U' }}</div>
-                  <span class="estudiante-nombre-pro">{{ a.nombre }}</span>
-                </div>
-              </td>
-              <td class="td-correo">
-                <span class="correo-texto">{{ a.email }}</span>
-              </td>
-              <td class="td-prestamos">
-                <span class="prestamos-badge-pro">{{ a.total_prestamos }}</span>
-              </td>
-              <td class="td-sanciones">
-                <span class="sanciones-badge-pro" [class.con-sanciones]="(a.sanciones ?? 0) > 0">
-                  {{ a.sanciones ?? 0 }}
-                </span>
-              </td>
-            </tr>
+      <div [class.hidden]="loadingRanking || errorRanking">
+        <!-- Gráfico -->
+        <div class="ranking-chart-area">
+          <canvas #topAlumnosCanvas></canvas>
+        </div>
 
-            <tr *ngIf="topAlumnos.length === 0">
-              <td colspan="5" class="td-empty-ranking">
-                <div class="empty-ranking-state">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
-                  <span>No hay datos disponibles para el ranking</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Tabla con métricas BI -->
+        <div class="ranking-table-wrapper">
+          <table class="ranking-table-pro">
+            <thead>
+              <tr>
+                <th class="th-pos">Pos.</th>
+                <th class="th-estudiante">Estudiante</th>
+                <th class="th-correo">Correo</th>
+                <th class="th-prestamos">Total</th>
+                <th class="th-internos">Int.</th>
+                <th class="th-externos">Ext.</th>
+                <th class="th-sanciones">Sanc.</th>
+                <th class="th-tasa">% Sanc.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of topAlumnos; let i = index" class="ranking-row-pro" [class.top-3]="i < 3">
+                <td class="td-pos">
+                  <span class="pos-badge-pro" [class]="'pos-' + (i + 1)">
+                    {{ i + 1 }}
+                  </span>
+                </td>
+                <td class="td-estudiante">
+                  <div class="estudiante-info-pro">
+                    <div class="estudiante-avatar-pro">{{ a.nombre ? a.nombre.charAt(0) : 'U' }}</div>
+                    <span class="estudiante-nombre-pro">{{ a.nombre }}</span>
+                  </div>
+                </td>
+                <td class="td-correo">
+                  <span class="correo-texto">{{ a.email }}</span>
+                </td>
+                <td class="td-prestamos">
+                  <span class="prestamos-badge-pro">{{ a.total_prestamos }}</span>
+                </td>
+                <td class="td-internos">
+                  <span class="tipo-badge interno">{{ a.prestamos_internos ?? 0 }}</span>
+                </td>
+                <td class="td-externos">
+                  <span class="tipo-badge externo">{{ a.prestamos_externos ?? 0 }}</span>
+                </td>
+                <td class="td-sanciones">
+                  <span class="sanciones-badge-pro" [class.con-sanciones]="(a.sanciones ?? 0) > 0">
+                    {{ a.sanciones ?? 0 }}
+                  </span>
+                </td>
+                <td class="td-tasa">
+                  <span class="tasa-badge" [class.alta]="(a.tasa_sancion ?? 0) > 10">
+                    {{ (a.tasa_sancion ?? 0).toFixed(1) }}%
+                  </span>
+                </td>
+              </tr>
+
+              <tr *ngIf="topAlumnos.length === 0 && !loadingRanking">
+                <td colspan="8" class="td-empty-ranking">
+                  <div class="empty-ranking-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>No hay datos disponibles para el ranking</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

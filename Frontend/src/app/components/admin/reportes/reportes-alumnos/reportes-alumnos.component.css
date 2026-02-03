@@ -1,40 +1,22 @@
-/* Reutilizamos el look & feel global de reportes */
-.reportes-wrapper {
-  font-family: 'Inter', sans-serif;
-}
+/* Reutilizamos el look & feel global de reportes-bi.css */
 
-/* Un poquito de espacio desde el navbar admin */
-.reportes-wrapper.container {
-  margin-top: 40px;
-}
-
-/* Ajuste pequeño para este reporte en particular (opcional) */
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
+/* Override cards para este reporte */
 .card-title::before {
   content: '';
   display: inline-block;
-  width: 6px;
-  height: 24px;
+  width: 3px;
+  height: 16px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #0d6efd, #6c5ce7);
-}
-
-.styled-table {
-  margin-bottom: 0;
+  background: #118dff;
 }
 
 .chart-area {
-  height: 320px;
+  height: 280px;
   position: relative;
 }
 
 .chart-area-sm {
-  height: 260px;
+  height: 220px;
   position: relative;
 }
 
@@ -55,15 +37,15 @@ canvas {
   overflow: visible;
 }
 
-/* Animaciones de carga más suaves */
+/* Animaciones de carga suaves */
 .card.fade-in {
-  animation: slideInUp 0.55s ease both;
+  animation: slideInUp 0.4s ease both;
 }
 
 @keyframes slideInUp {
   from {
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -337,5 +319,242 @@ canvas {
   
   .td-correo {
     display: none;
+  }
+}
+
+/* ============ SKELETON LOADERS (BI STYLE) ============ */
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+}
+
+.skeleton-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+.skeleton-line-chart {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+.skeleton-bar {
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+.skeleton-table {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-row {
+  width: 100%;
+  height: 50px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============ ERROR STATE ============ */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+}
+
+.error-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.error-state p {
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.retry-btn {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.retry-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* ============ LOADING STATE FOR CARDS ============ */
+.card.loading,
+.ranking-card-pro.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ================== Encabezado compacto ================== */
+.compact-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0 8px;
+}
+
+.compact-title {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.compact-subtitle {
+  margin: 4px 0 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.compact-meta i {
+  margin-right: 6px;
+  color: #0ea5e9;
+}
+
+/* ============ NUEVAS COLUMNAS BI: INTERNO/EXTERNO/TASA ============ */
+
+/* Badges de tipo (interno/externo) */
+.tipo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.tipo-badge.interno {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(243, 156, 18, 0.3);
+}
+
+.tipo-badge.externo {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(155, 89, 182, 0.3);
+}
+
+/* Badge de tasa de sanción */
+.tasa-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.tasa-badge.alta {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
+/* Columnas más compactas */
+.th-internos,
+.th-externos,
+.th-tasa,
+.td-internos,
+.td-externos,
+.td-tasa {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Ajustar ancho de columnas */
+.th-pos,
+.td-pos {
+  width: 60px;
+}
+
+.th-prestamos,
+.td-prestamos {
+  width: 70px;
+  text-align: center;
+}
+
+.th-sanciones,
+.td-sanciones {
+  width: 60px;
+  text-align: center;
+}
+
+/* Responsive para tabla con más columnas */
+@media (max-width: 1024px) {
+  .ranking-table-pro th,
+  .ranking-table-pro td {
+    padding: 10px 6px;
+    font-size: 0.75rem;
+  }
+  
+  .tipo-badge,
+  .tasa-badge {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    min-width: 30px;
+  }
+  
+  .prestamos-badge-pro {
+    min-width: 40px;
+    padding: 6px 10px;
   }
 }

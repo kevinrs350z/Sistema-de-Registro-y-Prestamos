@@ -4,95 +4,98 @@
   <!-- Mensaje flotante -->
   <div *ngIf="mensaje" class="msg-box">{{ mensaje }}</div>
 
-  <!-- Título general -->
-  <div class="report-section-header">
-    <div>
-      <h2 class="report-section-title">Reportes de Equipos</h2>
-      <p class="report-section-subtitle">Estadísticas del Sistema de Préstamos de Equipos</p>
-    </div>
-    <div class="report-section-actions"></div>
-      <!-- Filtros de fecha -->
-      <div class="report-fecha-filtros">
-        <label>Desde:</label>
-        <input type="date" [(ngModel)]="fechaInicio" />
-        <label>Hasta:</label>
-        <input type="date" [(ngModel)]="fechaFin" />
-        <select [(ngModel)]="periodo">
-          <option value="dias">Días</option>
-          <option value="meses">Meses</option>
-          <option value="anios">Años</option>
-        </select>
-        <button (click)="filtrarPorFecha()">Filtrar</button>
-      </div>
-  </div>
-
-  <!-- Botones de exportación -->
-  <app-export-buttons 
-    [onExportPDF]="exportarPDF.bind(this)" 
+  <!-- Componente de filtros BI con exportación integrada -->
+  <app-report-filters
+    [onExportPDF]="exportarPDF.bind(this)"
     [onExportExcel]="exportExcel.bind(this)">
-  </app-export-buttons>
+  </app-report-filters>
 
   <!-- CONTENIDO EXPORTABLE A PDF -->
   <div id="contenidoPDF" class="page-wrapper">
-
-    <!-- ENCABEZADO INSTITUCIONAL -->
-    <div class="inst-header">
-      <img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
-      <div>
-        <h1 class="inst-title">{{ universidad }}</h1>
-        <p class="inst-subtitle">{{ departamento }}</p>
-        <p class="inst-report">{{ reporteTitulo }}</p>
-        <div class="inst-info">
-          <span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
-          <span>Usuario: {{ usuarioGenera }}</span>
-          <span>Rango: {{ rangoFechas }}</span>
-        </div>
-      </div>
-    </div>
-
-    <hr class="pdf-divider fade-in" />
-
-    <!-- GRAFICO: Equipos más solicitados 
-    <div class="card fade-in">
-      <h2 class="card-title">Equipos más solicitados</h2>
-      <p class="card-subtitle">Cantidad total de solicitudes por tipo de equipo</p>
-
-      <div class="chart-area">
-        <canvas id="graficoEquipos"></canvas>
-      </div>
-    </div>-->
 
     <!-- GRAFICOS EN DOS COLUMNAS -->
     <div class="two-cols">
 
       <!-- Uso interno / externo -->
-      <div class="card fade-in">
-        <h2 class="card-title">Uso interno vs externo</h2>
-        <p class="card-subtitle">Distribución según tipo de préstamo</p>
+      <div class="card fade-in" [class.loading]="loadingUso">
+        <div class="card-header-filtro">
+          <div>
+            <h2 class="card-title">Uso interno vs externo</h2>
+            <p class="card-subtitle">Distribución según tipo de préstamo</p>
+          </div>
+          <!-- Filtro individual -->
+          <div class="filtro-individual" *ngIf="modoFiltro === 'individual'">
+            <select [(ngModel)]="filtroUso.periodo" class="filtro-mini">
+              <option *ngFor="let p of periodosDisponibles" [value]="p.valor">{{ p.label }}</option>
+            </select>
+            <button class="filtro-btn-mini" (click)="aplicarFiltroIndividual('uso')">🔄</button>
+          </div>
+        </div>
 
-        <div class="chart-area-sm">
+        <!-- Skeleton loader -->
+        <div *ngIf="loadingUso" class="skeleton-container">
+          <div class="skeleton-circle"></div>
+        </div>
+        
+        <!-- Error state -->
+        <div *ngIf="errorUso && !loadingUso" class="error-state">
+          <span class="error-icon">⚠️</span>
+          <p>{{ errorUso }}</p>
+          <button class="retry-btn" (click)="cargarUsoInternoExterno()">Reintentar</button>
+        </div>
+
+        <div class="chart-area-sm" [class.hidden]="loadingUso || errorUso">
           <canvas id="graficoUso"></canvas>
         </div>
       </div>
 
       <!-- Sanciones / Rechazos -->
-      <div class="card fade-in">
-        <h2 class="card-title">Sanciones y rechazos</h2>
-        <p class="card-subtitle">Indicadores disciplinarios asociados a los préstamos</p>
-
-        <div class="kpi-wrapper">
-          <div class="kpi-item">
-            <h3>{{ sanciones }}</h3>
-            <span>Sanciones</span>
+      <div class="card fade-in" [class.loading]="loadingSanciones">
+        <div class="card-header-filtro">
+          <div>
+            <h2 class="card-title">Sanciones y rechazos</h2>
+            <p class="card-subtitle">Indicadores disciplinarios asociados a los préstamos</p>
           </div>
-          <div class="kpi-item">
-            <h3>{{ rechazos }}</h3>
-            <span>Rechazos</span>
+          <!-- Filtro individual -->
+          <div class="filtro-individual" *ngIf="modoFiltro === 'individual'">
+            <select [(ngModel)]="filtroSanciones.periodo" class="filtro-mini">
+              <option *ngFor="let p of periodosDisponibles" [value]="p.valor">{{ p.label }}</option>
+            </select>
+            <button class="filtro-btn-mini" (click)="aplicarFiltroIndividual('sanciones')">🔄</button>
           </div>
         </div>
 
-        <div class="chart-area-sm">
-          <canvas id="graficoSanciones"></canvas>
+        <!-- Skeleton loader -->
+        <div *ngIf="loadingSanciones" class="skeleton-container">
+          <div class="skeleton-kpi-row">
+            <div class="skeleton-kpi"></div>
+            <div class="skeleton-kpi"></div>
+          </div>
+          <div class="skeleton-bar"></div>
+        </div>
+        
+        <!-- Error state -->
+        <div *ngIf="errorSanciones && !loadingSanciones" class="error-state">
+          <span class="error-icon">⚠️</span>
+          <p>{{ errorSanciones }}</p>
+          <button class="retry-btn" (click)="cargarSancionesYRechazos()">Reintentar</button>
+        </div>
+
+        <div [class.hidden]="loadingSanciones || errorSanciones">
+          <div class="kpi-wrapper">
+            <div class="kpi-item">
+              <h3>{{ sanciones }}</h3>
+              <span>Sanciones</span>
+            </div>
+            <div class="kpi-item">
+              <h3>{{ rechazos }}</h3>
+              <span>Rechazos</span>
+            </div>
+          </div>
+
+          <div class="chart-area-sm">
+            <canvas id="graficoSanciones"></canvas>
+          </div>
         </div>
       </div>
 

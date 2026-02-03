@@ -181,9 +181,33 @@ export class ReportesDashboardComponent implements OnInit, OnDestroy {
           type: 'bar',
           data: {
             labels: ['Sanciones', 'Rechazos'],
-            datasets: [{ data: [this.sanciones, this.rechazos], backgroundColor: ['#e74c3c', '#f1c40f'] }]
+            datasets: [{ 
+              data: [this.sanciones, this.rechazos], 
+              backgroundColor: ['#fca5a5', '#fcd34d'],
+              borderColor: ['#ef4444', '#f59e0b'],
+              borderWidth: 1,
+              borderRadius: 4,
+              barThickness: 32
+            }]
           },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { 
+                grid: { display: false },
+                ticks: { font: { size: 11 } }
+              },
+              y: { 
+                beginAtZero: true,
+                grid: { color: '#f1f5f9' },
+                ticks: { font: { size: 10 } }
+              }
+            }
+          }
         });
       },
       error: () => this.mostrarMensaje('Error al cargar sanciones.')
@@ -195,7 +219,7 @@ export class ReportesDashboardComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.topAlumnos = data || [];
 
-        const labels = this.topAlumnos.map((x: any) => x.nombre);
+        const labels = this.topAlumnos.map((x: any) => x.nombre?.split(' ')[0] || 'N/A');
         const valores = this.topAlumnos.map((x: any) => x.total_solicitudes);
 
         this.chartTopAlumnos?.destroy();
@@ -203,9 +227,34 @@ export class ReportesDashboardComponent implements OnInit, OnDestroy {
           type: 'bar',
           data: {
             labels,
-            datasets: [{ data: valores, backgroundColor: '#6c5ce7' }]
+            datasets: [{ 
+              data: valores, 
+              backgroundColor: '#e0e7ff',
+              borderColor: '#818cf8',
+              borderWidth: 1,
+              borderRadius: 4,
+              barThickness: 28
+            }]
           },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: { 
+            indexAxis: 'y',
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { 
+                beginAtZero: true,
+                grid: { color: '#f1f5f9' },
+                ticks: { font: { size: 10 } }
+              },
+              y: { 
+                grid: { display: false },
+                ticks: { font: { size: 11 } }
+              }
+            }
+          }
         });
       },
       error: () => this.mostrarMensaje('Error al cargar top alumnos.')

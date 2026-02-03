@@ -23,9 +23,16 @@ export class ImagenService {
   /**
    * Resolver final de imagen para un tipo de equipo
    * Solo devuelve imágenes del backend, nunca del frontend
+   * Prioridad: imagen_url (ya formateada) > imagen (ruta relativa)
    * @returns URL del backend o null si no hay imagen
    */
-  resolveTipoEquipoImage(tipo: { imagen?: string; nombre?: string }): string | null {
+  resolveTipoEquipoImage(tipo: { imagen_url?: string; imagen?: string; nombre?: string }): string | null {
+    // Si el backend ya envía imagen_url formateada, usarla
+    if (tipo?.imagen_url) {
+      return tipo.imagen_url;
+    }
+    
+    // Si solo viene la ruta relativa, construir URL
     if (tipo?.imagen) {
       return this.getStorageImage(tipo.imagen);
     }

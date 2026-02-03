@@ -1,20 +1,29 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { Subject, takeUntil } from "rxjs";
 import * as echarts from "echarts";
 import { ReportesProfesoresService } from "../../../../services/reportes/reportes-profesores.service";
 import { ExportService, ReporteData } from "../../../../services/export.service";
 import { ExportButtonsComponent } from "../export-buttons/export-buttons.component";
+import { ReportFiltersComponent } from "../report-filters/report-filters.component";
+import { ReportFiltersService, ReportFilter } from "../../../../services/report-filters.service";
 
 @Component({
   selector: "app-reportes-profesores",
   standalone: true,
-  imports: [CommonModule, ExportButtonsComponent, FormsModule],
+  imports: [CommonModule, ExportButtonsComponent, FormsModule, ReportFiltersComponent],
   templateUrl: "./reportes-profesores.component.html",
-  styleUrls: ["./reportes-profesores.component.css"], // 👈 OBLIGATORIO (plural)
+  styleUrls: ["./reportes-profesores.component.css"],
 })
 export class ReportesProfesoresComponent
   implements OnInit, AfterViewInit, OnDestroy {
+
+  // Subject para cleanup
+  private destroy$ = new Subject<void>();
+
+  // Filtro centralizado actual
+  currentFilter: ReportFilter | null = null;
 
   // =========================
   // TABLA
@@ -34,6 +43,11 @@ export class ReportesProfesoresComponent
   loadingTendencia = true;
   loadingEquipos = true;
 
+  // Error states
+  errorPrestamos: string | null = null;
+  errorTendencia: string | null = null;
+  errorEquipos: string | null = null;
+
   // =========================
   // CHARTS
   // =========================
@@ -50,24 +64,31 @@ export class ReportesProfesoresComponent
 
   constructor(
     private reportesService: ReportesProfesoresService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private filterService: ReportFiltersService
   ) {}
 
   // =============================================================
   // CICLO DE VIDA
   // =============================================================
   ngOnInit(): void {
-    // SOLO tabla
-    this.loadEquiposProfesor();
+    // Suscribirse a cambios del filtro centralizado
+    this.filterService.filter$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((filter: ReportFilter) => {
+        this.currentFilter = filter;
+        this.cargarTodosLosDatos();
+      });
   }
 
   ngAfterViewInit(): void {
-    // Cargar datos; inicializaremos cada gráfico después de que su DOM se renderice
-    this.loadGraficoPrestamos();
-    this.loadGraficoTendencia();
+    // Los gráficos se inicializarán cuando lleguen los datos
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
     if (this.chartPrestamos) {
       this.chartPrestamos.dispose();
       window.removeEventListener('resize', this.onResizePrestamos);
@@ -76,6 +97,15 @@ export class ReportesProfesoresComponent
       this.chartTendencia.dispose();
       window.removeEventListener('resize', this.onResizeTendencia);
     }
+  }
+
+  // =============================================================
+  // CARGA CENTRALIZADA DE DATOS
+  // =============================================================
+  cargarTodosLosDatos(): void {
+    this.cargarGraficoPrestamos();
+    this.cargarGraficoTendencia();
+    this.cargarEquiposProfesor();
   }
 
     filtrarPorFecha() {
@@ -93,9 +123,14 @@ export class ReportesProfesoresComponent
   // =============================================================
   // TABLA – Equipos por profesor
   // =============================================================
-  loadEquiposProfesor(): void {
+  cargarEquiposProfesor(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingEquipos = true;
+    this.errorEquipos = null;
+    
     this.reportesService
-      .getEquiposPorProfesor(this.currentPage, this.pageSize)
+      .getEquiposPorProfesorWithFilter(this.currentFilter, this.currentPage, this.pageSize)
       .subscribe({
         next: (res) => {
           this.equiposProfesor = res.data ?? [];
@@ -103,11 +138,18 @@ export class ReportesProfesoresComponent
           this.updatePagination();
           this.loadingEquipos = false;
         },
-        error: () => {
+        error: (err) => {
           this.equiposProfesor = [];
           this.loadingEquipos = false;
+          this.errorEquipos = 'Error al cargar equipos por profesor';
+          console.error('Error equipos profesor:', err);
         }
       });
+  }
+
+  // Método legacy para compatibilidad
+  loadEquiposProfesor(): void {
+    this.cargarEquiposProfesor();
   }
 
   updatePagination(): void {
@@ -171,8 +213,13 @@ export class ReportesProfesoresComponent
     window.addEventListener('resize', this.onResizePrestamos);
   }
 
-  loadGraficoPrestamos(): void {
-    this.reportesService.getPrestamosPorProfesor().subscribe({
+  cargarGraficoPrestamos(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingPrestamos = true;
+    this.errorPrestamos = null;
+    
+    this.reportesService.getPrestamosPorProfesorWithFilter(this.currentFilter).subscribe({
       next: (data) => {
         const safe = Array.isArray(data) ? data : [];
         const profesores = safe.map((x: any) => x.profesor);
@@ -190,11 +237,18 @@ export class ReportesProfesoresComponent
           this.setPrestamoChartOptions(profesores, totales);
         });
       },
-      error: () => {
+      error: (err) => {
         this.loadingPrestamos = false;
         this.prestamosPorProfesorData = [];
+        this.errorPrestamos = 'Error al cargar préstamos por profesor';
+        console.error('Error préstamos profesor:', err);
       }
     });
+  }
+
+  // Método legacy para compatibilidad
+  loadGraficoPrestamos(): void {
+    this.cargarGraficoPrestamos();
   }
 
   setPrestamoChartOptions(
@@ -249,8 +303,13 @@ export class ReportesProfesoresComponent
     window.addEventListener('resize', this.onResizeTendencia);
   }
 
-  loadGraficoTendencia(): void {
-    this.reportesService.getTendenciaPrestamos().subscribe({
+  cargarGraficoTendencia(): void {
+    if (!this.currentFilter) return;
+    
+    this.loadingTendencia = true;
+    this.errorTendencia = null;
+    
+    this.reportesService.getTendenciaPrestamosWithFilter(this.currentFilter).subscribe({
       next: (res) => {
         this.tendenciaMeses = Array.isArray(res?.meses) ? res.meses : [];
         this.tendenciaSeries = Array.isArray(res?.series) ? res.series : [];
@@ -260,20 +319,37 @@ export class ReportesProfesoresComponent
           this.setTendenciaChartOptions(this.tendenciaMeses, this.tendenciaSeries);
         });
       },
-      error: () => {
+      error: (err) => {
         this.loadingTendencia = false;
         this.tendenciaMeses = [];
         this.tendenciaSeries = [];
+        this.errorTendencia = 'Error al cargar tendencia de préstamos';
+        console.error('Error tendencia:', err);
       }
     });
+  }
+
+  // Método legacy para compatibilidad
+  loadGraficoTendencia(): void {
+    this.cargarGraficoTendencia();
   }
 
   setTendenciaChartOptions(meses: string[], series: any[]): void {
     if (!this.chartTendencia) return;
 
-    // Mostrar sólo las series top (por suma total) para mejorar legibilidad
     const maxSeries = 6;
-    const seriesWithTotal = series.map((s: any) => ({
+
+    const sanitizedSeries = (series || [])
+      .filter((s: any) => s && Array.isArray(s.data))
+      .map((s: any) => ({
+        name: s.name ?? 'Serie',
+        type: s.type ?? 'line',
+        smooth: s.smooth ?? true,
+        data: [...s.data],
+        yAxisIndex: s.yAxisIndex ?? 0
+      }));
+
+    const seriesWithTotal = sanitizedSeries.map((s: any) => ({
       ...s,
       _total: (s.data || []).reduce((a: number, b: number) => a + b, 0),
     }));
@@ -285,11 +361,14 @@ export class ReportesProfesoresComponent
       return copy;
     });
 
+    const legendData = topSeries.map((s: any) => s.name ?? 'Serie');
+
     this.chartTendencia.setOption(
       {
-        xAxis: { data: meses },
+        xAxis: { data: meses || [] },
+        yAxis: { type: 'value' },
         series: topSeries,
-        legend: { data: topSeries.map((s: any) => s.name) },
+        legend: { data: legendData },
       },
       { notMerge: true }
     );

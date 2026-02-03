@@ -1,56 +1,82 @@
 <div class="report-page report-animate">
 <div class="reportes-wrapper container report-surface py-4">
 
-	<div class="report-section-header">
-		<div>
-			<h2 class="report-section-title">Reporte de Tendencias</h2>
-			<p class="report-section-subtitle">Evolución temporal y demanda por categorías</p>
-		</div>
-		<div class="report-section-actions"></div>
-	</div>
-
-	<app-export-buttons
+	<!-- Filtros BI con exportación integrada -->
+	<app-report-filters
 		[onExportPDF]="exportarPDF.bind(this)"
 		[onExportExcel]="exportarExcel.bind(this)">
-	</app-export-buttons>
+	</app-report-filters>
 
 	<div id="contenidoPDFTendencias" class="page-wrapper">
 
-		<div class="inst-header">
-			<img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
-			<div>
-				<h1 class="inst-title">{{ universidad }}</h1>
-				<p class="inst-subtitle">{{ departamento }}</p>
-				<p class="inst-report">{{ reporteTitulo }}</p>
-				<div class="inst-info">
-					<span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
-					<span>Usuario: {{ usuarioGenera }}</span>
-					<span>Rango: {{ rangoFechas }}</span>
-				</div>
-			</div>
-		</div>
-
+		<!-- Préstamos por Mes Chart -->
 		<div class="card fade-in mb-4">
 			<h2 class="card-title">Préstamos por mes</h2>
 			<p class="card-subtitle">Comportamiento histórico de la demanda</p>
-			<div class="chart-area">
+			<!-- Skeleton -->
+			<div *ngIf="loadingPrestamosMes" class="chart-area skeleton-chart">
+				<div class="skeleton-line-chart">
+					<div class="skeleton-line"></div>
+					<div class="skeleton-x-axis">
+						<div class="skeleton-tick" *ngFor="let i of [1,2,3,4,5,6]"></div>
+					</div>
+				</div>
+			</div>
+			<!-- Error -->
+			<div *ngIf="!loadingPrestamosMes && errorPrestamosMes" class="chart-area error-state">
+				<span class="error-icon">⚠️</span>
+				<span>{{ errorPrestamosMes }}</span>
+				<button class="btn-retry" (click)="cargarPrestamosMes()">Reintentar</button>
+			</div>
+			<!-- Content -->
+			<div class="chart-area" [class.hidden]="loadingPrestamosMes || errorPrestamosMes">
 				<canvas #prestamosChart></canvas>
 			</div>
 		</div>
 
 		<div class="two-cols">
+			<!-- Categorías Chart -->
 			<div class="card fade-in">
 				<h2 class="card-title">Categorías más demandadas</h2>
 				<p class="card-subtitle">Uso acumulado por categoría</p>
-				<div class="chart-area">
+				<!-- Skeleton -->
+				<div *ngIf="loadingCategorias" class="chart-area skeleton-chart">
+					<div class="skeleton-bar-group">
+						<div class="skeleton-bar" style="height: 60%"></div>
+						<div class="skeleton-bar" style="height: 80%"></div>
+						<div class="skeleton-bar" style="height: 45%"></div>
+						<div class="skeleton-bar" style="height: 70%"></div>
+						<div class="skeleton-bar" style="height: 50%"></div>
+					</div>
+				</div>
+				<!-- Error -->
+				<div *ngIf="!loadingCategorias && errorCategorias" class="chart-area error-state">
+					<span class="error-icon">⚠️</span>
+					<span>{{ errorCategorias }}</span>
+					<button class="btn-retry" (click)="cargarCategorias()">Reintentar</button>
+				</div>
+				<!-- Content -->
+				<div class="chart-area" [class.hidden]="loadingCategorias || errorCategorias">
 					<canvas #categoriasChart></canvas>
 				</div>
 			</div>
 
+			<!-- Uso por Tipo Usuario Chart -->
 			<div class="card fade-in">
 				<h2 class="card-title">Uso por tipo de usuario</h2>
 				<p class="card-subtitle">Distribución por rol</p>
-				<div class="chart-area">
+				<!-- Skeleton -->
+				<div *ngIf="loadingUsoTipoUsuario" class="chart-area skeleton-chart">
+					<div class="skeleton-donut"></div>
+				</div>
+				<!-- Error -->
+				<div *ngIf="!loadingUsoTipoUsuario && errorUsoTipoUsuario" class="chart-area error-state">
+					<span class="error-icon">⚠️</span>
+					<span>{{ errorUsoTipoUsuario }}</span>
+					<button class="btn-retry" (click)="cargarUsoTipoUsuario()">Reintentar</button>
+				</div>
+				<!-- Content -->
+				<div class="chart-area" [class.hidden]="loadingUsoTipoUsuario || errorUsoTipoUsuario">
 					<canvas #usuariosChart></canvas>
 				</div>
 			</div>

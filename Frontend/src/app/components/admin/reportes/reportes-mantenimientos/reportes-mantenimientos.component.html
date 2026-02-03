@@ -1,70 +1,110 @@
 <div class="report-page report-animate">
 <div class="reportes-wrapper container report-surface py-4">
 
-	<div class="report-section-header">
-		<div>
-			<h2 class="report-section-title">Reporte de Devoluciones y Problemas</h2>
-			<p class="report-section-subtitle">Atrasos, incidentes y estado de mantenimiento</p>
-		</div>
-		<div class="report-section-actions"></div>
-	</div>
-
-	<app-export-buttons
+	<!-- Filtros BI con exportación integrada -->
+	<app-report-filters
 		[onExportPDF]="exportarPDF.bind(this)"
 		[onExportExcel]="exportarExcel.bind(this)">
-	</app-export-buttons>
+	</app-report-filters>
 
 	<div id="contenidoPDFMantenimientos" class="page-wrapper">
 
-		<div class="inst-header">
-			<img src="assets/logo-uta.png" class="inst-logo" alt="Logo Universidad de Tarapacá" />
-			<div>
-				<h1 class="inst-title">{{ universidad }}</h1>
-				<p class="inst-subtitle">{{ departamento }}</p>
-				<p class="inst-report">{{ reporteTitulo }}</p>
-				<div class="inst-info">
-					<span>Generado: {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
-					<span>Usuario: {{ usuarioGenera }}</span>
-					<span>Rango: {{ rangoFechas }}</span>
-				</div>
-			</div>
-		</div>
-
 		<div class="two-cols mb-4">
+			<!-- KPIs Card -->
 			<div class="card fade-in">
 				<h2 class="card-title">KPIs operativos</h2>
-				<div class="kpi-wrapper">
+				<!-- Skeleton KPIs -->
+				<div *ngIf="loadingAtrasos" class="kpi-wrapper">
+					<div class="kpi-item skeleton-kpi"><div class="skeleton-value"></div><div class="skeleton-label"></div></div>
+					<div class="kpi-item skeleton-kpi"><div class="skeleton-value"></div><div class="skeleton-label"></div></div>
+					<div class="kpi-item skeleton-kpi"><div class="skeleton-value"></div><div class="skeleton-label"></div></div>
+				</div>
+				<!-- Error KPIs -->
+				<div *ngIf="!loadingAtrasos && errorAtrasos" class="error-state">
+					<span class="error-icon">⚠️</span>
+					<span>{{ errorAtrasos }}</span>
+					<button class="btn-retry" (click)="cargarAtrasos()">Reintentar</button>
+				</div>
+				<!-- Content KPIs -->
+				<div *ngIf="!loadingAtrasos && !errorAtrasos" class="kpi-wrapper">
 					<div class="kpi-item"><h3>{{ kpis.atrasos }}</h3><span>Atrasos</span></div>
 					<div class="kpi-item"><h3>{{ kpis.incidentes }}</h3><span>Incidentes</span></div>
 					<div class="kpi-item"><h3>{{ kpis.equiposMantenimiento }}</h3><span>En mantenimiento</span></div>
 				</div>
 			</div>
 
+			<!-- Incidentes Chart -->
 			<div class="card fade-in">
 				<h2 class="card-title">Incidentes por tipo</h2>
 				<p class="card-subtitle">Daños, extravíos u observaciones registradas</p>
-				<div class="chart-area">
+				<!-- Skeleton -->
+				<div *ngIf="loadingIncidentes" class="chart-area skeleton-chart">
+					<div class="skeleton-donut"></div>
+				</div>
+				<!-- Error -->
+				<div *ngIf="!loadingIncidentes && errorIncidentes" class="chart-area error-state">
+					<span class="error-icon">⚠️</span>
+					<span>{{ errorIncidentes }}</span>
+					<button class="btn-retry" (click)="cargarIncidentes()">Reintentar</button>
+				</div>
+				<!-- Content -->
+				<div class="chart-area" [class.hidden]="loadingIncidentes || errorIncidentes">
 					<canvas #incidentesChart></canvas>
 				</div>
 			</div>
 		</div>
 
+		<!-- Incidentes por Equipo Chart -->
 		<div class="card fade-in mb-4">
 			<h2 class="card-title">Incidentes por equipo</h2>
 			<p class="card-subtitle">Tipos de equipos con más incidentes</p>
-			<div class="chart-area">
+			<!-- Skeleton -->
+			<div *ngIf="loadingIncidentesEquipo" class="chart-area skeleton-chart">
+				<div class="skeleton-bar-group horizontal">
+					<div class="skeleton-bar-h"></div>
+					<div class="skeleton-bar-h" style="width: 85%"></div>
+					<div class="skeleton-bar-h" style="width: 70%"></div>
+					<div class="skeleton-bar-h" style="width: 55%"></div>
+					<div class="skeleton-bar-h" style="width: 40%"></div>
+				</div>
+			</div>
+			<!-- Error -->
+			<div *ngIf="!loadingIncidentesEquipo && errorIncidentesEquipo" class="chart-area error-state">
+				<span class="error-icon">⚠️</span>
+				<span>{{ errorIncidentesEquipo }}</span>
+				<button class="btn-retry" (click)="cargarIncidentesEquipo()">Reintentar</button>
+			</div>
+			<!-- Content -->
+			<div class="chart-area" [class.hidden]="loadingIncidentesEquipo || errorIncidentesEquipo">
 				<canvas #incidentesEquipoChart></canvas>
 			</div>
 		</div>
 
 		<div class="two-cols">
+			<!-- Tabla Atrasos -->
 			<div class="tabla-pro-card fade-in">
 				<div class="tabla-pro-header bg-warning-pro">
 					<h2 class="tabla-pro-title">Préstamos Atrasados</h2>
 					<p class="tabla-pro-subtitle">Casos con devolución fuera de plazo</p>
 				</div>
 				<div class="tabla-pro-container">
-					<table class="tabla-pro">
+					<!-- Skeleton Table -->
+					<div *ngIf="loadingAtrasos" class="skeleton-table">
+						<div class="skeleton-row" *ngFor="let i of [1,2,3,4]">
+							<div class="skeleton-cell small"></div>
+							<div class="skeleton-cell medium"></div>
+							<div class="skeleton-cell large"></div>
+							<div class="skeleton-cell small"></div>
+						</div>
+					</div>
+					<!-- Error -->
+					<div *ngIf="!loadingAtrasos && errorAtrasos" class="error-state table-error">
+						<span class="error-icon">⚠️</span>
+						<span>{{ errorAtrasos }}</span>
+						<button class="btn-retry" (click)="cargarAtrasos()">Reintentar</button>
+					</div>
+					<!-- Content -->
+					<table class="tabla-pro" [class.hidden]="loadingAtrasos || errorAtrasos">
 						<thead>
 							<tr>
 								<th>ID</th>
@@ -95,13 +135,30 @@
 				</div>
 			</div>
 
+			<!-- Tabla Equipos Mantenimiento -->
 			<div class="tabla-pro-card fade-in">
 				<div class="tabla-pro-header bg-info-pro">
 					<h2 class="tabla-pro-title">Equipos en Mantenimiento</h2>
 					<p class="tabla-pro-subtitle">Equipos con estado crítico o en reparación</p>
 				</div>
 				<div class="tabla-pro-container">
-					<table class="tabla-pro">
+					<!-- Skeleton Table -->
+					<div *ngIf="loadingEquiposMantenimiento" class="skeleton-table">
+						<div class="skeleton-row" *ngFor="let i of [1,2,3,4]">
+							<div class="skeleton-cell medium"></div>
+							<div class="skeleton-cell small"></div>
+							<div class="skeleton-cell large"></div>
+							<div class="skeleton-cell small"></div>
+						</div>
+					</div>
+					<!-- Error -->
+					<div *ngIf="!loadingEquiposMantenimiento && errorEquiposMantenimiento" class="error-state table-error">
+						<span class="error-icon">⚠️</span>
+						<span>{{ errorEquiposMantenimiento }}</span>
+						<button class="btn-retry" (click)="cargarEquiposMantenimiento()">Reintentar</button>
+					</div>
+					<!-- Content -->
+					<table class="tabla-pro" [class.hidden]="loadingEquiposMantenimiento || errorEquiposMantenimiento">
 						<thead>
 							<tr>
 								<th>Código</th>

@@ -2,15 +2,13 @@
 
 namespace App\Services\Prestamos;
 
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\Prestamo;
 use App\Models\Observacion;
 use App\Models\PrestamoHistorial;
 use App\Models\User;
-use App\Mail\PrestamoAprobadoMail;
-use App\Mail\PrestamoRechazadoMail;
+use App\Jobs\SendPrestamoEmailJob;
 
 use App\Enums\EstadoPrestamo;
 use App\Enums\EstadoEquipo;
@@ -74,32 +72,25 @@ class PrestamoAdminService
         $equipos = $prestamo->equipos->map(fn ($e) => [
             'nombre' => $e->tipo->nombre ?? 'Equipo',
             'codigo' => $e->codigo ?? '—'
-        ]);
+        ])->toArray();
 
+        // 📧 ENVÍO DE CORREO EN SEGUNDO PLANO (NO BLOQUEA)
         if ($email) {
-            try {
-                if ($accion === 'aprobar') {
-                    Mail::to($email)->send(new PrestamoAprobadoMail(
-                        $nombre,
-                        $prestamo->idPrestamo,
-                        $prestamo->created_at->format('d/m/Y H:i'),
-                        $motivo,
-                        $equipos
-                    ));
-                } else {
-                    Mail::to($email)->send(new PrestamoRechazadoMail(
-                        $nombre,
-                        $prestamo->idPrestamo,
-                        $prestamo->created_at->format('d/m/Y H:i'),
-                        $motivo
-                    ));
-                }
-            } catch (\Throwable $e) {
-                Log::error('Error al enviar correo de préstamo', [
-                    'prestamo_id' => $prestamo->idPrestamo,
-                    'error' => $e->getMessage()
-                ]);
-            }
+            SendPrestamoEmailJob::dispatch(
+                $accion === 'aprobar' ? 'aprobado' : 'rechazado',
+                $email,
+                $nombre,
+                $prestamo->idPrestamo,
+                $prestamo->created_at->format('d/m/Y H:i'),
+                $motivo,
+                $accion === 'aprobar' ? $equipos : null
+            );
+
+            Log::info('Job de correo encolado', [
+                'prestamo_id' => $prestamo->idPrestamo,
+                'accion' => $accion,
+                'email' => $email
+            ]);
         }
     }
 

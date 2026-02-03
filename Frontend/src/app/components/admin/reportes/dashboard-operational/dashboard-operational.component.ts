@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, TitleCasePipe, SlicePipe } from '@angular/common';
 import { Chart } from 'chart.js/auto';
 import { DashboardOperationalService } from '../../../../services/reportes/dashboard-operational.service';
 import { trigger, style, animate, transition } from '@angular/animations';
@@ -7,7 +7,7 @@ import { trigger, style, animate, transition } from '@angular/animations';
 @Component({
   selector: 'app-dashboard-operational',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TitleCasePipe, SlicePipe],
   templateUrl: './dashboard-operational.component.html',
   styleUrls: ['./dashboard-operational.component.css']
   ,
@@ -29,6 +29,8 @@ import { trigger, style, animate, transition } from '@angular/animations';
 export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('inventarioCanvas') inventarioCanvas?: ElementRef<HTMLCanvasElement>;
 
+  today = new Date();
+
   kpis: {
     prestamosActivos: number;
     prestamosVencidos: number;
@@ -43,6 +45,43 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
     equiposDisponibles: 0,
     equiposTotales: 0,
     porcentajeDisponibilidad: 0
+  };
+
+  // KPIs de Inventario
+  kpisInventario: {
+    total: number;
+    disponibles: number;
+    mantenimiento: number;
+    baja: number;
+  } = {
+    total: 0,
+    disponibles: 0,
+    mantenimiento: 0,
+    baja: 0
+  };
+
+  // KPIs de Mantenimientos
+  kpisMantenimientos: {
+    atrasos: number;
+    incidentes: number;
+    equiposMantenimiento: number;
+  } = {
+    atrasos: 0,
+    incidentes: 0,
+    equiposMantenimiento: 0
+  };
+
+  // KPIs de Sanciones
+  kpisSanciones: {
+    sancionesActivas: number;
+    sancionesTotal: number;
+    bloqueosActivos: number;
+    bloqueosHistoricos: number;
+  } = {
+    sancionesActivas: 0,
+    sancionesTotal: 0,
+    bloqueosActivos: 0,
+    bloqueosHistoricos: 0
   };
 
   salud: { score: number; estado: string; color: string } = {
@@ -115,6 +154,22 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
       next: (data) => this.actividadReciente = data,
       error: (err) => console.error('Error cargando actividad:', err)
     });
+
+    // Cargar KPIs adicionales
+    this.dashboardService.getKPIsInventario().subscribe({
+      next: (data) => this.kpisInventario = data,
+      error: (err) => console.error('Error cargando KPIs inventario:', err)
+    });
+
+    this.dashboardService.getKPIsMantenimientos().subscribe({
+      next: (data) => this.kpisMantenimientos = data,
+      error: (err) => console.error('Error cargando KPIs mantenimientos:', err)
+    });
+
+    this.dashboardService.getKPIsSanciones().subscribe({
+      next: (data) => this.kpisSanciones = data,
+      error: (err) => console.error('Error cargando KPIs sanciones:', err)
+    });
   }
 
   private crearGraficoInventario(): void {
@@ -134,13 +189,26 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
       type: 'doughnut',
       data: {
         labels,
-        datasets: [{ data, backgroundColor: colores }]
+        datasets: [{ 
+          data, 
+          backgroundColor: colores,
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '65%',
         plugins: {
-          legend: { position: 'bottom' }
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#202124',
+            titleFont: { size: 12, weight: 'bold' },
+            bodyFont: { size: 11 },
+            padding: 10,
+            cornerRadius: 6
+          }
         }
       }
     });
@@ -148,12 +216,12 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
 
   private getColorEstado(estado: string): string {
     const colores: any = {
-      'DISPONIBLE': '#10b981',
-      'PRESTADO': '#3b82f6',
-      'MANTENIMIENTO': '#f59e0b',
-      'BAJA': '#ef4444'
+      'DISPONIBLE': '#1e8e3e',
+      'PRESTADO': '#1a73e8',
+      'MANTENIMIENTO': '#f9ab00',
+      'BAJA': '#d93025'
     };
-    return colores[estado] || '#6b7280';
+    return colores[estado] || '#9aa0a6';
   }
 
   getTipoActividad(estado: string): string {

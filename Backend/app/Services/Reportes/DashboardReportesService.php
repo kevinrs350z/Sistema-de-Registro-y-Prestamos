@@ -59,11 +59,17 @@ class DashboardReportesService
 
     /* ============================================================
        3) USO INTERNO / EXTERNO GLOBAL
+       Valores en BD: DENTRO = Interno, FUERA = Externo
     ============================================================ */
     public function getUsoInternoExterno()
     {
         return DB::table('prestamos')
-            ->select('tipo', DB::raw('COUNT(*) as total'))
+            ->selectRaw("CASE 
+                WHEN UPPER(tipo) = 'DENTRO' THEN 'Uso Interno'
+                WHEN UPPER(tipo) = 'FUERA' THEN 'Uso Externo'
+                ELSE tipo
+            END as tipo")
+            ->selectRaw('COUNT(*) as total')
             ->groupBy('tipo')
             ->get();
     }

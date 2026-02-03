@@ -256,7 +256,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 10000;
 }
 
 .modal-content {
@@ -265,6 +265,8 @@ h2 {
   border-radius: 16px;
   width: 420px;
   text-align: center;
+  position: relative;
+  z-index: 10001;
 }
 
 .paginacion {

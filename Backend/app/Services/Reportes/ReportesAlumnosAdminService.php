@@ -3,9 +3,104 @@ namespace App\Services\Reportes;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
+/**
+ * Servicio de reportes de alumnos con filtros BI estándar.
+ * 
+ * Soporta filtros universales:
+ * - from/to: Rango de fechas (YYYY-MM-DD)
+ * - uso: interno | externo | ambos
+ * - anioIngreso: Año de ingreso del alumno
+ * - granularity: day | week | month | quarter | semester | year
+ */
 class ReportesAlumnosAdminService
 {
+    /**
+     * Obtener rango de fechas desde request o usar default
+     */
+    private function getDateRange(?Request $request, int $defaultMonths = 6): array
+    {
+        if ($request && $request->has('from') && $request->has('to')) {
+            $start = Carbon::parse($request->input('from'))->startOfDay();
+            $end = Carbon::parse($request->input('to'))->endOfDay();
+        } else {
+            $end = Carbon::now()->endOfDay();
+            $start = Carbon::now()->subMonths($defaultMonths - 1)->startOfMonth();
+        }
+        return [$start, $end];
+    }
+
+    /**
+     * Aplicar filtro de tipo de uso (interno/externo/ambos)
+     */
+    private function applyTipoUsoFilter($query, ?Request $request)
+    {
+        $uso = $request?->input('uso', 'ambos') ?? 'ambos';
+        
+        if ($uso === 'interno') {
+            $query->where('p.tipo', 'INTERNO');
+        } elseif ($uso === 'externo') {
+            $query->where('p.tipo', 'EXTERNO');
+        }
+        // 'ambos' no aplica filtro
+        
+        return $query;
+    }
+
+    /**
+     * Obtener IDs de alumnos, opcionalmente filtrados por año de ingreso
+     */
+    private function alumnosUserIds(?int $anioIngreso = null): array
+    {
+        $query = DB::table('rol_user as ru')
+            ->join('rol as r', 'r.idRol', '=', 'ru.idRol')
+            ->join('users as u', 'u.idUser', '=', 'ru.idUser')
+            ->whereRaw('LOWER(r.Nombre) = ?', ['alumno']);
+            
+        if ($anioIngreso) {
+            $query->whereYear('u.created_at', $anioIngreso);
+        }
+        
+        return $query->pluck('ru.idUser')->toArray();
+    }
+
+    /**
+     * Generar todos los períodos del rango (para 12 meses completos)
+     */
+    private function generateAllPeriods(Carbon $start, Carbon $end, string $granularity = 'month'): array
+    {
+        $periods = [];
+        $current = $start->copy();
+        
+        while ($current <= $end) {
+            switch ($granularity) {
+                case 'day':
+                    $periods[] = $current->format('Y-m-d');
+                    $current->addDay();
+                    break;
+                case 'week':
+                    $periods[] = $current->format('Y-W');
+                    $current->addWeek();
+                    break;
+                case 'month':
+                default:
+                    $periods[] = $current->format('Y-m');
+                    $current->addMonth();
+                    break;
+                case 'quarter':
+                    $periods[] = $current->format('Y') . '-Q' . ceil($current->month / 3);
+                    $current->addMonths(3);
+                    break;
+            }
+        }
+        
+        return $periods;
+    }
+
+    /**
+     * @deprecated Usar getKPIs con Request
+     */
     private function getRange($months = 6)
     {
         $end = Carbon::now()->endOfDay();
@@ -13,28 +108,27 @@ class ReportesAlumnosAdminService
         return [$start, $end];
     }
 
-    private function alumnosUserIds()
+    public function getKPIs(?Request $request = null, $months = 1)
     {
-        return DB::table('rol_user as ru')
-            ->join('rol as r', 'r.idRol', '=', 'ru.idRol')
-            ->whereRaw('LOWER(r.Nombre) = ?', ['alumno'])
-            ->pluck('ru.idUser')
-            ->toArray();
-    }
+        [$start, $end] = $this->getDateRange($request, $months);
+        $anioIngreso = $request?->input('anioIngreso') ? (int)$request->input('anioIngreso') : null;
+        $alumnos = $this->alumnosUserIds($anioIngreso);
+        $uso = $request?->input('uso', 'ambos') ?? 'ambos';
 
-    public function getKPIs($months = 1)
-    {
-        [$start, $end] = $this->getRange($months);
-        $alumnos = $this->alumnosUserIds();
+        // Query base con filtro de uso
+        $baseQuery = DB::table('prestamos as p')
+            ->whereIn('p.idUser', $alumnos)
+            ->whereBetween('p.created_at', [$start, $end]);
+        
+        if ($uso === 'interno') {
+            $baseQuery->where('p.tipo', 'INTERNO');
+        } elseif ($uso === 'externo') {
+            $baseQuery->where('p.tipo', 'EXTERNO');
+        }
 
-        $totalLoans = DB::table('prestamos')
-            ->whereIn('idUser', $alumnos)
-            ->whereBetween('created_at', [$start, $end])
-            ->count();
+        $totalLoans = (clone $baseQuery)->count();
 
-        $alumnosConPrestamos = DB::table('prestamos')
-            ->whereIn('idUser', $alumnos)
-            ->whereBetween('created_at', [$start, $end])
+        $alumnosConPrestamos = (clone $baseQuery)
             ->distinct('idUser')
             ->count('idUser');
 
@@ -42,35 +136,37 @@ class ReportesAlumnosAdminService
             ? round($totalLoans / $alumnosConPrestamos, 1)
             : 0;
 
-        $pending = DB::table('prestamos')
-            ->whereIn('idUser', $alumnos)
-            ->where('estado', 'PENDIENTE')
+        $pending = (clone $baseQuery)
+            ->where('p.estado', 'PENDIENTE')
             ->count();
 
-        $active = DB::table('prestamos')
-            ->whereIn('idUser', $alumnos)
-            ->where('estado', 'APROBADO')
+        $active = (clone $baseQuery)
+            ->where('p.estado', 'APROBADO')
             ->count();
 
-        $late = DB::table('prestamos')
-            ->whereIn('idUser', $alumnos)
-            ->where('estado', 'APROBADO')
-            ->where('fecha_fin', '<', now())
+        $late = (clone $baseQuery)
+            ->where('p.estado', 'APROBADO')
+            ->where('p.fecha_fin', '<', now())
             ->count();
 
-        $avgResolutionDays = DB::table('prestamos')
-            ->whereIn('idUser', $alumnos)
-            ->whereIn('estado', ['DEVUELTO'])
-            ->selectRaw('AVG(DATEDIFF(updated_at, created_at)) as avgDays')
+        $avgResolutionDays = (clone $baseQuery)
+            ->whereIn('p.estado', ['DEVUELTO'])
+            ->selectRaw('AVG(DATEDIFF(p.updated_at, p.created_at)) as avgDays')
             ->value('avgDays');
 
         $totalEquipos = DB::table('equipos')->count();
 
-        $equiposPrestados = DB::table('prestamos as p')
+        $equiposPrestadosQuery = DB::table('prestamos as p')
             ->join('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
-            ->where('p.estado', 'APROBADO')
-            ->distinct('pe.idEquipo')
-            ->count('pe.idEquipo');
+            ->where('p.estado', 'APROBADO');
+        
+        if ($uso === 'interno') {
+            $equiposPrestadosQuery->where('p.tipo', 'INTERNO');
+        } elseif ($uso === 'externo') {
+            $equiposPrestadosQuery->where('p.tipo', 'EXTERNO');
+        }
+        
+        $equiposPrestados = $equiposPrestadosQuery->distinct('pe.idEquipo')->count('pe.idEquipo');
 
         $alumnosConSanciones = DB::table('user_sancion')
             ->whereIn('idUser', $alumnos)
@@ -82,15 +178,27 @@ class ReportesAlumnosAdminService
             ->whereBetween('created_at', [$start, $end])
             ->count();
 
-        [$prevStart, $prevEnd] = $this->getRange($months);
-        $prevStart = $prevStart->copy()->subMonths($months);
-        $prevEnd = $prevEnd->copy()->subMonths($months);
-        $prestamosPrevios = DB::table('prestamos')
-            ->whereIn('idUser', $alumnos)
-            ->whereBetween('created_at', [$prevStart, $prevEnd])
-            ->count();
-
+        // Calcular variación vs período anterior
+        $diffDays = $start->diffInDays($end);
+        $prevStart = $start->copy()->subDays($diffDays);
+        $prevEnd = $start->copy()->subDay();
+        
+        $prevQuery = DB::table('prestamos as p')
+            ->whereIn('p.idUser', $alumnos)
+            ->whereBetween('p.created_at', [$prevStart, $prevEnd]);
+        
+        if ($uso === 'interno') {
+            $prevQuery->where('p.tipo', 'INTERNO');
+        } elseif ($uso === 'externo') {
+            $prevQuery->where('p.tipo', 'EXTERNO');
+        }
+        
+        $prestamosPrevios = $prevQuery->count();
         $variacionPrestamos = $totalLoans - $prestamosPrevios;
+
+        // Métricas de interno vs externo
+        $internos = (clone $baseQuery)->where('p.tipo', 'INTERNO')->count();
+        $externos = (clone $baseQuery)->where('p.tipo', 'EXTERNO')->count();
 
         return [
             'alumnosConPrestamos' => $alumnosConPrestamos,
@@ -105,7 +213,19 @@ class ReportesAlumnosAdminService
             'avgResolutionDays' => $avgResolutionDays ? round($avgResolutionDays, 1) : 0,
             'equipmentUtilization' => $totalEquipos > 0
                 ? round(($equiposPrestados / $totalEquipos) * 100, 1)
-                : 0
+                : 0,
+            // Desglose interno/externo
+            'prestamosInternos' => $internos,
+            'prestamosExternos' => $externos,
+            'porcentajeInternos' => $totalLoans > 0 ? round(($internos / $totalLoans) * 100, 1) : 0,
+            'porcentajeExternos' => $totalLoans > 0 ? round(($externos / $totalLoans) * 100, 1) : 0,
+            // Filtros aplicados
+            'filtros' => [
+                'from' => $start->toDateString(),
+                'to' => $end->toDateString(),
+                'uso' => $uso,
+                'anioIngreso' => $anioIngreso
+            ]
         ];
     }
 
@@ -343,36 +463,102 @@ class ReportesAlumnosAdminService
         return $out;
     }
 
-    public function getPrestamosPorCarrera($months = 12)
+    public function getPrestamosPorCarrera(?Request $request = null, $months = 12)
     {
-        [$start, $end] = $this->getRange($months);
-        $alumnos = $this->alumnosUserIds();
+        [$start, $end] = $this->getDateRange($request, $months);
+        $anioIngreso = $request?->input('anioIngreso') ? (int)$request->input('anioIngreso') : null;
+        $alumnos = $this->alumnosUserIds($anioIngreso);
+        $uso = $request?->input('uso', 'ambos') ?? 'ambos';
 
-        return DB::table('prestamos as p')
+        $query = DB::table('prestamos as p')
             ->whereIn('p.idUser', $alumnos)
-            ->whereBetween('p.created_at', [$start, $end])
+            ->whereBetween('p.created_at', [$start, $end]);
+        
+        if ($uso === 'interno') {
+            $query->where('p.tipo', 'INTERNO');
+        } elseif ($uso === 'externo') {
+            $query->where('p.tipo', 'EXTERNO');
+        }
+
+        return $query
             ->selectRaw("'Sin carrera' as carrera, COUNT(*) as total_prestamos")
             ->groupBy('carrera')
             ->get();
     }
 
-    public function getEvolucionPrestamosAlumnos($months = 6)
+    /**
+     * Evolución de préstamos con 12 meses completos (meses vacíos = 0)
+     */
+    public function getEvolucionPrestamosAlumnos(?Request $request = null, $months = 12)
     {
-        [$start, $end] = $this->getRange($months);
-        $alumnos = $this->alumnosUserIds();
+        [$start, $end] = $this->getDateRange($request, $months);
+        $anioIngreso = $request?->input('anioIngreso') ? (int)$request->input('anioIngreso') : null;
+        $alumnos = $this->alumnosUserIds($anioIngreso);
+        $uso = $request?->input('uso', 'ambos') ?? 'ambos';
+        $granularity = $request?->input('granularity', 'month') ?? 'month';
 
-        return DB::table('prestamos as p')
+        // Generar todos los períodos del rango
+        $allPeriods = $this->generateAllPeriods($start, $end, $granularity);
+        
+        // Query base
+        $query = DB::table('prestamos as p')
             ->whereIn('p.idUser', $alumnos)
-            ->whereBetween('p.created_at', [$start, $end])
+            ->whereBetween('p.created_at', [$start, $end]);
+        
+        if ($uso === 'interno') {
+            $query->where('p.tipo', 'INTERNO');
+        } elseif ($uso === 'externo') {
+            $query->where('p.tipo', 'EXTERNO');
+        }
+
+        $data = $query
             ->selectRaw("DATE_FORMAT(p.created_at, '%Y-%m') as periodo, COUNT(*) as total_prestamos")
             ->groupBy('periodo')
             ->orderBy('periodo')
-            ->get();
+            ->get()
+            ->keyBy('periodo');
+
+        // También obtener desglose interno/externo por período
+        $internos = (clone $query)
+            ->where('p.tipo', 'INTERNO')
+            ->selectRaw("DATE_FORMAT(p.created_at, '%Y-%m') as periodo, COUNT(*) as total")
+            ->groupBy('periodo')
+            ->get()
+            ->keyBy('periodo');
+
+        $externos = (clone $query)
+            ->where('p.tipo', 'EXTERNO')
+            ->selectRaw("DATE_FORMAT(p.created_at, '%Y-%m') as periodo, COUNT(*) as total")
+            ->groupBy('periodo')
+            ->get()
+            ->keyBy('periodo');
+
+        // Completar todos los períodos (incluir meses con 0)
+        $result = collect($allPeriods)->map(function($periodo) use ($data, $internos, $externos) {
+            return [
+                'periodo' => $periodo,
+                'total_prestamos' => $data[$periodo]->total_prestamos ?? 0,
+                'internos' => $internos[$periodo]->total ?? 0,
+                'externos' => $externos[$periodo]->total ?? 0,
+            ];
+        });
+
+        return [
+            'data' => $result->values(),
+            'filtros' => [
+                'from' => $start->toDateString(),
+                'to' => $end->toDateString(),
+                'uso' => $uso,
+                'anioIngreso' => $anioIngreso,
+                'granularity' => $granularity
+            ]
+        ];
     }
 
-    public function getSancionesPorNivel($months = 12)
+    public function getSancionesPorNivel(?Request $request = null, $months = 12)
     {
-        $alumnos = $this->alumnosUserIds();
+        $anioIngreso = $request?->input('anioIngreso') ? (int)$request->input('anioIngreso') : null;
+        $alumnos = $this->alumnosUserIds($anioIngreso);
 
         return DB::table('user_sancion as us')
             ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
@@ -383,37 +569,81 @@ class ReportesAlumnosAdminService
             ->get();
     }
 
-    public function getRankingAlumnos($limit = 10, $months = 12)
+    /**
+     * Ranking de alumnos con filtros BI completos
+     * Incluye: total préstamos, sanciones, desglose interno/externo, tasa de sanción
+     */
+    public function getRankingAlumnos(?Request $request = null, $limit = 10, $months = 12)
     {
-        [$start, $end] = $this->getRange($months);
-        $alumnos = $this->alumnosUserIds();
+        [$start, $end] = $this->getDateRange($request, $months);
+        $anioIngreso = $request?->input('anioIngreso') ? (int)$request->input('anioIngreso') : null;
+        $alumnos = $this->alumnosUserIds($anioIngreso);
+        $uso = $request?->input('uso', 'ambos') ?? 'ambos';
 
-        $prestamos = DB::table('prestamos as p')
+        // Query base de préstamos
+        $prestamosQuery = DB::table('prestamos as p')
             ->join('users as u', 'u.idUser', '=', 'p.idUser')
             ->join('persona as per', 'per.idPersona', '=', 'u.idPersona')
             ->whereIn('p.idUser', $alumnos)
-            ->whereBetween('p.created_at', [$start, $end])
+            ->whereBetween('p.created_at', [$start, $end]);
+
+        if ($uso === 'interno') {
+            $prestamosQuery->where('p.tipo', 'INTERNO');
+        } elseif ($uso === 'externo') {
+            $prestamosQuery->where('p.tipo', 'EXTERNO');
+        }
+
+        $prestamos = $prestamosQuery
             ->selectRaw("
                 u.idUser as idUser,
                 CONCAT(per.Nombre,' ',per.apellido1,' ',COALESCE(per.apellido2,'')) as nombre,
                 u.Email as email,
-                'Sin carrera' as carrera,
-                COUNT(*) as total_prestamos
+                YEAR(u.created_at) as anio_ingreso,
+                COUNT(*) as total_prestamos,
+                SUM(CASE WHEN p.tipo = 'INTERNO' THEN 1 ELSE 0 END) as prestamos_internos,
+                SUM(CASE WHEN p.tipo = 'EXTERNO' THEN 1 ELSE 0 END) as prestamos_externos
             ")
-            ->groupBy('u.idUser','per.Nombre','per.apellido1','per.apellido2','u.Email');
+            ->groupBy('u.idUser','per.Nombre','per.apellido1','per.apellido2','u.Email', 'u.created_at');
 
-        $sanciones = DB::table('user_sancion as us')
+        // Subquery de sanciones en el período
+        $sancionesQuery = DB::table('user_sancion as us')
             ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
             ->whereIn('us.idUser', $alumnos)
+            ->whereBetween('us.created_at', [$start, $end])
             ->selectRaw("us.idUser, COUNT(*) as sanciones")
             ->groupBy('us.idUser');
 
-        return DB::query()
+        $ranking = DB::query()
             ->fromSub($prestamos, 'p')
-            ->leftJoinSub($sanciones, 's', 's.idUser', '=', 'p.idUser')
-            ->selectRaw("p.nombre, p.email, p.carrera, p.total_prestamos, COALESCE(s.sanciones,0) as sanciones")
+            ->leftJoinSub($sancionesQuery, 's', 's.idUser', '=', 'p.idUser')
+            ->selectRaw("
+                p.idUser,
+                p.nombre, 
+                p.email, 
+                p.anio_ingreso,
+                p.total_prestamos, 
+                p.prestamos_internos,
+                p.prestamos_externos,
+                COALESCE(s.sanciones, 0) as sanciones,
+                CASE 
+                    WHEN p.total_prestamos > 0 
+                    THEN ROUND((COALESCE(s.sanciones, 0) / p.total_prestamos) * 100, 1)
+                    ELSE 0 
+                END as tasa_sancion
+            ")
             ->orderByDesc('p.total_prestamos')
             ->limit($limit)
             ->get();
+
+        return [
+            'data' => $ranking,
+            'filtros' => [
+                'from' => $start->toDateString(),
+                'to' => $end->toDateString(),
+                'uso' => $uso,
+                'anioIngreso' => $anioIngreso,
+                'limit' => $limit
+            ]
+        ];
     }
 }

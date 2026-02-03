@@ -14,8 +14,18 @@ class TipoEquipoController extends Controller
 {
     public function index(TipoEquipoService $service)
     {
-        $tequipo = $service->getAll();
-        return response()->json($tequipo, 200);
+        $tipos = $service->getAll();
+        
+        // Agregar imagen_url para cada tipo
+        $tipos = $tipos->map(function ($tipo) {
+            $data = $tipo->toArray();
+            $data['imagen_url'] = $tipo->imagen 
+                ? asset('storage/' . $tipo->imagen) 
+                : null;
+            return $data;
+        });
+        
+        return response()->json($tipos, 200);
     }
     public function store(StoreTipoEquipoRequest $request, TipoEquipoService $service)
     {
@@ -109,6 +119,7 @@ class TipoEquipoController extends Controller
             $grupoRelacionados = $info['grupo_relacionados'] ?? [$t->id];
 
             return array_merge($t->toArray(), [
+                'imagen_url' => $t->imagen ? asset('storage/' . $t->imagen) : null,
                 'prestamos_activos' => $info['activos'] ?? 0,
                 'bloqueado' => $bloqueado,
                 'bloqueo_motivo' => $bloqueado

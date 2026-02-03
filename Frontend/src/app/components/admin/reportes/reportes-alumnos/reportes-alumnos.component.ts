@@ -7,9 +7,12 @@ import {
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Chart } from 'chart.js/auto';
+import { Subject, takeUntil } from 'rxjs';
 import { ExportButtonsComponent } from '../export-buttons/export-buttons.component';
 import { ExportService, ReporteData } from '../../../../services/export.service';
 import { ReportesAlumnosService } from '../../../../services/reportes/reportes-alumnos.service';
+import { ReportFiltersComponent } from '../report-filters/report-filters.component';
+import { ReportFiltersService, ReportFilter } from '../../../../services/report-filters.service';
 
 interface KpiAlumno {
   label: string;
@@ -23,17 +26,39 @@ interface AlumnoRanking {
   carrera?: string;
   total_prestamos: number;
   sanciones?: number;
+  // Nuevas métricas BI
+  prestamos_internos?: number;
+  prestamos_externos?: number;
+  tasa_sancion?: number;
+  anio_ingreso?: number;
 }
 
 @Component({
   selector: 'app-reportes-alumnos',
   standalone: true,
-  imports: [CommonModule, ExportButtonsComponent],
+  imports: [CommonModule, ExportButtonsComponent, ReportFiltersComponent],
   templateUrl: './reportes-alumnos.component.html',
   styleUrls: ['./reportes-alumnos.component.css'],
   providers: [DatePipe]
 })
 export class ReportesAlumnosComponent implements OnInit, OnDestroy {
+  // Subject para cleanup
+  private destroy$ = new Subject<void>();
+  
+  // Filtro centralizado actual
+  currentFilter: ReportFilter | null = null;
+
+  // Loading states
+  loadingKpis = false;
+  loadingSanciones = false;
+  loadingEvolucion = false;
+  loadingRanking = false;
+
+  // Error states
+  errorKpis: string | null = null;
+  errorSanciones: string | null = null;
+  errorEvolucion: string | null = null;
+  errorRanking: string | null = null;
 
   today = new Date();
   mensaje: string | null = null;
@@ -70,7 +95,8 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
 
   constructor(
     private alumnosService: ReportesAlumnosService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private filterService: ReportFiltersService
   ) {}
   
    fechaInicio: string = '';
@@ -79,10 +105,31 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarUsuario();
+    
+    // Suscribirse al servicio de filtros centralizado
+    this.filterService.filter$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((filter: ReportFilter) => {
+        this.currentFilter = filter;
+        this.actualizarRangoFechas();
+        this.cargarTodosLosDatos();
+      });
+  }
+
+  private actualizarRangoFechas(): void {
+    if (this.currentFilter) {
+      const info = this.filterService.getPeriodInfo();
+      this.rangoFechas = info.shortLabel;
+    }
+  }
+
+  private cargarTodosLosDatos(): void {
+    this.filterService.setLoading(true);
     this.cargarKPIs();
     this.cargarSancionesPorNivel();
     this.cargarEvolucionPrestamos();
     this.cargarTopAlumnos();
+    setTimeout(() => this.filterService.setLoading(false), 1500);
   }
 
    filtrarPorFecha() {
@@ -99,6 +146,8 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
    }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.destroyCharts();
   }
 
@@ -118,9 +167,17 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   }
 
   /* ===================== 1) KPIs ===================== */
-  private cargarKPIs() {
-    this.alumnosService.getKPIsAlumnos().subscribe({
+  cargarKPIs() {
+    this.loadingKpis = true;
+    this.errorKpis = null;
+    
+    const request$ = this.currentFilter 
+      ? this.alumnosService.getKPIsAlumnosWithFilter(this.currentFilter)
+      : this.alumnosService.getKPIsAlumnos();
+      
+    request$.subscribe({
       next: (data) => {
+        this.loadingKpis = false;
         this.kpis[0].value = data?.alumnosConPrestamos ?? 0;
         this.kpis[1].value = data?.prestamosPromedio ?? 0;
         this.kpis[2].value = data?.alumnosConSanciones ?? 0;
@@ -134,14 +191,25 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
           this.kpis[1].detail = '';
         }
       },
-      error: () => this.mostrarMensaje('No se pudieron cargar los KPIs de alumnos.')
+      error: () => {
+        this.loadingKpis = false;
+        this.errorKpis = 'No se pudieron cargar los KPIs de alumnos.';
+      }
     });
   }
 
   /* ===================== 2) SANCIONES POR NIVEL ===================== */
-  private cargarSancionesPorNivel() {
-    this.alumnosService.getSancionesPorNivel().subscribe({
+  cargarSancionesPorNivel() {
+    this.loadingSanciones = true;
+    this.errorSanciones = null;
+    
+    const request$ = this.currentFilter 
+      ? this.alumnosService.getSancionesPorNivelWithFilter(this.currentFilter)
+      : this.alumnosService.getSancionesPorNivel();
+      
+    request$.subscribe({
       next: (data) => {
+        this.loadingSanciones = false;
         const safe = Array.isArray(data) ? data : [];
 
         const labels = safe.map((x: any) => x.nivel ?? 'DESCONOCIDO');
@@ -172,7 +240,7 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
             labels,
             datasets: [{
               data: valores,
-              backgroundColor: ['#f1c40f', '#e67e22', '#e74c3c']
+              backgroundColor: ['#e74c3c',' #f1c40f', '#e67e22']
             }]
           },
           options: {
@@ -184,18 +252,31 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
           }
         });
       },
-      error: () => this.mostrarMensaje('No se pudieron cargar las sanciones por nivel.')
+      error: () => {
+        this.loadingSanciones = false;
+        this.errorSanciones = 'No se pudieron cargar las sanciones por nivel.';
+      }
     });
   }
 
-  /* ===================== 4) EVOLUCIÓN PRÉSTAMOS ===================== */
-  private cargarEvolucionPrestamos() {
-    this.alumnosService.getEvolucionPrestamosAlumnos().subscribe({
+  /* ===================== 4) EVOLUCIÓN PRÉSTAMOS (12 meses con desglose) ===================== */
+  cargarEvolucionPrestamos() {
+    this.loadingEvolucion = true;
+    this.errorEvolucion = null;
+    
+    const request$ = this.currentFilter 
+      ? this.alumnosService.getEvolucionPrestamosAlumnosWithFilter(this.currentFilter)
+      : this.alumnosService.getEvolucionPrestamosAlumnos();
+      
+    request$.subscribe({
       next: (data) => {
+        this.loadingEvolucion = false;
         const safe = Array.isArray(data) ? data : [];
 
-        const labels = safe.map((x: any) => x.periodo);
-        const valores = safe.map((x: any) => Number(x.total_prestamos ?? x.total ?? 0));
+        const labels = safe.map((x: any) => x.periodo || x.label);
+        const internos = safe.map((x: any) => Number(x.internos ?? 0));
+        const externos = safe.map((x: any) => Number(x.externos ?? 0));
+        const totales = safe.map((x: any) => Number(x.total_prestamos ?? x.total ?? 0));
 
         this.chartEvolucionPrestamos?.destroy();
 
@@ -205,13 +286,46 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        // Verificar si hay datos de desglose
+        const hayDesglose = internos.some(v => v > 0) || externos.some(v => v > 0);
+
         this.chartEvolucionPrestamos = new Chart(ctx, {
           type: 'line',
           data: {
             labels,
-            datasets: [{
+            datasets: hayDesglose ? [
+              {
+                label: 'Internos',
+                data: internos,
+                borderColor: '#f39c12',
+                backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                tension: 0.3,
+                fill: true,
+                pointRadius: 3
+              },
+              {
+                label: 'Externos',
+                data: externos,
+                borderColor: '#9b59b6',
+                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                tension: 0.3,
+                fill: true,
+                pointRadius: 3
+              },
+              {
+                label: 'Total',
+                data: totales,
+                borderColor: '#0d6efd',
+                backgroundColor: 'transparent',
+                tension: 0.3,
+                fill: false,
+                pointRadius: 4,
+                borderWidth: 2,
+                borderDash: [5, 5]
+              }
+            ] : [{
               label: 'Préstamos',
-              data: valores,
+              data: totales,
               borderColor: '#0d6efd',
               backgroundColor: 'rgba(13, 110, 253, 0.15)',
               tension: 0.3,
@@ -222,20 +336,34 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'top' }
+            },
             scales: {
               y: { beginAtZero: true }
             }
           }
         });
       },
-      error: () => this.mostrarMensaje('No se pudo cargar la evolución de préstamos.')
+      error: () => {
+        this.loadingEvolucion = false;
+        this.errorEvolucion = 'No se pudo cargar la evolución de préstamos.';
+      }
     });
   }
 
   /* ===================== 5) TOP ALUMNOS ===================== */
-  private cargarTopAlumnos() {
-    this.alumnosService.getRankingAlumnos().subscribe({
+  cargarTopAlumnos() {
+    this.loadingRanking = true;
+    this.errorRanking = null;
+    
+    const request$ = this.currentFilter 
+      ? this.alumnosService.getRankingAlumnosWithFilter(this.currentFilter)
+      : this.alumnosService.getRankingAlumnos();
+      
+    request$.subscribe({
       next: (data) => {
+        this.loadingRanking = false;
         const safe = Array.isArray(data) ? data : [];
 
         this.topAlumnos = safe.map((a: any) => ({
@@ -243,11 +371,17 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
           email: a.email,
           carrera: a.carrera,
           total_prestamos: Number(a.total_prestamos ?? a.total_solicitudes ?? 0),
-          sanciones: Number(a.sanciones ?? 0)
+          sanciones: Number(a.sanciones ?? 0),
+          // Nuevas métricas BI
+          prestamos_internos: Number(a.prestamos_internos ?? 0),
+          prestamos_externos: Number(a.prestamos_externos ?? 0),
+          tasa_sancion: Number(a.tasa_sancion ?? 0),
+          anio_ingreso: a.anio_ingreso
         }));
 
         const labels = this.topAlumnos.map(a => a.nombre);
-        const valores = this.topAlumnos.map(a => a.total_prestamos);
+        const valoresInternos = this.topAlumnos.map(a => a.prestamos_internos ?? 0);
+        const valoresExternos = this.topAlumnos.map(a => a.prestamos_externos ?? 0);
 
         this.chartTopAlumnos?.destroy();
 
@@ -257,26 +391,43 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        // Gráfico apilado para mostrar interno vs externo
         this.chartTopAlumnos = new Chart(ctx, {
           type: 'bar',
           data: {
             labels,
-            datasets: [{
-              label: 'Préstamos',
-              data: valores,
-              backgroundColor: '#6c5ce7'
-            }]
+            datasets: [
+              {
+                label: 'Internos',
+                data: valoresInternos,
+                backgroundColor: '#f39c12',
+                borderRadius: 4
+              },
+              {
+                label: 'Externos',
+                data: valoresExternos,
+                backgroundColor: '#9b59b6',
+                borderRadius: 4
+              }
+            ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'top' }
+            },
             scales: {
-              y: { beginAtZero: true }
+              x: { stacked: true },
+              y: { stacked: true, beginAtZero: true }
             }
           }
         });
       },
-      error: () => this.mostrarMensaje('No se pudo cargar el ranking de alumnos.')
+      error: () => {
+        this.loadingRanking = false;
+        this.errorRanking = 'No se pudo cargar el ranking de alumnos.';
+      }
     });
   }
 
@@ -299,16 +450,19 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
           titulo: 'Ranking de Alumnos',
           subtitulo: 'Estudiantes con mayor número de préstamos',
           datos: {
-            columnas: ['#', 'Nombre', 'Email', 'Carrera', 'Préstamos', 'Sanciones'],
+            columnas: ['#', 'Nombre', 'Email', 'Carrera', 'Total', 'Int.', 'Ext.', 'Sanc.', '% Sanc.'],
             filas: this.topAlumnos.map((a, idx) => [
               idx + 1,
               a.nombre,
               a.email,
               a.carrera || '—',
               a.total_prestamos,
-              a.sanciones ?? 0
+              a.prestamos_internos ?? 0,
+              a.prestamos_externos ?? 0,
+              a.sanciones ?? 0,
+              `${(a.tasa_sancion ?? 0).toFixed(1)}%`
             ]),
-            anchos: [30, '*', '*', '*', 60, 60]
+            anchos: [25, '*', '*', '*', 40, 35, 35, 35, 45]
           }
         },
         {
