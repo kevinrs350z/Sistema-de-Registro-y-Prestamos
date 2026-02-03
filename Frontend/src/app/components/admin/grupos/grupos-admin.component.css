@@ -1,0 +1,1 @@
+.grupos-layout{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}.col{min-height:600px}.detail{position:relative}.list{position:relative}@media (max-width:1024px){.grupos-layout{grid-template-columns:1fr;}.col{min-height:auto;}}

@@ -1,0 +1,102 @@
+<div class="detail-panel" *ngIf="grupo; else empty">
+  <div class="detail-header">
+    <div>
+      <h2>{{ grupo.nombre || 'Nuevo grupo' }}</h2>
+      <p class="hint">{{ grupo.asignatura_nombre || 'Sin asignatura' }} · {{ grupo.bloque_label || 'Sin bloque' }}</p>
+    </div>
+    <div class="actions">
+      <span class="badge" [class.badge-green]="grupo.estado === 'ACTIVO'" [class.badge-gray]="grupo.estado !== 'ACTIVO'">{{ grupo.estado || '—' }}</span>
+      <button class="btn-ghost" (click)="toggleEstado()" *ngIf="grupo.id">{{ grupo.estado === 'ACTIVO' ? 'Cerrar grupo' : 'Reabrir' }}</button>
+      <button class="btn-primary" [disabled]="saving" (click)="onSave()">{{ saving ? 'Guardando...' : 'Guardar' }}</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button [class.active]="tab === 'resumen'" (click)="selectTab('resumen')">Resumen</button>
+    <button [class.active]="tab === 'integrantes'" (click)="selectTab('integrantes')">Integrantes</button>
+    <button [class.active]="tab === 'reglas'" (click)="selectTab('reglas')">Reglas</button>
+    <button [class.active]="tab === 'historial'" (click)="selectTab('historial')">Historial</button>
+  </div>
+
+  <div class="tab-body" [ngSwitch]="tab">
+    <div *ngSwitchCase="'resumen'" class="grid">
+      <label class="field">
+        <span>Nombre del grupo <span class="required">*</span></span>
+        <input class="input" [(ngModel)]="grupo.nombre" placeholder="Ej. Grupo Audiovisual 1" />
+      </label>
+      <label class="field">
+        <span>Descripción</span>
+        <textarea class="input" rows="2" [(ngModel)]="grupo.descripcion" placeholder="Detalle opcional"></textarea>
+      </label>
+      <label class="field">
+        <span>Asignatura <span class="required">*</span></span>
+        <select class="input" [ngModel]="grupo.asignatura_id" (ngModelChange)="onAsignaturaChange($event)">
+          <option [ngValue]="null">Seleccionar asignatura</option>
+          <option *ngFor="let a of asignaturas" [ngValue]="a.idAsignatura">{{ a.nombre }}</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Bloque horario <span class="required">*</span></span>
+        <select class="input" [ngModel]="grupo.bloque_id" (ngModelChange)="onBloqueChange($event)">
+          <option [ngValue]="null">Seleccionar bloque</option>
+          <option *ngFor="let b of bloques" [ngValue]="b.idBloque">{{ b.nombre }} ({{ b.hora_inicio }}-{{ b.hora_fin }})</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Profesor responsable</span>
+        <input class="input" [(ngModel)]="grupo.docente_nombre" placeholder="Profesor (opcional)" />
+      </label>
+      <div class="field inline">
+        <label>
+          <span>Año</span>
+          <input class="input" type="number" [(ngModel)]="grupo.anio" min="2020" max="2100" />
+        </label>
+        <label>
+          <span>Semestre</span>
+          <select class="input" [(ngModel)]="grupo.semestre">
+            <option [ngValue]="null">—</option>
+            <option [ngValue]="1">1</option>
+            <option [ngValue]="2">2</option>
+          </select>
+        </label>
+      </div>
+      <div class="field inline">
+        <label>
+          <span>Estado</span>
+          <select class="input" [(ngModel)]="grupo.estado">
+            <option value="ACTIVO">Activo</option>
+            <option value="CERRADO">Cerrado</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div *ngSwitchCase="'integrantes'">
+      <app-grupo-members
+        [integrantes]="grupo.integrantes || []"
+        [estado]="grupo.estado"
+        (addMember)="addMember.emit($event)"
+        (removeMember)="removeMember.emit($event)"
+      ></app-grupo-members>
+    </div>
+
+    <div *ngSwitchCase="'reglas'">
+      <p class="hint">Solo lectura. Reglas y restricciones definidas para el grupo.</p>
+      <pre class="box">{{ (grupo.reglas || []) | json }}</pre>
+    </div>
+
+    <div *ngSwitchCase="'historial'">
+      <p class="hint">Historial de auditoría</p>
+      <div class="box" *ngIf="grupo.historial && grupo.historial.length; else hEmpty">
+        <div class="log" *ngFor="let h of grupo.historial">
+          <div class="title">{{ h.evento || h.action || 'Evento' }}</div>
+          <div class="sub">{{ h.user || h.usuario }} · {{ h.fecha || h.created_at | date:'short' }}</div>
+        </div>
+      </div>
+      <ng-template #hEmpty><div class="hint">Sin registros.</div></ng-template>
+    </div>
+  </div>
+</div>
+<ng-template #empty>
+  <div class="empty">Selecciona un grupo para ver el detalle o crea uno nuevo.</div>
+</ng-template>

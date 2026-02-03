@@ -353,4 +353,41 @@ class UsuarioService
             return true;
         });
     }
+
+    /**
+     * Buscar usuarios para autocompletado (gestión de grupos).
+     * Retorna id, nombre completo, email y rut.
+     *
+     * @param string $q    Texto a buscar
+     * @param int    $limit Máximo de resultados
+     * @return array
+     */
+    public function buscarUsuarios(string $q, int $limit = 20): array
+    {
+        $q = trim($q);
+
+        $usuarios = User::select(
+                'users.idUser as id',
+                DB::raw("CONCAT(COALESCE(persona.Nombre,''), ' ', COALESCE(persona.apellido1,''), ' ', COALESCE(persona.apellido2,'')) as nombre"),
+                'users.Email as email',
+                'persona.Rut as rut',
+                'rol.Nombre as rol'
+            )
+            ->join('persona', 'persona.idPersona', '=', 'users.idPersona')
+            ->leftJoin('rol_user', 'rol_user.idUser', '=', 'users.idUser')
+            ->leftJoin('rol', 'rol.idRol', '=', 'rol_user.idRol')
+            ->where('users.estado', 'ACTIVO')
+            ->where(function ($sub) use ($q) {
+                $sub->where('persona.Nombre', 'like', "%{$q}%")
+                    ->orWhere('persona.apellido1', 'like', "%{$q}%")
+                    ->orWhere('persona.apellido2', 'like', "%{$q}%")
+                    ->orWhere('users.Email', 'like', "%{$q}%")
+                    ->orWhere('persona.Rut', 'like', "%{$q}%");
+            })
+            ->orderBy('persona.Nombre', 'asc')
+            ->limit($limit)
+            ->get();
+
+        return $usuarios->toArray();
+    }
 }

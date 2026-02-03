@@ -1,0 +1,23 @@
+<div class="grupos-layout">
+  <div class="col list">
+    <app-grupos-list
+      [grupos]="grupos"
+      [selectedId]="selected?.id || null"
+      [loading]="loadingList"
+      (select)="onSelect($event)"
+      (filtersChange)="onFiltersChange($event)"
+      (create)="onCreate()"
+    ></app-grupos-list>
+  </div>
+  <div class="col detail">
+    <app-grupo-detail
+      [grupo]="selected"
+      [loading]="loadingDetail"
+      [saving]="saving"
+      (save)="onSave($event)"
+      (changeEstado)="onChangeEstado($event)"
+      (addMember)="onAddMember($event)"
+      (removeMember)="onRemoveMember($event)"
+    ></app-grupo-detail>
+  </div>
+</div>

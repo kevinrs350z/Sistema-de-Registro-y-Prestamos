@@ -264,4 +264,30 @@ class UsuarioController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Búsqueda de usuarios para autocompletado (usado en gestión de grupos).
+     * GET /api/admin/users/search?q=texto
+     */
+    public function search(Request $request, UsuarioService $service)
+    {
+        try {
+            $q = $request->query('q', '');
+
+            // Mínimo 2 caracteres para buscar
+            if (strlen($q) < 2) {
+                return response()->json([]);
+            }
+
+            $usuarios = $service->buscarUsuarios($q, 20);
+
+            return response()->json($usuarios);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error en búsqueda de usuarios',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

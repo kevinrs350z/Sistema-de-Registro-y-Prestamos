@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GrupoService } from '../../../services/grupo.service';
+import { AdminGrupoService } from '../../../services/admin-grupo.service';
 import { UsuariosService } from '../../../services/usuarios.service';
 import { Grupo } from '../../../models/grupo.model';
 
@@ -19,14 +19,14 @@ export class GestionarIntegrantesComponent {
   nombreGrupo = '';
   usuariosDisponibles: any[] = [];
 
-  constructor(private grupoService: GrupoService, private usuariosService: UsuariosService) {
+  constructor(private grupoService: AdminGrupoService, private usuariosService: UsuariosService) {
     this.cargarGrupos();
     this.cargarUsuarios();
   }
 
   cargarGrupos() {
-    this.grupoService.getGrupos().subscribe((grupos: Grupo[]) => {
-      this.grupos = grupos;
+    this.grupoService.getGrupos().subscribe((resp) => {
+      this.grupos = resp?.data || [];
     });
   }
 
@@ -46,7 +46,7 @@ export class GestionarIntegrantesComponent {
 
   crearGrupo() {
     if (!this.nombreGrupo.trim() || this.integrantes.length === 0) return;
-    this.grupoService.createGrupo({ nombre: this.nombreGrupo, usuarios: this.integrantes.map(u => u.id) }).subscribe((grupo: Grupo) => {
+    this.grupoService.createGrupo({ nombre: this.nombreGrupo, usuarios: this.integrantes.map(u => u.id) } as any).subscribe((grupo: Grupo) => {
       this.grupos.push(grupo);
       this.nombreGrupo = '';
       this.integrantes = [];

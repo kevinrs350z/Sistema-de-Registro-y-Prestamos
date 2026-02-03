@@ -34,6 +34,7 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
   private router = inject(Router);
   private api = inject(AuthService);
+  public auth = this.api; // Exponer auth para template (admin/super)
   private notify = inject(NotificationService);
 
   // 🔹 Secciones internas del dashboard
@@ -82,6 +83,10 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
         case 'asignaturas':
           this.irGestionarAsignaturas();
+          break;
+
+        case 'gestionar-grupos':
+          this.router.navigate(['/admin/gestionar-grupos']);
           break;
 
         /** ⭐ NUEVO: Preguntas Frecuentes */

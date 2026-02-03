@@ -64,6 +64,13 @@
         <p>Ver y editar cuentas de alumnos registradas</p>
       </div>
 
+      <!-- Gestión de Grupos (visible para Admin/Super) -->
+      <a routerLink="/admin/gestionar-grupos" class="action-card grupos" *ngIf="auth.isAdmin() || auth.isSuperUsuario()">
+        <div class="action-icon"><i class="bi bi-collection"></i></div>
+        <h3>Gestionar Grupos</h3>
+        <p>Asignar usuarios y préstamos a grupos</p>
+      </a>
+
       <!-- 🆕 NUEVA OPCIÓN – GESTIONAR ASIGNATURAS/EVENTOS -->
       <a routerLink="/admin/asignaturas" class="action-card asignaturas">
         <div class="action-icon"><i class="bi bi-calendar-event"></i></div>

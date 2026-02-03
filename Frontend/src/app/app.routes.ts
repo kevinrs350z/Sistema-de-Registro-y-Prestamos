@@ -115,8 +115,8 @@ export const routes: Routes = [
     {
       path: 'admin/gestionar-grupos',
       loadComponent: () =>
-        import('./components/admin/integrantes/gestionar-integrantes.component')
-          .then(m => m.GestionarIntegrantesComponent)
+        import('./components/admin/grupos/grupos-admin.component')
+          .then(m => m.GruposAdminComponent)
     },
 
   {

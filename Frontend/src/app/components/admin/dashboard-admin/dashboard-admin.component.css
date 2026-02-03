@@ -195,6 +195,21 @@
   text-align: center;
 }
 
+/* Variante para Grupos */
+.action-card.grupos {
+  background: #111827;
+  color: #e5e7eb;
+}
+
+.action-card.grupos .action-icon {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.action-card.grupos:hover {
+  border-color: #2563eb;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+}
+
 .action-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(68, 107, 169, 0.15);

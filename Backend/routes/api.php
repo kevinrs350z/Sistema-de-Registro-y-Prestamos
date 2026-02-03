@@ -34,6 +34,7 @@ use App\Http\Controllers\Reportes\ReportesMantenimientosController;
 use App\Http\Controllers\Reportes\ReportesTendenciasController;
 use App\Http\Controllers\Reportes\ReportesAsignaturasController;
 use App\Http\Controllers\ReportesEquiposNormalizadosController;
+use App\Http\Controllers\AdminGrupoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,7 +140,20 @@ Route::post('admin/prestamos/{id}/devolver', [PrestamoAdminController::class, 'm
 Route::patch('admin/prestamos/{id}/extender', [PrestamoAdminController::class, 'extender']);
 Route::post('admin/prestamos/{id}/entregar', [PrestamoAdminController::class, 'marcarEntregado']);
 
+    // ─────────────────────────────────────────────
+    // Gestión administrativa de grupos
+    // ─────────────────────────────────────────────
+    Route::get('/admin/grupos', [AdminGrupoController::class, 'index']);
+    Route::post('/admin/grupos', [AdminGrupoController::class, 'store']);
+    Route::get('/admin/grupos/{id}', [AdminGrupoController::class, 'show']);
+    Route::patch('/admin/grupos/{id}', [AdminGrupoController::class, 'update']);
+    Route::delete('/admin/grupos/{id}', [AdminGrupoController::class, 'destroy']);
+    Route::patch('/admin/grupos/{id}/estado', [AdminGrupoController::class, 'actualizarEstado']);
+    Route::post('/admin/grupos/{id}/integrantes', [AdminGrupoController::class, 'addIntegrantes']);
+    Route::delete('/admin/grupos/{id}/integrantes/{usuarioId}', [AdminGrupoController::class, 'removeIntegrante']);
 
+    // Búsqueda de usuarios para autocompletado
+    Route::get('/admin/users/search', [UsuarioController::class, 'search']);
 
 });
 Route::post('admin/prestamos', [PrestamoAdminController::class, 'store']);

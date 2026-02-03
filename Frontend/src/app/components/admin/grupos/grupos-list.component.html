@@ -1,0 +1,46 @@
+<div class="list-panel">
+  <div class="list-header">
+    <div>
+      <h3>Grupos</h3>
+      <p class="hint">Filtra por año, semestre, asignatura o estado</p>
+    </div>
+    <button class="btn-primary" (click)="nuevoGrupo()">Nuevo grupo</button>
+  </div>
+
+  <div class="filters">
+    <input class="input" placeholder="Buscar nombre o asignatura" [(ngModel)]="search" (ngModelChange)="onFilterChange()" />
+    <input class="input" placeholder="Año" [(ngModel)]="filtroAnio" (ngModelChange)="onFilterChange()" />
+    <select class="input" [(ngModel)]="filtroSemestre" (ngModelChange)="onFilterChange()">
+      <option value="">Semestre</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+    </select>
+    <input class="input" placeholder="Asignatura" [(ngModel)]="filtroAsignatura" (ngModelChange)="onFilterChange()" />
+    <select class="input" [(ngModel)]="filtroEstado" (ngModelChange)="onFilterChange()">
+      <option value="">Estado</option>
+      <option value="ACTIVO">Activo</option>
+      <option value="CERRADO">Cerrado</option>
+    </select>
+  </div>
+
+  <div class="list" *ngIf="!loading; else skeleton">
+    <div
+      class="list-item"
+      *ngFor="let g of grupos"
+      [class.active]="g.id === selectedId"
+      (click)="onSelect(g)"
+    >
+      <div class="item-title">{{ g.nombre }}</div>
+      <div class="item-sub">{{ g.asignatura_nombre || 'Sin asignatura' }} · {{ g.bloque_label || 'Sin bloque' }}</div>
+      <div class="item-meta">
+        <span class="badge" [class.badge-green]="g.estado === 'ACTIVO'" [class.badge-gray]="g.estado !== 'ACTIVO'">{{ g.estado || '—' }}</span>
+        <span class="count">{{ g.integrantes_count || 0 }} integrantes</span>
+      </div>
+    </div>
+    <p class="empty" *ngIf="grupos.length === 0">Sin grupos con los filtros actuales.</p>
+  </div>
+
+  <ng-template #skeleton>
+    <div class="skeleton" *ngFor="let i of [1,2,3,4,5]"></div>
+  </ng-template>
+</div>
