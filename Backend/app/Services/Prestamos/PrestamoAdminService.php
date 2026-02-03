@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Equipo;
 use App\Services\PrestamoService;
 use App\Models\Evento;
+use Carbon\Carbon;
 
 
 class PrestamoAdminService
@@ -188,6 +189,126 @@ class PrestamoAdminService
         });
     }
 
+    public function extenderPrestamo(
+        int $idPrestamo,
+        string $nuevaFecha,
+        array $equiposIds,
+        ?string $comentario
+    ): void {
+        DB::transaction(function () use ($idPrestamo, $nuevaFecha, $equiposIds, $comentario) {
+            $prestamo = Prestamo::with(['equipos.tipo'])->findOrFail($idPrestamo);
+
+            if (!in_array($prestamo->estado, [EstadoPrestamo::APROBADO, EstadoPrestamo::ENTREGADO], true)) {
+                throw new \Exception('Solo préstamos APROBADOS o ENTREGADOS pueden extenderse.');
+            }
+
+            $equiposSeleccionados = collect($equiposIds)->unique()->values();
+
+            if ($equiposSeleccionados->isEmpty()) {
+                throw new \Exception('Debes seleccionar al menos un equipo para extender.');
+            }
+
+            $equiposPrestamo = $prestamo->equipos;
+            $idsPrestamo = $equiposPrestamo->pluck('id');
+
+            if ($equiposSeleccionados->diff($idsPrestamo)->isNotEmpty()) {
+                throw new \Exception('Algunos equipos seleccionados no pertenecen al préstamo.');
+            }
+
+            $pendientesActuales = $equiposPrestamo->filter(fn ($equipo) => !($equipo->pivot->devuelto ?? false))->pluck('id');
+
+            if ($pendientesActuales->isEmpty()) {
+                throw new \Exception('No existen equipos pendientes para extender.');
+            }
+
+            $pendientesSeleccionados = $equiposSeleccionados->intersect($pendientesActuales);
+
+            if ($pendientesSeleccionados->isEmpty()) {
+                throw new \Exception('Los equipos elegidos ya fueron devueltos.');
+            }
+
+            $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
+
+            // 1️⃣ Actualizar fecha límite del préstamo
+            $prestamo->fecha_fin = Carbon::parse($nuevaFecha)->endOfDay();
+            $prestamo->save();
+
+            // 2️⃣ Registrar observación de extensión
+            Observacion::create([
+                'idPrestamo'  => $prestamo->idPrestamo,
+                'idUser'      => $userId,
+                'descripcion' => $comentario ?: 'Extensión del préstamo registrada por administración.',
+                'tipo'        => 'EXTENSION',
+                'estado'      => 'habilitado'
+            ]);
+
+            // 3️⃣ Marcar como devueltos los equipos no seleccionados
+            $equiposNoExtender = $pendientesActuales->diff($pendientesSeleccionados);
+
+            if ($equiposNoExtender->isNotEmpty()) {
+                DB::table('prestamo_equipo')
+                    ->where('idPrestamo', $prestamo->idPrestamo)
+                    ->whereIn('idEquipo', $equiposNoExtender->all())
+                    ->update(['devuelto' => true]);
+
+                Equipo::whereIn('id', $equiposNoExtender->all())
+                    ->update(['estado' => EstadoEquipo::DISPONIBLE]);
+
+                foreach ($equiposPrestamo->whereIn('id', $equiposNoExtender->all()) as $equipoDevuelto) {
+                    Observacion::create([
+                        'idPrestamo'  => $prestamo->idPrestamo,
+                        'idUser'      => $userId,
+                        'descripcion' => sprintf(
+                            'Extensión: equipo %s (%s) devuelto automáticamente.',
+                            $equipoDevuelto->tipo->nombre ?? 'Equipo',
+                            $equipoDevuelto->codigo ?? '—'
+                        ),
+                        'tipo'        => 'DEVOLUCION_PARCIAL',
+                        'estado'      => 'habilitado'
+                    ]);
+                }
+            }
+
+            // 4️⃣ Garantizar que equipos seleccionados sigan pendientes
+            DB::table('prestamo_equipo')
+                ->where('idPrestamo', $prestamo->idPrestamo)
+                ->whereIn('idEquipo', $pendientesSeleccionados->all())
+                ->update(['devuelto' => false]);
+
+            // 5️⃣ Ajustar estado del préstamo
+            $quedanPendientes = DB::table('prestamo_equipo')
+                ->where('idPrestamo', $prestamo->idPrestamo)
+                ->where('devuelto', false)
+                ->exists();
+
+            if (!$quedanPendientes) {
+                $estadoAnterior = $prestamo->estado;
+                $prestamo->estado = EstadoPrestamo::DEVUELTO;
+                $prestamo->save();
+
+                $this->registrarHistorial(
+                    $prestamo->idPrestamo,
+                    $userId,
+                    $estadoAnterior,
+                    EstadoPrestamo::DEVUELTO,
+                    'Extensión cerrada: todos los equipos fueron devueltos.'
+                );
+            } elseif ($prestamo->estado !== EstadoPrestamo::ENTREGADO) {
+                $estadoAnterior = $prestamo->estado;
+                $prestamo->estado = EstadoPrestamo::ENTREGADO;
+                $prestamo->save();
+
+                $this->registrarHistorial(
+                    $prestamo->idPrestamo,
+                    $userId,
+                    $estadoAnterior,
+                    EstadoPrestamo::ENTREGADO,
+                    'Extensión: equipos pendientes continúan en préstamo.'
+                );
+            }
+        });
+    }
+
     /* ============================================================
         LISTADOS
     ============================================================ */
@@ -196,7 +317,8 @@ class PrestamoAdminService
         return Prestamo::with([
             'user.persona',
             'equipos.tipo',
-            'bloquePrestamo.bloque'
+            'bloquePrestamo.bloque',
+            'integrantes.persona'
         ])
         ->whereIn('estado', [
             EstadoPrestamo::PENDIENTE,
@@ -214,6 +336,18 @@ class PrestamoAdminService
                         return optional($bp->bloque)->nombre ?? "Bloque {$bp->idBloque}";
                     })
                     ->join(', ');
+            }
+
+            // Mapear integrantes del equipo
+            $integrantesData = [];
+            if ($p->integrantes && $p->integrantes->count() > 0) {
+                $integrantesData = $p->integrantes->map(function ($integrante) {
+                    return [
+                        'idUser' => $integrante->idUser,
+                        'nombre' => $integrante->persona?->Nombre ?? 'Sin nombre',
+                        'email' => $integrante->persona?->Email ?? '',
+                    ];
+                })->toArray();
             }
 
             return [
@@ -240,6 +374,8 @@ class PrestamoAdminService
                         'devuelto' => (bool) ($e->pivot->devuelto ?? false),
                     ];
                 }),
+
+                'integrantes' => $integrantesData,
             ];
         });
 

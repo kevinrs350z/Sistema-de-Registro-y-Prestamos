@@ -7,14 +7,15 @@
   justify-content: center;
 }
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 60;
+  left: 0;
+  z-index: 1050;
   width: 100%;
   background: linear-gradient(135deg, #446ba9, #3b5f98);
-  border-bottom: 2px solid rgba(145, 181, 232, 0.28);
-  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.28);
-  padding: 16px 18px;
+  border-bottom: 1px solid rgba(145, 181, 232, 0.22);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.22);
+  padding: 12px 18px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -217,7 +218,7 @@
 
 @media (min-width: 768px) {
   .navbar {
-    padding: 20px 36px;
+    padding: 14px 36px;
   }
 
   .logo-title {
@@ -232,7 +233,7 @@
 
 @media (min-width: 1200px) {
   .navbar {
-    padding: 22px 64px;
+    padding: 16px 54px;
   }
 
   .logo-title {

@@ -21,6 +21,10 @@ export class CatalogoEquiposComponent {
   private router = inject(Router);
   private carritoSrv = inject(CarritoService);
   private notify = inject(NotificationService);
+  private readonly formatoDisponibilidad = new Intl.DateTimeFormat('es-CL', {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  });
 
   // ===========================
   // ESTADOS
@@ -123,6 +127,28 @@ export class CatalogoEquiposComponent {
     return this.carrito().find(
       c => c.idTipoEquipo === idTipo
     )?.modo ?? 'cualquiera';
+  }
+
+  obtenerMensajeDisponibilidad(e: TipoEquipo): string | null {
+    if (e.stock > 0) {
+      return 'Disponible ahora';
+    }
+
+    if (e.proxima_disponibilidad) {
+      const fecha = this.formatearDisponibilidad(e.proxima_disponibilidad);
+      return fecha ? `Disponible desde ${fecha}` : null;
+    }
+
+    return 'Sin disponibilidad próxima';
+  }
+
+  private formatearDisponibilidad(fechaIso: string): string | null {
+    const fecha = new Date(fechaIso);
+    if (Number.isNaN(fecha.getTime())) {
+      return null;
+    }
+
+    return this.formatoDisponibilidad.format(fecha);
   }
 
   // ===========================
@@ -328,6 +354,7 @@ interface TipoEquipo {
   prestamos_activos?: number;
   bloqueado?: boolean;
   bloqueo_motivo?: string | null;
+  proxima_disponibilidad?: string | null;
 }
 
 interface EquipoFisico {

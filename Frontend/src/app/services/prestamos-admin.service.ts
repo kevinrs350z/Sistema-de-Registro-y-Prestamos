@@ -55,6 +55,10 @@ marcarEntregado(id: number) {
   return this.http.post(`${this.apiUrl}/${id}/entregar`, {});
 }
 
+extenderPrestamo(id: number, payload: { fecha: string; comentario?: string; equiposIds: number[] }) {
+  return this.http.patch(`${this.apiUrl}/${id}/extender`, payload);
+}
+
 //devolverEquipo(idPrestamo: number, idEquipo: number, motivo: string) {
  // return this.http.patch(`${this.apiUrl}/prestamos/${idPrestamo}/devolver-equipo/${idEquipo}`, {
   //  motivo

@@ -1,6 +1,6 @@
-import { Component, computed, inject, signal, ChangeDetectorRef } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectorRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { startWith, map } from 'rxjs/operators';
@@ -46,7 +46,7 @@ function cortarHora(hora: string): string {
 @Component({
   selector: 'app-solicitar-reserva',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './solicitar-reserva.component.html',
   styleUrls: ['./solicitar-reserva.component.css'],
 })
@@ -65,15 +65,59 @@ export class SolicitarReservaComponent {
   bloqueadoMotivo: string | null = null;
   bloqueadoFecha: string | null = null;
 
+  // Términos y condiciones
+  aceptaTerminos = false;
+
   equipos = signal<Equipo[]>([]);
   carrito: CarritoItem[] = [];
 
-  asignaturas = signal<{ idAsignatura: number; nombre: string }[]>([]);
+  asignaturas = signal<{ nombre: string }[]>([
+    { nombre: 'Taller de fotografía Digital' },
+    { nombre: 'Taller de fotografía Publicitaria' },
+    { nombre: 'Taller de Producción Multimedia I' },
+    { nombre: 'Taller de Video Digital' },
+    { nombre: 'Taller de Medios de Comunicación' },
+    { nombre: 'Taller de Música y Sonido' },
+    { nombre: 'Laboratorio de Video Digital' },
+    { nombre: 'Practica Laboral Segundo año' },
+    { nombre: 'Practica Profesional Cuarto año' }
+  ]);
   bloques: { id: number; texto: string }[] = [];
 
   integrantes = signal<any[]>([]);
-  integrantesSeleccionados: number[] = [];
+  integrantesSeleccionados = signal<number[]>([]);
   bloqueosIntegrantes: Record<number, string> = {};
+
+  // Búsqueda de integrantes
+  busquedaIntegrante = signal('');
+
+  // Integrantes filtrados por búsqueda (máximo 3)
+  integrantesFiltrados = computed(() => {
+    const texto = this.busquedaIntegrante().toLowerCase().trim();
+    const todos = this.integrantes();
+    const seleccionados = this.integrantesSeleccionados();
+
+    // Si no hay búsqueda, no mostrar lista (solo los seleccionados)
+    if (!texto) return [];
+
+    return todos
+      .filter(u => !seleccionados.includes(u.id)) // excluir ya seleccionados
+      .filter(u =>
+        u.nombre.toLowerCase().includes(texto) ||
+        u.email.toLowerCase().includes(texto)
+      )
+      .slice(0, 3); // máximo 3 resultados
+  });
+
+  // Integrantes ya seleccionados (para mostrar chips)
+  integrantesSeleccionadosData = computed(() => {
+    const todos = this.integrantes();
+    const seleccionados = this.integrantesSeleccionados();
+    return todos.filter(u => seleccionados.includes(u.id));
+  });
+
+  proyectoHabilitado = false;
+  grupoProyectoSeleccionado = 'nuevo';
 
   grupos = signal<Grupo[]>([]);
   grupoSeleccionado: Grupo | null = null;
@@ -82,6 +126,8 @@ export class SolicitarReservaComponent {
   mostrarMotivo = false;
 
   mostrarResumenMobile = signal(false);
+  equiposSeleccionadosCount = computed(() => this.equiposResumen().length);
+  mostrarProtocolo = false;
 
   abrirResumenMobile() {
     this.mostrarResumenMobile.set(true);
@@ -91,6 +137,18 @@ export class SolicitarReservaComponent {
 
   cerrarResumenMobile() {
     this.mostrarResumenMobile.set(false);
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+  }
+
+  abrirProtocolo() {
+    this.mostrarProtocolo = true;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  }
+
+  cerrarProtocolo() {
+    this.mostrarProtocolo = false;
     document.documentElement.style.overflow = '';
     document.body.style.overflow = '';
   }
@@ -108,8 +166,8 @@ export class SolicitarReservaComponent {
 
       tipo_solicitud: ['DENTRO', Validators.required],
 
-      // ✅ ahora es number | null
-      asignatura: [null as number | null, Validators.required],
+      // ✅ ahora es string | null
+      asignatura: [null as string | null, Validators.required],
 
       motivo: [''],
 
@@ -117,9 +175,17 @@ export class SolicitarReservaComponent {
       fecha_inicio: [''],
       fecha_fin: [''],
       bloques: [[] as number[]],
+      nombre_proyecto: [''],
     },
     { validators: rangoFechasValido }
   );
+
+  private proyectoAutoResetEffect = effect(() => {
+    if (this.equiposSeleccionadosCount() === 0 && this.proyectoHabilitado) {
+      this.proyectoHabilitado = false;
+      this.onProyectoToggle();
+    }
+  });
 
   get f() {
     return this.form.controls;
@@ -153,14 +219,14 @@ export class SolicitarReservaComponent {
     { initialValue: { ...this.form.getRawValue() } }
   );
 
-  // ✅ ya no existe "OTROS" string. OTROS será null desde el select.
   asignaturaSeleccionada = computed(() => {
-    const id = this.formValueSig().asignatura;
+    const valor = this.formValueSig().asignatura;
+    const motivo = this.formValueSig().motivo;
 
-    if (id === null) return 'OTROS';
-    if (id === undefined) return '—';
+    if (!valor) return '—';
+    if (valor === 'OTROS') return motivo ? `OTROS: ${motivo}` : 'OTROS';
 
-    return this.asignaturas().find(a => a.idAsignatura === id)?.nombre ?? '—';
+    return this.asignaturas().find(a => a.nombre === valor)?.nombre ?? String(valor);
   });
 
   equiposSeleccionados = computed(() => {
@@ -247,14 +313,6 @@ export class SolicitarReservaComponent {
       this.cargarGrupos();
     });
 
-    this.api.getAsignaturas(token).subscribe((data: any[]) => {
-      const normalizadas = data.map((a: any) => ({
-        idAsignatura: Number(a.idAsignatura),
-        nombre: a.nombre
-      }));
-      this.asignaturas.set(normalizadas);
-    });
-
     this.api.getBloques(token).subscribe(data => {
       this.bloques = data
         .filter((b: any) => b.idBloque <= 5)
@@ -268,6 +326,9 @@ export class SolicitarReservaComponent {
       this.tipoSolicitud.set(v as any);
       this.minFechaInicio = this.calcularMinFecha(v as any);
     });
+
+    this.grupoProyectoSeleccionado = 'nuevo'; // Ensure project dropdown resets
+    this.f.nombre_proyecto.disable({ emitEvent: false });
   }
 
   cargarGrupos(): void {
@@ -280,21 +341,31 @@ export class SolicitarReservaComponent {
   }
 
   onGrupoChange(grupoId: string): void {
+    this.grupoProyectoSeleccionado = grupoId || 'nuevo';
+
+    if (!this.proyectoHabilitado) {
+      this.grupoSeleccionado = null;
+      this.integrantesSeleccionados.set([]);
+      this.actualizarBloqueosIntegrantes();
+      return;
+    }
+
     if (!grupoId || grupoId === 'nuevo') {
       this.grupoSeleccionado = null;
-      this.integrantesSeleccionados = [];
+      this.integrantesSeleccionados.set([]);
+      this.actualizarBloqueosIntegrantes();
       return;
     }
     const grupo = this.grupos().find((g: Grupo) => g.id === +grupoId);
     if (grupo) {
       this.grupoSeleccionado = grupo;
-      this.integrantesSeleccionados = (grupo.usuarios || []).map((u: any) => u.id);
+      this.integrantesSeleccionados.set((grupo.usuarios || []).map((u: any) => u.id));
+      this.actualizarBloqueosIntegrantes();
     }
   }
 
-  // ✅ ahora OTROS es null
-  onAsignaturaChange(valor: number | null) {
-    this.mostrarMotivo = valor === null;
+  onAsignaturaChange(valor: string | null) {
+    this.mostrarMotivo = valor === 'OTROS';
 
     if (this.mostrarMotivo) {
       this.f.motivo.setValidators([Validators.required]);
@@ -309,25 +380,94 @@ export class SolicitarReservaComponent {
   onBloqueChange(event: Event, id: number) {
     const target = event.target as HTMLInputElement;
     const arr: number[] = this.f.bloques.value ?? [];
-    target.checked
-      ? this.f.bloques.setValue([...new Set([...arr, id])])
-      : this.f.bloques.setValue(arr.filter(x => x !== id));
+    
+    if (target.checked) {
+      // Agregar bloque
+      const nuevoArr = [...new Set([...arr, id])].sort((a, b) => a - b);
+      
+      // Verificar si el nuevo conjunto es continuo
+      if (this.sonBloquesContinuos(nuevoArr)) {
+        this.f.bloques.setValue(nuevoArr);
+      } else {
+        // No permitir, revertir el checkbox
+        target.checked = false;
+        this.notify.warning('Solo puedes seleccionar bloques continuos (horarios consecutivos).');
+      }
+    } else {
+      // Quitar bloque
+      const nuevoArr = arr.filter(x => x !== id);
+      
+      // Si quedan bloques, verificar que sigan siendo continuos
+      if (nuevoArr.length === 0 || this.sonBloquesContinuos(nuevoArr)) {
+        this.f.bloques.setValue(nuevoArr);
+      } else {
+        // No permitir quitar si rompe la continuidad
+        target.checked = true;
+        this.notify.warning('No puedes quitar este bloque porque dejaría huecos en el horario.');
+      }
+    }
+  }
+
+  // Verifica si un array de IDs de bloques son continuos (consecutivos)
+  sonBloquesContinuos(bloques: number[]): boolean {
+    if (bloques.length <= 1) return true;
+    
+    const ordenados = [...bloques].sort((a, b) => a - b);
+    for (let i = 1; i < ordenados.length; i++) {
+      if (ordenados[i] - ordenados[i - 1] !== 1) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Verifica si un bloque puede ser seleccionado (es adyacente a los ya seleccionados)
+  puedeSeleccionarBloque(id: number): boolean {
+    const seleccionados: number[] = this.f.bloques.value ?? [];
+    
+    // Si no hay bloques seleccionados, cualquiera puede seleccionarse
+    if (seleccionados.length === 0) return true;
+    
+    // Si ya está seleccionado, siempre se puede "deseleccionar" (la lógica de quitar valida después)
+    if (seleccionados.includes(id)) return true;
+    
+    // Verificar si es adyacente al rango actual
+    const min = Math.min(...seleccionados);
+    const max = Math.max(...seleccionados);
+    
+    return id === min - 1 || id === max + 1;
   }
 
   toggleIntegrante(id: number) {
+    if (!this.proyectoHabilitado) {
+      return;
+    }
+
     if (this.bloqueosIntegrantes[id]) {
       this.notify.warning(this.bloqueosIntegrantes[id]);
       return;
     }
 
-    if (this.integrantesSeleccionados.includes(id)) {
-      this.integrantesSeleccionados = this.integrantesSeleccionados.filter(x => x !== id);
+    if (this.integrantesSeleccionados().includes(id)) {
+      this.integrantesSeleccionados.set(this.integrantesSeleccionados().filter(x => x !== id));
     } else {
-      this.integrantesSeleccionados = [...this.integrantesSeleccionados, id];
+      this.integrantesSeleccionados.set([...this.integrantesSeleccionados(), id]);
+      this.busquedaIntegrante.set(''); // Limpiar búsqueda al agregar
     }
 
     this.actualizarBloqueosIntegrantes();
     this.grupoSeleccionado = null; // Si el usuario edita manualmente, deselecciona grupo
+  }
+
+  quitarIntegrante(id: number) {
+    this.integrantesSeleccionados.set(this.integrantesSeleccionados().filter(x => x !== id));
+    this.actualizarBloqueosIntegrantes();
+    this.grupoSeleccionado = null;
+  }
+
+  onBusquedaIntegranteChange(event: Event) {
+    const valor = (event.target as HTMLInputElement).value;
+    this.busquedaIntegrante.set(valor);
   }
 
   private cargarIntegrantes() {
@@ -379,18 +519,33 @@ export class SolicitarReservaComponent {
   }
 
   private actualizarBloqueosIntegrantes() {
-    if (!this.integrantesSeleccionados.length) {
+    if (!this.proyectoHabilitado || !this.integrantesSeleccionados().length) {
       this.bloqueosIntegrantes = {};
       return;
     }
 
     this.api.validarMaximoPrestamo({
       equipos: this.buildEquiposPayload(),
-      integrantes: this.integrantesSeleccionados
+      integrantes: this.integrantesSeleccionados()
     }).subscribe({
       next: res => this.aplicarBloqueos(res?.bloqueos || {}),
       error: err => console.error('Error validando máximos', err)
     });
+  }
+
+  onProyectoToggle(): void {
+    if (!this.proyectoHabilitado) {
+      this.integrantesSeleccionados.set([]);
+      this.bloqueosIntegrantes = {};
+      this.grupoSeleccionado = null;
+      this.grupoProyectoSeleccionado = 'nuevo'; // Reset project dropdown state
+      this.busquedaIntegrante.set(''); // Limpiar búsqueda
+      this.f.nombre_proyecto.disable({ emitEvent: false });
+      this.f.nombre_proyecto.setValue('', { emitEvent: false });
+    } else {
+      this.f.nombre_proyecto.enable({ emitEvent: false });
+      this.actualizarBloqueosIntegrantes();
+    }
   }
 
   /* =========================
@@ -407,10 +562,9 @@ export class SolicitarReservaComponent {
       return;
     }
 
-    const asignaturaSel = this.f.asignatura.value; // number | null
+    const asignaturaSel = this.f.asignatura.value; // string | null
 
-    // ✅ ahora null significa OTROS
-    if (asignaturaSel === undefined) {
+    if (!asignaturaSel) {
       this.notify.warning('Debes seleccionar una asignatura.');
       return;
     }
@@ -418,14 +572,14 @@ export class SolicitarReservaComponent {
     const payload: any = {
       // OJO: el backend usa Auth::user() para idUser; no necesitamos mandarlo.
       tipo: this.f.tipo_solicitud.value,
-      asignatura: asignaturaSel, // number | null
-      motivo: asignaturaSel === null ? this.f.motivo.value : '',
+      asignatura: asignaturaSel, // string
+      motivo: asignaturaSel === 'OTROS' ? this.f.motivo.value : '',
       observacion: this.f.observacion.value,
       fecha_inicio: this.f.fecha_inicio.value,
       fecha_fin: this.f.fecha_fin.value,
       bloques: this.f.bloques.value,
       equipos: this.buildEquiposPayload(),
-      integrantes: this.integrantesSeleccionados
+      integrantes: this.proyectoHabilitado ? this.integrantesSeleccionados() : []
     };
     if (this.grupoSeleccionado && this.grupoSeleccionado.id) {
       payload.grupo_id = this.grupoSeleccionado.id;
@@ -485,8 +639,15 @@ export class SolicitarReservaComponent {
     });
     this.tipoSolicitud.set('DENTRO');
     this.carrito = [];
-    this.integrantesSeleccionados = [];
+    this.integrantesSeleccionados.set([]);
     this.bloqueosIntegrantes = {};
+    this.proyectoHabilitado = false;
+    this.aceptaTerminos = false;
+    this.grupoSeleccionado = null;
+    this.grupoProyectoSeleccionado = 'nuevo';
+    this.busquedaIntegrante.set(''); // Limpiar búsqueda
+    this.f.nombre_proyecto.disable({ emitEvent: false });
+    this.f.nombre_proyecto.setValue('', { emitEvent: false });
   }
 }
 

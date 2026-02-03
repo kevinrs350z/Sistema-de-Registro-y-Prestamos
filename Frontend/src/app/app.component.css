@@ -1,0 +1,4 @@
+.app-content {
+    min-height: 100vh;
+    transition: padding-top 0.2s ease;
+}

@@ -9,8 +9,11 @@ type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
   bloque?: string;
   periodo?: string;
+  fechaInicio?: string | null;
+  fechaFin?: string | null;
   observacion?: string;
   equipos?: { codigo: string; nombre: string; imagen?: string }[];
+  integrantes?: { idUser: number; nombre: string; email: string }[];
   motivoAprobacion?: string;
   estudiante?: string;
   email?: string;
@@ -73,10 +76,11 @@ export class SolicitudesPendientesComponent implements OnInit {
             tipo: p.tipo,
             bloque: p.bloquePrestamo ?? '—',
             equipos,
+            integrantes: Array.isArray(p.integrantes) ? p.integrantes : [],
             observacion: p.observacion ?? 'Sin observación',
             fechaSolicitud: p.created_at,
-            fechaInicio: p.fecha_inicio,
-            fechaFin: p.fecha_fin,
+            fechaInicio: p.fecha_inicio ?? null,
+            fechaFin: p.fecha_fin ?? null,
             periodo: esExterno ? `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}` : '—',
             estado: p.estado
 
@@ -228,11 +232,20 @@ confirmarRechazo() {
 
   formatearFecha(f: string): string {
     if (!f) return '—';
-    return new Date(f).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    const d = new Date(f);
+    if (isNaN(d.getTime())) return '—';
+    const dia = d.getDate().toString().padStart(2, '0');
+    const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+    const anio = d.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
+
+  formatearPeriodo(fechaInicio: string | null, fechaFin: string | null): string {
+    const inicio = this.formatearFecha(fechaInicio || '');
+    const fin = this.formatearFecha(fechaFin || '');
+    if (inicio === '—' && fin === '—') return '—';
+    if (inicio === fin) return inicio;
+    return `${inicio} - ${fin}`;
   }
 
   marcarEntregado(id?: number) {

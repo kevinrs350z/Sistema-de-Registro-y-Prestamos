@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Prestamo;
 use App\Models\BloquePrestamo;
+use App\Models\Asignatura;
 use App\Services\PrestamoService;
 
 class PrestamoController extends Controller
@@ -28,11 +29,19 @@ class PrestamoController extends Controller
             $prestamos = Prestamo::with([
                     'equipos.tipo',                    
                     'bloquePrestamo.bloque',
-                    'bloquePrestamo.asignatura'
+                    'bloquePrestamo.asignatura',
+                    'observaciones' => function($query) {
+                        $query->where('tipo', 'EXTENSION')->orderBy('created_at', 'desc');
+                    }
                 ])
                 ->where('idUser', $user->idUser)
                 ->orderByDesc('idPrestamo')
-                ->get();
+                ->get()
+                ->map(function($prestamo) {
+                    $prestamo->tiene_extension = $prestamo->observaciones->isNotEmpty();
+                    $prestamo->ultima_extension = $prestamo->observaciones->first();
+                    return $prestamo;
+                });
 
             return response()->json($prestamos);
 
@@ -77,6 +86,21 @@ class PrestamoController extends Controller
                 }
             }
 
+            // Obtener asignatura - puede venir como nombre o como ID
+            $asignaturaInput = $request->asignatura;
+            $asignaturaId = null;
+
+            if ($asignaturaInput === 'OTROS') {
+                // Cuando es OTROS, no se asocia ninguna asignatura
+                // El motivo personalizado se guarda en otra_motivo
+                $asignaturaId = null;
+            } elseif (is_numeric($asignaturaInput)) {
+                $asignaturaId = (int) $asignaturaInput;
+            } elseif (is_string($asignaturaInput) && trim($asignaturaInput) !== '') {
+                // Buscar asignatura por nombre (case insensitive)
+                $asignaturaId = Asignatura::whereRaw('LOWER(nombre) = ?', [mb_strtolower(trim($asignaturaInput))])->value('idAsignatura');
+            }
+
             $prestamo = $service->crearPrestamo([
                 'idUser'       => $user->idUser,
                 'fecha_inicio' => $request->fecha_inicio,
@@ -96,7 +120,7 @@ class PrestamoController extends Controller
                 $service->asignarBloques(
                     $prestamo->idPrestamo,
                     $request->bloques,
-                    $request->asignatura
+                    $asignaturaId
                 );
             }
 

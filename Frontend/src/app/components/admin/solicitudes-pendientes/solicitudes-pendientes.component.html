@@ -152,7 +152,7 @@
         <ng-container *ngIf="sel.tipo === 'FUERA'">
           <div class="detalle-item meta">
             <span class="label">Periodo</span>
-            <span class="valor">{{ sel.periodo || '—' }}</span>
+            <span class="valor">{{ formatearPeriodo(sel.fechaInicio, sel.fechaFin) }}</span>
           </div>
         </ng-container>
       </div>
@@ -171,6 +171,20 @@
       <div class="observacion-box">
         <h4>Observación</h4>
         <p>{{ sel.observacion || 'Sin observación' }}</p>
+      </div>
+
+      <!-- INTEGRANTES DEL EQUIPO -->
+      <div class="integrantes-box" *ngIf="sel.integrantes && sel.integrantes.length > 0">
+        <h4>Integrantes del equipo</h4>
+        <ul class="integrantes-lista">
+          <li *ngFor="let integrante of sel.integrantes" class="integrante-item">
+            <div class="integrante-avatar">{{ integrante.nombre.charAt(0) }}</div>
+            <div class="integrante-info">
+              <span class="integrante-nombre">{{ integrante.nombre }}</span>
+              <span class="integrante-email">{{ integrante.email }}</span>
+            </div>
+          </li>
+        </ul>
       </div>
 
       <div class="acciones">

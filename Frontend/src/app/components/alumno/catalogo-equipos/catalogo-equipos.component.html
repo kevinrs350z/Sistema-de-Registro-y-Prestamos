@@ -100,6 +100,10 @@
 
         <p class="stock">Stock: {{ e.stock }}</p>
 
+        <p class="disponibilidad" *ngIf="obtenerMensajeDisponibilidad(e) as mensaje">
+          {{ mensaje }}
+        </p>
+
         <span class="badge bg-danger" *ngIf="e.bloqueado">
           Límite alcanzado
         </span>

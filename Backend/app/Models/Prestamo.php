@@ -146,4 +146,27 @@ class Prestamo extends Model
         return $this->hasMany(PrestamoHistorial::class, 'idPrestamo', 'idPrestamo')
                     ->orderBy('created_at', 'desc');
     }
+
+    /**
+     * Observaciones del préstamo.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function observaciones()
+    {
+        return $this->hasMany(Observacion::class, 'idPrestamo', 'idPrestamo')
+                    ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Verificar si el préstamo tiene extensiones.
+     *
+     * @return bool
+     */
+    public function tieneExtension(): bool
+    {
+        return $this->observaciones()
+                    ->where('tipo', 'EXTENSION')
+                    ->exists();
+    }
 }
