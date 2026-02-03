@@ -13,7 +13,7 @@ export class TipoEquipoService {
   constructor(private http: HttpClient) { }
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
     return new HttpHeaders({
       Authorization: `Bearer ${token}`,
       Accept: 'application/json'
@@ -98,7 +98,7 @@ export class TipoEquipoService {
       // POST con _method=PUT para que Laravel procese el archivo
       return this.http.post(`${this.apiUrl}/tipoEquipo/${id}`, formData, {
         headers: new HttpHeaders({
-          Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+          Authorization: `Bearer ${sessionStorage.getItem('token') ?? ''}`,
           Accept: 'application/json'
           // NO ponemos Content-Type, el browser lo setea automáticamente con boundary
         })

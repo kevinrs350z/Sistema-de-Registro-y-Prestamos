@@ -146,6 +146,7 @@ class TipoEquipoController extends Controller
         $tipos = $tipos->map(function ($t) use ($bloqueos, $proximas) {
             $info = $bloqueos[$t->id] ?? null;
             $bloqueado = (bool) ($info['bloqueado'] ?? false);
+            $bloqueadoPorSolicitud = (bool) ($info['bloqueado_por_solicitud'] ?? false);
             $grupoRelacionados = $info['grupo_relacionados'] ?? [$t->id];
 
             return array_merge($t->toArray(), [
@@ -153,7 +154,9 @@ class TipoEquipoController extends Controller
                 'prestamos_activos' => $info['activos'] ?? 0,
                 'bloqueado' => $bloqueado,
                 'bloqueo_motivo' => $bloqueado
-                    ? 'Límite alcanzado para este tipo de equipo (incluyendo relacionados).'
+                    ? ($bloqueadoPorSolicitud
+                        ? 'Ya tienes una solicitud activa para este equipo. Espera aprobación o devolución.'
+                        : 'Límite alcanzado para este tipo de equipo (incluyendo relacionados).')
                     : null,
                 'grupo_relacionados' => $grupoRelacionados,
                 'proxima_disponibilidad' => $proximas[$t->id] ?? null,

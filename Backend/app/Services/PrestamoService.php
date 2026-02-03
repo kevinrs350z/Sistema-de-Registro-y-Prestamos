@@ -194,14 +194,16 @@ class PrestamoService
             foreach ($grupoIds as $tipoRelacionadoId) {
                 $activosGrupo += (int) ($activos[$userId][$tipoRelacionadoId] ?? 0);
             }
-            
-            $bloqueado = $maximo === 0 ? true : $activosGrupo >= $maximo;
+
+            $bloqueadoPorSolicitud = $activosGrupo > 0;
+            $bloqueado = $bloqueadoPorSolicitud || ($maximo === 0 ? true : $activosGrupo >= $maximo);
 
             $resultado[$tipo->id] = [
                 'activos' => $activosGrupo,
                 'maximo' => $maximo,
                 'bloqueado' => $bloqueado,
                 'grupo_relacionados' => $grupoIds,
+                'bloqueado_por_solicitud' => $bloqueadoPorSolicitud,
             ];
         }
 
@@ -262,9 +264,10 @@ class PrestamoService
                     $cantSolicitadaGrupo += (int) ($solicitados[$tipoRelacionadoId] ?? 0);
                 }
 
-                $excede = $maximo === 0
+                $excedePorSolicitud = $cantActivaGrupo > 0 && $cantSolicitadaGrupo > 0;
+                $excede = $excedePorSolicitud || ($maximo === 0
                     ? $cantSolicitadaGrupo > 0
-                    : ($cantActivaGrupo + $cantSolicitadaGrupo) > $maximo;
+                    : ($cantActivaGrupo + $cantSolicitadaGrupo) > $maximo);
 
                 if ($excede) {
                     if (!isset($bloqueos[$uid])) {
@@ -292,6 +295,7 @@ class PrestamoService
                         'activos' => $cantActivaGrupo,
                         'solicitados' => $cantSolicitadaGrupo,
                         'maximo' => $maximo,
+                        'bloqueado_por_solicitud' => $excedePorSolicitud,
                         'grupo_relacionados' => $grupoIds,
                         'nombres_relacionados' => $nombresRelacionados,
                     ];

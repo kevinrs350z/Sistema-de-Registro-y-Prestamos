@@ -44,7 +44,7 @@ export class CatalogoEquiposComponent {
   // INIT
   // ===========================
   ngOnInit(): void {
-    const token: string = localStorage.getItem('token') ?? '';
+    const token: string = sessionStorage.getItem('token') ?? '';
     if (!token) {
       this.notify.warning('Debes iniciar sesión para ver el catálogo de equipos.');
       this.router.navigate(['/auth/login']);
@@ -162,6 +162,9 @@ export class CatalogoEquiposComponent {
       this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
       return;
     }
+    if (delta > 0 && !this.puedeAgregarCantidad(e, delta)) {
+      return;
+    }
     if (e.stock <= 0 && delta > 0) {
       this.notify.warning('Este equipo está agotado.');
       return;
@@ -216,6 +219,9 @@ export class CatalogoEquiposComponent {
       this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
       return;
     }
+    if (!this.estaEnCarrito(idTipo) && !this.puedeAgregarCantidad(e, 1)) {
+      return;
+    }
     if (e.stock <= 0) {
       this.notify.warning('Este equipo está agotado.');
       return;
@@ -241,6 +247,54 @@ export class CatalogoEquiposComponent {
     };
 
     this.carritoSrv.setCarrito([...actual, nuevo]);
+  }
+
+  private puedeAgregarCantidad(e: TipoEquipo, delta: number): boolean {
+    const maximo = typeof e.maximo_prestamo === 'number' ? e.maximo_prestamo : null;
+    if (maximo === null) {
+      return true;
+    }
+
+    const activos = e.prestamos_activos ?? 0;
+    const grupoIds = this.obtenerGrupoRelacionados(e);
+    const totalCarritoGrupo = this.obtenerTotalCarritoGrupo(grupoIds);
+    const disponible = Math.max(0, maximo - activos);
+
+    if (maximo === 0 || disponible <= 0) {
+      this.notify.warning(`No puedes solicitar más de ${maximo} ${e.nombre}.`);
+      return false;
+    }
+
+    if (totalCarritoGrupo + delta > disponible) {
+      const restante = Math.max(0, disponible - totalCarritoGrupo);
+      this.notify.warning(
+        `Límite alcanzado para ${e.nombre}. Solo puedes agregar ${restante} más (máximo ${maximo}).`
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  private obtenerGrupoRelacionados(e: TipoEquipo): number[] {
+    const ids = Array.isArray(e.grupo_relacionados) && e.grupo_relacionados.length
+      ? e.grupo_relacionados
+      : [e.id];
+
+    return ids.map((id) => Number(id)).filter((id) => Number.isFinite(id));
+  }
+
+  private obtenerTotalCarritoGrupo(ids: number[]): number {
+    if (ids.length === 0) {
+      return 0;
+    }
+
+    return this.carrito().reduce((total, item) => {
+      if (item.tipo === 'equipo' && item.idTipoEquipo && ids.includes(item.idTipoEquipo)) {
+        return total + (item.cantidad ?? 0);
+      }
+      return total;
+    }, 0);
   }
 
   // ===========================
@@ -352,6 +406,7 @@ interface TipoEquipo {
   stock: number;
   maximo_prestamo?: number;
   prestamos_activos?: number;
+  grupo_relacionados?: number[];
   bloqueado?: boolean;
   bloqueo_motivo?: string | null;
   proxima_disponibilidad?: string | null;

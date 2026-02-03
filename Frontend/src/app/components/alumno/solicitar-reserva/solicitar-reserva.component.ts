@@ -286,7 +286,7 @@ export class SolicitarReservaComponent {
   });
 
   ngOnInit() {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
     this.carrito = this.carritoSrv.getCarrito();
     console.log('🛒 carrito desde servicio:', this.carrito);
 
@@ -585,7 +585,7 @@ export class SolicitarReservaComponent {
       payload.grupo_id = this.grupoSeleccionado.id;
     }
 
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
     this.api.validarMaximoPrestamo({
       equipos: payload.equipos,
       integrantes: payload.integrantes
