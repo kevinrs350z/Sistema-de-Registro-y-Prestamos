@@ -125,7 +125,7 @@ export class ReportesSancionesComponent implements OnInit, OnDestroy {
 
   private cargarUsuario(): void {
     try {
-      const raw = localStorage.getItem('user');
+      const raw = sessionStorage.getItem('user');
       if (!raw) return;
       const u = JSON.parse(raw);
       this.usuarioGenera = u?.nombre || u?.email || '—';

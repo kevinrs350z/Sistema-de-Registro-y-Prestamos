@@ -58,9 +58,9 @@ export class LoginComponent {
     console.log('TOKEN QUE ENVÍO AL BACKEND:', token);
     this.authService.loginWithGoogle(token).subscribe({
       next: (res: any) => {
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('user', JSON.stringify(res.user));
-        localStorage.setItem('rol', res.user.rol.nombre);
+        sessionStorage.setItem('token', res.token);
+        sessionStorage.setItem('user', JSON.stringify(res.user));
+        sessionStorage.setItem('rol', res.user.rol.nombre);
 
         if (res.user.rol.nombre.toLowerCase() === 'admin') {
           this.router.navigate(['/admin/dashboard']);
@@ -87,9 +87,9 @@ export class LoginComponent {
       next: (res) => {
         this.loading = false;
 
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('user', JSON.stringify(res.user));
-        localStorage.setItem('rol', res.user.rol.nombre);
+        sessionStorage.setItem('token', res.token);
+        sessionStorage.setItem('user', JSON.stringify(res.user));
+        sessionStorage.setItem('rol', res.user.rol.nombre);
 
         const rol = res.user.rol.nombre.toLowerCase();
         if (rol === 'admin') this.router.navigate(['/admin/dashboard']);

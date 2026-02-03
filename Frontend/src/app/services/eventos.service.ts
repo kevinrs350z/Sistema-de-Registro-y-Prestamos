@@ -17,7 +17,7 @@ export class EventosService {
               AUTH HEADERS
   ======================================= */
   private getToken(): string | null {
-    return localStorage.getItem('token')
+    return sessionStorage.getItem('token')
       || localStorage.getItem('access_token')
       || localStorage.getItem('auth_token');
   }

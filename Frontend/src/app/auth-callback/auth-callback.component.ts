@@ -31,12 +31,12 @@ export class AuthCallbackComponent implements OnInit {
       }
 
       if (token) {
-        localStorage.setItem('token', token);
+        sessionStorage.setItem('token', token);
 
         // pedir el usuario
         this.authService.getUsuario(token).subscribe({
           next: user => {
-            localStorage.setItem('user', JSON.stringify(user));
+            sessionStorage.setItem('user', JSON.stringify(user));
             // En esta app la raíz redirige a /auth/login; mandamos al catálogo por defecto.
             // (Si luego quieres, aquí podemos detectar rol y mandar a /admin/dashboard)
             this.router.navigate(['/equipos/catalogo']);

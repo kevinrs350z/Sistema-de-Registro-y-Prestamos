@@ -14,7 +14,7 @@ export class PrestamosAdminService {
 
   // Obtener header con token
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
     return new HttpHeaders({
       Authorization: `Bearer ${token}`
     });

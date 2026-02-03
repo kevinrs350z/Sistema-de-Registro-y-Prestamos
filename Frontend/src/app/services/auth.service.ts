@@ -23,9 +23,9 @@ export class AuthService {
     /** Devuelve el rol actual del usuario autenticado */
     getRol(): string {
       // Puede estar en localStorage como 'rol' o en el objeto 'user'
-      const rol = localStorage.getItem('rol');
+      const rol = sessionStorage.getItem('rol');
       if (rol) return rol;
-      const user = localStorage.getItem('user');
+      const user = sessionStorage.getItem('user');
       if (user) {
         try {
           const obj = JSON.parse(user);
@@ -50,7 +50,7 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   private getHeaders(): HttpHeaders {
-      const token = localStorage.getItem('token') ?? '';
+      const token = sessionStorage.getItem('token') ?? '';
       return new HttpHeaders({
         Authorization: `Bearer ${token}`,
         Accept: 'application/json'
@@ -167,12 +167,12 @@ export class AuthService {
   
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('rol');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('rol');
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
+    return !!sessionStorage.getItem('token');
   }
 }

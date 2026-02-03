@@ -83,7 +83,7 @@ export class MisSolicitudesComponent implements OnInit {
      CARGA DE SOLICITUDES
   ============================= */
   private cargarSolicitudes() {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
 
     this.api.getSolicitudesUsuario(token).subscribe({
       next: (data: any[]) => {

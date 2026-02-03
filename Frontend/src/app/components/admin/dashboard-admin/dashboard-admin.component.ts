@@ -102,7 +102,7 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
   /** 🔹 Cargar número de sanciones activas */
   private cargarSancionesActivas(): void {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
 
     this.api.getSancionesActivas(token).subscribe({
       next: (data) => this.totalSancionesActivas = data.length,
@@ -112,7 +112,7 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
   /** 🔹 Cargar número de equipos */
   private cargarEquipos(): void {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
 
     this.api.getEquipos(token).subscribe({
       next: (data) => this.totalEquipos = data.length,

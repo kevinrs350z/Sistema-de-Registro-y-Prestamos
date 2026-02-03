@@ -35,7 +35,7 @@ export class EquiposService {
    * @returns HttpHeaders Encabezados personalizados con token JWT.
    */
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
     return new HttpHeaders({
       Authorization: `Bearer ${token}`,
       Accept: 'application/json'
