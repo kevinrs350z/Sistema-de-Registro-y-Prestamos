@@ -12,10 +12,20 @@ export class ReportesAsignaturasService {
 
   // Helper para construir params desde filtro BI
   private buildParamsFromFilter(filter: ReportFilter): HttpParams {
-    return new HttpParams()
+    let params = new HttpParams()
       .set('fecha_inicio', filter.from)
       .set('fecha_fin', filter.to)
       .set('granularidad', filter.granularity);
+
+    if (filter.asignaturaId !== undefined && filter.asignaturaId !== null) {
+      params = params.set('asignatura_id', String(filter.asignaturaId));
+    }
+
+    if (filter.tipoEquipoId !== undefined && filter.tipoEquipoId !== null) {
+      params = params.set('tipo_equipo_id', String(filter.tipoEquipoId));
+    }
+
+    return params;
   }
 
   getUso(fechaInicio?: string, fechaFin?: string, periodo?: string): Observable<any[]> {

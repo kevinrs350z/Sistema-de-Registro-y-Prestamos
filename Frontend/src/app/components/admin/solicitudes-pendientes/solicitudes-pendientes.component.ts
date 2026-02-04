@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SolicitudEquipo } from '../../../shared/models';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ImagenService } from '../../../services/image.service';
 
 type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
@@ -30,6 +31,7 @@ type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
 export class SolicitudesPendientesComponent implements OnInit {
 
   private notify = inject(NotificationService);
+  private imagenSrv = inject(ImagenService);
 
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
@@ -57,14 +59,12 @@ export class SolicitudesPendientesComponent implements OnInit {
           const equipos = Array.isArray(p.equipos)
             ? p.equipos.map((eq: any) => {
                 if (typeof eq === 'string') {
-                  return { codigo: '—', nombre: eq, imagen: 'assets/equipos/default.jpg' };
+                  return { codigo: '—', nombre: eq, imagen: null };
                 }
                 return {
                   codigo: eq.codigo_activo ?? eq.codigo ?? '—',
                   nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
-                  imagen: eq.imagen
-                    ? `http://localhost:8000/storage/${eq.imagen}`
-                    : 'assets/equipos/default.jpg'
+                  imagen: this.imagenSrv.getStorageImage(eq.imagen) ?? null
                 };
               })
             : [];

@@ -52,6 +52,14 @@ Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset', [ResetPasswordController::class, 'reset']);
 Route::get('/password/validate-token/{token}', [ResetPasswordController::class, 'validateToken']);
 
+// =====================================================
+// RUTAS DE IMÁGENES (públicas, con CORS)
+// =====================================================
+Route::get('/images/{path}', [\App\Http\Controllers\ImageController::class, 'show'])
+    ->where('path', '.*'); // Permite rutas con subcarpetas como tipo_equipos/imagen.jpg
+
+Route::get('/tipo-equipos/{id}/imagen', [\App\Http\Controllers\ImageController::class, 'tipoEquipo']);
+
 // Ruta para iniciar sesión
 // URL: /api/login
 Route::post('/login', [AuthController::class, 'login']);

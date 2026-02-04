@@ -1,13 +1,14 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, firstValueFrom } from 'rxjs';
 import Chart from 'chart.js/auto';
 import { ExportButtonsComponent } from '../export-buttons/export-buttons.component';
 import { ReportesAsignaturasService } from '../../../../services/reportes/reportes-asignaturas.service';
 import { ExportService, ReporteData } from '../../../../services/export.service';
 import { ReportFiltersComponent } from '../report-filters/report-filters.component';
 import { ReportFiltersService, ReportFilter } from '../../../../services/report-filters.service';
+import { EquiposService } from '../../../../services/equipos.service';
 
 @Component({
   selector: 'app-reportes-asignaturas',
@@ -17,8 +18,9 @@ import { ReportFiltersService, ReportFilter } from '../../../../services/report-
   styleUrls: ['./reportes-asignaturas.component.css']
 })
 export class ReportesAsignaturasComponent implements OnInit, OnDestroy {
-  @ViewChild('usoChart') usoChart?: ElementRef<HTMLCanvasElement>;
   @ViewChild('tendenciaChart') tendenciaChart?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('usoStockChart') usoStockChart?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('comparativoChart') comparativoChart?: ElementRef<HTMLCanvasElement>;
 
   // Subject para cleanup
   private destroy$ = new Subject<void>();
@@ -27,11 +29,13 @@ export class ReportesAsignaturasComponent implements OnInit, OnDestroy {
   // Loading states
   loadingUso = true;
   loadingTendencia = true;
+  loadingComparativo = true;
   loadingEquipos = true;
 
   // Error states
   errorUso: string | null = null;
   errorTendencia: string | null = null;
+  errorComparativo: string | null = null;
   errorEquipos: string | null = null;
 
   equiposAsignatura: any[] = [];
@@ -47,17 +51,30 @@ export class ReportesAsignaturasComponent implements OnInit, OnDestroy {
   usuarioGenera = '—';
   fechaGeneracion = new Date();
 
-  private chartUso?: Chart;
   private chartTendencia?: Chart;
+  private chartUsoStock?: Chart;
+  private chartComparativo?: Chart;
+
+  // Stock por tipo de equipo (cache)
+  private stockPorTipo = new Map<string, number>();
+
+  // KPIs
+  kpis = {
+    usoPromedio: 0,
+    usoStock: 0,
+    variacion: 0
+  };
 
   constructor(
     private asignaturasService: ReportesAsignaturasService,
     private exportService: ExportService,
-    private filterService: ReportFiltersService
+    private filterService: ReportFiltersService,
+    private equiposService: EquiposService
   ) {}
 
   ngOnInit(): void {
     this.cargarUsuario();
+    this.cargarStockEquipos();
     
     // Suscribirse a cambios del filtro centralizado
     this.filterService.filter$
@@ -77,38 +94,42 @@ export class ReportesAsignaturasComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.chartUso?.destroy();
     this.chartTendencia?.destroy();
+    this.chartUsoStock?.destroy();
+    this.chartComparativo?.destroy();
   }
 
   cargarUso(): void {
     if (!this.currentFilter) return;
     
     this.loadingUso = true;
+    this.loadingComparativo = true;
     this.errorUso = null;
+    this.errorComparativo = null;
     
     this.asignaturasService.getUsoWithFilter(this.currentFilter).subscribe({
-      next: (data) => {
+      next: async (data) => {
         const labels = data.map((d: any) => d.asignatura);
         const valores = data.map((d: any) => d.prestamos);
 
-        const ctx = this.usoChart?.nativeElement.getContext('2d');
-        if (!ctx) {
-          this.loadingUso = false;
-          return;
-        }
+        // KPI: uso promedio
+        const total = valores.reduce((acc: number, v: number) => acc + v, 0);
+        this.kpis.usoPromedio = labels.length ? Math.round(total / labels.length) : 0;
 
-        this.chartUso?.destroy();
-        this.chartUso = new Chart(ctx, {
-          type: 'bar',
-          data: { labels, datasets: [{ data: valores, backgroundColor: '#1f78ff' }] },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
+        // KPI: variación vs periodo anterior
+        this.kpis.variacion = await this.calcularVariacionAnterior(total);
+
+        // Gráfico comparativo entre asignaturas (top 8)
+        this.renderComparativoChart(labels.slice(0, 8), valores.slice(0, 8));
+
         this.loadingUso = false;
+        this.loadingComparativo = false;
       },
       error: (err) => {
         this.loadingUso = false;
+        this.loadingComparativo = false;
         this.errorUso = 'Error al cargar uso por asignatura';
+        this.errorComparativo = 'Error al cargar comparativo de asignaturas';
         console.error('Error uso:', err);
       }
     });
@@ -158,6 +179,14 @@ export class ReportesAsignaturasComponent implements OnInit, OnDestroy {
         this.equiposAsignatura = data.data || [];
         this.totalPages = data.totalPages || 1;
         this.loadingEquipos = false;
+
+        // Armar gráfico uso vs stock para la primera asignatura visible
+        if (this.equiposAsignatura.length) {
+          const asignatura = this.equiposAsignatura[0].asignatura;
+          const series = this.agruparUsoPorTipo(asignatura, this.equiposAsignatura);
+          this.kpis.usoStock = this.calcularUsoSobreStock(series);
+          this.renderUsoStockChart(asignatura, series);
+        }
       },
       error: (err) => {
         this.equiposAsignatura = [];
@@ -178,6 +207,146 @@ export class ReportesAsignaturasComponent implements OnInit, OnDestroy {
     if (next < 1 || next > this.totalPages) return;
     this.page = next;
     this.cargarEquipos();
+  }
+
+  private cargarStockEquipos(): void {
+    this.equiposService.getEquipos().subscribe({
+      next: (lista: any) => {
+        const data = Array.isArray(lista?.data) ? lista.data : (Array.isArray(lista) ? lista : []);
+        const map = new Map<string, number>();
+        (data || []).forEach((e: any) => {
+          const tipo = e.tipo_equipo_nombre || e.tipo_equipo?.nombre || e.nombre_tipo || e.tipo_nombre || 'Otro';
+          const estado = (e.estado || '').toUpperCase();
+          if (estado === 'MANTENIMIENTO' || estado === 'BAJA') return;
+          map.set(tipo, (map.get(tipo) || 0) + 1);
+        });
+        this.stockPorTipo = map;
+      },
+      error: () => {
+        this.stockPorTipo = new Map();
+      }
+    });
+  }
+
+  private renderComparativoChart(labels: string[], valores: number[]): void {
+    const ctx = this.comparativoChart?.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    this.chartComparativo?.destroy();
+    this.chartComparativo = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data: valores,
+          backgroundColor: '#2563eb'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  private renderUsoStockChart(asignatura: string, series: { tipo: string; uso: number; stock: number }[]): void {
+    const ctx = this.usoStockChart?.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    const labels = series.map(s => s.tipo);
+    const usos = series.map(s => s.uso);
+    const stocks = series.map(s => s.stock);
+
+    this.chartUsoStock?.destroy();
+    this.chartUsoStock = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Uso',
+            data: usos,
+            backgroundColor: '#10b981'
+          },
+          {
+            label: 'Stock',
+            data: stocks,
+            type: 'line',
+            borderColor: '#111827',
+            backgroundColor: 'rgba(17,24,39,0.05)',
+            fill: false,
+            tension: 0.2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true },
+          title: { display: true, text: `Uso vs Stock · ${asignatura || 'Asignatura'}` }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  private agruparUsoPorTipo(asignatura: string, items: any[]): { tipo: string; uso: number; stock: number }[] {
+    const map = new Map<string, number>();
+    items
+      .filter(i => i.asignatura === asignatura)
+      .forEach(i => {
+        const tipo = i.equipo || 'Tipo';
+        map.set(tipo, (map.get(tipo) || 0) + (i.total || i.prestamos || 0));
+      });
+
+    const series: { tipo: string; uso: number; stock: number }[] = [];
+    map.forEach((uso, tipo) => {
+      const stock = this.stockPorTipo.get(tipo) || 0;
+      series.push({ tipo, uso, stock });
+    });
+    return series;
+  }
+
+  private calcularUsoSobreStock(series: { uso: number; stock: number }[]): number {
+    const totalUso = series.reduce((acc, s) => acc + s.uso, 0);
+    const totalStock = series.reduce((acc, s) => acc + s.stock, 0);
+    if (!totalStock) return 0;
+    return Math.round((totalUso / totalStock) * 100);
+  }
+
+  private async calcularVariacionAnterior(totalActual: number): Promise<number> {
+    if (!this.currentFilter) return 0;
+
+    const fromDate = new Date(this.currentFilter.from);
+    const toDate = new Date(this.currentFilter.to);
+    const diffMs = toDate.getTime() - fromDate.getTime();
+    const prevTo = new Date(fromDate.getTime() - 24 * 60 * 60 * 1000);
+    const prevFrom = new Date(prevTo.getTime() - diffMs);
+
+    const prevFilter: ReportFilter = {
+      ...this.currentFilter,
+      from: prevFrom.toISOString().split('T')[0],
+      to: prevTo.toISOString().split('T')[0],
+      preset: 'custom'
+    };
+
+    try {
+      const prevData = await firstValueFrom(this.asignaturasService.getUsoWithFilter(prevFilter));
+      const prevTotal = (prevData || []).reduce((acc: number, d: any) => acc + (d.prestamos || 0), 0);
+      if (!prevTotal) return 0;
+      return Math.round(((totalActual - prevTotal) / prevTotal) * 100);
+    } catch {
+      return 0;
+    }
   }
 
   exportarPDF(): void {

@@ -64,6 +64,12 @@ export class ReportesService {
     params = params.set('fechaInicio', filter.from);
     params = params.set('fechaFin', filter.to);
     params = params.set('granularity', filter.granularity);
+    if (filter.tipoEquipoId !== undefined && filter.tipoEquipoId !== null) {
+      params = params.set('tipoEquipoId', String(filter.tipoEquipoId));
+    }
+    if (filter.franjaHoraria) {
+      params = params.set('franjaHoraria', filter.franjaHoraria);
+    }
     return params;
   }
 

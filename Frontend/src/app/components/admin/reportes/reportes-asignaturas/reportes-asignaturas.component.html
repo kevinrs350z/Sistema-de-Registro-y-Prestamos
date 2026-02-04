@@ -9,41 +9,66 @@
 
 	<div id="contenidoPDFAsignaturas" class="page-wrapper">
 
-
+		<!-- KPIs -->
+		<div class="kpi-grid mb-4">
+			<div class="kpi-card">
+				<p class="kpi-label">Uso promedio</p>
+				<h3 class="kpi-value">{{ kpis.usoPromedio }}</h3>
+				<span class="kpi-help">Préstamos promedio por asignatura</span>
+			</div>
+			<div class="kpi-card">
+				<p class="kpi-label">Uso / Stock</p>
+				<h3 class="kpi-value">{{ kpis.usoStock }}%</h3>
+				<span class="kpi-help">Demanda relativa al stock operativo</span>
+			</div>
+			<div class="kpi-card" [class.positive]="kpis.variacion >= 0" [class.negative]="kpis.variacion < 0">
+				<p class="kpi-label">Variación periodo previo</p>
+				<h3 class="kpi-value">{{ kpis.variacion }}%</h3>
+				<span class="kpi-help">Comparado con el rango anterior</span>
+			</div>
+		</div>
 
 		<div class="two-cols mb-4">
 			<div class="card fade-in">
-				<h2 class="card-title">Uso por asignatura</h2>
-				<p class="card-subtitle">Ranking de préstamos por asignatura</p>
+				<h2 class="card-title">Uso vs Stock por tipo</h2>
+				<p class="card-subtitle">Asignatura seleccionada, demanda y stock operativo</p>
 				<div class="chart-area">
-					<!-- Skeleton -->
-					<div *ngIf="loadingUso && !errorUso" class="skeleton-chart"></div>
-					<!-- Error -->
-					<div *ngIf="errorUso" class="error-state">
+					<div *ngIf="loadingEquipos && !errorEquipos" class="skeleton-chart"></div>
+					<div *ngIf="errorEquipos" class="error-state">
 						<i class="bi bi-exclamation-triangle"></i>
-						<p>{{ errorUso }}</p>
-						<button class="retry-btn" (click)="cargarUso()">Reintentar</button>
+						<p>{{ errorEquipos }}</p>
+						<button class="retry-btn" (click)="cargarEquipos()">Reintentar</button>
 					</div>
-					<!-- Chart -->
-					<canvas #usoChart [class.hidden]="loadingUso || errorUso"></canvas>
+					<canvas #usoStockChart [class.hidden]="loadingEquipos || errorEquipos"></canvas>
 				</div>
 			</div>
 
 			<div class="card fade-in">
-				<h2 class="card-title">Tendencia anual</h2>
-				<p class="card-subtitle">Evolución de préstamos por año</p>
+				<h2 class="card-title">Evolución de préstamos</h2>
+				<p class="card-subtitle">Tendencia temporal (granularidad del filtro)</p>
 				<div class="chart-area">
-					<!-- Skeleton -->
 					<div *ngIf="loadingTendencia && !errorTendencia" class="skeleton-chart"></div>
-					<!-- Error -->
 					<div *ngIf="errorTendencia" class="error-state">
 						<i class="bi bi-exclamation-triangle"></i>
 						<p>{{ errorTendencia }}</p>
 						<button class="retry-btn" (click)="cargarTendencia()">Reintentar</button>
 					</div>
-					<!-- Chart -->
 					<canvas #tendenciaChart [class.hidden]="loadingTendencia || errorTendencia"></canvas>
 				</div>
+			</div>
+		</div>
+
+		<div class="card fade-in mb-4">
+			<h2 class="card-title">Comparativo entre asignaturas</h2>
+			<p class="card-subtitle">Top asignaturas por préstamos en el período</p>
+			<div class="chart-area">
+				<div *ngIf="loadingComparativo && !errorComparativo" class="skeleton-chart"></div>
+				<div *ngIf="errorComparativo" class="error-state">
+					<i class="bi bi-exclamation-triangle"></i>
+					<p>{{ errorComparativo }}</p>
+					<button class="retry-btn" (click)="cargarUso()">Reintentar</button>
+				</div>
+				<canvas #comparativoChart [class.hidden]="loadingComparativo || errorComparativo"></canvas>
 			</div>
 		</div>
 

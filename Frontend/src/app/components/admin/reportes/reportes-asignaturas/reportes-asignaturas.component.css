@@ -40,6 +40,41 @@
 	color: #6b7280;
 }
 
+/* ===== KPIs ===== */
+.kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 12px;
+}
+
+.kpi-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 12px 14px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.kpi-label {
+	margin: 0;
+	color: #64748b;
+	font-size: 0.8rem;
+}
+
+.kpi-value {
+	margin: 4px 0;
+	font-size: 1.6rem;
+	color: #0f172a;
+}
+
+.kpi-help {
+	font-size: 0.8rem;
+	color: #94a3b8;
+}
+
+.kpi-card.positive .kpi-value { color: #16a34a; }
+.kpi-card.negative .kpi-value { color: #dc2626; }
+
 /* ===== EQUIPOS POR ASIGNATURA - MINIMALISTA ===== */
 
 .equipos-asignatura-card {

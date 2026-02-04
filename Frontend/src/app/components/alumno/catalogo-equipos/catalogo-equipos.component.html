@@ -78,8 +78,9 @@
       <!-- IMAGEN -->
       <div class="imagen-wrapper">
         <img
-          [src]="e.imagen ? urlImagen(e.imagen) : getImagenEquipo(e)"
+          [src]="getImagenEquipo(e)"
           alt="Foto de {{ e.nombre }}"
+          onerror="this.style.display='none'"
         />
       </div>
 

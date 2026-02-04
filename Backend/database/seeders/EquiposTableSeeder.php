@@ -12,45 +12,142 @@ class EquiposTableSeeder extends Seeder
     {
         $equipos = [
 
+            // ================= CÁMARAS DE VIDEO =================
+
+            // Cámara de video Canon XA35
+            ['tipo'=>'Cámara de video Canon XA35','codigo'=>'051055967-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Cámara de video Canon XA35','codigo'=>'051055973-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Cámara de video Canon XA35','codigo'=>'051055970-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+
+            // Cámara de video Canon XA60
+            ['tipo'=>'Cámara de video Canon XA60','codigo'=>'053150024-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Cámara de video Canon XA60','codigo'=>'053150025-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Cámara de video Canon XA60','codigo'=>'053150026-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+
+            // Cámara de video Canon XA75
+            ['tipo'=>'Cámara de video Canon XA75','codigo'=>'051056460-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Cámara de video Canon XA75','codigo'=>'051056460-2','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+
+            // DJI Osmo Pocket 3
+            ['tipo'=>'DJI Osmo Pocket 3','codigo'=>'051056382-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            ['tipo'=>'DJI Osmo Pocket 3','codigo'=>'051056412-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            ['tipo'=>'DJI Osmo Pocket 3','codigo'=>'051056412-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+
+            // Insta360 One RS Twin Edition
+            ['tipo'=>'Insta360 One RS Twin Edition','codigo'=>'051056381-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+
+            // Trípode de video Miliboo
+            ['tipo'=>'Trípode de video Miliboo','codigo'=>'051056448-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Trípode de video Miliboo','codigo'=>'051056448-2','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Trípode de video Miliboo','codigo'=>'051056448-3','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Trípode de video Miliboo','codigo'=>'051056448-4','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Trípode de video Miliboo','codigo'=>'051056448-5','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Trípode de video Miliboo','codigo'=>'051056448-6','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Trípode de video Miliboo','codigo'=>'051056448-7','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+
+            // Trípode de video Manfrotto
+            ['tipo'=>'Trípode de video Manfrotto','codigo'=>'051055969-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Trípode de video Manfrotto','codigo'=>'051055969-2','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Trípode de video Manfrotto','codigo'=>'051055982-2','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+
+            // Estabilizador FeiyuTech Mini 2
+            ['tipo'=>'Estabilizador FeiyuTech Mini 2','codigo'=>'051056391-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            ['tipo'=>'Estabilizador FeiyuTech Mini 2','codigo'=>'051056391-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+
+            // Estabilizador Zhiyun Weebill 3S
+            ['tipo'=>'Estabilizador Zhiyun Weebill 3S','codigo'=>'051056413-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            ['tipo'=>'Estabilizador Zhiyun Weebill 3S','codigo'=>'051056413-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+
+            // Micrófono Shotgun RODE
+            ['tipo'=>'Micrófono Shotgun RODE','codigo'=>'051056271-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Micrófono Shotgun RODE','codigo'=>'051056254-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Micrófono Shotgun RODE','codigo'=>'051055971-2','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Micrófono Shotgun RODE','codigo'=>'051055971-3','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Micrófono Shotgun RODE','codigo'=>'051055974-3','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Micrófono Shotgun RODE','codigo'=>'051056390-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Micrófono Shotgun RODE','codigo'=>'051056390-2','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Micrófono Shotgun RODE','codigo'=>'051056390-3','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+
+            // Blimp RODE
+            ['tipo'=>'Blimp RODE','codigo'=>'051056389-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Blimp RODE','codigo'=>'051056389-2','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Blimp RODE','codigo'=>'051056389-3','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+            ['tipo'=>'Blimp RODE','codigo'=>'051056389-4','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV'],
+
             // ================= FOTOGRAFÍA =================
 
-            // Cámaras Canon T3i
-            ['tipo'=>'Cámara Canon T3i','codigo'=>'067-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
-            ['tipo'=>'Cámara Canon T3i','codigo'=>'014-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
-            ['tipo'=>'Cámara Canon T3i','codigo'=>'014-4','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
-            ['tipo'=>'Cámara Canon T3i','codigo'=>'014-7','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
-            ['tipo'=>'Cámara Canon T3i','codigo'=>'014-8','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
-            ['tipo'=>'Cámara Canon T3i','codigo'=>'014-9','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
-            ['tipo'=>'Cámara Canon T3i','codigo'=>'014-10','estado_fisico'=>'Nuevo','ubicacion'=>'Oficina','observacion'=>'Lente 50mm'],
-            ['tipo'=>'Cámara Canon T3i','codigo'=>'014-11','estado_fisico'=>'Nuevo','ubicacion'=>'Oficina','observacion'=>'Lente 75-300mm'],
+            // Cámara fotográfica Canon Rebel T3
+            ['tipo'=>'Cámara fotográfica Canon Rebel T3','codigo'=>'53110014-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T3','codigo'=>'53110014-3','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T3','codigo'=>'53110014-4','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T3','codigo'=>'53110014-7','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T3','codigo'=>'53110014-8','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T3','codigo'=>'53110014-9','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T3','codigo'=>'53110014-10','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
 
-            // Cámaras Canon T5i
-            ['tipo'=>'Cámara Canon T5i','codigo'=>'071-1','estado_fisico'=>'Buen estado','ubicacion'=>'CITE'],
-            ['tipo'=>'Cámara Canon T5i','codigo'=>'127-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
-            ['tipo'=>'Cámara Canon T5i','codigo'=>'864-4','estado_fisico'=>'Buen estado','ubicacion'=>'Set Foto'],
-            ['tipo'=>'Cámara Canon T5i','codigo'=>'864-5','estado_fisico'=>'Buen estado','ubicacion'=>'Set Foto'],
-            ['tipo'=>'Cámara Canon T5i','codigo'=>'864-6','estado_fisico'=>'Buen estado','ubicacion'=>'Set Foto'],
+            // Cámara fotográfica Canon Rebel T5i
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'053110071-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'053110127-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'053110130-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-4','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-5','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-6','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-7','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-8','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-9','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-10','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-12','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-14','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel T5i','codigo'=>'051055864-15','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
 
-            // Cámaras Canon SL3
-            ['tipo'=>'Cámara Canon SL3','codigo'=>'196-1','estado_fisico'=>'Nuevo','ubicacion'=>'Set Foto'],
-            ['tipo'=>'Cámara Canon SL3','codigo'=>'196-2','estado_fisico'=>'Nuevo','ubicacion'=>'Set Foto'],
-            ['tipo'=>'Cámara Canon SL3','codigo'=>'198-1','estado_fisico'=>'Nuevo','ubicacion'=>'Set Foto'],
-            ['tipo'=>'Cámara Canon SL3','codigo'=>'198-2','estado_fisico'=>'Nuevo','ubicacion'=>'Set Foto'],
+            // Cámara fotográfica Canon Rebel SL3
+            ['tipo'=>'Cámara fotográfica Canon Rebel SL3','codigo'=>'053110196-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel SL3','codigo'=>'053110196-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel SL3','codigo'=>'053110198-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
+            ['tipo'=>'Cámara fotográfica Canon Rebel SL3','codigo'=>'053110200-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye batería y tarjeta SD'],
 
-            // Trípodes
-            ['tipo'=>'Trípode Manfrotto','codigo'=>'051056411-1','estado_fisico'=>'Nuevo','ubicacion'=>'Centro de Práctica'],
-            ['tipo'=>'Trípode Manfrotto','codigo'=>'051056411-2','estado_fisico'=>'Nuevo','ubicacion'=>'Centro de Práctica'],
-            ['tipo'=>'Trípode Manfrotto','codigo'=>'051056411-3','estado_fisico'=>'Nuevo','ubicacion'=>'Centro de Práctica'],
+            // Lente fotográfico Canon 50mm
+            ['tipo'=>'Lente fotográfico Canon 50mm','codigo'=>'51056416-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            ['tipo'=>'Lente fotográfico Canon 50mm','codigo'=>'51056416-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            ['tipo'=>'Lente fotográfico Canon 50mm','codigo'=>'51056416-3','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            ['tipo'=>'Lente fotográfico Canon 50mm','codigo'=>'51056416-4','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+
+            // Lente fotográfico Canon 18-135mm
+            ['tipo'=>'Lente fotográfico Canon 18-135mm','codigo'=>'51056417-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            ['tipo'=>'Lente fotográfico Canon 18-135mm','codigo'=>'51056417-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+
+            // ================= ILUMINACIÓN =================
+
+            // Luz LED Visico Full Color 80R II
+            ['tipo'=>'Luz LED Visico Full Color 80R II','codigo'=>'051056385-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED Visico Full Color 80R II','codigo'=>'051056385-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED Visico Full Color 80R II','codigo'=>'051056385-3','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED Visico Full Color 80R II','codigo'=>'051056385-4','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+
+            // Luz LED Visico FT650R
+            ['tipo'=>'Luz LED Visico FT650R','codigo'=>'2401R100357','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED Visico FT650R','codigo'=>'2401R100362','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED Visico FT650R','codigo'=>'2401R100354','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED Visico FT650R','codigo'=>'2401R100355','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+
+            // Luz LED GODOX 500 LRC
+            ['tipo'=>'Luz LED GODOX 500 LRC','codigo'=>'051055977-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED GODOX 500 LRC','codigo'=>'051055977-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED GODOX 500 LRC','codigo'=>'051055977-3','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED GODOX 500 LRC','codigo'=>'051055977-4','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED GODOX 500 LRC','codigo'=>'051055977-5','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
+            ['tipo'=>'Luz LED GODOX 500 LRC','codigo'=>'051055977-6','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye baterías, cargador, cable de corriente y atril'],
 
             // ================= COMPUTACIONAL =================
 
-            // iMac
-            ['tipo'=>'iMac 21.5"','codigo'=>'IMAC-1','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV','observacion'=>'Sin mouse ni teclado'],
-            ['tipo'=>'iMac 21.5"','codigo'=>'IMAC-2','estado_fisico'=>'Buen estado','ubicacion'=>'UTA TV','observacion'=>'Sin mouse ni teclado'],
-
-            // Accesorios computacionales
-            ['tipo'=>'USB-C Hub','codigo'=>'USBHUB-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
-            ['tipo'=>'Disco Duro Externo','codigo'=>'DD-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina'],
+            // Tableta Digitalizadora WACOM Intuos Draw
+            ['tipo'=>'Tableta Digitalizadora WACOM Intuos Draw','codigo'=>'991020350-1','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye cable USB y lápiz digital'],
+            ['tipo'=>'Tableta Digitalizadora WACOM Intuos Draw','codigo'=>'991020350-2','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye cable USB y lápiz digital'],
+            ['tipo'=>'Tableta Digitalizadora WACOM Intuos Draw','codigo'=>'991020350-3','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye cable USB y lápiz digital'],
+            ['tipo'=>'Tableta Digitalizadora WACOM Intuos Draw','codigo'=>'991020350-4','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye cable USB y lápiz digital'],
+            ['tipo'=>'Tableta Digitalizadora WACOM Intuos Draw','codigo'=>'991020350-5','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye cable USB y lápiz digital'],
+            ['tipo'=>'Tableta Digitalizadora WACOM Intuos Draw','codigo'=>'991020350-6','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye cable USB y lápiz digital'],
+            ['tipo'=>'Tableta Digitalizadora WACOM Intuos Draw','codigo'=>'991020350-7','estado_fisico'=>'Buen estado','ubicacion'=>'Oficina','observacion'=>'Incluye cable USB y lápiz digital'],
         ];
 
         // ================= NOTEBOOKS HP ZBOOK 15V =================

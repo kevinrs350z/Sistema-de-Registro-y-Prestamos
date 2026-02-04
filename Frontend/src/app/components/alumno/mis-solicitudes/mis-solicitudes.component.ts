@@ -2,6 +2,7 @@ import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, style, transition, animate } from '@angular/animations';
 import { AuthService } from '../../../services/auth.service';
+import { ImagenService } from '../../../services/image.service';
 
 @Component({
   selector: 'app-mis-solicitudes',
@@ -24,6 +25,7 @@ import { AuthService } from '../../../services/auth.service';
 export class MisSolicitudesComponent implements OnInit {
 
   private api = inject(AuthService);
+  private imagenSrv = inject(ImagenService);
 
   solicitudes = signal<any[]>([]);
   estadoFiltro = signal('');
@@ -106,9 +108,7 @@ export class MisSolicitudesComponent implements OnInit {
               ? s.equipos.map((eq: any) => ({
                   codigo: eq.codigo,
                   nombre: eq.tipo?.nombre ?? 'Equipo',
-                  imagen: eq.tipo?.imagen
-                    ? `http://localhost:8000/storage/${eq.tipo.imagen}`
-                    : 'assets/equipos/default.jpg',
+                  imagen: this.imagenSrv.getStorageImage(eq.tipo?.imagen) ?? null,
                 }))
               : [];
 

@@ -79,6 +79,21 @@ class TipoEquipo extends Model
         return array_values(array_unique(array_merge([$this->id], $relacionados)));
     }
 
+    /**
+     * Accessor para obtener la URL completa de la imagen.
+     * Usa la ruta API para evitar problemas de CORS.
+     */
+    public function getImagenUrlAttribute(): ?string
+    {
+        if (!$this->imagen) {
+            return null;
+        }
+        
+        return url('/api/images/' . $this->imagen);
+    }
+
+    protected $appends = ['imagen_url'];
+
     protected $casts = [
         'categoria_id' => 'integer',
         'maximo_prestamo' => 'integer',

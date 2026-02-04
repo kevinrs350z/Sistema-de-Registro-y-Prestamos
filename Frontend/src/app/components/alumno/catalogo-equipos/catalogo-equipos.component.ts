@@ -7,6 +7,7 @@ import { Pack } from '../../../models/pack.model';
 import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
 import { CarritoService } from '../../../services/carrito.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ImagenService } from '../../../services/image.service';
 
 @Component({
   selector: 'app-catalogo-equipos',
@@ -21,6 +22,7 @@ export class CatalogoEquiposComponent {
   private router = inject(Router);
   private carritoSrv = inject(CarritoService);
   private notify = inject(NotificationService);
+  private imagenSrv = inject(ImagenService);
   private readonly formatoDisponibilidad = new Intl.DateTimeFormat('es-CL', {
     dateStyle: 'short',
     timeStyle: 'short'
@@ -95,17 +97,17 @@ export class CatalogoEquiposComponent {
   // ===========================
   // IMÁGENES
   // ===========================
-  urlImagen(path: string): string {
-    return `http://localhost:8000/storage/${path}`;
-  }
-
-  getImagenEquipo(e: TipoEquipo): string {
-    const n = e.nombre.toLowerCase();
-    if (n.includes('cámara')) return 'assets/equipos/camara.jpg';
-    if (n.includes('micrófono')) return 'assets/equipos/aro.jpg';
-    if (n.includes('tablet')) return 'assets/equipos/computador.jpg';
-    if (n.includes('proyector')) return 'assets/equipos/proyector.jpg';
-    return 'assets/equipos/lampara.jpg';
+  /**
+   * Obtener URL de imagen para un tipo de equipo.
+   * Usa el servicio de imágenes que apunta al API con CORS.
+   */
+  getImagenEquipo(e: TipoEquipo): string | null {
+    return this.imagenSrv.resolveTipoEquipoImage({
+      id: e.id,
+      imagen_url: e.imagen_url,
+      imagen: e.imagen,
+      nombre: e.nombre
+    });
   }
 
   // ===========================
@@ -403,6 +405,7 @@ interface TipoEquipo {
   descripcion?: string;
   categoria?: string;
   imagen?: string;
+  imagen_url?: string;
   stock: number;
   maximo_prestamo?: number;
   prestamos_activos?: number;

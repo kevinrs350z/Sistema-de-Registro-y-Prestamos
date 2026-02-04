@@ -8,8 +8,11 @@ import {
   PeriodPreset,
   Granularity,
   TipoUso,
-  PeriodInfo
+  PeriodInfo,
+  FranjaHoraria
 } from '../../../../services/report-filters.service';
+import { AsignaturasService } from '../../../../services/asignaturas.service';
+import { EquiposService } from '../../../../services/equipos.service';
 
 @Component({
   selector: 'app-report-filters',
@@ -42,6 +45,28 @@ import {
             </button>
           }
         </div>
+
+        <!-- Asignatura -->
+        <select 
+          class="form-select form-select-sm w-auto"
+          [ngModel]="currentFilter?.asignaturaId"
+          (ngModelChange)="setAsignatura($event)">
+          <option [ngValue]="null">Todas las asignaturas</option>
+          @for (asig of asignaturas; track asig.id) {
+            <option [ngValue]="asig.id">{{ asig.nombre }}</option>
+          }
+        </select>
+
+        <!-- Tipo de equipo -->
+        <select 
+          class="form-select form-select-sm w-auto"
+          [ngModel]="currentFilter?.tipoEquipoId"
+          (ngModelChange)="setTipoEquipo($event)">
+          <option [ngValue]="null">Todos los tipos</option>
+          @for (tipo of tiposEquipo; track tipo.id) {
+            <option [ngValue]="tipo.id">{{ tipo.nombre }}</option>
+          }
+        </select>
 
         <!-- Tipo de uso -->
         <div class="btn-group btn-group-sm" role="group">
@@ -132,6 +157,19 @@ import {
                 <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
               </button>
             </div>
+
+              <!-- Franja horaria (equipos) -->
+              <div>
+                <label class="form-label small text-muted mb-1">Franja horaria</label>
+                <select 
+                  class="form-select form-select-sm"
+                  [ngModel]="currentFilter?.franjaHoraria"
+                  (ngModelChange)="setFranjaHoraria($event)">
+                  @for (franja of franjasHorarias; track franja.value) {
+                    <option [ngValue]="franja.value">{{ franja.label }}</option>
+                  }
+                </select>
+              </div>
 
             <!-- Spacer -->
             <div class="flex-grow-1"></div>
@@ -282,13 +320,22 @@ export class ReportFiltersComponent implements OnInit, OnDestroy {
   granularities: { value: Granularity; label: string }[] = [];
   tiposUso: { value: TipoUso; label: string; icon: string }[] = [];
   aniosIngreso: { value: number | null; label: string }[] = [];
+  franjasHorarias: { value: FranjaHoraria; label: string }[] = [];
+
+  asignaturas: { id: number; nombre: string }[] = [];
+  tiposEquipo: { id: number; nombre: string }[] = [];
 
   private destroy$ = new Subject<void>();
 
-  constructor(private filterService: ReportFiltersService) {
+  constructor(
+    private filterService: ReportFiltersService,
+    private asignaturasService: AsignaturasService,
+    private equiposService: EquiposService
+  ) {
     this.granularities = this.filterService.granularities;
     this.tiposUso = this.filterService.tiposUso;
     this.aniosIngreso = this.filterService.aniosIngreso;
+    this.franjasHorarias = this.filterService.franjasHorarias;
   }
 
   ngOnInit(): void {
@@ -313,6 +360,9 @@ export class ReportFiltersComponent implements OnInit, OnDestroy {
       .subscribe((loading: boolean) => {
         this.isLoading = loading;
       });
+
+    this.loadAsignaturas();
+    this.loadTiposEquipo();
   }
 
   ngOnDestroy(): void {
@@ -334,6 +384,18 @@ export class ReportFiltersComponent implements OnInit, OnDestroy {
 
   setAnioIngreso(anioIngreso: number | null): void {
     this.filterService.setAnioIngreso(anioIngreso ?? undefined);
+  }
+
+  setAsignatura(asignaturaId: number | null): void {
+    this.filterService.setAsignatura(asignaturaId);
+  }
+
+  setTipoEquipo(tipoEquipoId: number | null): void {
+    this.filterService.setTipoEquipo(tipoEquipoId);
+  }
+
+  setFranjaHoraria(franja: FranjaHoraria): void {
+    this.filterService.setFranjaHoraria(franja);
   }
 
   setMode(mode: 'global' | 'individual'): void {
@@ -358,6 +420,38 @@ export class ReportFiltersComponent implements OnInit, OnDestroy {
 
   reset(): void {
     this.filterService.reset();
+  }
+
+  private loadAsignaturas(): void {
+    this.asignaturasService.getAsignaturas().subscribe({
+      next: (resp) => {
+        const list = Array.isArray(resp?.data) ? resp.data : resp;
+        this.asignaturas = (list || []).map((a: any) => ({ id: a.idAsignatura || a.id || a.id_asignatura, nombre: a.nombre }));
+      },
+      error: () => {
+        this.asignaturas = [];
+      }
+    });
+  }
+
+  private loadTiposEquipo(): void {
+    this.equiposService.getEquipos().subscribe({
+      next: (resp: any) => {
+        const list = Array.isArray(resp?.data) ? resp.data : (Array.isArray(resp) ? resp : []);
+        const map = new Map<number, string>();
+        (list || []).forEach((e: any) => {
+          const id = e.tipo_equipo_id || e.tipoEquipoId || e.tipo_equipo?.id;
+          const nombre = e.tipo_equipo_nombre || e.tipo_equipo?.nombre || e.nombre_tipo || e.tipo_nombre;
+          if (id && nombre && !map.has(id)) {
+            map.set(id, nombre);
+          }
+        });
+        this.tiposEquipo = Array.from(map.entries()).map(([id, nombre]) => ({ id, nombre }));
+      },
+      error: () => {
+        this.tiposEquipo = [];
+      }
+    });
   }
 
   // Métodos de exportación con feedback

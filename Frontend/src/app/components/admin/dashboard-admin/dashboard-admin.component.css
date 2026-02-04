@@ -195,19 +195,15 @@
   text-align: center;
 }
 
-/* Variante para Grupos */
+/* Variante para Grupos - mismo estilo que las demás tarjetas */
 .action-card.grupos {
-  background: #111827;
-  color: #e5e7eb;
-}
-
-.action-card.grupos .action-icon {
-  background: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  color: #374151;
 }
 
 .action-card.grupos:hover {
-  border-color: #2563eb;
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+  border-color: #f5a474;
+  box-shadow: 0 10px 25px rgba(245, 164, 116, 0.15);
 }
 
 .action-card:hover {

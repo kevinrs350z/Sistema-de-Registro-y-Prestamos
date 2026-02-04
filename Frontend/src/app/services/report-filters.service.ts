@@ -12,6 +12,11 @@ export type Granularity = 'day' | 'week' | 'month' | 'quarter' | 'semester' | 'y
 export type TipoUso = 'interno' | 'externo' | 'ambos';
 
 /**
+ * Franja horaria opcional para análisis de equipos
+ */
+export type FranjaHoraria = 'all' | 'manana' | 'tarde' | 'noche';
+
+/**
  * Presets rápidos de período
  */
 export type PeriodPreset = 
@@ -39,6 +44,9 @@ export interface ReportFilter {
   tipoUso: TipoUso;       // interno | externo | ambos
   anioIngreso?: number;   // Año de ingreso del alumno (para ranking)
   timezone?: string;
+  asignaturaId?: number | null;
+  tipoEquipoId?: number | null;
+  franjaHoraria?: FranjaHoraria;
 }
 
 /**
@@ -111,6 +119,16 @@ export class ReportFiltersService {
   readonly aniosIngreso: { value: number | null; label: string }[] = this.generateAniosIngreso();
 
   /**
+   * Franjas horarias disponibles
+   */
+  readonly franjasHorarias: { value: FranjaHoraria; label: string }[] = [
+    { value: 'all', label: 'Todo el día' },
+    { value: 'manana', label: 'Mañana (06-12)' },
+    { value: 'tarde', label: 'Tarde (12-18)' },
+    { value: 'noche', label: 'Noche (18-24)' },
+  ];
+
+  /**
    * Filtro por defecto: último año, ambos tipos de uso
    */
   private defaultFilter: ReportFilter = {
@@ -118,7 +136,10 @@ export class ReportFiltersService {
     to: this.formatDate(new Date()),
     granularity: 'month',
     preset: 'this_year',
-    tipoUso: 'ambos'
+    tipoUso: 'ambos',
+    asignaturaId: null,
+    tipoEquipoId: null,
+    franjaHoraria: 'all'
   };
 
   /**
@@ -179,6 +200,36 @@ export class ReportFiltersService {
     this.updateFilter({
       ...this.currentFilter,
       tipoUso
+    });
+  }
+
+  /**
+   * Cambiar asignatura seleccionada
+   */
+  setAsignatura(asignaturaId: number | null): void {
+    this.updateFilter({
+      ...this.currentFilter,
+      asignaturaId
+    });
+  }
+
+  /**
+   * Cambiar tipo de equipo seleccionado
+   */
+  setTipoEquipo(tipoEquipoId: number | null): void {
+    this.updateFilter({
+      ...this.currentFilter,
+      tipoEquipoId
+    });
+  }
+
+  /**
+   * Cambiar franja horaria
+   */
+  setFranjaHoraria(franjaHoraria: FranjaHoraria): void {
+    this.updateFilter({
+      ...this.currentFilter,
+      franjaHoraria
     });
   }
 
@@ -361,6 +412,9 @@ export class ReportFiltersService {
     granularity: string;
     uso: TipoUso;
     anioIngreso?: number;
+    asignaturaId?: number | null;
+    tipoEquipoId?: number | null;
+    franjaHoraria?: FranjaHoraria;
   } {
     const filter = this.currentFilter;
     const params: any = {
@@ -372,6 +426,18 @@ export class ReportFiltersService {
     
     if (filter.anioIngreso) {
       params.anioIngreso = filter.anioIngreso;
+    }
+
+    if (filter.asignaturaId !== undefined) {
+      params.asignaturaId = filter.asignaturaId;
+    }
+
+    if (filter.tipoEquipoId !== undefined) {
+      params.tipoEquipoId = filter.tipoEquipoId;
+    }
+
+    if (filter.franjaHoraria) {
+      params.franjaHoraria = filter.franjaHoraria;
     }
     
     return params;
@@ -452,6 +518,10 @@ export class ReportFiltersService {
         if (!parsed.tipoUso) {
           parsed.tipoUso = 'ambos';
         }
+        // Defaults para nuevos campos
+        if (parsed.asignaturaId === undefined) parsed.asignaturaId = null;
+        if (parsed.tipoEquipoId === undefined) parsed.tipoEquipoId = null;
+        if (parsed.franjaHoraria === undefined) parsed.franjaHoraria = 'all';
         return parsed;
       }
       return null;

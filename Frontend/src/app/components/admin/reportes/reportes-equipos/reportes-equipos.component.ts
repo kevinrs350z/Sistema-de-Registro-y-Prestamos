@@ -309,10 +309,14 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
     
     // Usar filtro centralizado si está disponible
     const filtro = this.currentFilter 
-      ? { fechaInicio: this.currentFilter.from, fechaFin: this.currentFilter.to }
+      ? this.currentFilter
       : this.getFiltroParaGrafico('uso');
       
-    this.reportesService.getEquiposMasSolicitados(filtro).subscribe({
+    const request$ = this.currentFilter
+      ? this.reportesService.getEquiposMasSolicitadosWithFilter(filtro as any)
+      : this.reportesService.getEquiposMasSolicitados(filtro);
+
+    request$.subscribe({
       next: (data) => {
         this.loadingEquipos = false;
         const items = Array.isArray(data) ? data : (data?.data || []);
@@ -369,10 +373,14 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
     this.errorUso = null;
     
     const filtro = this.currentFilter 
-      ? { fechaInicio: this.currentFilter.from, fechaFin: this.currentFilter.to }
+      ? this.currentFilter
       : this.getFiltroParaGrafico('uso');
       
-    this.reportesService.getUsoInternoExterno(filtro).subscribe({
+    const request$ = this.currentFilter
+      ? this.reportesService.getUsoInternoExternoWithFilter(filtro as any)
+      : this.reportesService.getUsoInternoExterno(filtro);
+
+    request$.subscribe({
       next: (data) => {
         this.loadingUso = false;
         const items = Array.isArray(data) ? data : (data?.data || []);
@@ -426,10 +434,14 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
     this.errorSanciones = null;
     
     const filtro = this.currentFilter 
-      ? { fechaInicio: this.currentFilter.from, fechaFin: this.currentFilter.to }
+      ? this.currentFilter
       : this.getFiltroParaGrafico('sanciones');
       
-    this.reportesService.getSancionesYRechazos(filtro).subscribe({
+    const request$ = this.currentFilter
+      ? this.reportesService.getSancionesYRechazosWithFilter(filtro as any)
+      : this.reportesService.getSancionesYRechazos(filtro);
+
+    request$.subscribe({
       next: (data) => {
         this.loadingSanciones = false;
         const result = data?.data || data;
@@ -480,10 +492,14 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
     this.loadingBaja = true;
     
     const filtro = this.currentFilter 
-      ? { fechaInicio: this.currentFilter.from, fechaFin: this.currentFilter.to }
+      ? this.currentFilter
       : this.getFiltroParaGrafico('disponibilidad');
       
-    this.reportesService.getEquiposDadoDeBaja(filtro).subscribe({
+    const request$ = this.currentFilter
+      ? this.reportesService.getEquiposDadoDeBajaWithFilter(filtro as any)
+      : this.reportesService.getEquiposDadoDeBaja(filtro);
+
+    request$.subscribe({
       next: (data) => {
         this.loadingBaja = false;
         this.equiposBaja = Array.isArray(data) ? data : (data?.data || []);
