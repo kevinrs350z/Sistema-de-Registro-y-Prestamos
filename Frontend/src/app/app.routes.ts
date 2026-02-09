@@ -9,6 +9,7 @@ import { ResetPasswordComponent } from './components/auth/reset-password/reset-p
 // ALUMNO
 import { CatalogoEquiposComponent } from './components/alumno/catalogo-equipos/catalogo-equipos.component';
 import { SolicitarReservaComponent } from './components/alumno/solicitar-reserva/solicitar-reserva.component';
+import { MisSancionesComponent } from './components/alumno/mis-sanciones/mis-sanciones.component';
 
 // ADMIN
 import { DashboardAdminComponent } from './components/admin/dashboard-admin/dashboard-admin.component';
@@ -48,6 +49,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/alumno/mis-solicitudes/mis-solicitudes.component')
         .then(m => m.MisSolicitudesComponent)
+  },
+
+  {
+    path: 'mis-sanciones',
+    component: MisSancionesComponent
   },
 
   {

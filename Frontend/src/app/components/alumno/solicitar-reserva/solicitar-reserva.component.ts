@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal, ChangeDetectorRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { startWith, map } from 'rxjs/operators';
@@ -59,6 +60,7 @@ export class SolicitarReservaComponent {
   private cdr = inject(ChangeDetectorRef);
   private usuariosSrv = inject(UsuariosService);
   private grupoSrv = inject(GrupoService);
+  private router = inject(Router);
 
   usuarioActivo: any = null;
   bloqueado = false;
@@ -82,7 +84,7 @@ export class SolicitarReservaComponent {
     { nombre: 'Practica Laboral Segundo año' },
     { nombre: 'Practica Profesional Cuarto año' }
   ]);
-  bloques: { id: number; texto: string }[] = [];
+  bloques: { id: number; texto: string; aviso?: boolean; avisoTexto?: string }[] = [];
 
   integrantes = signal<any[]>([]);
   integrantesSeleccionados = signal<number[]>([]);
@@ -314,12 +316,28 @@ export class SolicitarReservaComponent {
     });
 
     this.api.getBloques(token).subscribe(data => {
-      this.bloques = data
-        .filter((b: any) => b.idBloque <= 5)
+      const avisosTexto = 'Sujeto a disponibilidad administrativa';
+      const fromApi = data
+        .filter((b: any) => b.idBloque <= 7)
         .map((b: any) => ({
           id: b.idBloque,
-          texto: `Bloque ${b.idBloque} (${cortarHora(b.hora_inicio)} – ${cortarHora(b.hora_fin)})`
+          texto: `Bloque ${b.idBloque} (${cortarHora(b.hora_inicio)} – ${cortarHora(b.hora_fin)})`,
+          aviso: b.idBloque === 6 || b.idBloque === 7,
+          avisoTexto: b.idBloque === 6 || b.idBloque === 7 ? avisosTexto : undefined
         }));
+
+      const defaults = [
+        { id: 6, texto: 'Bloque 6 (16:20 – 17:50)', aviso: true, avisoTexto: avisosTexto },
+        { id: 7, texto: 'Bloque 7 (17:55 – 19:20)', aviso: true, avisoTexto: avisosTexto },
+      ];
+
+      const map = new Map<number, { id: number; texto: string; aviso?: boolean; avisoTexto?: string }>();
+      fromApi.forEach(b => map.set(b.id, b));
+      defaults.forEach(b => {
+        if (!map.has(b.id)) map.set(b.id, b);
+      });
+
+      this.bloques = Array.from(map.values()).sort((a, b) => a.id - b.id);
     });
 
     this.form.get('tipo_solicitud')!.valueChanges.subscribe(v => {
@@ -603,6 +621,7 @@ export class SolicitarReservaComponent {
             this.notify.success('Solicitud enviada correctamente.');
             this.limpiar();
             this.carritoSrv.limpiar();
+            this.router.navigate(['/equipos/catalogo']);
           },
           error: err => {
             if (err?.status === 403) {

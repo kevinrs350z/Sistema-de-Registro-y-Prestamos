@@ -86,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/prestamos/{id}', [PrestamoController::class, 'show']);
     Route::delete('/prestamos/{id}', [PrestamoController::class, 'destroy']);
 
+    // Sanciones del alumno autenticado
+    Route::get('/sanciones/mis', [UserSancionController::class, 'misSanciones']);
+
 
 
     // Ruta para cerrar sesión (requiere que el usuario esté autenticado para invalidar su token)

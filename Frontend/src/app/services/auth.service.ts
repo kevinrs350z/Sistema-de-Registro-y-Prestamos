@@ -146,6 +146,12 @@ export class AuthService {
     });
   }
 
+  getMisSanciones(token: string) {
+    return this.http.get<{ sanciones: any[] }>(`${this.apiUrl}/sanciones/mis`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+
 
   //**rutas asignaturas */
   getAsignaturas(token: string): Observable<any[]> {

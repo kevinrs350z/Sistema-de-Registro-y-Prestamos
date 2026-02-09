@@ -1,0 +1,46 @@
+<div class="wrap">
+  <header class="page-head">
+    <h1>Mis sanciones</h1>
+    <p class="sub">Consulta tus sanciones activas y el historial.</p>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" (click)="setFiltro('TODAS')" [class.active]="filtro() === 'TODAS'">Todas</button>
+    <button type="button" (click)="setFiltro('ACTIVAS')" [class.active]="filtro() === 'ACTIVAS'">Activas</button>
+    <button type="button" (click)="setFiltro('PASADAS')" [class.active]="filtro() === 'PASADAS'">Pasadas</button>
+  </div>
+
+  <div class="estado" *ngIf="cargando()">Cargando sanciones...</div>
+  <div class="estado error" *ngIf="error()">{{ error() }}</div>
+
+  <div class="grid" *ngIf="!cargando() && !error()">
+    <div class="card" *ngFor="let s of sancionesFiltradas()">
+      <div class="card-head">
+        <span class="badge" [class.activa]="s.estado === 'ACTIVA'">
+          {{ s.estado === 'ACTIVA' ? 'Activa' : 'Pasada' }}
+        </span>
+        <span class="nivel">{{ s.nivel }}</span>
+      </div>
+
+      <p class="desc">{{ s.descripcion || '—' }}</p>
+
+      <div class="detalle" *ngIf="s.detalle">
+        <strong>Detalle:</strong> {{ s.detalle }}
+      </div>
+
+      <div class="fechas">
+        <div><strong>Inicio:</strong> {{ s.fecha_inicio | date:'dd/MM/yyyy' }}</div>
+        <div><strong>Fin:</strong> {{ s.fecha_fin | date:'dd/MM/yyyy' }}</div>
+      </div>
+
+      <div class="asignacion" *ngIf="s.asignada_por || s.asignada_en">
+        <div *ngIf="s.asignada_por"><strong>Asignada por:</strong> {{ s.asignada_por }}</div>
+        <div *ngIf="s.asignada_en"><strong>Asignada en:</strong> {{ s.asignada_en | date:'dd/MM/yyyy HH:mm' }}</div>
+      </div>
+    </div>
+
+    <div class="vacio" *ngIf="sancionesFiltradas().length === 0">
+      No tienes sanciones registradas.
+    </div>
+  </div>
+</div>

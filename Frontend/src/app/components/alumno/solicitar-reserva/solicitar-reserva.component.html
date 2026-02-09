@@ -7,6 +7,15 @@
       <h1>Solicitar reserva de equipo</h1>
       <p class="page-sub">Completa los datos y confirma tu solicitud.</p>
 
+      <div class="alert-tiempo">
+        <strong>Retiro con tiempo límite.</strong>
+        <span>
+          Debes retirar los equipos dentro del tiempo asignado según el bloque o la fecha.
+          Si no los retiras dentro de los primeros 10 minutos del horario indicado, la reserva se
+          cancelará automáticamente y será rechazada.
+        </span>
+      </div>
+
       <div class="alert-bloqueo" *ngIf="bloqueado">
         <strong>Cuenta bloqueada.</strong>
         <span>
@@ -302,8 +311,15 @@
             (change)="onBloqueChange($event, b.id)"
           />
           <div class="bloque-info">
-            {{ b.texto }}
+            <span class="bloque-texto">{{ b.texto }}</span>
           </div>
+          <span
+            class="bloque-warning"
+            *ngIf="b.aviso"
+            [attr.aria-label]="b.avisoTexto"
+            tabindex="0"
+          >?</span>
+          <span class="bloque-tooltip" *ngIf="b.aviso">{{ b.avisoTexto }}</span>
         </label>
       </div>
     </div>
@@ -311,7 +327,11 @@
     <!-- 8) Observación -->
     <div class="card">
       <h2>Observación</h2>
-      <textarea rows="3" formControlName="observacion"></textarea>
+      <textarea
+        rows="3"
+        formControlName="observacion"
+        placeholder="Ej.: necesito batería, cable auxiliar, trípode, etc."
+      ></textarea>
     </div>
 
     <!-- 9) Términos y condiciones -->
