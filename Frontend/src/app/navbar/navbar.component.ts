@@ -44,8 +44,20 @@ export class NavbarComponent {
     this.router.navigate(['/equipos/catalogo']);
   }
 
+  getUserId(): string {
+    try {
+      const raw = sessionStorage.getItem('user');
+      if (raw) {
+        const user = JSON.parse(raw);
+        return user?.rut || user?.codigo || user?.email?.split('@')[0] || 'Usuario';
+      }
+    } catch {
+      // ignore
+    }
+    return 'Usuario';
+  }
+
   cerrarSesion() {
-    // Evitamos confirm() (modal del navegador). Cerramos sesión y avisamos con toast.
     this.menuAbierto = false;
     this.auth.logout();
     sessionStorage.clear();
