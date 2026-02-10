@@ -36,6 +36,12 @@
 
     <div class="action-grid">
 
+      <a routerLink="/equipos/catalogo" class="action-card solicitudes">
+        <div class="action-icon"><i class="bi bi-clipboard-check"></i></div>
+        <h3>Crear solicitud</h3>
+        <p>Usa la vista de alumno para registrar una solicitud.</p>
+      </a>
+
       <!-- Gestión Equipos -->
       <div class="action-card equipos" (click)="seccionActiva = 'inventario'">
         <div class="action-icon"><i class="bi bi-hdd-stack"></i></div>
@@ -64,18 +70,18 @@
         <p>Ver y editar cuentas de alumnos registradas</p>
       </div>
 
-      <!-- Gestión de Grupos (visible para Admin/Super) -->
-      <a routerLink="/admin/gestionar-grupos" class="action-card grupos" *ngIf="auth.isAdmin() || auth.isSuperUsuario()">
-        <div class="action-icon"><i class="bi bi-collection"></i></div>
-        <h3>Gestionar Grupos</h3>
-        <p>Asignar usuarios y préstamos a grupos</p>
-      </a>
 
       <!-- 🆕 NUEVA OPCIÓN – GESTIONAR ASIGNATURAS/EVENTOS -->
       <a routerLink="/admin/asignaturas" class="action-card asignaturas">
         <div class="action-icon"><i class="bi bi-calendar-event"></i></div>
         <h3>Gestionar Asignaturas / Eventos</h3>
         <p>Definir restricciones de equipos para clases o eventos</p>
+      </a>
+
+      <a routerLink="/admin/bloqueos-horario" class="action-card bloqueos">
+        <div class="action-icon"><i class="bi bi-calendar2-week"></i></div>
+        <h3>Bloqueos de horario</h3>
+        <p>Bloquear equipos por bloque y dia.</p>
       </a>
 
       <!-- 📊 Visualizar Reportes -->

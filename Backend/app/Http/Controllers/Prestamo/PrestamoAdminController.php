@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Prestamo;
     use App\Http\Requests\Prestamo\Admin\AprobarRechazarPrestamoRequest;
     use App\Http\Requests\Prestamo\Admin\MarcarDevueltoRequest;
     use App\Http\Requests\Prestamo\Admin\ExtenderPrestamoRequest;
+    use App\Http\Requests\Prestamo\Admin\ActualizarEquiposPrestamoRequest;
     use App\Services\Prestamos\PrestamoAdminService;
     use App\Http\Requests\Prestamo\StorePrestamoAdminRequest;
     use Illuminate\Support\Facades\DB;
@@ -129,6 +130,21 @@ namespace App\Http\Controllers\Prestamo;
                     'error' => $e->getMessage()
                 ], 400);
             }
+        }
+
+        public function actualizarEquipos(
+            ActualizarEquiposPrestamoRequest $request,
+            int $id
+        ) {
+            $this->service->actualizarEquiposPrestamo(
+                $id,
+                $request->equipos,
+                $request->motivo
+            );
+
+            return response()->json([
+                'message' => 'Equipos actualizados correctamente.'
+            ]);
         }
 
         /* ============================================================

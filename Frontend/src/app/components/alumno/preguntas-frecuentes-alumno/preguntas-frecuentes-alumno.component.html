@@ -6,9 +6,14 @@
   </header>
 
   <div class="faq-lista">
-    <div class="faq-card" *ngFor="let p of preguntas">
-      <h3 class="faq-pregunta">{{ p.pregunta }}</h3>
-      <p class="faq-respuesta">{{ p.respuesta }}</p>
+    <div class="faq-card" *ngFor="let p of preguntas; let i = index" [class.activa]="activa() === i">
+      <button type="button" class="faq-trigger" (click)="toggle(i)">
+        <span class="faq-pregunta">{{ p.pregunta }}</span>
+        <span class="faq-icon">{{ activa() === i ? '–' : '+' }}</span>
+      </button>
+      <div class="faq-respuesta" *ngIf="activa() === i">
+        {{ p.respuesta }}
+      </div>
     </div>
   </div>
 

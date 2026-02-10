@@ -1,0 +1,52 @@
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>Bloqueos por horario</h1>
+      <p>Bloquea equipos por bloque y dia para alumnos.</p>
+    </div>
+    <div class="selector">
+      <label>Tipo de equipo</label>
+      <select [(ngModel)]="tipoSeleccionado" (ngModelChange)="onTipoChange()">
+        <option [ngValue]="null">Selecciona un tipo</option>
+        <option *ngFor="let t of tipos()" [ngValue]="t.id">{{ t.nombre }}</option>
+      </select>
+      <span class="tipo-seleccionado">Seleccionado: {{ tipoNombreSeleccionado() }}</span>
+    </div>
+  </header>
+
+  <div class="tabla">
+    <div class="tabla-row tabla-header">
+      <div class="tabla-cell bloque">Bloque</div>
+      <div class="tabla-cell" *ngFor="let d of dias">{{ d.nombre }}</div>
+    </div>
+
+    <div class="tabla-row" *ngFor="let b of bloquesOrdenados()">
+      <div class="tabla-cell bloque">{{ b.texto }}</div>
+      <div class="tabla-cell" *ngFor="let d of dias">
+        <button
+          type="button"
+          class="toggle"
+          [class.activo]="isBloqueado(d.id, b.id)"
+          (click)="toggle(d.id, b.id)"
+          [disabled]="!tipoSeleccionado()"
+        >
+          <span class="toggle-text">
+            {{ isBloqueado(d.id, b.id) ? 'Bloqueado' : 'Libre' }}
+          </span>
+          <span class="toggle-sub" *ngIf="isBloqueado(d.id, b.id)">
+            {{ tipoNombreSeleccionado() }}
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="resumen-bloqueos" *ngIf="bloqueosActivos().length">
+    <h3>Bloqueos activos para {{ tipoNombreSeleccionado() }}</h3>
+    <div class="resumen-list">
+      <span class="resumen-item" *ngFor="let b of bloqueosActivos()">
+        {{ b.dia }} · {{ b.bloque }}
+      </span>
+    </div>
+  </div>
+</div>

@@ -85,9 +85,6 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
           this.irGestionarAsignaturas();
           break;
 
-        case 'gestionar-grupos':
-          this.router.navigate(['/admin/gestionar-grupos']);
-          break;
 
         /** ⭐ NUEVO: Preguntas Frecuentes */
         case 'preguntas-frecuentes':

@@ -83,7 +83,14 @@
         (click)="seleccionarSolicitud(s)"
       >
         <div class="card-header">
-          <h3>Solicitud #{{ s.id }} — {{ s.asignatura }}</h3>
+          <h3>
+            Solicitud #{{ s.id }} — {{ s.asignatura }}
+            <span
+              class="ajuste-dot"
+              *ngIf="s.tieneAjuste"
+              title="Solicitud ajustada por administración"
+            ></span>
+          </h3>
 
           <!-- 🔥 ESTADO -->
           <span class="estado" [ngClass]="getEstadoClass(s.estado)">
@@ -110,6 +117,9 @@
           </p>
           <p class="extension-badge" *ngIf="s.tieneExtension">
             Plazo extendido
+          </p>
+          <p class="ajuste-badge" *ngIf="s.tieneAjuste">
+            Actualizada por administración
           </p>
         </div>
       </div>
@@ -171,6 +181,7 @@
         </ng-template>
 
         <p><b>Observación:</b> {{ solicitudSeleccionada().observacion }}</p>
+        <p *ngIf="solicitudSeleccionada().ajusteEquipos"><b>Ajuste admin:</b> {{ solicitudSeleccionada().ajusteEquipos }}</p>
         <p><b>Estado:</b> {{ solicitudSeleccionada().estado }}</p>
       </div>
     </div>

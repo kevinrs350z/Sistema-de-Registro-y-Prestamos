@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { AuthService } from '../../../services/auth.service';
 import { Pack } from '../../../models/pack.model';
 import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
 import { CarritoService } from '../../../services/carrito.service';
@@ -23,6 +24,7 @@ export class CatalogoEquiposComponent {
   private carritoSrv = inject(CarritoService);
   private notify = inject(NotificationService);
   private imagenSrv = inject(ImagenService);
+  private auth = inject(AuthService);
   private readonly formatoDisponibilidad = new Intl.DateTimeFormat('es-CL', {
     dateStyle: 'short',
     timeStyle: 'short'
@@ -41,6 +43,16 @@ export class CatalogoEquiposComponent {
 
   // ✅ carrito se lee desde el servicio (fuente única)
   carrito = computed(() => this.carritoSrv.getCarrito());
+
+  computadoresEnCarrito = computed(() =>
+    this.carrito()
+      .filter(item => item.tipo === 'equipo' && this.esComputadorItem(item))
+      .map(item => item.idTipoEquipo)
+      .filter((id): id is number => typeof id === 'number')
+  );
+
+  bloqueoPorComputador = computed(() => this.computadoresEnCarrito().length > 0);
+  esAdmin = this.auth.isAdmin();
 
   // ===========================
   // INIT
@@ -131,6 +143,23 @@ export class CatalogoEquiposComponent {
     )?.modo ?? 'cualquiera';
   }
 
+  esComputador(e: TipoEquipo): boolean {
+    return this.esTextoComputador(e.categoria) || this.esTextoComputador(e.nombre);
+  }
+
+  estaComputadorSeleccionado(e: TipoEquipo): boolean {
+    return this.computadoresEnCarrito().includes(e.id);
+  }
+
+  private esComputadorItem(item: CarritoItem): boolean {
+    return this.esTextoComputador(item.categoria) || this.esTextoComputador(item.nombre);
+  }
+
+  private esTextoComputador(texto?: string): boolean {
+    if (!texto) return false;
+    return /(computador|computacional|laptop|notebook|pc)/i.test(texto);
+  }
+
   obtenerMensajeDisponibilidad(e: TipoEquipo): string | null {
     if (e.stock > 0) {
       return 'Disponible ahora';
@@ -160,12 +189,18 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
-    if (e.bloqueado && delta > 0) {
-      this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
-      return;
-    }
-    if (delta > 0 && !this.puedeAgregarCantidad(e, delta)) {
-      return;
+    if (!this.esAdmin) {
+      if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+        this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
+        return;
+      }
+      if (e.bloqueado && delta > 0) {
+        this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
+        return;
+      }
+      if (delta > 0 && !this.puedeAgregarCantidad(e, delta)) {
+        return;
+      }
     }
     if (e.stock <= 0 && delta > 0) {
       this.notify.warning('Este equipo está agotado.');
@@ -217,12 +252,18 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
-    if (e.bloqueado) {
-      this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
-      return;
-    }
-    if (!this.estaEnCarrito(idTipo) && !this.puedeAgregarCantidad(e, 1)) {
-      return;
+    if (!this.esAdmin) {
+      if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+        this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
+        return;
+      }
+      if (e.bloqueado) {
+        this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
+        return;
+      }
+      if (!this.estaEnCarrito(idTipo) && !this.puedeAgregarCantidad(e, 1)) {
+        return;
+      }
     }
     if (e.stock <= 0) {
       this.notify.warning('Este equipo está agotado.');
@@ -238,6 +279,13 @@ export class CatalogoEquiposComponent {
       return;
     }
 
+    if (!this.esAdmin && this.esComputador(e)) {
+      const otros = actual.filter(c => c.tipo !== 'equipo' || c.idTipoEquipo !== idTipo);
+      if (otros.length > 0) {
+        this.notify.info('Se removieron otros equipos porque seleccionaste un computador condicional.');
+      }
+    }
+
     const nuevo: CarritoItem = {
       tipo: 'equipo',
       idTipoEquipo: idTipo,
@@ -248,10 +296,17 @@ export class CatalogoEquiposComponent {
       equiposSeleccionados: []
     };
 
-    this.carritoSrv.setCarrito([...actual, nuevo]);
+    if (!this.esAdmin && this.esComputador(e)) {
+      this.carritoSrv.setCarrito([nuevo]);
+    } else {
+      this.carritoSrv.setCarrito([...actual, nuevo]);
+    }
   }
 
   private puedeAgregarCantidad(e: TipoEquipo, delta: number): boolean {
+    if (this.esAdmin) {
+      return true;
+    }
     const maximo = typeof e.maximo_prestamo === 'number' ? e.maximo_prestamo : null;
     if (maximo === null) {
       return true;
@@ -303,6 +358,10 @@ export class CatalogoEquiposComponent {
   // CARRITO – PACKS (✅ ahora modifica el servicio)
   // ===========================
   agregarPackAlCarrito(pack: Pack): void {
+    if (this.bloqueoPorComputador()) {
+      this.notify.warning('No puedes agregar packs mientras exista un computador condicional en la solicitud.');
+      return;
+    }
     if (pack.disponibles !== undefined && pack.disponibles <= 0) {
       this.notify.warning('Este pack está agotado.');
       return;
@@ -331,6 +390,10 @@ export class CatalogoEquiposComponent {
   }
 
   togglePack(idPack: number): void {
+    if (this.bloqueoPorComputador()) {
+      this.notify.warning('No puedes agregar packs mientras exista un computador condicional en la solicitud.');
+      return;
+    }
     const p = this.packs().find(x => x.id === idPack);
     if (!p) return;
 

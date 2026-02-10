@@ -39,6 +39,7 @@ use App\Http\Controllers\EquipoEstadoController;
 use App\Http\Controllers\EquipoEstadisticasController;
 use App\Http\Controllers\Reportes\DashboardModelosController;
 use App\Http\Controllers\MotivoRechazoController;
+use App\Http\Controllers\BloqueoHorarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,6 +91,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/prestamos/{id}', [PrestamoController::class, 'show']);
     Route::delete('/prestamos/{id}', [PrestamoController::class, 'destroy']);
 
+    // Sanciones del alumno autenticado
+    Route::get('/sanciones/mis', [UserSancionController::class, 'misSanciones']);
+
 
 
     // Ruta para cerrar sesión (requiere que el usuario esté autenticado para invalidar su token)
@@ -122,6 +126,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
    # Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
     Route::post('/admin/prestamos/aprobar/{id}',[PrestamoAdminController::class, 'aprobar']);
     Route::post('/admin/prestamos/rechazar/{id}',[PrestamoAdminController::class, 'rechazar']);
+    Route::patch('/admin/prestamos/{id}/equipos', [PrestamoAdminController::class, 'actualizarEquipos']);
     Route::get('/equipos/{idEquipo}/historial', [EquipoController::class, 'historial']);
     Route::get('/admin/prestamos/pendientes', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
     Route::patch('/admin/prestamos/{idPrestamo}/equipos/{idEquipo}/devolver',[PrestamoAdminController::class, 'devolverEquipo']);
@@ -135,6 +140,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::patch('/admin/sanciones/{id}/ampliar', [UserSancionController::class, 'ampliarSancion']);
     Route::patch('/admin/sanciones/{id}/quitar', [UserSancionController::class, 'quitarSancion']);
     Route::post('/admin/devolucion', [DevolucionAdminController::class, 'devolverEquipo']);
+
+    Route::get('/admin/bloqueos-horario', [BloqueoHorarioController::class, 'index']);
+    Route::post('/admin/bloqueos-horario', [BloqueoHorarioController::class, 'store']);
 
     Route::patch('/admin/alumnos/{id}/bloquear', [UsuarioController::class, 'bloquear']);
     Route::patch('/admin/alumnos/{id}/desbloquear', [UsuarioController::class, 'desbloquear']);

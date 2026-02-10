@@ -142,7 +142,26 @@ export class GestionarSancionesComponent implements OnInit {
   cargarCatalogo(): void {
     this.sancionesService.getCatalogo().subscribe({
       next: (resp) => {
-        this.tiposSancion = resp.sanciones || [];
+        const nivelesPermitidos = ['LEVE', 'MEDIA', 'GRAVE'];
+        const catalogo = (resp.sanciones || [])
+          .filter((s: any) => nivelesPermitidos.includes(String(s.nivel || '').toUpperCase()))
+          .reduce((acc: any[], s: any) => {
+            const nivel = String(s.nivel || '').toUpperCase();
+            if (!acc.some((x) => String(x.nivel || '').toUpperCase() === nivel)) {
+              acc.push({
+                id: s.id ?? s.idSancion,
+                nivel: s.nivel,
+                descripcion: s.descripcion
+              });
+            }
+            return acc;
+          }, [])
+          .sort((a: any, b: any) =>
+            nivelesPermitidos.indexOf(String(a.nivel || '').toUpperCase()) -
+            nivelesPermitidos.indexOf(String(b.nivel || '').toUpperCase())
+          );
+
+        this.tiposSancion = catalogo;
         this.asignarTipo = this.tiposSancion[0]?.id ?? 0;
       },
       error: () => {
@@ -530,7 +549,7 @@ asignarSancion(): void {
     },
     error: (err) => {
       console.error(err);
-      this.notify.error('Ocurrió un error al asignar la sanción.');
+        this.notify.error(err?.error?.error || err?.error?.message || 'Ocurrió un error al asignar la sanción.');
     }
   });
 }

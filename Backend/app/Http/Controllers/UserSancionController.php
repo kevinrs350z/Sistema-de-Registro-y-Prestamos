@@ -120,9 +120,23 @@ class UserSancionController extends Controller
 
     public function catalogo()
     {
+        $nivelesPermitidos = ['LEVE', 'MEDIA', 'GRAVE'];
+
         $catalogo = Sancion::select('idSancion', 'nivel', 'descripcion', 'estado')
-            ->orderBy('nivel')
-            ->get();
+            ->get()
+            ->filter(function ($s) use ($nivelesPermitidos) {
+                return in_array(strtoupper((string) $s->nivel), $nivelesPermitidos, true);
+            })
+            ->groupBy(function ($s) {
+                return strtoupper((string) $s->nivel);
+            })
+            ->map(function ($group) {
+                return $group->sortBy('idSancion')->first();
+            })
+            ->sortBy(function ($s) use ($nivelesPermitidos) {
+                return array_search(strtoupper((string) $s->nivel), $nivelesPermitidos, true);
+            })
+            ->values();
 
         return response()->json([
             'sanciones' => $catalogo
@@ -195,6 +209,59 @@ class UserSancionController extends Controller
         return response()->json([
             'message'   => 'Listado de sanciones activas.',
             'sanciones' => $sanciones
+        ]);
+    }
+
+    // -------- SANCIONES DEL USUARIO AUTENTICADO --------
+    public function misSanciones(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no autenticado'], 401);
+        }
+
+        $sanciones = $user->sanciones()
+            ->orderBy('fecha_inicio', 'desc')
+            ->orderBy('idSancion', 'desc')
+            ->get();
+
+        $assignedIds = $sanciones
+            ->map(fn ($s) => $s->pivot?->assigned_by)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $assignedUsers = User::with('persona')
+            ->whereIn('idUser', $assignedIds)
+            ->get()
+            ->keyBy('idUser');
+
+        $data = $sanciones->map(function ($s) use ($assignedUsers) {
+            $assigned = $assignedUsers->get($s->pivot?->assigned_by);
+            $nombreAsignador = trim(
+                ($assigned?->persona?->Nombre ?? '') . ' ' . ($assigned?->persona?->Apellido1 ?? '')
+            );
+
+            return [
+                'idSancion' => $s->idSancion,
+                'nivel' => $s->nivel,
+                'descripcion' => $s->descripcion,
+                'estado' => $s->estado,
+                'fecha_inicio' => $s->fecha_inicio,
+                'fecha_fin' => $s->fecha_fin,
+                'detalle' => $s->pivot?->descripcion,
+                'prestamo_id' => $s->pivot?->prestamo_id,
+                'accion' => $s->pivot?->accion,
+                'asignada_por' => $nombreAsignador !== '' ? $nombreAsignador : null,
+                'asignada_por_email' => $assigned?->Email ?? null,
+                'asignada_en' => $s->pivot?->created_at,
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Listado de sanciones del usuario autenticado.',
+            'sanciones' => $data
         ]);
     }
 

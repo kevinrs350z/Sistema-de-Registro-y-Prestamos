@@ -400,9 +400,11 @@ class PrestamoAdminService
 
                 'equipos' => $p->equipos->map(function ($e) {
                     return [
+                        'id' => $e->id,
                         'codigo' => $e->codigo,
                         'nombre' => optional($e->tipo)->nombre ?? 'Equipo',
                         'imagen' => $e->imagen,
+                        'tipo_equipo_id' => $e->tipo_equipo_id,
                         'devuelto' => (bool) ($e->pivot->devuelto ?? false),
                     ];
                 }),
@@ -411,6 +413,50 @@ class PrestamoAdminService
             ];
         });
 
+    }
+
+    public function actualizarEquiposPrestamo(
+        int $idPrestamo,
+        array $equipos,
+        ?string $motivo
+    ): void {
+        DB::transaction(function () use ($idPrestamo, $equipos, $motivo) {
+            $prestamo = Prestamo::with(['equipos'])->findOrFail($idPrestamo);
+
+            if ($prestamo->estado !== EstadoPrestamo::PENDIENTE) {
+                throw new \Exception('Solo solicitudes PENDIENTES pueden modificarse.');
+            }
+
+            foreach ($prestamo->equipos as $equipo) {
+                $equipo->estado = EstadoEquipo::DISPONIBLE;
+                $equipo->save();
+            }
+
+            DB::table('prestamo_equipo')
+                ->where('idPrestamo', $prestamo->idPrestamo)
+                ->delete();
+
+            $equiposPayload = collect($equipos)
+                ->map(function ($e) {
+                    return [
+                        'idTipoEquipo' => $e['idTipoEquipo'],
+                        'cantidad' => $e['cantidad'],
+                        'modo' => 'cualquiera',
+                    ];
+                })
+                ->values()
+                ->all();
+
+            $this->prestamoService->procesarEquipos($prestamo->idPrestamo, $equiposPayload);
+
+            Observacion::create([
+                'idPrestamo' => $prestamo->idPrestamo,
+                'idUser' => auth()->id() ?? auth('sanctum')->user()?->idUser,
+                'descripcion' => $motivo ?: 'Ajuste de equipos realizado por administracion.',
+                'tipo' => 'AJUSTE_EQUIPOS',
+                'estado' => 'habilitado'
+            ]);
+        });
     }
 
 

@@ -9,6 +9,7 @@ import { ResetPasswordComponent } from './components/auth/reset-password/reset-p
 // ALUMNO
 import { CatalogoEquiposComponent } from './components/alumno/catalogo-equipos/catalogo-equipos.component';
 import { SolicitarReservaComponent } from './components/alumno/solicitar-reserva/solicitar-reserva.component';
+import { MisSancionesComponent } from './components/alumno/mis-sanciones/mis-sanciones.component';
 
 // ADMIN
 import { DashboardAdminComponent } from './components/admin/dashboard-admin/dashboard-admin.component';
@@ -26,6 +27,7 @@ import { ReportesEquiposComponent } from './components/admin/reportes/reportes-e
 import { GestionarAsignaturasComponent } from './components/admin/asignaturas/gestionar-asignaturas.component';
 import { DashboardOperationalComponent } from './components/admin/reportes/dashboard-operational/dashboard-operational.component';
 import { DashboardModelosComponent } from './components/admin/reportes/dashboard-modelos/dashboard-modelos.component';
+import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -52,6 +54,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'mis-sanciones',
+    component: MisSancionesComponent
+  },
+
+  {
     path: 'preguntas-frecuentes',
     loadComponent: () =>
       import('./components/alumno/preguntas-frecuentes-alumno/preguntas-frecuentes-alumno.component')
@@ -65,6 +72,7 @@ export const routes: Routes = [
   { path: 'admin/notificaciones', component: NotificacionesComponent },
 
   { path: 'admin/solicitudes', component: SolicitudesPendientesComponent },
+  { path: 'admin/bloqueos-horario', component: BloqueosHorarioComponent },
   {
     path: 'admin/reportes',
     component: ReportesComponent,
@@ -113,13 +121,6 @@ export const routes: Routes = [
       import('./components/admin/gestionar-packs/gestionar-packs.component')
         .then(m => m.GestionarPacksComponent)
   },
-
-    {
-      path: 'admin/gestionar-grupos',
-      loadComponent: () =>
-        import('./components/admin/grupos/grupos-admin.component')
-          .then(m => m.GruposAdminComponent)
-    },
 
   {
   path: 'admin/preguntas-frecuentes',

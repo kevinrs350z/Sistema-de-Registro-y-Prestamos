@@ -3,10 +3,16 @@
   <!-- ======== ENCABEZADO ======== -->
   <div class="encabezado-superior">
     <div class="titulo">
-      <h1>Selecciona los equipos</h1>
+      <h1>Arma tu solicitud de equipos</h1>
       <p class="sub">
-        Agrega equipos o packs al carrito antes de continuar con la reserva.
+        Selecciona equipos o packs para tu reserva en Diseño Multimedia.
       </p>
+      <div class="alert-condicional" *ngIf="bloqueoPorComputador()">
+        <strong>Computador condicional seleccionado.</strong>
+        <span>
+          Mientras este computador esté en tu solicitud, el resto de equipos queda bloqueado.
+        </span>
+      </div>
     </div>
 
     <!-- Botón movido a flotante -->
@@ -72,7 +78,7 @@
       *ngFor="let e of tiposFiltrados()"
       class="card-equipo"
       [class.selected]="estaEnCarrito(e.id)"
-      [class.bloqueado]="e.bloqueado"
+      [class.bloqueado]="!esAdmin && (e.bloqueado || (bloqueoPorComputador() && !estaComputadorSeleccionado(e)))"
     >
 
       <!-- IMAGEN -->
@@ -92,27 +98,51 @@
 
       <!-- CONTROLES -->
       <div class="controles-card">
-
-        <div class="cantidad-contenedor">
-          <button (click)="cambiarCantidad(e.id, -1)">−</button>
-          <span>{{ getCantidad(e.id) }}</span>
-          <button (click)="cambiarCantidad(e.id, 1)" [disabled]="e.bloqueado">+</button>
-        </div>
-
         <p class="stock">Stock: {{ e.stock }}</p>
 
         <p class="disponibilidad" *ngIf="obtenerMensajeDisponibilidad(e) as mensaje">
           {{ mensaje }}
         </p>
 
-        <span class="badge bg-danger" *ngIf="e.bloqueado">
+        <span class="badge bg-danger" *ngIf="!esAdmin && e.bloqueado">
           Límite alcanzado
+        </span>
+
+        <span class="badge bg-secondary" *ngIf="!esAdmin && bloqueoPorComputador() && !estaComputadorSeleccionado(e)">
+          Bloqueado por computador
         </span>
 
       </div>
 
-      <!-- BOTÓN -->
-      <button class="btn-principal" (click)="toggleProducto(e.id)" [disabled]="e.bloqueado">
+      <!-- CONTROLES ADMIN / ALUMNO -->
+      <div class="cantidad-admin" *ngIf="esAdmin">
+        <button
+          type="button"
+          (click)="cambiarCantidad(e.id, -1)"
+          [disabled]="getCantidad(e.id) <= 0"
+        >
+          -
+        </button>
+        <span class="cantidad-valor">{{ getCantidad(e.id) }}</span>
+        <button
+          type="button"
+          (click)="cambiarCantidad(e.id, 1)"
+          [disabled]="
+            e.bloqueado ||
+            (bloqueoPorComputador() && !estaComputadorSeleccionado(e)) ||
+            e.stock <= getCantidad(e.id)
+          "
+        >
+          +
+        </button>
+      </div>
+
+      <button
+        class="btn-principal"
+        *ngIf="!esAdmin"
+        (click)="toggleProducto(e.id)"
+        [disabled]="e.bloqueado || (bloqueoPorComputador() && !estaComputadorSeleccionado(e))"
+      >
         {{ estaEnCarrito(e.id) ? 'Quitar de la solicitud' : 'Agregar a la solicitud' }}
       </button>
 

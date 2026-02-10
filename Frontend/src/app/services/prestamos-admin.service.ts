@@ -59,6 +59,15 @@ extenderPrestamo(id: number, payload: { fecha: string; comentario?: string; equi
   return this.http.patch(`${this.apiUrl}/${id}/extender`, payload);
 }
 
+  actualizarEquiposPrestamo(
+    id: number,
+    payload: { equipos: Array<{ idTipoEquipo: number; cantidad: number }>; motivo?: string | null }
+  ) {
+    return this.http.patch(`${this.apiUrl}/${id}/equipos`, payload, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
 //devolverEquipo(idPrestamo: number, idEquipo: number, motivo: string) {
  // return this.http.patch(`${this.apiUrl}/prestamos/${idPrestamo}/devolver-equipo/${idEquipo}`, {
   //  motivo

@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Prestamo;
 use App\Models\BloquePrestamo;
 use App\Models\Asignatura;
+use App\Models\BloqueoHorario;
 use App\Services\PrestamoService;
+use Carbon\Carbon;
 
 class PrestamoController extends Controller
 {
@@ -31,7 +33,8 @@ class PrestamoController extends Controller
                     'bloquePrestamo.bloque',
                     'bloquePrestamo.asignatura',
                     'observaciones' => function($query) {
-                        $query->where('tipo', 'EXTENSION')->orderBy('created_at', 'desc');
+                        $query->whereIn('tipo', ['EXTENSION', 'AJUSTE_EQUIPOS'])
+                            ->orderBy('created_at', 'desc');
                     }
                 ])
                 ->where('idUser', $user->idUser)
@@ -40,6 +43,9 @@ class PrestamoController extends Controller
                 ->map(function($prestamo) {
                     $prestamo->tiene_extension = $prestamo->observaciones->isNotEmpty();
                     $prestamo->ultima_extension = $prestamo->observaciones->first();
+                    $prestamo->ajuste_equipos = $prestamo->observaciones
+                        ->where('tipo', 'AJUSTE_EQUIPOS')
+                        ->first();
                     return $prestamo;
                 });
 
@@ -86,6 +92,28 @@ class PrestamoController extends Controller
                 }
             }
 
+            if ($request->tipo === 'DENTRO' && $user && $user->hasRole('ALUMNO')) {
+                $tiposSolicitados = $service->obtenerTiposSolicitados($request->equipos ?? []);
+                $bloques = $request->bloques ?? [];
+
+                if (!empty($tiposSolicitados) && !empty($bloques)) {
+                    $diaSemana = Carbon::now()->dayOfWeekIso; // 1 = Lunes, 7 = Domingo
+
+                    $existeBloqueo = BloqueoHorario::where('activo', true)
+                        ->where('dia_semana', $diaSemana)
+                        ->whereIn('idBloque', $bloques)
+                        ->whereIn('idTipoEquipo', $tiposSolicitados)
+                        ->exists();
+
+                    if ($existeBloqueo) {
+                        return response()->json([
+                            'error' => 'BLOQUEO_HORARIO',
+                            'message' => 'Hay equipos bloqueados para este bloque y dia. Elige otro horario o equipo.'
+                        ], 422);
+                    }
+                }
+            }
+
             // Obtener asignatura - puede venir como nombre o como ID
             $asignaturaInput = $request->asignatura;
             $asignaturaId = null;
@@ -101,13 +129,15 @@ class PrestamoController extends Controller
                 $asignaturaId = Asignatura::whereRaw('LOWER(nombre) = ?', [mb_strtolower(trim($asignaturaInput))])->value('idAsignatura');
             }
 
+            $estadoInicial = ($user && $user->hasRole('ALUMNO')) ? 'PENDIENTE' : 'APROBADO';
+
             $prestamo = $service->crearPrestamo([
                 'idUser'       => $user->idUser,
                 'fecha_inicio' => $request->fecha_inicio,
                 'fecha_fin'    => $request->fecha_fin,
                 'otra_motivo'  => $request->motivo,
                 'tipo'         => $request->tipo,
-                'estado'       => 'PENDIENTE',
+                'estado'       => $estadoInicial,
                 'observacion'  => $request->observacion,
             ]);
 
