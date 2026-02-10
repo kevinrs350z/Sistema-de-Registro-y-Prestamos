@@ -1,46 +1,133 @@
-/* ======== NAVBAR GENERAL ======== */
-.navbar-admin {
-  width: 100%;
-  background-color: #446BA9; /* Azul institucional */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 40px;
+/* ==========================
+   NAVBAR ADMIN - ESTILO ALUMNO
+========================== */
+.navbar-uta {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
   z-index: 1100;
-  box-shadow: 0 8px 22px rgba(2, 6, 23, 0.22);
-  border-bottom: 1px solid rgba(145, 181, 232, 0.24);
-  font-family: "Poppins", sans-serif;
+  height: 72px;
+  font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
 }
 
-/* ======== LADO IZQUIERDO ======== */
-.nav-left {
-  position: relative;
+.navbar-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      105deg,
+      rgba(45, 27, 78, 0.97) 0%,
+      rgba(58, 35, 95, 0.95) 25%,
+      rgba(74, 44, 122, 0.93) 50%,
+      rgba(55, 40, 100, 0.94) 75%,
+      rgba(35, 30, 90, 0.96) 100%
+    ),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200"><defs><radialGradient id="node" cx="50%25" cy="50%25" r="50%25"><stop offset="0%25" style="stop-color:rgba(255,255,255,0.12)"/><stop offset="100%25" style="stop-color:rgba(255,255,255,0)"/></radialGradient></defs><rect fill="%232d1b4e" width="1200" height="200"/><g stroke="rgba(255,255,255,0.06)" stroke-width="1" fill="none"><line x1="50" y1="40" x2="180" y2="90"/><line x1="180" y1="90" x2="320" y2="50"/><line x1="320" y1="50" x2="450" y2="120"/><line x1="450" y1="120" x2="600" y2="70"/><line x1="600" y1="70" x2="750" y2="130"/><line x1="750" y1="130" x2="900" y2="60"/><line x1="900" y1="60" x2="1050" y2="100"/><line x1="1050" y1="100" x2="1180" y2="45"/><line x1="100" y1="160" x2="250" y2="110"/><line x1="250" y1="110" x2="400" y2="170"/><line x1="400" y1="170" x2="550" y2="100"/><line x1="550" y1="100" x2="700" y2="160"/><line x1="700" y1="160" x2="850" y2="90"/><line x1="850" y1="90" x2="1000" y2="150"/><line x1="1000" y1="150" x2="1150" y2="80"/><line x1="180" y1="90" x2="250" y2="110"/><line x1="450" y1="120" x2="400" y2="170"/><line x1="600" y1="70" x2="550" y2="100"/><line x1="750" y1="130" x2="700" y2="160"/><line x1="900" y1="60" x2="850" y2="90"/><line x1="320" y1="50" x2="250" y2="110"/><line x1="600" y1="70" x2="700" y2="160"/></g><g fill="url(%23node)"><circle cx="50" cy="40" r="8"/><circle cx="180" cy="90" r="10"/><circle cx="320" cy="50" r="7"/><circle cx="450" cy="120" r="9"/><circle cx="600" cy="70" r="11"/><circle cx="750" cy="130" r="8"/><circle cx="900" cy="60" r="10"/><circle cx="1050" cy="100" r="7"/><circle cx="1180" cy="45" r="9"/><circle cx="100" cy="160" r="7"/><circle cx="250" cy="110" r="9"/><circle cx="400" cy="170" r="8"/><circle cx="550" cy="100" r="10"/><circle cx="700" cy="160" r="7"/><circle cx="850" cy="90" r="9"/><circle cx="1000" cy="150" r="8"/><circle cx="1150" cy="80" r="10"/></g><g fill="rgba(255,255,255,0.04)"><circle cx="200" cy="30" r="60"/><circle cx="600" cy="150" r="80"/><circle cx="1000" cy="40" r="50"/></g></svg>');
+  background-size: cover, 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
+.navbar-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 60px;
+  width: 100%;
 }
 
-/* Botón hamburguesa */
-.icon-btn {
-  width: 44px;
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-uta {
   height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-carrera {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.navbar-admin-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+}
+
+.nav-logout {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.nav-logout:hover {
+  color: #fca5a5;
+}
+
+.nav-separator {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  margin: 0 4px;
+  user-select: none;
+}
+
+.nav-user-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.navbar-toggler {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 16px;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+  transition: background 0.2s ease;
 }
 
-.icon-btn span {
+.navbar-toggler:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.toggler-icon {
+  display: block;
   width: 20px;
   height: 2px;
   background: #ffffff;
@@ -48,123 +135,91 @@
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-.icon-btn:hover {
-  border-color: #F5A474;
-  box-shadow: 0 0 0 2px rgba(245, 164, 116, 0.35);
-  transform: translateY(-2px);
+.menu-open .navbar-toggler .toggler-icon:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
 }
 
-/* Menú desplegable */
-.menu-dropdown {
+.menu-open .navbar-toggler .toggler-icon:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-open .navbar-toggler .toggler-icon:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.navbar-collapse {
   position: absolute;
-  top: 60px;
-  left: 0;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  display: flex;
+  top: 72px;
+  right: 24px;
+  display: none;
   flex-direction: column;
-  min-width: 150px;
-  max-width: 185px;
-  overflow: hidden;
-  z-index: 10000;
+  padding: 18px 22px;
+  width: min(440px, 50vw);
+  background: linear-gradient(
+    180deg,
+    rgba(45, 27, 78, 0.98) 0%,
+    rgba(74, 44, 122, 0.98) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
 }
 
-.home-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.12);
+.navbar-collapse.show {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  animation: slideDown 0.25s ease;
+}
+
+.nav-link-mobile {
+  display: block;
+  padding: 14px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+  transition: color 0.2s ease;
 }
 
-.home-btn:hover {
-  border-color: #F5A474;
-  box-shadow: 0 0 0 2px rgba(245, 164, 116, 0.35);
-  transform: translateY(-2px);
+.nav-link-mobile:last-of-type {
+  border-bottom: none;
 }
 
-.home-btn i {
-  font-size: 22px;
+.nav-link-mobile:hover {
   color: #ffffff;
 }
-.menu-dropdown button {
-  border: none;
-  background: none;
-  padding: 10px 14px;
-  text-align: left;
-  font-weight: 600;
-  color: #446BA9;
-  cursor: pointer;
-  transition: background 0.2s ease;
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.menu-dropdown button:hover {
-  background-color: #EAF1FB;
-}
-
-/* ======== CENTRO ======== */
-.nav-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.brand {
-  color: #fff;
-  font-weight: 700;
-  font-size: 20px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-/* ======== DERECHA ======== */
-.nav-right {
-  display: flex;
-  align-items: center;
-}
-
-.btn-logout {
-  background-color: #F5A474;
-  color: white;
-  border: none;
-  font-weight: 600;
-  padding: 10px 22px;
-  border-radius: 12px;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
-}
-
-.btn-logout:hover {
-  background-color: #91B5E8;
-  transform: translateY(-3px);
-}
-
-/* ======== RESPONSIVE ======== */
 @media (max-width: 768px) {
-  .navbar-admin {
-    flex-direction: column;
-    padding: 16px 20px;
-    gap: 10px;
+  .navbar-content {
+    padding: 0 20px;
   }
 
-  .nav-center {
-    justify-content: center;
+  .navbar-admin-tools {
+    gap: 8px;
   }
 
-  .brand {
-    font-size: 17px;
+  .nav-user-name {
+    display: none;
   }
 
-  .btn-logout {
-    padding: 9px 18px;
-    font-size: 14px;
+  .navbar-collapse {
+    right: 12px;
+    width: min(92vw, 420px);
   }
 }

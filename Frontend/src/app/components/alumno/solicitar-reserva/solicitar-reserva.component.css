@@ -27,7 +27,7 @@
 
 /* === FORMULARIO === */
 .formulario {
-  flex: 0 0 68%;
+  flex: 0 0 100%;
   background: #ffffff;
   border-radius: var(--radio-2);
   padding: 2rem 2.8rem;
@@ -69,17 +69,45 @@
   gap: 4px;
 }
 
-.chip-resumen {
-  display: none; /* se activa solo en móvil */
-  align-self: flex-start;
-  border: 1.5px solid var(--borde);
-  background: #ffffff;
-  color: var(--azul);
-  border-radius: 999px;
-  padding: 0.55rem 0.9rem;
-  font-weight: 600;
-  font-size: 0.9rem;
+.tipo-solicitud .tipo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 0.6rem;
+}
+
+.tipo-solicitud .tipo-option {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1.5px solid #d8e2ff;
+  background: #f8faff;
   cursor: pointer;
+  transition: border 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.tipo-solicitud .tipo-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tipo-solicitud .tipo-option:has(input:checked) {
+  border-color: var(--azul-2);
+  box-shadow: 0 8px 18px rgba(90, 121, 255, 0.16);
+  background: #f0f4ff;
+  transform: translateY(-1px);
+}
+
+.tipo-solicitud .tipo-title {
+  font-weight: 700;
+  color: #2f3f88;
+}
+
+.tipo-solicitud .tipo-sub {
+  font-size: 0.85rem;
+  color: #6b7280;
 }
 
 /* === TARJETAS === */
@@ -227,27 +255,6 @@ button.ghost {
   border: 1.5px solid #b3c1ff;
 }
 
-/* === RESUMEN DESKTOP === */
-.resumen {
-  flex: 0 0 30%;
-  background: #f9fbff;
-  border: 1.5px solid #c7d3ff;
-  border-radius: 20px;
-  padding: 1.8rem 1.6rem;
-  box-shadow: 0 6px 14px rgba(80, 110, 255, 0.08);
-}
-
-.resumen h3 {
-  color: #2e3f8a;
-  font-weight: 700;
-}
-
-.resumen hr {
-  margin: 1.3rem 0;
-  height: 1px;
-  background: #d9e1ff;
-  border: none;
-}
 
 /* === BLOQUES HORARIOS === */
 .bloques-grid {
@@ -362,16 +369,6 @@ button.ghost {
 }
 
 /* === OVERLAY (RESUMEN MÓVIL) - EXTRA UI === */
-.overlay-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.8rem;
-}
-
-.overlay-close {
-  background: #f2f4ff;
 .alert-bloqueo {
   margin-top: 12px;
   padding: 12px 14px;
@@ -389,33 +386,6 @@ button.ghost {
   font-size: 0.85rem;
   color: #7f1d1d;
 }
-  color: var(--azul);
-  border: 1px solid var(--borde);
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  padding: 0;
-}
-
-/* === OVERLAY (RESUMEN MÓVIL) === */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(30, 40, 80, 0.35);
-  display: flex;
-  align-items: flex-end;
-  z-index: 999;
-}
-
-.overlay-card {
-  width: 100%;
-  max-height: 85vh;
-  background: #ffffff;
-  border-radius: 18px 18px 0 0;
-  padding: 1.4rem;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease;
-}
 
 /* === RESPONSIVE === */
 @media (max-width: 1024px) {
@@ -424,8 +394,7 @@ button.ghost {
     padding: 2rem;
   }
 
-  .formulario,
-  .resumen {
+  .formulario {
     width: 100%;
   }
 }
@@ -451,9 +420,6 @@ button.ghost {
     font-size: 0.9rem;
   }
 
-  .chip-resumen {
-    display: inline-flex;
-  }
 
   .card,
   .card-datos {
@@ -522,9 +488,8 @@ button.ghost {
     border-radius: 14px;
   }
 
-  /* 🔥 OCULTAMOS RESUMEN DESKTOP */
-  .resumen {
-    display: none;
+  .tipo-solicitud .tipo-grid {
+    grid-template-columns: 1fr;
   }
 }
 

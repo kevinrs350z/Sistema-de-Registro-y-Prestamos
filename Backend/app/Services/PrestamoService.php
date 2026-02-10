@@ -335,6 +335,11 @@ class PrestamoService
         return $conteo;
     }
 
+    public function obtenerTiposSolicitados(array $equipos): array
+    {
+        return array_keys($this->construirConteoSolicitado($equipos));
+    }
+
     private function obtenerConteosActivosPorUsuario(array $userIds): array
     {
         $estadosActivos = [

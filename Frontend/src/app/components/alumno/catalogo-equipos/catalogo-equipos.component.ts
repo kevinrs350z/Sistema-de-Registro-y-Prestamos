@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { AuthService } from '../../../services/auth.service';
 import { Pack } from '../../../models/pack.model';
 import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
 import { CarritoService } from '../../../services/carrito.service';
@@ -23,6 +24,7 @@ export class CatalogoEquiposComponent {
   private carritoSrv = inject(CarritoService);
   private notify = inject(NotificationService);
   private imagenSrv = inject(ImagenService);
+  private auth = inject(AuthService);
   private readonly formatoDisponibilidad = new Intl.DateTimeFormat('es-CL', {
     dateStyle: 'short',
     timeStyle: 'short'
@@ -50,6 +52,7 @@ export class CatalogoEquiposComponent {
   );
 
   bloqueoPorComputador = computed(() => this.computadoresEnCarrito().length > 0);
+  esAdmin = this.auth.isAdmin();
 
   // ===========================
   // INIT
@@ -186,16 +189,18 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
-    if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
-      this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
-      return;
-    }
-    if (e.bloqueado && delta > 0) {
-      this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
-      return;
-    }
-    if (delta > 0 && !this.puedeAgregarCantidad(e, delta)) {
-      return;
+    if (!this.esAdmin) {
+      if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+        this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
+        return;
+      }
+      if (e.bloqueado && delta > 0) {
+        this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
+        return;
+      }
+      if (delta > 0 && !this.puedeAgregarCantidad(e, delta)) {
+        return;
+      }
     }
     if (e.stock <= 0 && delta > 0) {
       this.notify.warning('Este equipo está agotado.');
@@ -247,16 +252,18 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
-    if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
-      this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
-      return;
-    }
-    if (e.bloqueado) {
-      this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
-      return;
-    }
-    if (!this.estaEnCarrito(idTipo) && !this.puedeAgregarCantidad(e, 1)) {
-      return;
+    if (!this.esAdmin) {
+      if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+        this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
+        return;
+      }
+      if (e.bloqueado) {
+        this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
+        return;
+      }
+      if (!this.estaEnCarrito(idTipo) && !this.puedeAgregarCantidad(e, 1)) {
+        return;
+      }
     }
     if (e.stock <= 0) {
       this.notify.warning('Este equipo está agotado.');
@@ -272,7 +279,7 @@ export class CatalogoEquiposComponent {
       return;
     }
 
-    if (this.esComputador(e)) {
+    if (!this.esAdmin && this.esComputador(e)) {
       const otros = actual.filter(c => c.tipo !== 'equipo' || c.idTipoEquipo !== idTipo);
       if (otros.length > 0) {
         this.notify.info('Se removieron otros equipos porque seleccionaste un computador condicional.');
@@ -289,7 +296,7 @@ export class CatalogoEquiposComponent {
       equiposSeleccionados: []
     };
 
-    if (this.esComputador(e)) {
+    if (!this.esAdmin && this.esComputador(e)) {
       this.carritoSrv.setCarrito([nuevo]);
     } else {
       this.carritoSrv.setCarrito([...actual, nuevo]);
@@ -297,6 +304,9 @@ export class CatalogoEquiposComponent {
   }
 
   private puedeAgregarCantidad(e: TipoEquipo, delta: number): boolean {
+    if (this.esAdmin) {
+      return true;
+    }
     const maximo = typeof e.maximo_prestamo === 'number' ? e.maximo_prestamo : null;
     if (maximo === null) {
       return true;

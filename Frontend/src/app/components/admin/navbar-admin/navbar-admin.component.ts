@@ -28,12 +28,6 @@ export class NavbarAdminComponent {
   navegarInterno(seccion: string) {
     this.menuAbierto = false;
 
-    // Ruta directa para gestionar grupos (fuera del dashboard embebido)
-    if (seccion === 'gestionar-grupos') {
-      this.router.navigate(['/admin/gestionar-grupos']);
-      return;
-    }
-
     // Si estamos en el dashboard, usar eventos
     if (this.router.url === '/admin/dashboard' || this.router.url.startsWith('/admin/dashboard')) {
       window.dispatchEvent(
@@ -56,6 +50,29 @@ export class NavbarAdminComponent {
   irReportes() {
     this.menuAbierto = false;
     this.router.navigate(['/admin/reportes']);
+  }
+
+  irCrearSolicitud() {
+    this.menuAbierto = false;
+    this.router.navigate(['/equipos/catalogo']);
+  }
+
+  irBloqueosHorario() {
+    this.menuAbierto = false;
+    this.router.navigate(['/admin/bloqueos-horario']);
+  }
+
+  getUserId(): string {
+    try {
+      const raw = sessionStorage.getItem('user');
+      if (raw) {
+        const user = JSON.parse(raw);
+        return user?.rut || user?.codigo || user?.email?.split('@')[0] || 'Usuario';
+      }
+    } catch {
+      // ignore
+    }
+    return 'Usuario';
   }
 
   cerrarSesion() {

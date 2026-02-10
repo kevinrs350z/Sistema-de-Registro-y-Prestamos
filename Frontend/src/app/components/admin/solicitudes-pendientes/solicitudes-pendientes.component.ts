@@ -5,6 +5,7 @@ import { SolicitudEquipo } from '../../../shared/models';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ImagenService } from '../../../services/image.service';
+import { TipoEquipoService } from '../../../services/tipoEquipo.service';
 
 type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
@@ -13,7 +14,7 @@ type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   fechaInicio?: string | null;
   fechaFin?: string | null;
   observacion?: string;
-  equipos?: { codigo: string; nombre: string; imagen?: string }[];
+  equipos?: { id?: number; codigo: string; nombre: string; imagen?: string; tipoEquipoId?: number }[];
   integrantes?: { idUser: number; nombre: string; email: string }[];
   motivoAprobacion?: string;
   estudiante?: string;
@@ -32,22 +33,41 @@ export class SolicitudesPendientesComponent implements OnInit {
 
   private notify = inject(NotificationService);
   private imagenSrv = inject(ImagenService);
+  private tiposSrv = inject(TipoEquipoService);
 
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
 
   motivoRechazo = '';
   mostrarModal = false;
+  mostrarEditarModal = false;
   filtroBusqueda = '';
   orden: 'recientes' | 'antiguas' = 'recientes';
   paginaPendientes = 1;
   paginaPendientesEntrega = 1;
   tamanioPagina = 6;
 
+  tiposEquipo: any[] = [];
+  editarEquipos: { idTipoEquipo: number; nombre: string; cantidad: number; stock?: number }[] = [];
+  tipoAgregar: number | null = null;
+  cantidadAgregar = 1;
+  motivoAjuste = '';
+
   constructor(private prestamosAdmin: PrestamosAdminService) {}
 
   ngOnInit(): void {
+    this.cargarTipos();
     this.cargarSolicitudes();
+  }
+
+  private cargarTipos() {
+    this.tiposSrv.getTipos().subscribe({
+      next: (data) => {
+        this.tiposEquipo = data || [];
+        this.tipoAgregar = this.tiposEquipo[0]?.id ?? null;
+      },
+      error: () => this.notify.error('No se pudieron cargar los tipos de equipo.')
+    });
   }
 
   cargarSolicitudes() {
@@ -62,9 +82,11 @@ export class SolicitudesPendientesComponent implements OnInit {
                   return { codigo: '—', nombre: eq, imagen: null };
                 }
                 return {
+                  id: eq.id,
                   codigo: eq.codigo_activo ?? eq.codigo ?? '—',
                   nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
-                  imagen: this.imagenSrv.getStorageImage(eq.imagen) ?? null
+                  imagen: this.imagenSrv.getStorageImage(eq.imagen) ?? null,
+                  tipoEquipoId: eq.tipo_equipo_id
                 };
               })
             : [];
@@ -183,6 +205,97 @@ export class SolicitudesPendientesComponent implements OnInit {
     this.mostrarModal = true;
   }
 
+  abrirEditarEquipos() {
+    if (!this.solicitudSeleccionada) return;
+    if (this.solicitudSeleccionada.estado !== 'PENDIENTE') {
+      this.notify.warning('Solo solicitudes pendientes pueden editarse.');
+      return;
+    }
+
+    const conteo = new Map<number, number>();
+    (this.solicitudSeleccionada.equipos || []).forEach((eq: any) => {
+      if (!eq.tipoEquipoId) return;
+      const actual = conteo.get(eq.tipoEquipoId) ?? 0;
+      conteo.set(eq.tipoEquipoId, actual + 1);
+    });
+
+    this.editarEquipos = Array.from(conteo.entries()).map(([idTipoEquipo, cantidad]) => {
+      const tipo = this.tiposEquipo.find(t => t.id === idTipoEquipo);
+      return {
+        idTipoEquipo,
+        nombre: tipo?.nombre ?? 'Equipo',
+        cantidad,
+        stock: tipo?.stock ?? undefined
+      };
+    });
+
+    this.cantidadAgregar = 1;
+    this.motivoAjuste = '';
+    this.mostrarEditarModal = true;
+  }
+
+  cerrarEditarModal() {
+    this.mostrarEditarModal = false;
+    this.editarEquipos = [];
+    this.motivoAjuste = '';
+  }
+
+  agregarTipo() {
+    if (!this.tipoAgregar || this.cantidadAgregar < 1) return;
+    const tipo = this.tiposEquipo.find(t => t.id === this.tipoAgregar);
+    if (!tipo) return;
+
+    const existente = this.editarEquipos.find(e => e.idTipoEquipo === tipo.id);
+    if (existente) {
+      existente.cantidad += this.cantidadAgregar;
+    } else {
+      this.editarEquipos.push({
+        idTipoEquipo: tipo.id,
+        nombre: tipo.nombre,
+        cantidad: this.cantidadAgregar,
+        stock: tipo?.stock ?? undefined
+      });
+    }
+    this.cantidadAgregar = 1;
+  }
+
+  confirmarEditarEquipos() {
+    if (!this.solicitudSeleccionada) return;
+
+    const equipos = this.editarEquipos
+      .filter(e => e.cantidad > 0)
+      .map(e => ({ idTipoEquipo: e.idTipoEquipo, cantidad: e.cantidad }));
+
+    if (equipos.length === 0) {
+      this.notify.warning('Debes mantener al menos un equipo.');
+      return;
+    }
+
+    const excedidos = this.editarEquipos.filter(e =>
+      typeof e.stock === 'number' && e.stock >= 0 && e.cantidad > e.stock
+    );
+    if (excedidos.length > 0) {
+      const nombres = excedidos.map(e => e.nombre).join(', ');
+      this.notify.error(`Stock insuficiente para: ${nombres}.`);
+      return;
+    }
+
+    this.prestamosAdmin.actualizarEquiposPrestamo(this.solicitudSeleccionada.id!, {
+      equipos,
+      motivo: this.motivoAjuste?.trim() || null
+    }).subscribe({
+      next: () => {
+        this.notify.success('Solicitud actualizada correctamente.');
+        this.cerrarEditarModal();
+        this.cargarSolicitudes();
+      },
+      error: (err: any) => {
+        console.error('Error actualizando solicitud:', err);
+        this.notify.error(err?.error?.message || 'No se pudo actualizar la solicitud.');
+      }
+    });
+  }
+
   aprobarSolicitud(id?: number) {
     const solicitudId = id ?? this.solicitudSeleccionada?.id;
     if (!solicitudId) {
@@ -259,6 +372,15 @@ confirmarRechazo() {
       },
       error: (err: any) => console.error('Error al marcar como entregado:', err),
     });
+  }
+
+  getStockTipo(idTipoEquipo: number): number | null {
+    const tipo = this.tiposEquipo.find(t => t.id === idTipoEquipo);
+    return typeof tipo?.stock === 'number' ? tipo.stock : null;
+  }
+
+  getNombreTipo(idTipoEquipo: number): string {
+    return this.tiposEquipo.find(t => t.id === idTipoEquipo)?.nombre ?? 'Equipo';
   }
 
   getEstadoTexto(estado?: string): string {

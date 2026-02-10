@@ -12,7 +12,6 @@
 
       <div class="botones-header">
         <button class="btn-crear" type="button" (click)="toggleAsignar()">Asignar sanción</button>
-        <button class="btn-crear" type="button" (click)="toggleRegistrar()">Registrar sanción</button>
         <button class="btn-outline" type="button" (click)="exportarCsv()">Exportar CSV</button>
         <button class="btn-outline" type="button" (click)="exportarExcel()">Exportar Excel</button>
       </div>
@@ -125,23 +124,6 @@
         <button class="btn-azul" type="button" (click)="guardarEdicion()">Guardar</button>
         <button class="btn-cancelar" type="button" (click)="toggleEditarSancion()">Cancelar</button>
       </div>
-    </div>
-  </div>
-
-  <!-- FORMULARIO REGISTRAR (CORREGIDO CON ESTILO PANEL) -->
-  <div class="detalle" *ngIf="formularioVisible">
-    <h2>Registrar Nueva Sanción</h2>
-
-    <div class="detalle-grid">
-      <div class="col-100">
-        <label>Nombre del tipo de sanción</label>
-        <input type="text" [(ngModel)]="nuevoTipo">
-      </div>
-    </div>
-
-    <div style="display:flex; gap:8px; align-items:center">
-      <button class="btn-azul" type="button" (click)="registrarTipo()">Registrar</button>
-      <button type="button" class="btn-cancelar" (click)="cancelarRegistrar()">Cancelar</button>
     </div>
   </div>
 
@@ -264,7 +246,7 @@
 
     <div class="acciones-asignar">
       <button class="btn-azul" type="button"
-              [disabled]="!asignarUsuario.trim() || !asignarTipo || !asignarInicio || !asignarFin || tiposSancion.length === 0"
+              [disabled]="tiposSancion.length === 0"
               (click)="asignarSancion()">
         Asignar sanción
       </button>

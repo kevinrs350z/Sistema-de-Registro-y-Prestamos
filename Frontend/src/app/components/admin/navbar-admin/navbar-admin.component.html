@@ -1,65 +1,77 @@
-<nav class="navbar-admin">
+<nav class="navbar-uta admin-navbar" [class.menu-open]="menuAbierto">
+  <div class="navbar-bg"></div>
 
-  <div class="nav-left">
-
-    <button class="icon-btn" (click)="toggleMenu()" aria-label="Menú">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-
-    <button class="home-btn" (click)="navegarInterno('gestionar')" aria-label="Inicio" title="Inicio">
-      <i class="bi bi-house-door-fill"></i>
-    </button>
-
-    <!-- MENU LATERAL -->
-    <div class="menu-dropdown" *ngIf="menuAbierto">
-
-      <button (click)="navegarInterno('gestionar')">
-        Gestionar
-      </button>
-
-      <button (click)="navegarInterno('solicitudes')">
-        Solicitudes pendientes
-      </button>
-
-      <button (click)="navegarInterno('finalizadas')">
-        Solicitudes finalizadas
-      </button>
-
-      <button (click)="navegarInterno('inventario')">
-        Inventario
-      </button>
-
-      <button (click)="navegarInterno('cuentas')">
-        Cuentas
-      </button>
-
-      <button (click)="navegarInterno('asignaturas')">
-        Asignaturas / Eventos
-      </button>
-
-        <button (click)="navegarInterno('gestionar-grupos')">
-          Gestionar grupos
-        </button>
-
-      <button *ngIf="auth.isAdmin()" (click)="irReportes()">
-        Reportes
-      </button>
-
-
+  <div class="navbar-content">
+    <div class="navbar-brand">
+      <img
+        src="assets/logo-uta-white.png"
+        alt="Universidad de Tarapacá"
+        class="logo-uta"
+      />
+      <img
+        src="assets/logo-carrera-white.png"
+        alt="Diseño Multimedia"
+        class="logo-carrera"
+      />
     </div>
 
+    <div class="navbar-admin-tools">
+      <button
+        type="button"
+        class="navbar-toggler"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="menuAbierto"
+        aria-label="Abrir menú"
+      >
+        <span class="toggler-icon"></span>
+        <span class="toggler-icon"></span>
+        <span class="toggler-icon"></span>
+      </button>
+
+      <span class="nav-separator">|</span>
+      <span class="nav-user-name">{{ getUserId() }}</span>
+      <a
+        href="javascript:void(0)"
+        class="nav-link nav-logout"
+        (click)="cerrarSesion()"
+      >
+        <i class="bi bi-box-arrow-right"></i>
+        Salir
+      </a>
+    </div>
   </div>
 
-  <div class="nav-center">
-    <span class="brand">Registro y Préstamos Diseño Multimedia</span>
-  </div>
-
-  <div class="nav-right">
-    <button class="btn-logout" (click)="cerrarSesion()">
-      <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+  <div class="navbar-collapse admin-menu" [class.show]="menuAbierto">
+    <button class="nav-link-mobile" (click)="navegarInterno('gestionar')">
+      Gestionar
+    </button>
+    <button class="nav-link-mobile" (click)="navegarInterno('solicitudes')">
+      Solicitudes pendientes
+    </button>
+    <button class="nav-link-mobile" (click)="navegarInterno('finalizadas')">
+      Solicitudes finalizadas
+    </button>
+    <button class="nav-link-mobile" (click)="navegarInterno('inventario')">
+      Inventario
+    </button>
+    <button class="nav-link-mobile" (click)="navegarInterno('cuentas')">
+      Cuentas
+    </button>
+    <button class="nav-link-mobile" (click)="navegarInterno('asignaturas')">
+      Asignaturas / Eventos
+    </button>
+    <button class="nav-link-mobile" (click)="irCrearSolicitud()">
+      Crear solicitud
+    </button>
+    <button class="nav-link-mobile" (click)="irBloqueosHorario()">
+      Bloqueos de horario
+    </button>
+    <button
+      class="nav-link-mobile"
+      *ngIf="auth.isAdmin()"
+      (click)="irReportes()"
+    >
+      Reportes
     </button>
   </div>
-
 </nav>

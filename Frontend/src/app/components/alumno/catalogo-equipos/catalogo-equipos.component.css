@@ -234,6 +234,41 @@
   cursor: pointer;
 }
 
+.cantidad-admin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 14px 16px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f3f6ff;
+  border: 1px solid #d7e0ff;
+}
+
+.cantidad-admin button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #446BA9;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cantidad-admin button:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.cantidad-valor {
+  font-weight: 700;
+  color: #1f2a44;
+  min-width: 18px;
+  text-align: center;
+}
+
 .pack .descripcion {
   color: #5a5a5a;
   font-size: 14px;

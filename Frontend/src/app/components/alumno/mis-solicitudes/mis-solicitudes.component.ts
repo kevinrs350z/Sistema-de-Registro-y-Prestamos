@@ -128,6 +128,8 @@ export class MisSolicitudesComponent implements OnInit {
             observacion: s.observacion ?? 'Sin observación',
             tieneExtension: s.tiene_extension ?? false,
             ultimaExtension: s.ultima_extension ?? null,
+            ajusteEquipos: s.ajuste_equipos?.descripcion ?? null,
+            tieneAjuste: !!s.ajuste_equipos?.descripcion,
 
             // 🔥 NORMALIZACIÓN CLAVE
             estado: (s.estado ?? 'PENDIENTE').toUpperCase(),

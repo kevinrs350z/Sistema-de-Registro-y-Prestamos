@@ -27,10 +27,6 @@
         </div>
       </div>
 
-      <!-- Chip resumen móvil -->
-      <button type="button" class="chip-resumen" (click)="abrirResumenMobile()">
-        Ver resumen · {{ resumen().cantidadEquipos }} equipos
-      </button>
     </header>
 
     <!-- 1) Datos del alumno -->
@@ -57,16 +53,20 @@
     </div>
 
     <!-- 2) Tipo de solicitud -->
-    <div class="card">
+    <div class="card tipo-solicitud">
       <h2>Tipo de solicitud</h2>
-      <label class="radio">
-        <input type="radio" value="DENTRO" formControlName="tipo_solicitud" />
-        Dentro de la universidad
-      </label>
-      <label class="radio">
-        <input type="radio" value="FUERA" formControlName="tipo_solicitud" />
-        Fuera de la universidad
-      </label>
+      <div class="tipo-grid">
+        <label class="tipo-option">
+          <input type="radio" value="DENTRO" formControlName="tipo_solicitud" />
+          <span class="tipo-title">Dentro de la universidad</span>
+          <span class="tipo-sub">Reserva dentro del laboratorio.</span>
+        </label>
+        <label class="tipo-option">
+          <input type="radio" value="FUERA" formControlName="tipo_solicitud" />
+          <span class="tipo-title">Fuera de la universidad</span>
+          <span class="tipo-sub">Salida autorizada con fechas.</span>
+        </label>
+      </div>
     </div>
 
     <!-- 3) Asignatura o motivo -->
@@ -367,65 +367,15 @@
     <!-- Acciones desktop -->
     <div class="actions actions-desktop">
       <button type="submit" [disabled]="bloqueado || !aceptaTerminos">Solicitar</button>
-      <button type="button" class="ghost" (click)="limpiar()">Limpiar</button>
     </div>
 
     <!-- Acciones móvil -->
     <div class="mobile-actions">
-      <button type="button" class="ghost" (click)="abrirResumenMobile()">
-        Resumen
-      </button>
       <button type="submit" class="primary" [disabled]="bloqueado || !aceptaTerminos">
         Solicitar
       </button>
     </div>
   </form>
-
-  <!-- ================= RESUMEN DESKTOP ================= -->
-  <aside class="resumen">
-    <h3>Resumen de solicitud</h3>
-
-    <div class="detalle">
-      <p><b>Estudiante:</b> {{ resumen().usuario }}</p>
-      <p><b>Tipo:</b> {{ resumen().tipo }}</p>
-      <p><b>Asignatura:</b> {{ asignaturaSeleccionada() }}</p>
-
-      <ng-container *ngIf="resumen().tipo === 'FUERA'; else dentro">
-        <p><b>Periodo:</b> {{ resumen().periodo }}</p>
-        <p><b>Bloques:</b> —</p>
-      </ng-container>
-
-      <ng-template #dentro>
-        <p><b>Periodo:</b> —</p>
-        <p><b>Bloques:</b> {{ resumen().bloquesTxt || '—' }}</p>
-      </ng-template>
-
-      <p><b>Observación:</b> {{ form.get('observacion')?.value || '—' }}</p>
-    </div>
-
-    <hr />
-
-    <div class="equipos-resumen-min" *ngIf="equiposResumen().length > 0; else sinEquiposDesk">
-      <div class="resumen-title">
-        Equipos seleccionados
-        <span class="resumen-count">
-          {{ equiposResumen().length }} · {{ totalUnidades() }} u.
-        </span>
-      </div>
-
-      <ul class="resumen-list list-unstyled m-0">
-        <li *ngFor="let e of equiposResumen()">
-          <span class="dot">•</span>
-          <span class="name">{{ e.nombre }}</span>
-          <span class="qty">x{{ e.cantidad }}</span>
-        </li>
-      </ul>
-    </div>
-
-    <ng-template #sinEquiposDesk>
-      <p class="vacio">Ningún equipo seleccionado.</p>
-    </ng-template>
-  </aside>
 </div>
 
 <!-- ================= MODAL PROTOCOLO (BORRADOR) ================= -->
@@ -454,76 +404,3 @@
   </div>
 </div>
 
-<!-- ================= RESUMEN MÓVIL ================= -->
-<div class="overlay" *ngIf="mostrarResumenMobile()" (click)="cerrarResumenMobile()">
-  <div class="overlay-card" (click)="$event.stopPropagation()">
-
-    <div class="overlay-head">
-      <h3>Resumen</h3>
-      <button type="button" class="overlay-close" (click)="cerrarResumenMobile()">✕</button>
-    </div>
-
-    <div class="detalle">
-      <p><b>Estudiante:</b> {{ resumen().usuario }}</p>
-      <p><b>Tipo:</b> {{ resumen().tipo }}</p>
-      <p><b>Asignatura:</b> {{ asignaturaSeleccionada() }}</p>
-
-      <ng-container *ngIf="resumen().tipo === 'FUERA'; else dentroMobile">
-        <p><b>Periodo:</b> {{ resumen().periodo }}</p>
-        <p><b>Bloques:</b> —</p>
-      </ng-container>
-
-      <ng-template #dentroMobile>
-        <p><b>Periodo:</b> —</p>
-        <p><b>Bloques:</b> {{ resumen().bloquesTxt || '—' }}</p>
-      </ng-template>
-
-      <p><b>Observación:</b> {{ form.get('observacion')?.value || '—' }}</p>
-    </div>
-
-    <hr />
-
-    <div class="equipos-card" *ngIf="equiposResumen().length > 0; else sinEquiposMobile">
-      <div class="equipos-header d-flex align-items-center">
-        <div class="icon-box">
-          <i class="bi bi-box-seam"></i>
-        </div>
-        <div>
-          <strong>Equipos seleccionados</strong>
-          <div class="equipos-sub">
-            {{ equiposSeleccionadosCount() }} equipos · {{ totalUnidades() }} unidades
-          </div>
-        </div>
-      </div>
-
-      <ul class="equipos-list list-unstyled m-0">
-        <li
-          *ngFor="let e of equiposResumen()"
-          class="equipos-item d-flex align-items-center justify-content-between"
-        >
-          <div class="d-flex align-items-center gap-3">
-            <div class="equipos-icon">
-              <i class="bi bi-camera"></i>
-            </div>
-            <div class="equipos-info">
-              <div class="equipos-nombre">{{ e.nombre }}</div>
-              <div class="equipos-cantidad">
-                Cantidad:
-                <span class="cantidad">{{ e.cantidad }}</span>
-              </div>
-            </div>
-          </div>
-        </li>
-      </ul>
-
-      <div class="equipos-footer d-flex justify-content-between">
-        <span class="muted">Total de equipos</span>
-        <strong>{{ totalUnidades() }} unidades</strong>
-      </div>
-    </div>
-
-    <ng-template #sinEquiposMobile>
-      <p class="vacio">No hay equipos seleccionados.</p>
-    </ng-template>
-  </div>
-</div>

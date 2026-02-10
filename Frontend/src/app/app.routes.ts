@@ -26,6 +26,7 @@ import { ReportesMantenimientosComponent } from './components/admin/reportes/rep
 import { ReportesEquiposComponent } from './components/admin/reportes/reportes-equipos/reportes-equipos.component';
 import { GestionarAsignaturasComponent } from './components/admin/asignaturas/gestionar-asignaturas.component';
 import { DashboardOperationalComponent } from './components/admin/reportes/dashboard-operational/dashboard-operational.component';
+import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -70,6 +71,7 @@ export const routes: Routes = [
   { path: 'admin/notificaciones', component: NotificacionesComponent },
 
   { path: 'admin/solicitudes', component: SolicitudesPendientesComponent },
+  { path: 'admin/bloqueos-horario', component: BloqueosHorarioComponent },
   {
     path: 'admin/reportes',
     component: ReportesComponent,
@@ -117,13 +119,6 @@ export const routes: Routes = [
       import('./components/admin/gestionar-packs/gestionar-packs.component')
         .then(m => m.GestionarPacksComponent)
   },
-
-    {
-      path: 'admin/gestionar-grupos',
-      loadComponent: () =>
-        import('./components/admin/grupos/grupos-admin.component')
-          .then(m => m.GruposAdminComponent)
-    },
 
   {
   path: 'admin/preguntas-frecuentes',

@@ -195,6 +195,9 @@
           <button class="btn-rechazar" (click)="abrirRechazo()">
             Rechazar
           </button>
+          <button class="btn-editar" (click)="abrirEditarEquipos()">
+            Editar equipos
+          </button>
         </ng-container>
 
         <ng-container *ngIf="sel.estado === 'APROBADO'">
@@ -228,6 +231,72 @@
           Confirmar
         </button>
         <button class="btn-cancelar" (click)="cerrarModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR EQUIPOS -->
+  <div class="modal" *ngIf="mostrarEditarModal">
+    <div class="modal-content modal-edicion">
+      <h4>Editar equipos de la solicitud</h4>
+
+      <div class="equipos-edicion" *ngIf="editarEquipos.length > 0">
+        <div class="equipo-row" *ngFor="let e of editarEquipos">
+          <div class="equipo-meta">
+            <span class="equipo-nombre">{{ e.nombre }}</span>
+            <span class="equipo-stock" [class.sin-stock]="e.stock === 0">
+              Stock: {{ e.stock ?? '—' }}
+            </span>
+          </div>
+          <div class="equipo-controls">
+            <input
+              type="number"
+              min="0"
+              [max]="e.stock ?? null"
+              [(ngModel)]="e.cantidad"
+            />
+            <span class="stock-alert" *ngIf="e.stock === 0">Sin stock</span>
+            <span class="stock-alert" *ngIf="e.stock !== undefined && e.cantidad > (e.stock ?? 0)">
+              Excede stock
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="equipos-edicion" *ngIf="editarEquipos.length === 0">
+        <p>No hay equipos cargados. Agrega nuevos equipos.</p>
+      </div>
+
+      <div class="agregar-equipo">
+        <select [(ngModel)]="tipoAgregar">
+          <option [ngValue]="null">Selecciona un tipo</option>
+          <option *ngFor="let t of tiposEquipo" [ngValue]="t.id">{{ t.nombre }}</option>
+        </select>
+        <input type="number" min="1" [(ngModel)]="cantidadAgregar" />
+        <button
+          type="button"
+          class="btn-agregar"
+          (click)="agregarTipo()"
+          [disabled]="!tipoAgregar || cantidadAgregar < 1 || getStockTipo(tipoAgregar) === 0"
+        >
+          Agregar
+        </button>
+      </div>
+
+      <div class="stock-ayuda" *ngIf="tipoAgregar as tipoId">
+        Stock disponible: {{ getStockTipo(tipoId) ?? '—' }}
+      </div>
+
+      <label>Motivo del ajuste</label>
+      <textarea rows="3" [(ngModel)]="motivoAjuste" placeholder="Describe el ajuste..."></textarea>
+
+      <div class="modal-actions">
+        <button class="btn-confirmar" (click)="confirmarEditarEquipos()">
+          Guardar cambios
+        </button>
+        <button class="btn-cancelar" (click)="cerrarEditarModal()">
           Cancelar
         </button>
       </div>

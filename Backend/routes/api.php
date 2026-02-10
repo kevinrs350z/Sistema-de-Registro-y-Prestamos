@@ -35,6 +35,7 @@ use App\Http\Controllers\Reportes\ReportesTendenciasController;
 use App\Http\Controllers\Reportes\ReportesAsignaturasController;
 use App\Http\Controllers\ReportesEquiposNormalizadosController;
 use App\Http\Controllers\AdminGrupoController;
+use App\Http\Controllers\BloqueoHorarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -121,6 +122,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
    # Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
     Route::post('/admin/prestamos/aprobar/{id}',[PrestamoAdminController::class, 'aprobar']);
     Route::post('/admin/prestamos/rechazar/{id}',[PrestamoAdminController::class, 'rechazar']);
+    Route::patch('/admin/prestamos/{id}/equipos', [PrestamoAdminController::class, 'actualizarEquipos']);
     Route::get('/equipos/{idEquipo}/historial', [EquipoController::class, 'historial']);
     Route::get('/admin/prestamos/pendientes', [PrestamoAdminController::class, 'verTodosLosPrestamos']);
     Route::patch('/admin/prestamos/{idPrestamo}/equipos/{idEquipo}/devolver',[PrestamoAdminController::class, 'devolverEquipo']);
@@ -134,6 +136,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::patch('/admin/sanciones/{id}/ampliar', [UserSancionController::class, 'ampliarSancion']);
     Route::patch('/admin/sanciones/{id}/quitar', [UserSancionController::class, 'quitarSancion']);
     Route::post('/admin/devolucion', [DevolucionAdminController::class, 'devolverEquipo']);
+
+    Route::get('/admin/bloqueos-horario', [BloqueoHorarioController::class, 'index']);
+    Route::post('/admin/bloqueos-horario', [BloqueoHorarioController::class, 'store']);
 
     Route::patch('/admin/alumnos/{id}/bloquear', [UsuarioController::class, 'bloquear']);
     Route::patch('/admin/alumnos/{id}/desbloquear', [UsuarioController::class, 'desbloquear']);
