@@ -6,6 +6,7 @@ import { PrestamosAdminService } from '../../../services/prestamos-admin.service
 import { NotificationService } from '../../../services/notification.service';
 import { ImagenService } from '../../../services/image.service';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { MotivosRechazoService } from '../../../services/motivos-rechazo.service';
 
 type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
@@ -39,14 +40,22 @@ export class SolicitudesPendientesComponent implements OnInit {
   solicitudSeleccionada: AdminSolicitud | null = null;
 
   motivoRechazo = '';
+  motivoObservacion = '';
   mostrarModal = false;
+<<<<<<< HEAD
   mostrarEditarModal = false;
+=======
+  motivos: any[] = [];
+  loadingRechazo = false;
+  errorRechazo = '';
+>>>>>>> 129987f (cambios en los reportes)
   filtroBusqueda = '';
   orden: 'recientes' | 'antiguas' = 'recientes';
   paginaPendientes = 1;
   paginaPendientesEntrega = 1;
   tamanioPagina = 6;
 
+<<<<<<< HEAD
   tiposEquipo: any[] = [];
   editarEquipos: { idTipoEquipo: number; nombre: string; cantidad: number; stock?: number }[] = [];
   tipoAgregar: number | null = null;
@@ -54,6 +63,12 @@ export class SolicitudesPendientesComponent implements OnInit {
   motivoAjuste = '';
 
   constructor(private prestamosAdmin: PrestamosAdminService) {}
+=======
+  constructor(
+    private prestamosAdmin: PrestamosAdminService,
+    private motivosSrv: MotivosRechazoService
+  ) {}
+>>>>>>> 129987f (cambios en los reportes)
 
   ngOnInit(): void {
     this.cargarTipos();
@@ -203,6 +218,18 @@ export class SolicitudesPendientesComponent implements OnInit {
 
   abrirRechazo() {
     this.mostrarModal = true;
+    this.loadingRechazo = true;
+    this.errorRechazo = '';
+    this.motivosSrv.getMotivos().subscribe({
+      next: (data) => {
+        this.motivos = data;
+        this.loadingRechazo = false;
+      },
+      error: (err) => {
+        this.errorRechazo = 'Error al cargar motivos.';
+        this.loadingRechazo = false;
+      }
+    });
   }
 
   abrirEditarEquipos() {
@@ -313,34 +340,43 @@ export class SolicitudesPendientesComponent implements OnInit {
       });
   }
 
-confirmarRechazo() {
-  if (!this.solicitudSeleccionada) return;
-  if (this.motivoRechazo.trim() === '') {
-    this.notify.warning('Debes ingresar un motivo para el rechazo.');
-    return;
+  confirmarRechazo() {
+    if (!this.solicitudSeleccionada) return;
+    if (!this.motivoRechazo) {
+      this.notify.warning('Debes seleccionar un motivo para el rechazo.');
+      return;
+    }
+    this.loadingRechazo = true;
+    this.errorRechazo = '';
+    const motivoFinal = this.motivoRechazo + (this.motivoObservacion ? ' - ' + this.motivoObservacion : '');
+    this.prestamosAdmin
+      .rechazarPrestamo(
+        this.solicitudSeleccionada.id!,
+        motivoFinal,
+        'rechazar'
+      )
+      .subscribe({
+        next: () => {
+          this.notify.success('Solicitud rechazada correctamente.');
+          this.cargarSolicitudes();
+          this.cerrarModal();
+          this.loadingRechazo = false;
+        },
+        error: (err) => {
+          this.errorRechazo = 'Error al rechazar solicitud.';
+          this.loadingRechazo = false;
+        }
+      });
   }
-
-  this.prestamosAdmin
-    .rechazarPrestamo(
-      this.solicitudSeleccionada.id!,
-      this.motivoRechazo,
-      'rechazar'
-    )
-    .subscribe({
-      next: () => {
-        this.notify.success('Solicitud rechazada correctamente.');
-        this.cargarSolicitudes();
-        this.cerrarModal();
-      },
-      error: (err) => console.error('Error al rechazar:', err)
-    });
-}
 
 
   cerrarModal() {
     this.mostrarModal = false;
     this.motivoRechazo = '';
+    this.motivoObservacion = '';
     this.solicitudSeleccionada = null;
+    this.loadingRechazo = false;
+    this.errorRechazo = '';
   }
 
   formatearFecha(f: string): string {

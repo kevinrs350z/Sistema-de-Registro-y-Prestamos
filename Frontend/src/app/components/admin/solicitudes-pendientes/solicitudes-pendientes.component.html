@@ -219,18 +219,22 @@
   <div class="modal" *ngIf="mostrarModal">
     <div class="modal-content modal-rechazo">
       <h4>Motivo del rechazo</h4>
-
-      <textarea
-        [(ngModel)]="motivoRechazo"
-        rows="3"
-        placeholder="Ingrese el motivo..."
-      ></textarea>
-
+      <div *ngIf="loadingRechazo" class="loader">Cargando motivos...</div>
+      <div *ngIf="errorRechazo" class="error">{{ errorRechazo }}</div>
+      <div *ngIf="!loadingRechazo && motivos.length">
+        <label for="motivoSelect">Motivo:</label>
+        <select id="motivoSelect" [(ngModel)]="motivoRechazo">
+          <option value="" disabled>Selecciona un motivo</option>
+          <option *ngFor="let m of motivos" [value]="m.motivo">{{ m.motivo }}</option>
+        </select>
+        <label for="observacion">Observación adicional:</label>
+        <textarea id="observacion" [(ngModel)]="motivoObservacion" rows="3" placeholder="Observación adicional..."></textarea>
+      </div>
       <div class="modal-actions">
-        <button class="btn-confirmar" (click)="confirmarRechazo()">
+        <button class="btn-confirmar" (click)="confirmarRechazo()" [disabled]="loadingRechazo">
           Confirmar
         </button>
-        <button class="btn-cancelar" (click)="cerrarModal()">
+        <button class="btn-cancelar" (click)="cerrarModal()" [disabled]="loadingRechazo">
           Cancelar
         </button>
       </div>

@@ -27,6 +27,7 @@ import { ReportesEquiposComponent } from './components/admin/reportes/reportes-e
 import { GestionarAsignaturasComponent } from './components/admin/asignaturas/gestionar-asignaturas.component';
 import { DashboardOperationalComponent } from './components/admin/reportes/dashboard-operational/dashboard-operational.component';
 import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
+import { DashboardModelosComponent } from './components/admin/reportes/dashboard-modelos/dashboard-modelos.component';
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -85,6 +86,7 @@ export const routes: Routes = [
       { path: 'sanciones', component: ReportesSancionesComponent },
       { path: 'mantenimientos', component: ReportesMantenimientosComponent },
       { path: 'tendencias', component: ReportesTendenciasComponent },
+      { path: 'modelos', component: DashboardModelosComponent },
 
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
