@@ -4,14 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\BloqueoHorario;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class BloqueoHorarioController extends Controller
 {
     public function index(Request $request)
     {
         $tipoEquipoId = $request->query('tipo_equipo_id');
+        $weekStart = $request->query('week_start');
 
-        $query = BloqueoHorario::query()->where('activo', true);
+        $semanaInicio = $weekStart
+            ? Carbon::parse($weekStart)->startOfWeek(Carbon::MONDAY)->toDateString()
+            : Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+
+        $query = BloqueoHorario::query()
+            ->where('activo', true)
+            ->where('semana_inicio', $semanaInicio);
 
         if ($tipoEquipoId) {
             $query->where('idTipoEquipo', $tipoEquipoId);
@@ -28,12 +36,18 @@ class BloqueoHorarioController extends Controller
             'idTipoEquipo' => ['required', 'integer', 'exists:tipo_equipos,id'],
             'activo' => ['required', 'boolean'],
             'motivo' => ['nullable', 'string'],
+            'week_start' => ['nullable', 'date'],
         ]);
+
+        $data['semana_inicio'] = isset($data['week_start'])
+            ? Carbon::parse($data['week_start'])->startOfWeek(Carbon::MONDAY)->toDateString()
+            : Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
 
         $data['creado_por'] = auth()->user()?->idUser;
 
         $registro = BloqueoHorario::updateOrCreate(
             [
+                'semana_inicio' => $data['semana_inicio'],
                 'dia_semana' => $data['dia_semana'],
                 'idBloque' => $data['idBloque'],
                 'idTipoEquipo' => $data['idTipoEquipo'],

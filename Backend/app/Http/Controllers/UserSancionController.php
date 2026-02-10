@@ -212,6 +212,65 @@ class UserSancionController extends Controller
         ]);
     }
 
+    // -------- SANCIONES POR USUARIO (ADMIN) --------
+    public function sancionesPorUsuario(int $idUser)
+    {
+        $user = User::with('persona')->findOrFail($idUser);
+
+        $sanciones = $user->sanciones()
+            ->orderBy('fecha_inicio', 'desc')
+            ->orderBy('idSancion', 'desc')
+            ->get();
+
+        $assignedIds = $sanciones
+            ->map(fn ($s) => $s->pivot?->assigned_by)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $assignedUsers = User::with('persona')
+            ->whereIn('idUser', $assignedIds)
+            ->get()
+            ->keyBy('idUser');
+
+        $data = $sanciones->map(function ($s) use ($assignedUsers) {
+            $assigned = $assignedUsers->get($s->pivot?->assigned_by);
+            $nombreAsignador = trim(
+                ($assigned?->persona?->Nombre ?? '') . ' ' . ($assigned?->persona?->Apellido1 ?? '')
+            );
+
+            return [
+                'idSancion' => $s->idSancion,
+                'nivel' => $s->nivel,
+                'descripcion' => $s->descripcion,
+                'estado' => $s->estado,
+                'fecha_inicio' => $s->fecha_inicio,
+                'fecha_fin' => $s->fecha_fin,
+                'detalle' => $s->pivot?->descripcion,
+                'prestamo_id' => $s->pivot?->prestamo_id,
+                'accion' => $s->pivot?->accion,
+                'asignada_por' => $nombreAsignador !== '' ? $nombreAsignador : null,
+                'asignada_por_email' => $assigned?->Email ?? null,
+                'asignada_en' => $s->pivot?->created_at,
+            ];
+        });
+
+        return response()->json([
+            'usuario' => [
+                'idUser' => $user->idUser,
+                'nombre' => $user->persona?->Nombre ?? null,
+                'apellido' => $user->persona?->Apellido1 ?? null,
+                'email' => $user->Email ?? null,
+                'rut' => $user->persona?->Rut ?? null,
+            ],
+            'resumen' => [
+                'activas' => $sanciones->where('estado', 'ACTIVA')->count(),
+                'total' => $sanciones->count(),
+            ],
+            'sanciones' => $data,
+        ]);
+    }
+
     // -------- SANCIONES DEL USUARIO AUTENTICADO --------
     public function misSanciones(Request $request)
     {

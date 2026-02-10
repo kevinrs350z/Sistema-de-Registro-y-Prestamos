@@ -1,49 +1,36 @@
 <nav class="navbar-uta" [class.menu-open]="menuAbierto">
-  <!-- Fondo institucional con overlay -->
   <div class="navbar-bg"></div>
-  
+
   <div class="navbar-content">
-    <!-- Logos UTA a la izquierda -->
     <div class="navbar-brand">
-      <!-- Logo institucional UTA -->
-      <img 
-        src="assets/logo-uta-white.png" 
-        alt="Universidad de Tarapacá" 
+      <img
+        src="assets/logo-uta-white.png"
+        alt="Universidad de Tarapaca"
         class="logo-uta"
       />
-      <!-- Logo carrera Diseño Multimedia -->
-      <img 
-        src="assets/logo-carrera-white.png" 
-        alt="Diseño Multimedia" 
+      <img
+        src="assets/logo-carrera-white.png"
+        alt="Diseno Multimedia"
         class="logo-carrera"
       />
     </div>
 
-    <!-- Menú principal a la derecha (desktop) -->
     <div class="navbar-menu" *ngIf="!esAdmin">
-      <a 
-        routerLink="/equipos/catalogo" 
-        routerLinkActive="active"
-        class="nav-link"
-      >
+      <a routerLink="/equipos/catalogo" routerLinkActive="active" class="nav-link">
         Inicio
       </a>
-      <a 
-        routerLink="/mis-solicitudes" 
-        routerLinkActive="active"
-        class="nav-link"
-      >
+      <a routerLink="/mis-solicitudes" routerLinkActive="active" class="nav-link">
         Mis Solicitudes
       </a>
-      <a 
-        routerLink="/mis-sanciones" 
+      <a
+        routerLink="/mis-sanciones"
         routerLinkActive="active"
         class="nav-link"
       >
         Mis Sanciones
       </a>
-      <a 
-        routerLink="/preguntas-frecuentes" 
+      <a
+        routerLink="/preguntas-frecuentes"
         routerLinkActive="active"
         class="nav-link"
       >
@@ -51,7 +38,7 @@
       </a>
       <span class="nav-separator">|</span>
       <span class="nav-user-name">{{ getUserId() }}</span>
-      <a 
+      <a
         href="javascript:void(0)"
         class="nav-link nav-logout"
         (click)="cerrarSesion()"
@@ -61,13 +48,26 @@
       </a>
     </div>
 
-    <!-- Botón hamburguesa (móvil) -->
-    <button 
+    <div class="navbar-menu" *ngIf="esAdmin">
+      <a routerLink="/admin/dashboard" class="nav-link">Volver al dashboard</a>
+      <span class="nav-separator">|</span>
+      <span class="nav-user-name">{{ getUserId() }}</span>
+      <a
+        href="javascript:void(0)"
+        class="nav-link nav-logout"
+        (click)="cerrarSesion()"
+      >
+        <i class="bi bi-box-arrow-right"></i>
+        Salir
+      </a>
+    </div>
+
+    <button
       type="button"
       class="navbar-toggler"
       (click)="toggleMenu()"
       [attr.aria-expanded]="menuAbierto"
-      aria-label="Abrir menú"
+      aria-label="Abrir menu"
       *ngIf="!esAdmin"
     >
       <span class="toggler-icon"></span>
@@ -76,34 +76,33 @@
     </button>
   </div>
 
-  <!-- Menú móvil colapsable -->
   <div class="navbar-collapse" [class.show]="menuAbierto" *ngIf="!esAdmin">
-    <a 
-      routerLink="/equipos/catalogo" 
+    <a
+      routerLink="/equipos/catalogo"
       routerLinkActive="active"
       class="nav-link-mobile"
       (click)="menuAbierto = false"
     >
       Inicio
     </a>
-    <a 
-      routerLink="/mis-solicitudes" 
+    <a
+      routerLink="/mis-solicitudes"
       routerLinkActive="active"
       class="nav-link-mobile"
       (click)="menuAbierto = false"
     >
       Mis Solicitudes
     </a>
-    <a 
-      routerLink="/mis-sanciones" 
+    <a
+      routerLink="/mis-sanciones"
       routerLinkActive="active"
       class="nav-link-mobile"
       (click)="menuAbierto = false"
     >
       Mis Sanciones
     </a>
-    <a 
-      routerLink="/preguntas-frecuentes" 
+    <a
+      routerLink="/preguntas-frecuentes"
       routerLinkActive="active"
       class="nav-link-mobile"
       (click)="menuAbierto = false"
@@ -112,7 +111,7 @@
     </a>
     <div class="nav-mobile-footer">
       <span class="nav-user-mobile">{{ getUserId() }}</span>
-      <a 
+      <a
         href="javascript:void(0)"
         class="nav-link-mobile nav-logout-mobile"
         (click)="cerrarSesion()"

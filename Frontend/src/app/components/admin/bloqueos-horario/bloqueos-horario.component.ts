@@ -24,20 +24,25 @@ export class BloqueosHorarioComponent implements OnInit {
   private bloqueosSrv = inject(BloqueosHorarioService);
   private notify = inject(NotificationService);
 
-  dias = [
-    { id: 1, nombre: 'Lunes' },
-    { id: 2, nombre: 'Martes' },
-    { id: 3, nombre: 'Miercoles' },
-    { id: 4, nombre: 'Jueves' },
-    { id: 5, nombre: 'Viernes' },
-    { id: 6, nombre: 'Sabado' },
-    { id: 7, nombre: 'Domingo' },
+  private readonly diasBase = [
+    { id: 1, nombre: 'Lun' },
+    { id: 2, nombre: 'Mar' },
+    { id: 3, nombre: 'Mie' },
+    { id: 4, nombre: 'Jue' },
+    { id: 5, nombre: 'Vie' },
+    { id: 6, nombre: 'Sab' },
+    { id: 7, nombre: 'Dom' },
   ];
 
   tipos = signal<any[]>([]);
   bloques = signal<BloqueItem[]>([]);
   tipoSeleccionado = signal<number | null>(null);
   bloqueos = signal<Set<string>>(new Set());
+  weekOffset = signal(0);
+  private readonly formatoFecha = new Intl.DateTimeFormat('es-CL', {
+    day: '2-digit',
+    month: '2-digit'
+  });
 
   bloquesOrdenados = computed(() =>
     [...this.bloques()].sort((a, b) => a.id - b.id)
@@ -49,20 +54,25 @@ export class BloqueosHorarioComponent implements OnInit {
     return this.tipos().find(t => t.id === tipoId)?.nombre ?? '—';
   });
 
-  bloqueosActivos = computed(() => {
-    const set = this.bloqueos();
-    const diasMap = new Map(this.dias.map(d => [d.id, d.nombre]));
-    const bloquesMap = new Map(this.bloques().map(b => [b.id, b.texto]));
+  semanaInicio = computed(() => {
+    const base = this.getWeekStart(new Date());
+    const offset = this.weekOffset();
+    base.setDate(base.getDate() + offset * 7);
+    return base;
+  });
 
-    return Array.from(set)
-      .map((key) => {
-        const [dia, bloque] = key.split('-').map(Number);
-        return {
-          dia: diasMap.get(dia) ?? `Dia ${dia}`,
-          bloque: bloquesMap.get(bloque) ?? `Bloque ${bloque}`
-        };
-      })
-      .sort((a, b) => a.dia.localeCompare(b.dia));
+  dias = computed(() => {
+    const inicio = this.semanaInicio();
+    return this.diasBase.map((d, index) => {
+      const fecha = new Date(inicio);
+      fecha.setDate(inicio.getDate() + index);
+      return {
+        id: d.id,
+        nombre: d.nombre,
+        fecha,
+        etiqueta: `${d.nombre} ${this.formatoFecha.format(fecha)}`
+      };
+    });
   });
 
   ngOnInit(): void {
@@ -105,8 +115,17 @@ export class BloqueosHorarioComponent implements OnInit {
     }
   }
 
+  cambiarSemana(delta: number): void {
+    this.weekOffset.update((actual) => actual + delta);
+    const tipo = this.tipoSeleccionado();
+    if (tipo) {
+      this.cargarBloqueos(tipo);
+    }
+  }
+
   private cargarBloqueos(tipoEquipoId: number) {
-    this.bloqueosSrv.getBloqueos(tipoEquipoId).subscribe({
+    const weekStart = this.toISODate(this.semanaInicio());
+    this.bloqueosSrv.getBloqueos(tipoEquipoId, weekStart).subscribe({
       next: (data) => {
         const set = new Set<string>();
         (data || []).forEach((b: any) => {
@@ -134,7 +153,8 @@ export class BloqueosHorarioComponent implements OnInit {
       dia_semana: dia,
       idBloque: bloqueId,
       idTipoEquipo: tipoId,
-      activo
+      activo,
+      week_start: this.toISODate(this.semanaInicio())
     }).subscribe({
       next: () => {
         const set = new Set(this.bloqueos());
@@ -152,5 +172,18 @@ export class BloqueosHorarioComponent implements OnInit {
 
   private key(dia: number, bloqueId: number): string {
     return `${dia}-${bloqueId}`;
+  }
+
+  private getWeekStart(fecha: Date): Date {
+    const date = new Date(fecha);
+    const day = date.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    date.setDate(date.getDate() + diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  private toISODate(fecha: Date): string {
+    return fecha.toISOString().split('T')[0];
   }
 }

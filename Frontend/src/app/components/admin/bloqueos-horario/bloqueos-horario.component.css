@@ -14,6 +14,7 @@
   justify-content: space-between;
   gap: 1.5rem;
   margin-bottom: 1.8rem;
+  flex-wrap: wrap;
 }
 
 .head h1 {
@@ -49,6 +50,37 @@
 .tipo-seleccionado {
   font-size: 0.85rem;
   color: #4b5563;
+}
+
+.semana-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.semana-controls button {
+  border: 1px solid #d7dde8;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #1f2a44;
+}
+
+.semana-controls button:hover {
+  background: #eef2ff;
+}
+
+.semana-label {
+  font-size: 0.9rem;
+  color: #1f2a44;
+  font-weight: 600;
 }
 
 .tabla {
@@ -93,6 +125,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  text-align: center;
 }
 
 .toggle.activo {
@@ -132,33 +165,3 @@
   }
 }
 
-.resumen-bloqueos {
-  margin-top: 1.4rem;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 16px 18px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-}
-
-.resumen-bloqueos h3 {
-  margin: 0 0 10px;
-  font-size: 1rem;
-  color: #1f2a44;
-}
-
-.resumen-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.resumen-item {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}

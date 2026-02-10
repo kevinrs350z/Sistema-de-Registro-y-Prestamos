@@ -17,8 +17,11 @@ export class BloqueosHorarioService {
     });
   }
 
-  getBloqueos(tipoEquipoId: number): Observable<any[]> {
-    const params = new HttpParams().set('tipo_equipo_id', String(tipoEquipoId));
+  getBloqueos(tipoEquipoId: number, weekStart?: string): Observable<any[]> {
+    let params = new HttpParams().set('tipo_equipo_id', String(tipoEquipoId));
+    if (weekStart) {
+      params = params.set('week_start', weekStart);
+    }
     return this.http.get<any[]>(this.apiUrl, { headers: this.getHeaders(), params });
   }
 
@@ -27,6 +30,7 @@ export class BloqueosHorarioService {
     idBloque: number;
     idTipoEquipo: number;
     activo: boolean;
+    week_start?: string;
     motivo?: string | null;
   }): Observable<any> {
     return this.http.post(this.apiUrl, payload, { headers: this.getHeaders() });

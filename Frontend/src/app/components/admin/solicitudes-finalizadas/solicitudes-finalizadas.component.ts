@@ -65,8 +65,6 @@ export class SolicitudesFinalizadasComponent implements OnInit {
   paginaDevueltos = 1;
   tamanioPagina = 6;
 
-  mostrarModal = false;
-  motivoFinalizar = '';
   mostrarExtendModal = false;
   extendModal: ExtendModalState = {
     fecha: '',
@@ -289,7 +287,7 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     });
   }
 
-  abrirFinalizar(): void {
+  devolverPrestamoDirecto(): void {
     if (!this.solicitudSeleccionada) {
       return;
     }
@@ -299,42 +297,10 @@ export class SolicitudesFinalizadasComponent implements OnInit {
       return;
     }
 
-    this.mostrarModal = true;
-  }
-
-  abrirExtender(): void {
-    if (!this.solicitudSeleccionada) {
-      return;
-    }
-
-    if (!this.puedeExtender(this.solicitudSeleccionada)) {
-      this.notify.info('No hay equipos pendientes para extender.');
-      return;
-    }
-
-    this.extendModal = this.crearEstadoExtendModal(this.solicitudSeleccionada);
-    this.mostrarExtendModal = true;
-  }
-
-  cerrarExtendModal(): void {
-    this.mostrarExtendModal = false;
-    this.extendModal = this.crearEstadoExtendModal();
-  }
-
-  confirmarFinalizar(): void {
-    if (!this.solicitudSeleccionada) return;
-
-    if (this.motivoFinalizar.trim() === '') {
-      this.notify.warning('Debes ingresar un motivo para finalizar el préstamo.');
-      return;
-    }
-
     const prestamoId = this.solicitudSeleccionada.id;
+    const motivo = 'Préstamo devuelto por administración.';
 
-    this.api.marcarDevuelto(
-      prestamoId,
-      this.motivoFinalizar
-    ).subscribe({
+    this.api.marcarDevuelto(prestamoId, motivo).subscribe({
       next: () => {
         const solicitud = this.solicitudes.find((s) => s.id === prestamoId) ?? null;
 
@@ -359,12 +325,31 @@ export class SolicitudesFinalizadasComponent implements OnInit {
 
         this.reselectPrestamoId = prestamoId;
         this.notify.success('Préstamo marcado como devuelto correctamente.');
-        this.cerrarModal();
         this.cargarSolicitudes();
       },
       error: (err) => console.error('Error al finalizar préstamo:', err),
     });
   }
+
+  abrirExtender(): void {
+    if (!this.solicitudSeleccionada) {
+      return;
+    }
+
+    if (!this.puedeExtender(this.solicitudSeleccionada)) {
+      this.notify.info('No hay equipos pendientes para extender.');
+      return;
+    }
+
+    this.extendModal = this.crearEstadoExtendModal(this.solicitudSeleccionada);
+    this.mostrarExtendModal = true;
+  }
+
+  cerrarExtendModal(): void {
+    this.mostrarExtendModal = false;
+    this.extendModal = this.crearEstadoExtendModal();
+  }
+
 
   confirmarExtension(): void {
     if (!this.solicitudSeleccionada) {
@@ -419,10 +404,6 @@ export class SolicitudesFinalizadasComponent implements OnInit {
     });
   }
 
-  cerrarModal(): void {
-    this.mostrarModal = false;
-    this.motivoFinalizar = '';
-  }
 
   devolverEquipo(idPrestamo: number, idEquipo: number): void {
     const motivoPorDefecto = 'Devolución registrada desde el panel administrativo.';

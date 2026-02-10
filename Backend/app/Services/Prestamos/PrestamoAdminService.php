@@ -100,7 +100,7 @@ class PrestamoAdminService
     ============================================================ */
     public function marcarDevuelto(
         int $idPrestamo,
-        string $motivo
+        ?string $motivo
     ): void {
         $prestamo = Prestamo::with(['equipos'])
             ->findOrFail($idPrestamo);
@@ -116,12 +116,16 @@ class PrestamoAdminService
 
         // 🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
         $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
+        $motivoFinal = $motivo && trim($motivo) !== ''
+            ? $motivo
+            : 'Préstamo devuelto por administración.';
+
         $this->registrarHistorial(
             $prestamo->idPrestamo,
             $userId,
             $estadoAnterior,
             EstadoPrestamo::DEVUELTO,
-            $motivo
+            $motivoFinal
         );
 
         foreach ($prestamo->equipos as $equipo) {
@@ -360,6 +364,7 @@ class PrestamoAdminService
                 'fecha_fin' => $p->fecha_fin,
 
                 'user' => [
+                    'idUser' => optional($p->user)->idUser,
                     'nombre' => $persona?->Nombre,
                     'email'  => $persona?->Email,
                 ],
