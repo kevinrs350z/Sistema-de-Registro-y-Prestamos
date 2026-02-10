@@ -25,6 +25,7 @@ import { ReportesMantenimientosComponent } from './components/admin/reportes/rep
 import { ReportesEquiposComponent } from './components/admin/reportes/reportes-equipos/reportes-equipos.component';
 import { GestionarAsignaturasComponent } from './components/admin/asignaturas/gestionar-asignaturas.component';
 import { DashboardOperationalComponent } from './components/admin/reportes/dashboard-operational/dashboard-operational.component';
+import { DashboardModelosComponent } from './components/admin/reportes/dashboard-modelos/dashboard-modelos.component';
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -77,6 +78,7 @@ export const routes: Routes = [
       { path: 'sanciones', component: ReportesSancionesComponent },
       { path: 'mantenimientos', component: ReportesMantenimientosComponent },
       { path: 'tendencias', component: ReportesTendenciasComponent },
+      { path: 'modelos', component: DashboardModelosComponent },
 
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]

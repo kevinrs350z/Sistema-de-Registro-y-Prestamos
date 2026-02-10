@@ -90,7 +90,8 @@ class Equipo extends Model
         )->withPivot('tipo_relacion')
          ->withTimestamps();
     }
-        public function packs()
+
+    public function packs()
     {
         return $this->belongsToMany(
             Pack::class,
@@ -98,5 +99,38 @@ class Equipo extends Model
             'equipo_id',
             'pack_id'
         )->withTimestamps();
+    }
+
+    /**
+     * Relación: eventos de cambio de estado de este equipo (auditoría).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function estadoEventos()
+    {
+        return $this->hasMany(EquipoEstadoEvento::class, 'equipo_id', 'id');
+    }
+
+    /**
+     * Obtiene el último evento de estado del equipo.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function ultimoEstadoEvento()
+    {
+        return $this->hasOne(EquipoEstadoEvento::class, 'equipo_id', 'id')
+            ->orderBy('fecha_evento', 'desc')
+            ->orderBy('id', 'desc');
+    }
+
+    /**
+     * Obtiene los eventos de mantenimiento del equipo.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function mantenimientos()
+    {
+        return $this->hasMany(EquipoEstadoEvento::class, 'equipo_id', 'id')
+            ->where('estado_nuevo', \App\Enums\EstadoEquipo::MANTENIMIENTO);
     }
 }

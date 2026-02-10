@@ -44,9 +44,41 @@ class PrestamoAdminService
 
         // Guardamos estado
         $prestamo->estado = $nuevoEstado;
+
+        // Lógica para procesar motivo y observación
         if (!is_null($motivo) && trim($motivo) !== '') {
-            $prestamo->observacion = $motivo;
+            // Si es rechazo, intentamos extraer el enum del motivo
+            if ($accion === 'rechazar') {
+                $motivoEnum = null;
+                $textoObservacion = $motivo;
+
+                // Buscar si el string empieza con algún motivo válido
+                foreach (\App\Enums\MotivoRechazo::all() as $enum) {
+                    // Verificamos si empieza con el ENUM
+                    // Ej: "SIN_STOCK - No hay unidades" o "SIN_STOCK"
+                    if (str_starts_with($motivo, $enum)) {
+                        $motivoEnum = $enum;
+                        // Limpiamos el enum del texto de observación
+                        // Removemos el enum y caracteres separadores comunes (" - ", ": ", " ")
+                        $resto = substr($motivo, strlen($enum));
+                        $textoObservacion = ltrim($resto, " -:\t\n\r");
+                        break;
+                    }
+                }
+
+                // Asignamos el motivo detectado o null (o OTRO si preferimos default)
+                // Si no se detectó enum, asumimos que todo es observación y el motivo queda null o OTRO
+                $prestamo->motivo_rechazo = $motivoEnum; 
+                
+                // Si se detectó un enum, guardamos solo el texto limpio en observación
+                // Si no, guardamos todo el string original
+                $prestamo->observacion = $textoObservacion ?: null; // Si queda vacío, null
+            } else {
+                // Si es aprobar, todo va a observación directo
+                $prestamo->observacion = $motivo;
+            }
         }
+
         $prestamo->save();
 
         // 🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
@@ -56,7 +88,7 @@ class PrestamoAdminService
             $userId,
             $estadoAnterior,
             $nuevoEstado,
-            $motivo
+            $motivo // Guardamos el string completo original en historial para referencia
         );
 
         // Si se rechaza, liberar equipos a DISPONIBLE

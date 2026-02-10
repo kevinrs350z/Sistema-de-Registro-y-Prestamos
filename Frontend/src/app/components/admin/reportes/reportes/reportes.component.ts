@@ -12,6 +12,7 @@ import { ReportesProfesoresComponent } from '../reportes-profesores/reportes-pro
 import { ReportesAsignaturasComponent } from '../reportes-asignaturas/reportes-asignaturas.component';
 import { ReportesInventarioComponent } from '../reportes-inventario/reportes-inventario.component';
 import { Router, RouterModule } from '@angular/router';
+import { DashboardModelosComponent } from '../dashboard-modelos/dashboard-modelos.component';
 
 @Component({
   selector: 'app-reportes',
@@ -27,7 +28,8 @@ import { Router, RouterModule } from '@angular/router';
     // ReportesDashboardComponent removed
     ReportesProfesoresComponent,
     ReportesAsignaturasComponent,
-    ReportesInventarioComponent
+    ReportesInventarioComponent,
+    DashboardModelosComponent
   ],
   templateUrl: './reportes.component.html',
   styleUrls: ['./reportes.component.css']
