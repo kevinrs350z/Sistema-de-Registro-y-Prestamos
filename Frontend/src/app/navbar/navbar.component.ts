@@ -20,14 +20,14 @@ export class NavbarComponent {
   private notify = inject(NotificationService);
 
   constructor(private router: Router) {
-    // Detectar ruta inicial
-    this.esAdmin = this.router.url.startsWith('/admin');
+    // Detectar rol inicial
+    this.esAdmin = this.auth.isAdmin() || this.auth.isSuperUsuario();
 
     // Escuchar cambios en la URL
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
-        this.esAdmin = event.urlAfterRedirects.startsWith('/admin');
+        this.esAdmin = this.auth.isAdmin() || this.auth.isSuperUsuario();
         this.menuAbierto = false;
       });
   }

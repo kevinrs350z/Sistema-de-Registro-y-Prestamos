@@ -42,7 +42,7 @@
     <div class="items-grid" *ngIf="!cargandoSanciones">
       <div *ngFor="let s of sancionesPaginadas"
            class="item"
-           [class.activo]="sancionSeleccionada?.id === s.id"
+         [class.activo]="sancionSeleccionada?.key === s.key"
            (click)="seleccionar(s)">
 
         <p><strong>{{ s.usuario }}</strong></p>

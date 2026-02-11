@@ -54,4 +54,10 @@ export class SancionesService {
       headers: this.getAuthHeaders()
     });
   }
+
+  getSancionesUsuario(idUser: number) {
+    return this.http.get<{ resumen: any; sanciones: any[] }>(`${this.apiUrl}/usuario/${idUser}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
 }

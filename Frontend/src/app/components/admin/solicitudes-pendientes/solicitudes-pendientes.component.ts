@@ -6,7 +6,11 @@ import { PrestamosAdminService } from '../../../services/prestamos-admin.service
 import { NotificationService } from '../../../services/notification.service';
 import { ImagenService } from '../../../services/image.service';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+<<<<<<< HEAD
 import { MotivosRechazoService } from '../../../services/motivos-rechazo.service';
+=======
+import { SancionesService } from '../../../services/sanciones.service';
+>>>>>>> practica1/actualizacion-admin
 
 type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
@@ -20,6 +24,7 @@ type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   motivoAprobacion?: string;
   estudiante?: string;
   email?: string;
+  userId?: number;
   estado: 'PENDIENTE' | 'APROBADO' | 'ENTREGADO' | 'RECHAZADO';
 };
 
@@ -35,6 +40,7 @@ export class SolicitudesPendientesComponent implements OnInit {
   private notify = inject(NotificationService);
   private imagenSrv = inject(ImagenService);
   private tiposSrv = inject(TipoEquipoService);
+  private sancionesSrv = inject(SancionesService);
 
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
@@ -61,12 +67,16 @@ export class SolicitudesPendientesComponent implements OnInit {
   tipoAgregar: number | null = null;
   cantidadAgregar = 1;
   motivoAjuste = '';
+  sancionesResumen: { activas: number; total: number; items: any[] } | null = null;
+  sancionesCargando = false;
+  sancionesAbierto = false;
 
   constructor(private prestamosAdmin: PrestamosAdminService) {}
 =======
   constructor(
     private prestamosAdmin: PrestamosAdminService,
-    private motivosSrv: MotivosRechazoService
+        private motivosSrv: MotivosRechazoService,
+        private sancionesSrv: SancionesService
   ) {}
 >>>>>>> 129987f (cambios en los reportes)
 
@@ -77,7 +87,7 @@ export class SolicitudesPendientesComponent implements OnInit {
 
   private cargarTipos() {
     this.tiposSrv.getTipos().subscribe({
-      next: (data) => {
+          next: (data: any) => {
         this.tiposEquipo = data || [];
         this.tipoAgregar = this.tiposEquipo[0]?.id ?? null;
       },
@@ -110,6 +120,7 @@ export class SolicitudesPendientesComponent implements OnInit {
             id: p.idPrestamo,
             estudiante: p.user?.nombre ?? 'Desconocido',
             email: p.user?.email ?? '',
+            userId: p.user?.idUser ?? undefined,
             tipo: p.tipo,
             bloque: p.bloquePrestamo ?? '—',
             equipos,
@@ -192,6 +203,12 @@ export class SolicitudesPendientesComponent implements OnInit {
 
   seleccionarSolicitud(s: AdminSolicitud) {
     this.solicitudSeleccionada = s;
+    this.sancionesResumen = null;
+    this.sancionesAbierto = false;
+
+    if (s.userId) {
+      this.cargarSancionesUsuario(s.userId);
+    }
   }
 
   irPaginaPendientes(pagina: number) {
@@ -214,6 +231,26 @@ export class SolicitudesPendientesComponent implements OnInit {
 
   cerrarDetalle() {
     this.solicitudSeleccionada = null;
+    this.sancionesResumen = null;
+    this.sancionesAbierto = false;
+  }
+
+  private cargarSancionesUsuario(idUser: number) {
+    this.sancionesCargando = true;
+    this.sancionesSrv.getSancionesUsuario(idUser).subscribe({
+      next: (data) => {
+        this.sancionesResumen = {
+          activas: data?.resumen?.activas ?? 0,
+          total: data?.resumen?.total ?? 0,
+          items: data?.sanciones ?? []
+        };
+        this.sancionesCargando = false;
+      },
+      error: () => {
+        this.sancionesCargando = false;
+        this.sancionesResumen = { activas: 0, total: 0, items: [] };
+      }
+    });
   }
 
   abrirRechazo() {
@@ -286,6 +323,10 @@ export class SolicitudesPendientesComponent implements OnInit {
     this.cantidadAgregar = 1;
   }
 
+  quitarEquipo(index: number) {
+    this.editarEquipos.splice(index, 1);
+  }
+
   confirmarEditarEquipos() {
     if (!this.solicitudSeleccionada) return;
 
@@ -315,6 +356,7 @@ export class SolicitudesPendientesComponent implements OnInit {
         this.notify.success('Solicitud actualizada correctamente.');
         this.cerrarEditarModal();
         this.cargarSolicitudes();
+        this.solicitudSeleccionada = null;
       },
       error: (err: any) => {
         console.error('Error actualizando solicitud:', err);
@@ -335,6 +377,7 @@ export class SolicitudesPendientesComponent implements OnInit {
         next: () => {
           this.notify.success('Solicitud aprobada correctamente.');
           this.cargarSolicitudes();
+          this.solicitudSeleccionada = null;
         },
         error: (err) => console.error('Error al aprobar:', err)
       });
@@ -369,6 +412,26 @@ export class SolicitudesPendientesComponent implements OnInit {
       });
   }
 
+<<<<<<< HEAD
+=======
+  this.prestamosAdmin
+    .rechazarPrestamo(
+      this.solicitudSeleccionada.id!,
+      this.motivoRechazo,
+      'rechazar'
+    )
+    .subscribe({
+      next: () => {
+        this.notify.success('Solicitud rechazada correctamente.');
+        this.cargarSolicitudes();
+        this.cerrarModal();
+        this.solicitudSeleccionada = null;
+      },
+      error: (err) => console.error('Error al rechazar:', err)
+    });
+}
+
+>>>>>>> practica1/actualizacion-admin
 
   cerrarModal() {
     this.mostrarModal = false;

@@ -173,6 +173,42 @@
         <p>{{ sel.observacion || 'Sin observación' }}</p>
       </div>
 
+      <div class="sanciones-box">
+        <div class="sanciones-header">
+          <h4>Historial de sanciones</h4>
+          <div class="sanciones-resumen" *ngIf="sancionesResumen">
+            <span class="pill">Activas: {{ sancionesResumen.activas }}</span>
+            <span class="pill">Total: {{ sancionesResumen.total }}</span>
+          </div>
+        </div>
+
+        <p class="sanciones-cargando" *ngIf="sancionesCargando">Cargando sanciones...</p>
+
+        <button
+          class="sanciones-toggle"
+          type="button"
+          [disabled]="sancionesCargando || !sancionesResumen"
+          (click)="sancionesAbierto = !sancionesAbierto"
+        >
+          {{ sancionesAbierto ? 'Ocultar historial' : 'Ver historial' }}
+        </button>
+
+        <div class="sanciones-lista" *ngIf="sancionesAbierto && sancionesResumen">
+          <div class="sancion-item" *ngFor="let s of sancionesResumen.items">
+            <div class="sancion-head">
+              <span class="nivel">{{ s.nivel }}</span>
+              <span class="estado" [class.activa]="s.estado === 'ACTIVA'">{{ s.estado }}</span>
+            </div>
+            <div class="sancion-fechas">{{ s.fecha_inicio }} → {{ s.fecha_fin }}</div>
+            <p class="sancion-detalle">{{ s.detalle || s.descripcion || 'Sin detalle' }}</p>
+          </div>
+
+          <p class="sanciones-vacio" *ngIf="sancionesResumen.items.length === 0">
+            No hay sanciones registradas para este alumno.
+          </p>
+        </div>
+      </div>
+
       <!-- INTEGRANTES DEL EQUIPO -->
       <div class="integrantes-box" *ngIf="sel.integrantes && sel.integrantes.length > 0">
         <h4>Integrantes del equipo</h4>
@@ -247,7 +283,7 @@
       <h4>Editar equipos de la solicitud</h4>
 
       <div class="equipos-edicion" *ngIf="editarEquipos.length > 0">
-        <div class="equipo-row" *ngFor="let e of editarEquipos">
+        <div class="equipo-row" *ngFor="let e of editarEquipos; let i = index">
           <div class="equipo-meta">
             <span class="equipo-nombre">{{ e.nombre }}</span>
             <span class="equipo-stock" [class.sin-stock]="e.stock === 0">
@@ -266,6 +302,9 @@
               Excede stock
             </span>
           </div>
+          <button type="button" class="btn-quitar" (click)="quitarEquipo(i)">
+            Quitar
+          </button>
         </div>
       </div>
 

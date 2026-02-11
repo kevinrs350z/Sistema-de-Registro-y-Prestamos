@@ -234,7 +234,7 @@
         <button
           class="btn-finalizar"
           *ngIf="puedeDevolver(sel)"
-          (click)="abrirFinalizar()"
+           (click)="devolverPrestamoDirecto()"
         >
           Devolver préstamo
         </button>
@@ -245,27 +245,6 @@
           (click)="abrirExtender()"
         >
           Extender plazo
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" *ngIf="mostrarModal">
-    <div class="modal-content">
-      <h4>Motivo de finalización</h4>
-
-      <textarea
-        rows="3"
-        [(ngModel)]="motivoFinalizar"
-        placeholder="Ingrese el motivo..."
-      ></textarea>
-
-      <div class="modal-actions">
-        <button class="btn-confirmar" (click)="confirmarFinalizar()">
-          Confirmar
-        </button>
-        <button class="btn-cancelar" (click)="cerrarModal()">
-          Cancelar
         </button>
       </div>
     </div>

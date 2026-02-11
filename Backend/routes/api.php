@@ -136,6 +136,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/admin/sanciones/catalogo', [UserSancionController::class, 'catalogo']);
     Route::get('/admin/sanciones', [UserSancionController::class, 'listarSanciones']);
     Route::get('/admin/sanciones/activa', [UserSancionController::class, 'listarSancionesActivas']);
+    Route::get('/admin/sanciones/usuario/{idUser}', [UserSancionController::class, 'sancionesPorUsuario']);
     Route::post('/admin/sanciones/asignar', [UserSancionController::class, 'asignarSancion']);
     Route::patch('/admin/sanciones/{id}/ampliar', [UserSancionController::class, 'ampliarSancion']);
     Route::patch('/admin/sanciones/{id}/quitar', [UserSancionController::class, 'quitarSancion']);

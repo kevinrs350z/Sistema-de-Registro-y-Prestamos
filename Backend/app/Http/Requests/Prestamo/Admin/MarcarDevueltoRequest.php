@@ -18,14 +18,13 @@ class MarcarDevueltoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'motivo' => 'required|string|min:3'
+            'motivo' => 'nullable|string|min:3'
         ];
     }
 
     public function messages(): array
     {
         return [
-            'motivo.required' => 'Debe ingresar un motivo.',
             'motivo.min'      => 'El motivo debe tener al menos 3 caracteres.'
         ];
     }

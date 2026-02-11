@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 
 interface Sancion {
   id: number;
+  key: string;
 
  
   usuario: string;  
@@ -208,42 +209,46 @@ export class GestionarSancionesComponent implements OnInit {
     this.errorSanciones = null;
     this.sancionesService.getSanciones().subscribe({
       next: (resp) => {
-        this.sanciones = resp.sanciones.map((s: any) => {
-          const u = s.users?.[0]; // primer usuario asociado
-          const persona = u?.persona;
+        const lista = (resp.sanciones || []).flatMap((s: any) => {
+          const usuarios = Array.isArray(s.users) ? s.users : [];
 
-          const estadoUI: 'ACTIVA' | 'EXPIRADA' =
-            s.estado === 'ACTIVA' ? 'ACTIVA' : 'EXPIRADA';
+          return usuarios.map((u: any) => {
+            const persona = u?.persona;
 
+            const estadoUI: 'ACTIVA' | 'EXPIRADA' =
+              s.estado === 'ACTIVA' ? 'ACTIVA' : 'EXPIRADA';
 
-          const nombre = persona?.Nombre ?? persona?.nombre ?? '';
-          const apellido =
-            persona?.Apellido1 ??
-            persona?.apellido1 ??
-            persona?.Apellido2 ??
-            persona?.apellido2 ??
-            '';
+            const nombre = persona?.Nombre ?? persona?.nombre ?? '';
+            const apellido =
+              persona?.Apellido1 ??
+              persona?.apellido1 ??
+              persona?.Apellido2 ??
+              persona?.apellido2 ??
+              '';
 
-          return {
-            id: s.idSancion,
-            usuario: `${nombre} ${apellido}`.trim() || u?.Email || 'Sin usuario',
-            correo: u?.Email ?? '',
-            rut: persona?.Rut ?? '',
-            nombre,
-            apellido,
-            motivo: s.nivel,
-            descripcion: s.descripcion ?? '',
-            fecha_inicio: s.fecha_inicio,
-            fecha_fin: s.fecha_fin,
-            estado: estadoUI,
-            asignada_por: `${u?.pivot?.assigned_by_nombre ?? ''} ${u?.pivot?.assigned_by_apellido ?? ''}`.trim() || u?.pivot?.assigned_by_email || '—',
-            asignada_en: u?.pivot?.created_at ?? ''
-          } as Sancion;
+            return {
+              id: s.idSancion,
+              key: `${s.idSancion}-${u?.idUser ?? u?.id ?? 'user'}`,
+              usuario: `${nombre} ${apellido}`.trim() || u?.Email || 'Sin usuario',
+              correo: u?.Email ?? '',
+              rut: persona?.Rut ?? '',
+              nombre,
+              apellido,
+              motivo: s.nivel,
+              descripcion: s.descripcion ?? '',
+              fecha_inicio: s.fecha_inicio,
+              fecha_fin: s.fecha_fin,
+              estado: estadoUI,
+              asignada_por: `${u?.pivot?.assigned_by_nombre ?? ''} ${u?.pivot?.assigned_by_apellido ?? ''}`.trim() || u?.pivot?.assigned_by_email || '—',
+              asignada_en: u?.pivot?.created_at ?? ''
+            } as Sancion;
+          });
         });
 
-      this.sancionSeleccionada = this.sanciones[0] || null;
-      this.page = 1;
-      this.cargandoSanciones = false;
+        this.sanciones = lista;
+        this.sancionSeleccionada = this.sanciones[0] || null;
+        this.page = 1;
+        this.cargandoSanciones = false;
     },
     error: (err) => {
       console.error('Error cargando sanciones', err);
@@ -543,9 +548,11 @@ asignarSancion(): void {
   this.sancionesService.asignarSancion(payload).subscribe({
     next: () => {
       this.notify.success('Sanción asignada correctamente.');
-      this.cargarDatosReales();
-      this.resetFormularioAsignar();
       this.formularioAsignar = false;
+      this.filtro = '';
+      this.page = 1;
+      this.resetFormularioAsignar();
+      this.cargarDatosReales();
     },
     error: (err) => {
       console.error(err);

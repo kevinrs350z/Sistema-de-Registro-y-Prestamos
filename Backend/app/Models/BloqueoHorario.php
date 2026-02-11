@@ -12,6 +12,7 @@ class BloqueoHorario extends Model
         'dia_semana',
         'idBloque',
         'idTipoEquipo',
+        'semana_inicio',
         'activo',
         'motivo',
         'creado_por',

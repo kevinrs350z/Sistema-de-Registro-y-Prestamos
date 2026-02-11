@@ -11,6 +11,7 @@ import { CuentasComponent } from '../cuentas/cuentas.component';
 import { PreguntasFrecuentesAdminComponent } from '../preguntas-frecuentes-admin/preguntas-frecuentes-admin.component';  // ✅ NUEVO
 
 import { AuthService } from '../../../services/auth.service';
+import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
 import { NotificationService } from '../../../services/notification.service';
 
 @Component({
@@ -34,6 +35,7 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
   private router = inject(Router);
   private api = inject(AuthService);
+  private prestamosAdmin = inject(PrestamosAdminService);
   public auth = this.api; // Exponer auth para template (admin/super)
   private notify = inject(NotificationService);
 
@@ -48,14 +50,15 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
   // Estadísticas
   totalEquipos = 0;
-  totalSancionesActivas = 0;
+  equiposPrestados = 0;
+  prestamosActivos = 0;
 
   // Listener para eventos del navbar
   listener: any;
 
   ngOnInit(): void {
     this.cargarEquipos();
-    this.cargarSancionesActivas();
+    this.cargarPrestamosActivos();
 
     /** 🔹 NAVBAR -> Dashboard */
     this.listener = (e: any) => {
@@ -102,23 +105,28 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 🔹 Cargar número de sanciones activas */
-  private cargarSancionesActivas(): void {
-    const token = sessionStorage.getItem('token') ?? '';
-
-    this.api.getSancionesActivas(token).subscribe({
-      next: (data) => this.totalSancionesActivas = data.length,
-      error: (err) => console.error('Error al cargar sanciones activas:', err)
-    });
-  }
-
   /** 🔹 Cargar número de equipos */
   private cargarEquipos(): void {
     const token = sessionStorage.getItem('token') ?? '';
 
     this.api.getEquipos(token).subscribe({
-      next: (data) => this.totalEquipos = data.length,
+      next: (data) => {
+        this.totalEquipos = data.length;
+        this.equiposPrestados = data.filter((e: any) => String(e.estado).toUpperCase() === 'PRESTADO').length;
+      },
       error: (err) => console.error('Error al cargar equipos:', err)
+    });
+  }
+
+  private cargarPrestamosActivos(): void {
+    this.prestamosAdmin.getHistorial().subscribe({
+      next: (data) => {
+        const activos = (data || []).filter((p: any) =>
+          ['APROBADO', 'ENTREGADO'].includes(String(p.estado).toUpperCase())
+        );
+        this.prestamosActivos = activos.length;
+      },
+      error: (err) => console.error('Error al cargar préstamos activos:', err)
     });
   }
 

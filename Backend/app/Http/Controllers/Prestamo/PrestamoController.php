@@ -98,8 +98,10 @@ class PrestamoController extends Controller
 
                 if (!empty($tiposSolicitados) && !empty($bloques)) {
                     $diaSemana = Carbon::now()->dayOfWeekIso; // 1 = Lunes, 7 = Domingo
+                    $semanaInicio = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
 
                     $existeBloqueo = BloqueoHorario::where('activo', true)
+                        ->where('semana_inicio', $semanaInicio)
                         ->where('dia_semana', $diaSemana)
                         ->whereIn('idBloque', $bloques)
                         ->whereIn('idTipoEquipo', $tiposSolicitados)
