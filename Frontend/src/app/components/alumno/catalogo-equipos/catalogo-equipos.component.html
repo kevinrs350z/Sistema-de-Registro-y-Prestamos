@@ -201,10 +201,12 @@
 </div>
 
 <!-- BOTÓN FLOTANTE ABAJO DERECHA -->
-<button
-  class="btn-flotante-continuar"
-  [disabled]="carrito().length === 0"
-  (click)="continuarReserva()"
->
-  Continuar con {{ carrito().length }} seleccionado(s) →
-</button>
+<div class="btn-flotante-container">
+  <button
+    class="btn-flotante-continuar"
+    [disabled]="carrito().length === 0"
+    (click)="continuarReserva()"
+  >
+    Continuar con {{ carrito().length }} seleccionado(s) →
+  </button>
+</div>

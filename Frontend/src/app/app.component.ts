@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
-import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
+import { Router, RouterOutlet, NavigationEnd, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { fromEvent, Subscription } from 'rxjs';
 import { filter, debounceTime } from 'rxjs/operators';
@@ -8,6 +8,7 @@ import { NavbarComponent } from './navbar/navbar.component';
 import { NavbarAdminComponent } from './components/admin/navbar-admin/navbar-admin.component';
 import { LoadingOverlayComponent } from './shared/loading-overlay/loading-overlay.component';
 import { NotificationComponent } from './shared/notification/notification.component';
+import { FooterComponent } from './shared/footer/footer.component';
 
 @Component({
   selector: 'app-root',
@@ -18,15 +19,19 @@ import { NotificationComponent } from './shared/notification/notification.compon
     NavbarAdminComponent,
     LoadingOverlayComponent, // 👈 IMPORTANTE
     NgIf,
-    NotificationComponent
+    NotificationComponent,
+    RouterLink,
+    FooterComponent
   ],
-  templateUrl: './app.component.html'
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css'
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
 
   esRutaAuth = false;
   esRutaAdmin = false;
   navbarOffset = 0;
+  readonly versionStamp = this.computeVersionStamp();
 
   private resizeSub?: Subscription;
   private navbarResizeObserver?: ResizeObserver;
@@ -141,5 +146,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.navbarResizeObserver.unobserve(this.observedNavbar);
       this.observedNavbar = undefined;
     }
+  }
+
+  private computeVersionStamp(): string {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${yyyy}.${mm}.${dd}`;
   }
 }
