@@ -6,11 +6,8 @@ import { PrestamosAdminService } from '../../../services/prestamos-admin.service
 import { NotificationService } from '../../../services/notification.service';
 import { ImagenService } from '../../../services/image.service';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
-<<<<<<< HEAD
 import { MotivosRechazoService } from '../../../services/motivos-rechazo.service';
-=======
 import { SancionesService } from '../../../services/sanciones.service';
->>>>>>> practica1/actualizacion-admin
 
 type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
@@ -48,20 +45,15 @@ export class SolicitudesPendientesComponent implements OnInit {
   motivoRechazo = '';
   motivoObservacion = '';
   mostrarModal = false;
-<<<<<<< HEAD
   mostrarEditarModal = false;
-=======
   motivos: any[] = [];
   loadingRechazo = false;
   errorRechazo = '';
->>>>>>> 129987f (cambios en los reportes)
   filtroBusqueda = '';
   orden: 'recientes' | 'antiguas' = 'recientes';
   paginaPendientes = 1;
   paginaPendientesEntrega = 1;
   tamanioPagina = 6;
-
-<<<<<<< HEAD
   tiposEquipo: any[] = [];
   editarEquipos: { idTipoEquipo: number; nombre: string; cantidad: number; stock?: number }[] = [];
   tipoAgregar: number | null = null;
@@ -71,14 +63,11 @@ export class SolicitudesPendientesComponent implements OnInit {
   sancionesCargando = false;
   sancionesAbierto = false;
 
-  constructor(private prestamosAdmin: PrestamosAdminService) {}
-=======
   constructor(
     private prestamosAdmin: PrestamosAdminService,
-        private motivosSrv: MotivosRechazoService,
-        private sancionesSrv: SancionesService
+    private motivosSrv: MotivosRechazoService,
+      // private sancionesSrv = inject(SancionesService), // Removed duplicate declaration
   ) {}
->>>>>>> 129987f (cambios en los reportes)
 
   ngOnInit(): void {
     this.cargarTipos();
@@ -382,25 +371,22 @@ export class SolicitudesPendientesComponent implements OnInit {
         error: (err) => console.error('Error al aprobar:', err)
       });
   }
-
-  confirmarRechazo() {
-    if (!this.solicitudSeleccionada) return;
-    if (!this.motivoRechazo) {
-      this.notify.warning('Debes seleccionar un motivo para el rechazo.');
-      return;
-    }
-    this.loadingRechazo = true;
-    this.errorRechazo = '';
-    const motivoFinal = this.motivoRechazo + (this.motivoObservacion ? ' - ' + this.motivoObservacion : '');
     this.prestamosAdmin
       .rechazarPrestamo(
         this.solicitudSeleccionada.id!,
-        motivoFinal,
+        this.motivoRechazo,
         'rechazar'
       )
       .subscribe({
         next: () => {
           this.notify.success('Solicitud rechazada correctamente.');
+          this.cargarSolicitudes();
+          this.cerrarModal();
+          this.solicitudSeleccionada = null;
+        },
+        error: (err) => console.error('Error al rechazar:', err)
+      });
+    }
           this.cargarSolicitudes();
           this.cerrarModal();
           this.loadingRechazo = false;
