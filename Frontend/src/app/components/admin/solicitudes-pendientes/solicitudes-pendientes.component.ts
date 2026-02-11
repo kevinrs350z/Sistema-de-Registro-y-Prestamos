@@ -368,9 +368,15 @@ export class SolicitudesPendientesComponent implements OnInit {
           this.cargarSolicitudes();
           this.solicitudSeleccionada = null;
         },
-        error: (err) => console.error('Error al aprobar:', err)
+        error: (err: any) => console.error('Error al aprobar:', err)
       });
   }
+
+  confirmarRechazo() {
+    if (!this.solicitudSeleccionada || !this.motivoRechazo) return;
+    this.loadingRechazo = true;
+    this.errorRechazo = '';
+
     this.prestamosAdmin
       .rechazarPrestamo(
         this.solicitudSeleccionada.id!,
@@ -383,41 +389,15 @@ export class SolicitudesPendientesComponent implements OnInit {
           this.cargarSolicitudes();
           this.cerrarModal();
           this.solicitudSeleccionada = null;
-        },
-        error: (err) => console.error('Error al rechazar:', err)
-      });
-    }
-          this.cargarSolicitudes();
-          this.cerrarModal();
           this.loadingRechazo = false;
         },
-        error: (err) => {
+        error: (err: any) => {
           this.errorRechazo = 'Error al rechazar solicitud.';
           this.loadingRechazo = false;
+          console.error('Error al rechazar:', err);
         }
       });
   }
-
-<<<<<<< HEAD
-=======
-  this.prestamosAdmin
-    .rechazarPrestamo(
-      this.solicitudSeleccionada.id!,
-      this.motivoRechazo,
-      'rechazar'
-    )
-    .subscribe({
-      next: () => {
-        this.notify.success('Solicitud rechazada correctamente.');
-        this.cargarSolicitudes();
-        this.cerrarModal();
-        this.solicitudSeleccionada = null;
-      },
-      error: (err) => console.error('Error al rechazar:', err)
-    });
-}
-
->>>>>>> practica1/actualizacion-admin
 
   cerrarModal() {
     this.mostrarModal = false;
@@ -448,8 +428,7 @@ export class SolicitudesPendientesComponent implements OnInit {
 
   marcarEntregado(id?: number) {
     if (!this.solicitudSeleccionada) return;
-    
-    // Llamada real a la API
+
     this.prestamosAdmin.marcarEntregado(id || this.solicitudSeleccionada.id!).subscribe({
       next: () => {
         this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
@@ -460,12 +439,12 @@ export class SolicitudesPendientesComponent implements OnInit {
   }
 
   getStockTipo(idTipoEquipo: number): number | null {
-    const tipo = this.tiposEquipo.find(t => t.id === idTipoEquipo);
+    const tipo = this.tiposEquipo.find((t: any) => t.id === idTipoEquipo);
     return typeof tipo?.stock === 'number' ? tipo.stock : null;
   }
 
   getNombreTipo(idTipoEquipo: number): string {
-    return this.tiposEquipo.find(t => t.id === idTipoEquipo)?.nombre ?? 'Equipo';
+    return this.tiposEquipo.find((t: any) => t.id === idTipoEquipo)?.nombre ?? 'Equipo';
   }
 
   getEstadoTexto(estado?: string): string {
