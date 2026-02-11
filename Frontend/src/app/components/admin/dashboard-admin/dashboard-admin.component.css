@@ -180,6 +180,19 @@
   margin: 0 auto;
 }
 
+.action-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1rem;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  background: #eef2fb;
+  color: #446ba9;
+  box-shadow: 0 6px 14px rgba(68, 107, 169, 0.12);
+}
+
 .action-card {
   background: #fff;
   padding: 2.5rem;
@@ -194,6 +207,7 @@
   justify-content: center;
   text-align: center;
 }
+
 
 /* Variante para Grupos - mismo estilo que las demás tarjetas */
 .action-card.grupos {
@@ -210,6 +224,7 @@
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(68, 107, 169, 0.15);
 }
+
 
 /* =========================
    SECCIÓN SOLICITUDES (FIX)

@@ -12,3 +12,10 @@
 >
   <router-outlet></router-outlet>
 </div>
+
+<app-footer
+  [role]="esRutaAdmin ? 'admin' : 'alumno'"
+  [showLinks]="!esRutaAuth"
+  [compact]="esRutaAuth"
+  [version]="versionStamp"
+></app-footer>

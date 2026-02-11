@@ -1,0 +1,37 @@
+<footer class="srp-footer" [class.is-compact]="compact" [class.is-minimal]="!showLinks">
+  <div class="footer-shell" *ngIf="showLinks">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-logos">
+          <img src="assets/logo-uta-white.png" alt="Universidad de Tarapacá" class="logo-uta" />
+          <img src="assets/logo-carrera-white.png" alt="Diseño Multimedia" class="logo-dm" />
+        </div>
+        <p class="footer-title">Sistema de Registro y Préstamo de Equipos</p>
+        <p class="footer-subtitle">Universidad de Tarapacá</p>
+        <p class="footer-desc">Soporte y gestión de préstamos para el Departamento de Diseño Multimedia.</p>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-heading">Accesos rápidos</p>
+        <a *ngFor="let link of links; trackBy: trackByLabel"
+           [routerLink]="link.route"
+           [attr.href]="link.route ? null : link.href"
+           routerLinkActive="active"
+           >{{ link.label }}</a>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-heading">Contacto / Legal</p>
+        <span>Contacto: soporte&#64;ejemplo.cl</span>
+        <span>Horario: Lun–Vie 09:00–18:00</span>
+        <a [routerLink]="privacyLink.route" [attr.href]="privacyLink.href">{{ privacyLink.label }}</a>
+        <a [routerLink]="termsLink.route" [attr.href]="termsLink.href">{{ termsLink.label }}</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© {{ year }} Universidad de Tarapacá</span>
+    <span class="footer-meta">Rol: {{ roleLabel }} · Versión: {{ currentVersion }}</span>
+  </div>
+</footer>
