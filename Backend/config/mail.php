@@ -41,7 +41,8 @@ return [
             'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            'timeout' => 15, // Timeout de 15s para no bloquear el worker si SMTP no responde
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
             'auth_mode' => null,
         ],
 
@@ -77,6 +78,13 @@ return [
                 'smtp',
                 'log',
             ],
+        ],
+
+        'gmail-api' => [
+            'transport'    => 'gmail-api',
+            'client_id'     => env('GOOGLE_CLIENT_ID'),
+            'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+            'refresh_token' => env('GMAIL_REFRESH_TOKEN'),
         ],
     ],
 
@@ -114,5 +122,23 @@ return [
             resource_path('views/vendor/mail'),
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fallback email for prestamo notifications
+    |--------------------------------------------------------------------------
+    */
+    'prestamo_fallback_email' => env('PRESTAMO_FALLBACK_EMAIL'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email de Inventario para prestamos externos (FUERA de la UTA)
+    |--------------------------------------------------------------------------
+    | Cuando un prestamo de tipo FUERA cambia de estado, se notifica a esta
+    | direccion para que inventario pueda rendir cuenta de los equipos que
+    | salen de la universidad.
+    |--------------------------------------------------------------------------
+    */
+    'inventario_email' => env('INVENTARIO_EMAIL'),
 
 ];

@@ -158,19 +158,35 @@ class ReportesEquiposNormalizadosService
     /**
      * Métricas normalizadas por equipo (evita sesgo por antigüedad)
      * 
-     * Para cada equipo calcula:
-     * - meses_activos: desde fecha_alta hasta 'to'
-     * - prestamos_por_mes_activo: préstamos / meses_activos
-     * - dias_prestado_total: suma de días en préstamo
-     * - dias_disponibles: días desde max(fecha_alta, from) hasta to
-     * - utilizacion_porcentaje: dias_prestado / dias_disponibles * 100
+     * Usa una sola consulta agregada en vez de N+1 queries.
      */
     public function getEquiposNormalizados(?Request $request = null, int $limit = 20): array
     {
         [$start, $end] = $this->getDateRange($request);
         $uso = $request?->input('uso', 'ambos') ?? 'ambos';
 
-        // Obtener equipos con su fecha de alta
+        // 1) Obtener métricas agregadas por equipo en una sola query
+        $metricsQuery = DB::table('prestamo_equipo as pe')
+            ->join('prestamos as p', 'p.idPrestamo', '=', 'pe.idPrestamo')
+            ->whereBetween('p.created_at', [$start, $end])
+            ->whereIn('p.estado', ['APROBADO', 'DEVUELTO', 'ENTREGADO']);
+
+        $this->applyTipoUsoFilter($metricsQuery, $uso);
+
+        $metrics = $metricsQuery
+            ->select(
+                'pe.idEquipo',
+                DB::raw('COUNT(*) as total_prestamos'),
+                DB::raw("SUM(CASE WHEN p.estado = 'DEVUELTO' AND p.fecha_inicio IS NOT NULL AND p.fecha_fin IS NOT NULL 
+                          THEN DATEDIFF(p.fecha_fin, p.fecha_inicio) ELSE 0 END) as dias_prestado"),
+                DB::raw("SUM(CASE WHEN p.tipo = 'INTERNO' THEN 1 ELSE 0 END) as prestamos_internos"),
+                DB::raw("SUM(CASE WHEN p.tipo = 'EXTERNO' THEN 1 ELSE 0 END) as prestamos_externos")
+            )
+            ->groupBy('pe.idEquipo')
+            ->get()
+            ->keyBy('idEquipo');
+
+        // 2) Obtener equipos con su info base
         $equipos = DB::table('equipos as e')
             ->join('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
             ->join('categorias as c', 'c.id', '=', 'te.categoria_id')
@@ -185,53 +201,26 @@ class ReportesEquiposNormalizadosService
             )
             ->get();
 
+        // 3) Combinar en memoria (0 queries extra)
         $result = [];
 
         foreach ($equipos as $equipo) {
             $fechaAlta = Carbon::parse($equipo->fecha_alta);
-            
-            // Meses activos: desde fecha_alta hasta el fin del período
             $mesesActivos = max(1, $fechaAlta->diffInMonths($end) + 1);
-            
-            // Días disponibles: desde max(fecha_alta, start) hasta end
             $inicioDisponibilidad = $fechaAlta->gt($start) ? $fechaAlta : $start;
             $diasDisponibles = max(1, $inicioDisponibilidad->diffInDays($end) + 1);
 
-            // Contar préstamos del equipo en el período
-            $prestamosQuery = DB::table('prestamos as p')
-                ->join('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
-                ->where('pe.idEquipo', $equipo->id)
-                ->whereBetween('p.created_at', [$start, $end])
-                ->whereIn('p.estado', ['APROBADO', 'DEVUELTO', 'ENTREGADO']);
+            $m = $metrics->get($equipo->id);
+            $totalPrestamos = $m->total_prestamos ?? 0;
+            $diasPrestado = (int)($m->dias_prestado ?? 0);
+            $internos = $m->prestamos_internos ?? 0;
+            $externos = $m->prestamos_externos ?? 0;
 
-            $this->applyTipoUsoFilter($prestamosQuery, $uso);
-            $totalPrestamos = $prestamosQuery->count();
-
-            // Calcular días totales prestado (suma de duración de cada préstamo)
-            $diasPrestado = DB::table('prestamos as p')
-                ->join('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
-                ->where('pe.idEquipo', $equipo->id)
-                ->whereBetween('p.created_at', [$start, $end])
-                ->where('p.estado', 'DEVUELTO')
-                ->whereNotNull('p.fecha_inicio')
-                ->whereNotNull('p.fecha_fin')
-                ->selectRaw('SUM(DATEDIFF(p.fecha_fin, p.fecha_inicio)) as dias')
-                ->value('dias') ?? 0;
-
-            // Promedio de duración por préstamo
             $promedioDuracion = $totalPrestamos > 0 
                 ? round($diasPrestado / $totalPrestamos, 1) 
                 : 0;
-
-            // Préstamos por mes activo (métrica normalizada)
             $prestamosPorMesActivo = round($totalPrestamos / $mesesActivos, 2);
-
-            // % de utilización (días prestado / días disponibles)
             $utilizacionPorcentaje = round(($diasPrestado / $diasDisponibles) * 100, 1);
-
-            // Desglose interno/externo
-            $internos = (clone $prestamosQuery)->where('p.tipo', 'INTERNO')->count();
-            $externos = (clone $prestamosQuery)->where('p.tipo', 'EXTERNO')->count();
 
             $result[] = [
                 'id' => $equipo->id,
@@ -241,15 +230,13 @@ class ReportesEquiposNormalizadosService
                 'categoria' => $equipo->categoria,
                 'estado' => $equipo->estado,
                 'fecha_alta' => $fechaAlta->toDateString(),
-                // Métricas normalizadas
                 'meses_activos' => $mesesActivos,
                 'dias_disponibles' => $diasDisponibles,
                 'total_prestamos' => $totalPrestamos,
-                'dias_prestado' => (int)$diasPrestado,
+                'dias_prestado' => $diasPrestado,
                 'promedio_duracion_dias' => $promedioDuracion,
                 'prestamos_por_mes_activo' => $prestamosPorMesActivo,
-                'utilizacion_porcentaje' => min(100, $utilizacionPorcentaje), // Cap at 100%
-                // Desglose
+                'utilizacion_porcentaje' => min(100, $utilizacionPorcentaje),
                 'prestamos_internos' => $internos,
                 'prestamos_externos' => $externos,
             ];

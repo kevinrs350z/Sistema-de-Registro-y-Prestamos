@@ -79,9 +79,19 @@ export class CatalogoEquiposComponent {
   // ===========================
   // CATEGORÍAS
   // ===========================
-  categorias = computed((): string[] => {
-    const cats = this.tipos().map(t => t.categoria ?? 'Otros');
-    return ['TODOS', 'PACKS', ...Array.from(new Set(cats))];
+  categorias = computed((): { nombre: string; icono: string }[] => {
+    const seen = new Map<string, string>();
+    for (const t of this.tipos()) {
+      const cat = t.categoria ?? 'Otros';
+      if (!seen.has(cat)) {
+        seen.set(cat, t.categoria_icono ?? 'bi-tag');
+      }
+    }
+    return [
+      { nombre: 'TODOS', icono: 'bi-grid-1x2' },
+      { nombre: 'PACKS', icono: 'bi-box-seam' },
+      ...Array.from(seen.entries()).map(([nombre, icono]) => ({ nombre, icono }))
+    ];
   });
 
   esVistaPacks = computed((): boolean =>
@@ -467,6 +477,7 @@ interface TipoEquipo {
   nombre: string;
   descripcion?: string;
   categoria?: string;
+  categoria_icono?: string;
   imagen?: string;
   imagen_url?: string;
   stock: number;

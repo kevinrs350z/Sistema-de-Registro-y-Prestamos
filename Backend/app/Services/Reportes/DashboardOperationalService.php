@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardOperationalService
 {
+    public function __construct(
+        private ReportesSancionesService $sancionesService,
+        private ReportesInventarioService $inventarioService
+    ) {}
     /**
      * KPIs OPERATIVOS PRINCIPALES
      * - Préstamos activos (estado APROBADO)
@@ -62,20 +66,11 @@ class DashboardOperationalService
 
     /**
      * ESTADO DE INVENTARIO
-     * Distribución de equipos por estado (DISPONIBLE, PRESTADO, MANTENIMIENTO, BAJA)
+     * Delega a ReportesInventarioService (fuente canónica)
      */
     public function getEstadoInventario()
     {
-        return DB::table('equipos')
-            ->select('estado', DB::raw('COUNT(*) as total'))
-            ->groupBy('estado')
-            ->get()
-            ->map(function($item) {
-                return [
-                    'estado' => strtoupper($item->estado),
-                    'total' => $item->total
-                ];
-            });
+        return $this->inventarioService->estadoInventario();
     }
 
     /**
@@ -99,9 +94,11 @@ class DashboardOperationalService
         return DB::table('equipos as e')
             ->join('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
             ->select('e.id as id', 'e.codigo', 'te.nombre as tipo', 'e.estado', 'e.observacion', 'e.updated_at')
-            ->whereIn('estado', ['MANTENIMIENTO', 'BAJA'])
-            ->orWhere('observacion', 'like', '%bloque%')
-            ->orderBy('updated_at', 'desc')
+            ->where(function ($q) {
+                $q->whereIn('e.estado', ['MANTENIMIENTO', 'BAJA'])
+                  ->orWhere('e.observacion', 'like', '%bloque%');
+            })
+            ->orderBy('e.updated_at', 'desc')
             ->get();
     }
 
@@ -160,7 +157,7 @@ class DashboardOperationalService
         // conteo de equipos críticos bajo su responsabilidad y préstamos próximos
         $equiposCriticos = DB::table('prestamos as p')
             ->join('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
-            ->join('equipos as e', 'e.idEquipo', '=', 'pe.idEquipo')
+            ->join('equipos as e', 'e.id', '=', 'pe.idEquipo')
             ->where('p.idUser', $idUser)
             ->whereIn('e.estado', ['MANTENIMIENTO', 'BAJA'])
             ->count();
@@ -310,11 +307,13 @@ class DashboardOperationalService
     {
         $kpis = $this->getKPIsOperativos();
         
-        // Calcular score de salud (0-100)
+        // Calcular score de salud (0-100) usando proporciones, no absolutos
         $score = 100;
         
-        // Penalizar por vencidos
-        $score -= $kpis['prestamosVencidos'] * 5;
+        // Penalizar por vencidos (proporción sobre activos totales)
+        $totalActivos = max(1, $kpis['prestamosActivos'] + $kpis['prestamosVencidos']);
+        $tasaVencidos = ($kpis['prestamosVencidos'] / $totalActivos) * 100;
+        $score -= min(30, $tasaVencidos); // Máximo 30 puntos de penalización
         
         // Penalizar por baja disponibilidad
         if ($kpis['porcentajeDisponibilidad'] < 30) {
@@ -323,14 +322,16 @@ class DashboardOperationalService
             $score -= 10;
         }
         
-        // Penalizar por sanciones activas
+        // Penalizar por sanciones activas (proporción sobre total usuarios activos)
         $sancionesActivas = DB::table('sancions')
             ->where('estado', 'ACTIVA')
             ->count();
-        $score -= $sancionesActivas * 2;
+        $totalUsuarios = max(1, DB::table('users')->count());
+        $tasaSanciones = ($sancionesActivas / $totalUsuarios) * 100;
+        $score -= min(20, $tasaSanciones * 2); // Máximo 20 puntos
         
         // Asegurar que no baje de 0 ni suba de 100
-        $score = max(0, min(100, $score));
+        $score = max(0, min(100, round($score, 1)));
         
         // Determinar estado
         if ($score >= 80) {
@@ -395,15 +396,10 @@ class DashboardOperationalService
 
     /**
      * KPIs DE SANCIONES
-     * Sanciones activas, total histórico, bloqueos activos, bloqueos históricos
+     * Delega a ReportesSancionesService (fuente canónica)
      */
     public function getKPIsSanciones()
     {
-        return [
-            'sancionesActivas' => DB::table('sancions')->where('estado', 'ACTIVA')->count(),
-            'sancionesTotal' => DB::table('user_sancion')->count(),
-            'bloqueosActivos' => DB::table('users')->where('bloqueado', true)->count(),
-            'bloqueosHistoricos' => DB::table('user_sancion')->where('accion', 'BLOQUEO')->count(),
-        ];
+        return $this->sancionesService->kpis();
     }
 }

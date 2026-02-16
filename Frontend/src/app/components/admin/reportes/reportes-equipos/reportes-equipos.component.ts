@@ -62,6 +62,7 @@ interface FiltroGrafico {
 export class ReportesEquiposComponent implements OnInit, OnDestroy {
   // Nuevo: Subject para cleanup
   private destroy$ = new Subject<void>();
+  private pendingLoads = 0;
   
   // Nuevo: Filtro centralizado actual
   currentFilter: ReportFilter | null = null;
@@ -253,6 +254,7 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
 
   cargarTodosLosDatos(): void {
     this.filterService.setLoading(true);
+    this.pendingLoads = 6;
     this.cargarEquiposMasSolicitados();
     this.cargarUsoInternoExterno();
     this.cargarSancionesYRechazos();
@@ -260,9 +262,13 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
     this.cargarDisponibilidad();
     this.cargarEquiposCriticos();
     this.actualizarRangoFechas();
-    
-    // Terminar loading después de un momento
-    setTimeout(() => this.filterService.setLoading(false), 1500);
+  }
+
+  private onLoadComplete(): void {
+    this.pendingLoads--;
+    if (this.pendingLoads <= 0) {
+      this.filterService.setLoading(false);
+    }
   }
 
   actualizarRangoFechas(): void {
@@ -361,7 +367,9 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
         this.loadingEquipos = false;
         this.errorEquipos = 'Error cargando equipos más solicitados';
         console.error(err);
-      }
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 
@@ -422,7 +430,9 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
         this.loadingUso = false;
         this.errorUso = 'Error cargando uso interno/externo';
         console.error('Error cargando uso interno/externo:', error);
-      }
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 
@@ -481,7 +491,9 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
         this.loadingSanciones = false;
         this.errorSanciones = 'Error cargando sanciones y rechazos';
         console.error('Error cargando sanciones:', error);
-      }
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 
@@ -507,19 +519,26 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.loadingBaja = false;
         console.error('Error cargando equipos de baja:', err);
-      }
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 
   cargarDisponibilidad() {
-    this.reportesService.getDisponibilidadEquipos().subscribe((data) => {
-      this.disponibilidadEquipos = data || [];
-      const totalPages = this.disponibilidadTotalPages;
-      if (this.disponibilidadPage > totalPages) {
-        this.disponibilidadPage = totalPages;
-      }
-    }, (err) => {
-      console.error('Error cargando disponibilidad:', err);
+    this.reportesService.getDisponibilidadEquipos().subscribe({
+      next: (data) => {
+        this.disponibilidadEquipos = data || [];
+        const totalPages = this.disponibilidadTotalPages;
+        if (this.disponibilidadPage > totalPages) {
+          this.disponibilidadPage = totalPages;
+        }
+      },
+      error: (err) => {
+        console.error('Error cargando disponibilidad:', err);
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 
@@ -539,10 +558,15 @@ export class ReportesEquiposComponent implements OnInit, OnDestroy {
   }
 
   cargarEquiposCriticos() {
-    this.reportesService.getEquiposCriticos().subscribe((data) => {
-      this.equiposCriticos = data || [];
-    }, (err) => {
-      console.error('Error cargando equipos críticos:', err);
+    this.reportesService.getEquiposCriticos().subscribe({
+      next: (data) => {
+        this.equiposCriticos = data || [];
+      },
+      error: (err) => {
+        console.error('Error cargando equipos críticos:', err);
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 

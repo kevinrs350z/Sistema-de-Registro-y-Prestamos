@@ -25,35 +25,14 @@
       <div
         *ngFor="let c of categorias()"
         class="categoria-item"
-        [class.active]="categoriaSeleccionada() === c"
-        (click)="categoriaSeleccionada.set(c)"
+        [class.active]="categoriaSeleccionada() === c.nombre"
+        (click)="categoriaSeleccionada.set(c.nombre)"
       >
         <div class="icono-categoria">
-          <i
-            class="bi"
-            [ngClass]="{
-              'bi-grid-1x2': c === 'TODOS',
-              'bi-box-seam': c === 'PACKS',
-              'bi-camera-video': c === 'Audiovisual',
-              'bi-camera': c === 'Fotografía',
-              'bi-laptop': c === 'Equipo Computacional',
-              'bi-lightbulb': c === 'Iluminación' || c === 'Iluminacion' || c ==='Iluminación'
-            }"
-          ></i>
+          <i class="bi" [ngClass]="c.icono"></i>
         </div>
-        <span>{{ c }}</span>
-        
+        <span>{{ c.nombre }}</span>
       </div>
-       <div
-    class="categoria-item"
-    [class.active]="categoriaSeleccionada() === 'Iluminación'"
-    (click)="categoriaSeleccionada.set('Iluminación')"
-  >
-    <div class="icono-categoria">
-      <i class="bi bi-lightbulb"></i>
-    </div>
-    <span>Iluminación</span>
-  </div>
     </div>
 
     <!-- BUSCADOR -->

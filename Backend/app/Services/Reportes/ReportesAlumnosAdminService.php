@@ -463,6 +463,10 @@ class ReportesAlumnosAdminService
         return $out;
     }
 
+    /**
+     * @deprecated No funcional - la tabla users/persona no tiene campo 'carrera'.
+     * Retorna préstamos agrupados por año de ingreso como alternativa.
+     */
     public function getPrestamosPorCarrera(?Request $request = null, $months = 12)
     {
         [$start, $end] = $this->getDateRange($request, $months);
@@ -471,6 +475,7 @@ class ReportesAlumnosAdminService
         $uso = $request?->input('uso', 'ambos') ?? 'ambos';
 
         $query = DB::table('prestamos as p')
+            ->join('users as u', 'u.idUser', '=', 'p.idUser')
             ->whereIn('p.idUser', $alumnos)
             ->whereBetween('p.created_at', [$start, $end]);
         
@@ -481,8 +486,9 @@ class ReportesAlumnosAdminService
         }
 
         return $query
-            ->selectRaw("'Sin carrera' as carrera, COUNT(*) as total_prestamos")
-            ->groupBy('carrera')
+            ->selectRaw("YEAR(u.created_at) as carrera, COUNT(*) as total_prestamos")
+            ->groupBy(DB::raw('YEAR(u.created_at)'))
+            ->orderByDesc('total_prestamos')
             ->get();
     }
 
@@ -557,12 +563,14 @@ class ReportesAlumnosAdminService
 
     public function getSancionesPorNivel(?Request $request = null, $months = 12)
     {
+        [$start, $end] = $this->getDateRange($request, $months);
         $anioIngreso = $request?->input('anioIngreso') ? (int)$request->input('anioIngreso') : null;
         $alumnos = $this->alumnosUserIds($anioIngreso);
 
         return DB::table('user_sancion as us')
             ->join('sancions as s', 's.idSancion', '=', 'us.idSancion')
             ->whereIn('us.idUser', $alumnos)
+            ->whereBetween('us.created_at', [$start, $end])
             ->selectRaw("UPPER(s.nivel) as nivel, COUNT(*) as total")
             ->groupBy(DB::raw("UPPER(s.nivel)"))
             ->orderByDesc('total')

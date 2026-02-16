@@ -170,6 +170,16 @@ class PrestamoController extends Controller
 
             DB::commit();
 
+            try {
+                $service->notificarEncargadosSolicitud($prestamo->idPrestamo);
+            } catch (\Exception $e) {
+                // Evitar bloquear la respuesta si falla la notificacion
+                \Log::warning('No se pudo notificar encargados', [
+                    'prestamo_id' => $prestamo->idPrestamo,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             return response()->json([
                 'message'    => 'Solicitud enviada correctamente',
                 'idPrestamo' => $prestamo->idPrestamo

@@ -107,7 +107,7 @@ class PrestamoAdminService
             'codigo' => $e->codigo ?? '—'
         ])->toArray();
 
-        // 📧 ENVÍO DE CORREO EN SEGUNDO PLANO (NO BLOQUEA)
+        // Envio de correo al alumno (NO BLOQUEA)
         if ($email) {
             SendPrestamoEmailJob::dispatch(
                 $accion === 'aprobar' ? 'aprobado' : 'rechazado',
@@ -123,6 +123,27 @@ class PrestamoAdminService
                 'prestamo_id' => $prestamo->idPrestamo,
                 'accion' => $accion,
                 'email' => $email
+            ]);
+        }
+
+        // Notificar encargados del cambio de estado
+        try {
+            $this->prestamoService->notificarEncargadosCambioEstado($prestamo->idPrestamo, $accion);
+        } catch (\Exception $e) {
+            Log::warning('No se pudo notificar encargados del cambio de estado', [
+                'prestamo_id' => $prestamo->idPrestamo,
+                'accion' => $accion,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Si es externo (FUERA), notificar a inventario
+        try {
+            $this->prestamoService->notificarInventarioSiExterno($prestamo, $accion === 'aprobar' ? 'APROBADO' : 'RECHAZADO');
+        } catch (\Exception $e) {
+            Log::warning('No se pudo notificar inventario', [
+                'prestamo_id' => $prestamo->idPrestamo,
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -163,6 +184,16 @@ class PrestamoAdminService
         foreach ($prestamo->equipos as $equipo) {
             $equipo->estado = EstadoEquipo::DISPONIBLE;
             $equipo->save();
+        }
+
+        // Notificar al alumno y encargados de la devolucion
+        try {
+            $this->prestamoService->notificarDevuelto($prestamo->idPrestamo, $motivoFinal);
+        } catch (\Exception $e) {
+            Log::warning('No se pudo notificar devolucion', [
+                'prestamo_id' => $prestamo->idPrestamo,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -207,7 +238,7 @@ class PrestamoAdminService
                 ->where('devuelto', false)
                 ->count();
 
-            // 5️⃣ Si NO quedan → préstamo DEVUELTO
+            // 5. Si NO quedan → prestamo DEVUELTO
             if ($pendientes === 0) {
                 $estadoAnterior = $prestamo->estado;
                 $prestamo->estado = EstadoPrestamo::DEVUELTO;
@@ -221,6 +252,16 @@ class PrestamoAdminService
                     EstadoPrestamo::DEVUELTO,
                     'Todos los equipos devueltos'
                 );
+
+                // Notificar al alumno y encargados
+                try {
+                    $this->prestamoService->notificarDevuelto($prestamo->idPrestamo, 'Todos los equipos devueltos');
+                } catch (\Exception $e) {
+                    Log::warning('No se pudo notificar devolucion completa', [
+                        'prestamo_id' => $prestamo->idPrestamo,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         });
     }
@@ -572,14 +613,16 @@ class PrestamoAdminService
         int $idPrestamo,
         int $adminId
     ): void {
-        DB::transaction(function () use ($idPrestamo, $adminId) {
+        $nombreAdmin = null;
+
+        DB::transaction(function () use ($idPrestamo, $adminId, &$nombreAdmin) {
             
-            // 1️⃣ OBTENER PRÉSTAMO
+            // 1. OBTENER PRESTAMO
             $prestamo = Prestamo::findOrFail($idPrestamo);
 
             $estadoAnterior = $prestamo->estado;
 
-            // 2️⃣ VALIDAR: Solo APROBADO → ENTREGADO
+            // 2. VALIDAR: Solo APROBADO -> ENTREGADO
             if ($prestamo->estado !== EstadoPrestamo::APROBADO) {
                 throw new \Exception(
                     "Solo préstamos en estado APROBADO pueden marcarse como ENTREGADO. " .
@@ -587,17 +630,19 @@ class PrestamoAdminService
                 );
             }
 
-            // 3️⃣ VALIDAR QUE QUIEN EJECUTA SEA ADMIN
+            // 3. VALIDAR QUE QUIEN EJECUTA SEA ADMIN
             $admin = User::findOrFail($adminId);
             if (!$admin->isAdmin()) {
                 throw new \Exception('Solo un administrador puede marcar un préstamo como ENTREGADO.');
             }
 
-            // 4️⃣ CAMBIAR ESTADO
+            $nombreAdmin = $admin->persona?->Nombre ?? 'Administrador';
+
+            // 4. CAMBIAR ESTADO
             $prestamo->estado = EstadoPrestamo::ENTREGADO;
             $prestamo->save();
 
-            // 5️⃣ REGISTRAR EN HISTORIAL DE CAMBIOS
+            // 5. REGISTRAR EN HISTORIAL DE CAMBIOS
             $this->registrarHistorial(
                 $prestamo->idPrestamo,
                 $adminId,
@@ -606,14 +651,24 @@ class PrestamoAdminService
                 'Entrega física realizada'
             );
 
-            // 6️⃣ LOG DE AUDITORÍA
-            Log::info('Préstamo marcado como ENTREGADO', [
+            // 6. LOG DE AUDITORIA
+            Log::info('Prestamo marcado como ENTREGADO', [
                 'idPrestamo'   => $idPrestamo,
                 'admin_id'     => $adminId,
-                'admin_nombre' => $admin->persona?->Nombre ?? 'Admin',
+                'admin_nombre' => $nombreAdmin,
                 'timestamp'    => now(),
             ]);
         });
+
+        // 7. Notificar al alumno y encargados de la entrega (fuera de la transaccion)
+        try {
+            $this->prestamoService->notificarEntregado($idPrestamo, $nombreAdmin ?? 'Administrador');
+        } catch (\Exception $e) {
+            Log::warning('No se pudo notificar entrega', [
+                'prestamo_id' => $idPrestamo,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function registrarHistorial(

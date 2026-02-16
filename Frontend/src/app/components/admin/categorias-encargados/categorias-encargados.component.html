@@ -1,0 +1,208 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h1 class="admin-title">Gestion de Categorias y Encargados</h1>
+    <p class="admin-subtitle">Administra categorias, iconos y responsables por area</p>
+  </div>
+
+  <div class="estado-bar" *ngIf="cargando">Cargando categorias...</div>
+  <div class="estado-error" *ngIf="error">{{ error }}</div>
+
+  <div class="layout">
+    <div class="columna-lista">
+      <div class="header-lista">
+        <h3>Categorias</h3>
+        <button class="btn-crear" (click)="nuevaCategoria()">+ Nueva categoria</button>
+      </div>
+
+      <div *ngIf="categorias.length === 0 && !cargando" class="vacio">
+        No hay categorias registradas.
+      </div>
+
+      <table class="tabla" *ngIf="categorias.length">
+        <thead>
+          <tr>
+            <th>Icono</th>
+            <th>Nombre</th>
+            <th>Estado</th>
+            <th>Encargados</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of categorias" [class.activa]="c.id === categoriaSeleccionada?.id">
+            <td>
+              <i class="bi" [ngClass]="c.icono || 'bi-tag'"></i>
+            </td>
+            <td>
+              <div class="nombre">{{ c.nombre }}</div>
+              <div class="desc" *ngIf="c.descripcion">{{ c.descripcion }}</div>
+            </td>
+            <td>
+              <span class="estado" [class.inactivo]="!c.activo">
+                {{ c.activo ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </td>
+            <td>{{ c.encargados_count || 0 }}</td>
+            <td class="acciones">
+              <button class="btn-link" (click)="seleccionarCategoria(c)">Ver / Editar</button>
+              <button class="btn-link danger" *ngIf="c.activo" (click)="desactivarCategoria(c)">Desactivar</button>
+              <button class="btn-link success" *ngIf="!c.activo" (click)="activarCategoria(c)">Activar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="columna-detalle">
+      <div class="detalle-card">
+        <h3>{{ categoriaSeleccionada ? 'Editar categoria' : 'Crear categoria' }}</h3>
+
+        <div class="form-row">
+          <label>Nombre</label>
+          <input class="input" [(ngModel)]="form.nombre" placeholder="Nombre de categoria" />
+        </div>
+
+        <div class="form-row">
+          <label>Descripcion</label>
+          <textarea class="textarea" [(ngModel)]="form.descripcion" placeholder="Descripcion breve"></textarea>
+        </div>
+
+        <div class="form-row">
+          <label>Icono</label>
+          <div class="icon-picker">
+            <button class="icon-trigger" type="button" (click)="toggleIconPicker()">
+              <span class="icon-preview">
+                <i class="bi" [ngClass]="form.icono || 'bi-tag'"></i>
+              </span>
+              <span>{{ form.icono || 'Seleccionar icono' }}</span>
+              <i class="bi bi-chevron-down"></i>
+            </button>
+
+            <div class="icon-dropdown" *ngIf="iconPickerOpen">
+              <input
+                class="input buscador"
+                placeholder="Buscar icono"
+                [(ngModel)]="iconSearch"
+              />
+              <div class="icon-grid">
+                <button
+                  class="icon-item"
+                  *ngFor="let i of iconosFiltrados"
+                  type="button"
+                  (click)="seleccionarIcono(i.name)"
+                >
+                  <i class="bi" [ngClass]="i.name"></i>
+                  <span>{{ i.label }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row switch-row">
+          <label>Activo</label>
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="form.activo" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <button class="btn-primario" (click)="guardarCategoria()" [disabled]="guardando">
+          {{ guardando ? 'Guardando...' : (categoriaSeleccionada ? 'Guardar cambios' : 'Crear categoria') }}
+        </button>
+      </div>
+
+      <div class="detalle-card" *ngIf="categoriaSeleccionada">
+        <h3>Encargados</h3>
+
+        <div class="alerta" *ngIf="encargados.length === 0">
+          No hay encargados asignados. Agrega al menos uno para activar notificaciones.
+        </div>
+
+        <div class="encargados-list">
+          <span class="chip" *ngFor="let e of encargados">
+            <span class="chip-name">{{ e.nombre || e.email }}</span>
+            <button class="chip-remove" type="button" (click)="quitarEncargado(e)">
+              <i class="bi bi-x"></i>
+            </button>
+          </span>
+        </div>
+
+        <div class="search-block">
+          <label>Agregar encargado</label>
+          <input
+            class="input"
+            placeholder="Buscar por nombre o correo"
+            [(ngModel)]="busquedaEncargado"
+            (ngModelChange)="buscarEncargados()"
+          />
+          <div class="loader" *ngIf="buscandoEncargados"></div>
+          <div class="error" *ngIf="errorEncargados">{{ errorEncargados }}</div>
+
+          <div class="resultados" *ngIf="resultadosEncargados.length">
+            <button
+              class="resultado"
+              type="button"
+              *ngFor="let r of resultadosEncargados"
+              (click)="agregarEncargado(r)"
+            >
+              <div class="resultado-nombre">{{ r.nombre || 'Sin nombre' }}</div>
+              <div class="resultado-email">{{ r.email }}</div>
+              <span class="resultado-rol">{{ r.rol || 'Rol' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONFIGURACION DE CORREOS ============ -->
+  <div class="seccion-emails">
+    <div class="seccion-emails-header">
+      <h2><i class="bi bi-envelope-gear"></i> Correos del sistema</h2>
+      <p class="seccion-emails-sub">Configura las direcciones de correo utilizadas para notificaciones automaticas.</p>
+    </div>
+
+    <div class="estado-bar" *ngIf="cargandoEmails">Cargando configuracion de correos...</div>
+
+    <div class="emails-grid" *ngIf="!cargandoEmails && emailConfigs.length > 0">
+      <div class="email-card" *ngFor="let config of emailConfigs">
+        <div class="email-card-header">
+          <i class="bi" [ngClass]="getEmailIcono(config.clave)"></i>
+          <span class="email-card-titulo">{{ getEmailEtiqueta(config.clave) }}</span>
+        </div>
+        <p class="email-card-desc">{{ getEmailDescripcion(config.clave) }}</p>
+        <div class="email-input-wrap">
+          <input
+            class="input"
+            type="email"
+            [placeholder]="'correo@ejemplo.com'"
+            [(ngModel)]="emailValores[config.clave]"
+            [class.input-error]="emailValores[config.clave] && !esEmailValido(emailValores[config.clave])"
+          />
+          <small class="email-error" *ngIf="emailValores[config.clave] && !esEmailValido(emailValores[config.clave])">
+            Correo no valido
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="vacio" *ngIf="!cargandoEmails && emailConfigs.length === 0">
+      No hay configuraciones de correo registradas.
+    </div>
+
+    <div class="email-info" *ngIf="!cargandoEmails && emailConfigs.length > 0">
+      <i class="bi bi-info-circle"></i>
+      Si dejas un campo vacio se usara el valor por defecto del archivo de configuracion del servidor (.env).
+    </div>
+
+    <button
+      class="btn-primario btn-guardar-emails"
+      *ngIf="!cargandoEmails && emailConfigs.length > 0"
+      (click)="guardarEmails()"
+      [disabled]="guardandoEmails"
+    >
+      {{ guardandoEmails ? 'Guardando...' : 'Guardar correos' }}
+    </button>
+  </div>
+</div>

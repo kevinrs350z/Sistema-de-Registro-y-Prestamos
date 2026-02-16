@@ -39,7 +39,9 @@
           <button class="retry-btn" (click)="cargarGraficoPrestamos()">Reintentar</button>
         </div>
         <!-- Chart -->
-        <div *ngIf="!loadingPrestamos && !errorPrestamos" id="profesorPrestamoChart" class="echart"></div>
+        <div *ngIf="!loadingPrestamos && !errorPrestamos" class="chart-container" style="position: relative; height: 350px;">
+          <canvas id="profesorPrestamoChart"></canvas>
+        </div>
       </div>
     </div>
 
@@ -68,7 +70,9 @@
           <button class="retry-btn" (click)="cargarGraficoTendencia()">Reintentar</button>
         </div>
         <!-- Chart -->
-        <div *ngIf="!loadingTendencia && !errorTendencia" id="profesorTendenciaChart" class="echart"></div>
+        <div *ngIf="!loadingTendencia && !errorTendencia" class="chart-container" style="position: relative; height: 350px;">
+          <canvas id="profesorTendenciaChart"></canvas>
+        </div>
       </div>
     </div>
 

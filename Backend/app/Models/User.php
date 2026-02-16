@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
+use App\Models\Categoria;
 
 class User extends Authenticatable implements CanResetPasswordContract
 {
@@ -100,6 +101,26 @@ class User extends Authenticatable implements CanResetPasswordContract
     public function isAdmin()
     {
         return $this->hasRole('ADMIN');
+    }
+
+    public function isAdminOrSuper(): bool
+    {
+        return $this->hasRole('ADMIN') || $this->hasRole('SUPER_USUARIO');
+    }
+
+    /**
+     * Categorias donde el usuario es encargado.
+     */
+    public function categoriasEncargadas()
+    {
+        return $this->belongsToMany(
+            Categoria::class,
+            'categoria_encargado',
+            'user_id',
+            'categoria_id',
+            'idUser',
+            'id'
+        )->withTimestamps();
     }
 
     /**

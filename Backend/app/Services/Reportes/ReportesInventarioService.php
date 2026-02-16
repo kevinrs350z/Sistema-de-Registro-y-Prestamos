@@ -29,7 +29,11 @@ class ReportesInventarioService
             ->select('estado', DB::raw('COUNT(*) as total'))
             ->groupBy('estado')
             ->orderBy('estado')
-            ->get();
+            ->get()
+            ->map(fn($item) => [
+                'estado' => strtoupper($item->estado),
+                'total' => $item->total,
+            ]);
     }
 
     public function equiposPorCategoria()

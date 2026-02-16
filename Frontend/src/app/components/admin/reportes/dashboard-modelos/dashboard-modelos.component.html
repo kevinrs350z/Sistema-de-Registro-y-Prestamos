@@ -30,31 +30,8 @@
         </div>
       </div>
 
-      <!-- Filtros compactos -->
-      <div class="filter-bar d-flex align-items-center flex-wrap gap-2">
-        <div class="btn-group btn-group-sm">
-          @for (p of presetOptions; track p.key) {
-            <button class="btn"
-                    [class.btn-primary]="activePreset === p.key"
-                    [class.btn-outline-secondary]="activePreset !== p.key"
-                    (click)="applyPreset(p.key)">
-              {{ p.label }}
-            </button>
-          }
-        </div>
-
-        <div class="d-flex align-items-center gap-1">
-          <input type="date" class="form-control form-control-sm" style="width:140px"
-                 [(ngModel)]="desde" (change)="onFilterChange()" [max]="hasta">
-          <span class="text-muted">→</span>
-          <input type="date" class="form-control form-control-sm" style="width:140px"
-                 [(ngModel)]="hasta" (change)="onFilterChange()" [min]="desde">
-        </div>
-
-        <button class="btn btn-sm btn-primary" (click)="loadData()">
-          <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
-        </button>
-      </div>
+      <!-- Filtros centralizados -->
+      <app-report-filters></app-report-filters>
     </div>
 
     <!-- Loading bar -->

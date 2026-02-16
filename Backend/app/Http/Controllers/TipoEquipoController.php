@@ -90,7 +90,8 @@ class TipoEquipoController extends Controller
                 'tipo_equipos.descripcion',
                 'tipo_equipos.imagen',
                 'tipo_equipos.maximo_prestamo',
-                'categorias.nombre as categoria'
+                'categorias.nombre as categoria',
+                'categorias.icono as categoria_icono'
             )
             ->leftJoin('categorias', 'categorias.id', '=', 'tipo_equipos.categoria_id')
             ->withCount([

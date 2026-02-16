@@ -33,6 +33,7 @@ use App\Http\Controllers\Reportes\ReportesSancionesController;
 use App\Http\Controllers\Reportes\ReportesMantenimientosController;
 use App\Http\Controllers\Reportes\ReportesTendenciasController;
 use App\Http\Controllers\Reportes\ReportesAsignaturasController;
+use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\ReportesEquiposNormalizadosController;
 use App\Http\Controllers\AdminGrupoController;
 use App\Http\Controllers\BloqueoHorarioController;
@@ -121,6 +122,26 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::post('/prestamos/solicitar', [PrestamoController::class, 'solicitarPrestamo']);
    
     //Route::get('/admin/dashboard', [AdminDashboardController::class, 'getDashboardData']);
+});
+
+// =====================================================
+// ADMIN: GESTION DE CATEGORIAS + ENCARGADOS
+// =====================================================
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/admin/categorias', [CategoriaController::class, 'adminIndex']);
+    Route::post('/admin/categorias', [CategoriaController::class, 'store']);
+    Route::get('/admin/categorias/{id}', [CategoriaController::class, 'adminShow']);
+    Route::put('/admin/categorias/{id}', [CategoriaController::class, 'update']);
+    Route::patch('/admin/categorias/{id}/estado', [CategoriaController::class, 'actualizarEstado']);
+
+    Route::get('/admin/categorias/{id}/encargados', [CategoriaController::class, 'encargados']);
+    Route::post('/admin/categorias/{id}/encargados', [CategoriaController::class, 'agregarEncargados']);
+    Route::delete('/admin/categorias/{id}/encargados/{userId}', [CategoriaController::class, 'quitarEncargado']);
+
+    // CONFIGURACIONES DEL SISTEMA
+    Route::get('/admin/configuraciones', [ConfiguracionController::class, 'index']);
+    Route::put('/admin/configuraciones', [ConfiguracionController::class, 'update']);
+    Route::patch('/admin/configuraciones/{clave}', [ConfiguracionController::class, 'updateOne']);
 });
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
    # Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
@@ -389,13 +410,14 @@ Route::middleware(['auth:sanctum'])
                     Route::get('/equipos-mantenimiento', [ReportesMantenimientosController::class, 'equiposMantenimiento']);
             });
 
-        Route::middleware(['auth:sanctum'])
-            ->prefix('reportes/tendencias')
-            ->group(function () {
-                    Route::get('/prestamos-mes', [ReportesTendenciasController::class, 'prestamosPorMes']);
-                    Route::get('/categorias', [ReportesTendenciasController::class, 'categorias']);
-                    Route::get('/uso-tipo-usuario', [ReportesTendenciasController::class, 'usoPorTipo']);
-            });
+        // Tendencias fusionado en otros módulos — rutas deshabilitadas
+        // Route::middleware(['auth:sanctum'])
+        //     ->prefix('reportes/tendencias')
+        //     ->group(function () {
+        //             Route::get('/prestamos-mes', [ReportesTendenciasController::class, 'prestamosPorMes']);
+        //             Route::get('/categorias', [ReportesTendenciasController::class, 'categorias']);
+        //             Route::get('/uso-tipo-usuario', [ReportesTendenciasController::class, 'usoPorTipo']);
+        //     });
 
     // Dashboard operacional (estado actual del sistema)
     Route::middleware(['auth:sanctum'])

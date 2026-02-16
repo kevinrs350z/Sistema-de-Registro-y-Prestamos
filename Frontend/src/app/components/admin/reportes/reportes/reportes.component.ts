@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportesEquiposComponent } from '../reportes-equipos/reportes-equipos.component';
 import { ReportesAlumnosComponent } from '../reportes-alumnos/reportes-alumnos.component';
-import { ReportesTendenciasComponent } from '../reportes-tendencias/reportes-tendencias.component';
 import { ReportesMantenimientosComponent } from '../reportes-mantenimientos/reportes-mantenimientos.component';
 import { ReportesSancionesComponent } from '../reportes-sanciones/reportes-sanciones.component';
 
@@ -24,8 +23,6 @@ import { DashboardModelosComponent } from '../dashboard-modelos/dashboard-modelo
     ReportesAlumnosComponent,
     ReportesSancionesComponent,
     ReportesMantenimientosComponent,
-    ReportesTendenciasComponent,
-    // ReportesDashboardComponent removed
     ReportesProfesoresComponent,
     ReportesAsignaturasComponent,
     ReportesInventarioComponent,

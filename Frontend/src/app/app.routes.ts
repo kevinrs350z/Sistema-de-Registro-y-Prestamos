@@ -16,7 +16,6 @@ import { DashboardAdminComponent } from './components/admin/dashboard-admin/dash
 import { NotificacionesComponent } from './components/admin/notificaciones/notificaciones.component';
 import { SolicitudesPendientesComponent } from './components/admin/solicitudes-pendientes/solicitudes-pendientes.component';
 import { ReportesComponent } from './components/admin/reportes/reportes/reportes.component';
-import { ReportesTendenciasComponent } from './components/admin/reportes/reportes-tendencias/reportes-tendencias.component';
 import { ReportesAlumnosComponent } from './components/admin/reportes/reportes-alumnos/reportes-alumnos.component';
 import { ReportesProfesoresComponent } from './components/admin/reportes/reportes-profesores/reportes-profesores.component';
 import { ReportesAsignaturasComponent } from './components/admin/reportes/reportes-asignaturas/reportes-asignaturas.component';
@@ -28,6 +27,7 @@ import { GestionarAsignaturasComponent } from './components/admin/asignaturas/ge
 import { DashboardOperationalComponent } from './components/admin/reportes/dashboard-operational/dashboard-operational.component';
 import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
 import { DashboardModelosComponent } from './components/admin/reportes/dashboard-modelos/dashboard-modelos.component';
+import { CategoriasEncargadosComponent } from './components/admin/categorias-encargados/categorias-encargados.component';
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -73,6 +73,7 @@ export const routes: Routes = [
 
   { path: 'admin/solicitudes', component: SolicitudesPendientesComponent },
   { path: 'admin/bloqueos-horario', component: BloqueosHorarioComponent },
+  { path: 'admin/categorias', component: CategoriasEncargadosComponent },
   {
     path: 'admin/reportes',
     component: ReportesComponent,
@@ -85,7 +86,6 @@ export const routes: Routes = [
       { path: 'inventario', component: ReportesInventarioComponent },
       { path: 'sanciones', component: ReportesSancionesComponent },
       { path: 'mantenimientos', component: ReportesMantenimientosComponent },
-      { path: 'tendencias', component: ReportesTendenciasComponent },
       { path: 'modelos', component: DashboardModelosComponent },
 
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }

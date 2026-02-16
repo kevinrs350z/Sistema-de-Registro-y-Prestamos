@@ -362,7 +362,7 @@ class UsuarioService
      * @param int    $limit Máximo de resultados
      * @return array
      */
-    public function buscarUsuarios(string $q, int $limit = 20): array
+    public function buscarUsuarios(string $q, int $limit = 20, array $roles = []): array
     {
         $q = trim($q);
 
@@ -384,6 +384,10 @@ class UsuarioService
                     ->orWhere('users.Email', 'like', "%{$q}%")
                     ->orWhere('persona.Rut', 'like', "%{$q}%");
             })
+            ->when(!empty($roles), function ($query) use ($roles) {
+                $query->whereIn('rol.Nombre', $roles);
+            })
+            ->groupBy('users.idUser', 'users.Email', 'persona.Nombre', 'persona.apellido1', 'persona.apellido2', 'persona.Rut', 'rol.Nombre')
             ->orderBy('persona.Nombre', 'asc')
             ->limit($limit)
             ->get();

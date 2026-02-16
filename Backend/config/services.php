@@ -35,4 +35,8 @@ return [
         'redirect'      => env('GOOGLE_REDIRECT_URL'),
     ],
 
+    'gmail' => [
+        'refresh_token' => env('GMAIL_REFRESH_TOKEN'),
+    ],
+
 ];

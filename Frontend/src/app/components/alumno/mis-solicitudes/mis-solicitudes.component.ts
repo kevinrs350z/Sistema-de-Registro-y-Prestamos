@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, style, transition, animate } from '@angular/animations';
 import { AuthService } from '../../../services/auth.service';
@@ -22,12 +22,14 @@ import { ImagenService } from '../../../services/image.service';
     ]),
   ],
 })
-export class MisSolicitudesComponent implements OnInit {
+export class MisSolicitudesComponent implements OnInit, OnDestroy {
 
   private api = inject(AuthService);
   private imagenSrv = inject(ImagenService);
+  private countdownInterval: any = null;
 
   solicitudes = signal<any[]>([]);
+  countdowns = signal<Record<number, string>>({});
   estadoFiltro = signal('');
   orden = signal<'asc' | 'desc'>('desc');
   solicitudSeleccionada = signal<any | null>(null);
@@ -81,6 +83,72 @@ export class MisSolicitudesComponent implements OnInit {
     this.cargarSolicitudes();
   }
 
+  ngOnDestroy(): void {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+  }
+
+  /**
+   * Inicia un intervalo que actualiza cada segundo la cuenta regresiva
+   * para todas las solicitudes PENDIENTE.
+   */
+  private iniciarCountdown(): void {
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+
+    const MINUTOS_TOLERANCIA = 10;
+
+    const actualizar = () => {
+      const ahora = new Date();
+      const result: Record<number, string> = {};
+
+      for (const s of this.solicitudes()) {
+        if (s.estado !== 'PENDIENTE') continue;
+
+        let deadlineMs: number | null = null;
+
+        if (s.tipoRaw === 'FUERA') {
+          // Externos: fecha_inicio + 10 min
+          if (s.fecha_inicio) {
+            const fi = new Date(s.fecha_inicio);
+            deadlineMs = fi.getTime() + MINUTOS_TOLERANCIA * 60_000;
+          }
+        } else {
+          // Internos: fecha_inicio + hora_inicio_bloque + 10 min
+          if (s.fecha_inicio && s.bloque_hora_inicio) {
+            const fechaStr = s.fecha_inicio.split('T')[0];
+            const dt = new Date(`${fechaStr}T${s.bloque_hora_inicio}`);
+            deadlineMs = dt.getTime() + MINUTOS_TOLERANCIA * 60_000;
+          }
+        }
+
+        if (deadlineMs === null) continue;
+
+        const diff = deadlineMs - ahora.getTime();
+
+        if (diff <= 0) {
+          result[s.id] = 'Tiempo agotado';
+        } else {
+          const totalSeg = Math.floor(diff / 1000);
+          const horas = Math.floor(totalSeg / 3600);
+          const mins = Math.floor((totalSeg % 3600) / 60);
+          const segs = totalSeg % 60;
+
+          if (horas > 0) {
+            result[s.id] = `${horas}h ${mins.toString().padStart(2, '0')}m ${segs.toString().padStart(2, '0')}s`;
+          } else {
+            result[s.id] = `${mins}m ${segs.toString().padStart(2, '0')}s`;
+          }
+        }
+      }
+
+      this.countdowns.set(result);
+    };
+
+    actualizar();
+    this.countdownInterval = setInterval(actualizar, 1000);
+  }
+
   /* =============================
      CARGA DE SOLICITUDES
   ============================= */
@@ -112,9 +180,14 @@ export class MisSolicitudesComponent implements OnInit {
                 }))
               : [];
 
+          // Extraer hora_inicio del primer bloque (para countdown internos)
+          const primerBloque = s.bloque_prestamo?.[0]?.bloque;
+          const bloque_hora_inicio = primerBloque?.hora_inicio ?? null;
+
           return {
             id: s.idPrestamo,
             tipo: s.tipo === 'DENTRO' ? 'Laboratorio' : 'Externo',
+            tipoRaw: s.tipo,
             asignatura:
               s.asignatura_nombre ||
               s.asignaturaNombre ||
@@ -124,6 +197,7 @@ export class MisSolicitudesComponent implements OnInit {
             fecha_fin: s.fecha_fin || null,
             created_at: s.created_at || null,
             bloqueTxt,
+            bloque_hora_inicio,
             equipos,
             observacion: s.observacion ?? 'Sin observación',
             tieneExtension: s.tiene_extension ?? false,
@@ -138,6 +212,7 @@ export class MisSolicitudesComponent implements OnInit {
 
         this.solicitudes.set(solicitudesMapeadas);
         this.currentPage.set(1);
+        this.iniciarCountdown();
       },
       error: (err) => console.error('Error al cargar solicitudes:', err),
     });

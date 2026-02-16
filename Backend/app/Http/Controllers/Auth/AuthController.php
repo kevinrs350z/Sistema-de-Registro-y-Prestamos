@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth; 
-use Illuminate\Support\Facades\Mail;
 use App\Mail\LoginNotification;
+use App\Jobs\SendGenericEmailJob;
 
 
 
@@ -101,8 +101,13 @@ class AuthController extends Controller
             // 4. Crear el token
             $token = $user->createToken('auth-token')->plainTextToken;
 
+            // Enviar notificación de login de forma asíncrona
             if ($user->persona && $user->persona->Email) {
-                Mail::to($user->persona->Email)->send(new LoginNotification($user));
+                SendGenericEmailJob::dispatch(
+                    $user->persona->Email,
+                    new LoginNotification($user),
+                    'login-notification'
+                );
             }
             return response()->json([
                 'user' => $user->load('persona', 'roles'),

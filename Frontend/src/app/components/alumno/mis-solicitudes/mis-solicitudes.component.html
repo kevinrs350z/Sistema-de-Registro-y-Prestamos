@@ -69,6 +69,15 @@
 
           <p><b>Observación:</b> {{ solicitudSeleccionada().observacion }}</p>
           <p><b>Estado:</b> {{ solicitudSeleccionada().estado }}</p>
+
+          <!-- ⏱️ Cuenta regresiva detalle móvil -->
+          <div class="countdown-detail" *ngIf="solicitudSeleccionada().estado === 'PENDIENTE' && countdowns()[solicitudSeleccionada().id]">
+            <span class="countdown-icon">⏱</span>
+            <span>Tiempo restante: </span>
+            <strong [class.countdown-expired]="countdowns()[solicitudSeleccionada().id] === 'Tiempo agotado'">
+              {{ countdowns()[solicitudSeleccionada().id] }}
+            </strong>
+          </div>
         </div>
 
       </div>
@@ -95,6 +104,14 @@
           <!-- 🔥 ESTADO -->
           <span class="estado" [ngClass]="getEstadoClass(s.estado)">
             {{ s.estado }}
+          </span>
+        </div>
+
+        <!-- ⏱️ Cuenta regresiva para PENDIENTE -->
+        <div class="countdown-badge" *ngIf="s.estado === 'PENDIENTE' && countdowns()[s.id]">
+          <span class="countdown-icon">⏱</span>
+          <span [class.countdown-expired]="countdowns()[s.id] === 'Tiempo agotado'">
+            {{ countdowns()[s.id] }}
           </span>
         </div>
 
@@ -175,6 +192,15 @@
             {{ eq.codigo }} — {{ eq.nombre }}
           </li>
         </ul>
+
+        <!-- ⏱️ Cuenta regresiva detalle desktop -->
+        <div class="countdown-detail" *ngIf="solicitudSeleccionada().estado === 'PENDIENTE' && countdowns()[solicitudSeleccionada().id]">
+          <span class="countdown-icon">⏱</span>
+          <span>Tiempo restante para retirar: </span>
+          <strong [class.countdown-expired]="countdowns()[solicitudSeleccionada().id] === 'Tiempo agotado'">
+            {{ countdowns()[solicitudSeleccionada().id] }}
+          </strong>
+        </div>
 
         <ng-template #sinEquipos>
           <p>—</p>
