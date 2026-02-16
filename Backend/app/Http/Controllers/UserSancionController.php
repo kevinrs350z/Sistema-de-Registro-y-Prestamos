@@ -328,7 +328,7 @@ class UserSancionController extends Controller
         ]);
     }
 
-   
+
     public function ampliarSancion(Request $request, $idSancion)
     {
         $request->validate([

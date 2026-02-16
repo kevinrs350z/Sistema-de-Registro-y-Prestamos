@@ -31,6 +31,8 @@ export class MisSancionesComponent implements OnInit {
   cargando = signal(false);
   error = signal<string | null>(null);
   filtro = signal<'TODAS' | 'ACTIVAS' | 'PASADAS'>('TODAS');
+  page = signal(1);
+  readonly pageSize = 6;
 
   sancionesFiltradas = computed(() => {
     const list = this.sanciones();
@@ -38,6 +40,18 @@ export class MisSancionesComponent implements OnInit {
     if (f === 'ACTIVAS') return list.filter(s => s.estado === 'ACTIVA');
     if (f === 'PASADAS') return list.filter(s => s.estado !== 'ACTIVA');
     return list;
+  });
+
+  totalPages = computed(() => {
+    const total = this.sancionesFiltradas().length;
+    return Math.ceil(total / this.pageSize);
+  });
+
+  sancionesPaginadas = computed(() => {
+    const list = this.sancionesFiltradas();
+    const page = this.page();
+    const start = (page - 1) * this.pageSize;
+    return list.slice(start, start + this.pageSize);
   });
 
   ngOnInit(): void {
@@ -51,6 +65,7 @@ export class MisSancionesComponent implements OnInit {
     this.api.getMisSanciones(token).subscribe({
       next: (res) => {
         this.sanciones.set(res?.sanciones ?? []);
+        this.normalizarPagina();
         this.cargando.set(false);
       },
       error: () => {
@@ -62,5 +77,36 @@ export class MisSancionesComponent implements OnInit {
 
   setFiltro(f: 'TODAS' | 'ACTIVAS' | 'PASADAS') {
     this.filtro.set(f);
+    this.page.set(1);
+    this.normalizarPagina();
+  }
+
+  prevPage() {
+    if (this.page() > 1) {
+      this.page.set(this.page() - 1);
+    }
+  }
+
+  nextPage() {
+    const total = this.totalPages();
+    if (total > 0 && this.page() < total) {
+      this.page.set(this.page() + 1);
+    }
+  }
+
+  private normalizarPagina() {
+    const total = this.totalPages();
+    if (total === 0) {
+      this.page.set(1);
+      return;
+    }
+
+    if (this.page() > total) {
+      this.page.set(total);
+    }
+
+    if (this.page() < 1) {
+      this.page.set(1);
+    }
   }
 }

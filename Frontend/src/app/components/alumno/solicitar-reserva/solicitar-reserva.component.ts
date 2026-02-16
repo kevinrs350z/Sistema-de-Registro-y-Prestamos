@@ -84,7 +84,7 @@ export class SolicitarReservaComponent {
     { nombre: 'Practica Laboral Segundo año' },
     { nombre: 'Practica Profesional Cuarto año' }
   ]);
-  bloques: { id: number; texto: string; aviso?: boolean; avisoTexto?: string }[] = [];
+  bloques: { id: number; texto: string; aviso?: boolean; avisoTexto?: string; horaInicio?: string; horaFin?: string }[] = [];
 
   integrantes = signal<any[]>([]);
   integrantesSeleccionados = signal<number[]>([]);
@@ -322,16 +322,18 @@ export class SolicitarReservaComponent {
         .map((b: any) => ({
           id: b.idBloque,
           texto: `Bloque ${b.idBloque} (${cortarHora(b.hora_inicio)} – ${cortarHora(b.hora_fin)})`,
+          horaInicio: cortarHora(b.hora_inicio),
+          horaFin: cortarHora(b.hora_fin),
           aviso: b.idBloque === 6 || b.idBloque === 7,
           avisoTexto: b.idBloque === 6 || b.idBloque === 7 ? avisosTexto : undefined
         }));
 
       const defaults = [
-        { id: 6, texto: 'Bloque 6 (16:20 – 17:50)', aviso: true, avisoTexto: avisosTexto },
-        { id: 7, texto: 'Bloque 7 (17:55 – 19:20)', aviso: true, avisoTexto: avisosTexto },
+        { id: 6, texto: 'Bloque 6 (16:20 – 17:50)', horaInicio: '16:20', horaFin: '17:50', aviso: true, avisoTexto: avisosTexto },
+        { id: 7, texto: 'Bloque 7 (17:55 – 19:20)', horaInicio: '17:55', horaFin: '19:20', aviso: true, avisoTexto: avisosTexto },
       ];
 
-      const map = new Map<number, { id: number; texto: string; aviso?: boolean; avisoTexto?: string }>();
+      const map = new Map<number, { id: number; texto: string; aviso?: boolean; avisoTexto?: string; horaInicio?: string; horaFin?: string }>();
       fromApi.forEach(b => map.set(b.id, b));
       defaults.forEach(b => {
         if (!map.has(b.id)) map.set(b.id, b);
@@ -398,6 +400,13 @@ export class SolicitarReservaComponent {
   onBloqueChange(event: Event, id: number) {
     const target = event.target as HTMLInputElement;
     const arr: number[] = this.f.bloques.value ?? [];
+    const bloque = this.bloques.find(b => b.id === id);
+
+    if (bloque && this.bloqueFueraDeHorario(bloque)) {
+      target.checked = false;
+      this.notify.warning('Este bloque ya está fuera del horario permitido hoy.');
+      return;
+    }
     
     if (target.checked) {
       // Agregar bloque
@@ -454,6 +463,24 @@ export class SolicitarReservaComponent {
     const max = Math.max(...seleccionados);
     
     return id === min - 1 || id === max + 1;
+  }
+
+  bloqueFueraDeHorario(bloque: { horaInicio?: string; horaFin?: string }): boolean {
+    if (!bloque?.horaInicio) return false;
+    const ahora = this.minutosActuales();
+    const inicio = this.horaTextoAMinutos(bloque.horaInicio);
+    return inicio !== null && ahora >= inicio;
+  }
+
+  private minutosActuales(): number {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  }
+
+  private horaTextoAMinutos(hora: string): number | null {
+    const [hh, mm] = hora.split(':').map(x => Number(x));
+    if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
+    return hh * 60 + mm;
   }
 
   toggleIntegrante(id: number) {

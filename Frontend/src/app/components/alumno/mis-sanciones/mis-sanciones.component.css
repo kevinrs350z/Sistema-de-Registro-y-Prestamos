@@ -110,3 +110,32 @@
   color: #6b7280;
   padding: 18px 0;
 }
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.paginacion button {
+  border: 1px solid #d8e2ff;
+  background: #f7f9ff;
+  color: #2f3f88;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.paginacion button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.paginacion-info {
+  color: #4b5563;
+  font-weight: 600;
+}

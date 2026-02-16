@@ -17,7 +17,7 @@ import { FooterComponent } from './shared/footer/footer.component';
     RouterOutlet,
     NavbarComponent,
     NavbarAdminComponent,
-    LoadingOverlayComponent, // 👈 IMPORTANTE
+    LoadingOverlayComponent, 
     NgIf,
     NotificationComponent,
     RouterLink,

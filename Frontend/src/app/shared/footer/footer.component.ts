@@ -49,10 +49,6 @@ export class FooterComponent {
     return this.version || 'v1.0.0';
   }
 
-  get roleLabel(): string {
-    return this.role === 'admin' ? 'Admin' : 'Alumno';
-  }
-
   trackByLabel(_index: number, item: QuickLink): string {
     return item.label;
   }
