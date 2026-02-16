@@ -302,23 +302,25 @@
         <label 
           class="bloque-card" 
           *ngFor="let b of bloques"
-          [class.disabled]="!puedeSeleccionarBloque(b.id)"
+          [class.disabled]="!puedeSeleccionarBloque(b.id) || bloqueFueraDeHorario(b)"
+          [class.fuera-tiempo]="bloqueFueraDeHorario(b)"
         >
           <input
             type="checkbox"
             [checked]="form.get('bloques')?.value?.includes(b.id)"
-            [disabled]="!puedeSeleccionarBloque(b.id)"
+            [disabled]="!puedeSeleccionarBloque(b.id) || bloqueFueraDeHorario(b)"
             (change)="onBloqueChange($event, b.id)"
           />
           <div class="bloque-info">
             <span class="bloque-texto">{{ b.texto }}</span>
+            <span class="bloque-fuera" *ngIf="bloqueFueraDeHorario(b)">Fuera de horario hoy</span>
           </div>
           <span
             class="bloque-warning"
             *ngIf="b.aviso"
             [attr.aria-label]="b.avisoTexto"
             tabindex="0"
-          >?</span>
+          >!</span>
           <span class="bloque-tooltip" *ngIf="b.aviso">{{ b.avisoTexto }}</span>
         </label>
       </div>

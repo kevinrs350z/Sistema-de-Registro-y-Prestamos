@@ -14,7 +14,7 @@
   <div class="estado error" *ngIf="error()">{{ error() }}</div>
 
   <div class="grid" *ngIf="!cargando() && !error()">
-    <div class="card" *ngFor="let s of sancionesFiltradas()">
+    <div class="card" *ngFor="let s of sancionesPaginadas()">
       <div class="card-head">
         <span class="badge" [class.activa]="s.estado === 'ACTIVA'">
           {{ s.estado === 'ACTIVA' ? 'Activa' : 'Pasada' }}
@@ -42,5 +42,11 @@
     <div class="vacio" *ngIf="sancionesFiltradas().length === 0">
       No tienes sanciones registradas.
     </div>
+  </div>
+
+  <div class="paginacion" *ngIf="!cargando() && !error() && totalPages() > 1">
+    <button type="button" (click)="prevPage()" [disabled]="page() === 1">Anterior</button>
+    <span class="paginacion-info">Pagina {{ page() }} de {{ totalPages() }}</span>
+    <button type="button" (click)="nextPage()" [disabled]="page() === totalPages()">Siguiente</button>
   </div>
 </div>

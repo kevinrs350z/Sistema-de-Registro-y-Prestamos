@@ -83,19 +83,52 @@
 
     <h2>Detalle de Sanción</h2>
 
-<div class="detalle-grid">
-  <div><label>Nombre</label><p>{{ sancionSeleccionada.nombre }}</p></div>
-  <div><label>Apellido</label><p>{{ sancionSeleccionada.apellido }}</p></div>
-  <div><label>Correo</label><p>{{ sancionSeleccionada.correo }}</p></div>
-  <div><label>RUT</label><p>{{ sancionSeleccionada.rut }}</p></div>
+<div class="detalle-grid detail-tiles">
+  <div class="detail-tile">
+    <p class="tile-label">Nombre</p>
+    <p class="tile-value">{{ sancionSeleccionada.nombre }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Apellido</p>
+    <p class="tile-value">{{ sancionSeleccionada.apellido }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Correo</p>
+    <p class="tile-value">{{ sancionSeleccionada.correo }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">RUT</p>
+    <p class="tile-value">{{ sancionSeleccionada.rut }}</p>
+  </div>
 
-  <div><label>Motivo</label><p>{{ sancionSeleccionada.motivo }}</p></div>
-    <div class="col-100"><label>Descripción</label><p>{{ sancionSeleccionada.descripcion || '—' }}</p></div>
-  <div><label>Asignada por</label><p>{{ sancionSeleccionada.asignada_por || '—' }}</p></div>
-  <div><label>Asignada en</label><p>{{ sancionSeleccionada.asignada_en || '—' }}</p></div>
-  <div><label>Fecha inicio</label><p>{{ sancionSeleccionada.fecha_inicio }}</p></div>
-  <div><label>Fecha fin</label><p>{{ sancionSeleccionada.fecha_fin }}</p></div>
-  <div><label>Estado</label><p>{{ sancionSeleccionada.estado }}</p></div>
+  <div class="detail-tile">
+    <p class="tile-label">Motivo</p>
+    <p class="tile-value">{{ sancionSeleccionada.motivo }}</p>
+  </div>
+  <div class="detail-tile col-100">
+    <p class="tile-label">Descripción</p>
+    <p class="tile-value">{{ sancionSeleccionada.descripcion || '—' }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Asignada por</p>
+    <p class="tile-value">{{ sancionSeleccionada.asignada_por || '—' }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Asignada el</p>
+    <p class="tile-value">{{ sancionSeleccionada.asignada_en ? (sancionSeleccionada.asignada_en | date:'dd/MM/yyyy · HH:mm') : '—' }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Fecha inicio</p>
+    <p class="tile-value">{{ sancionSeleccionada.fecha_inicio }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Fecha fin</p>
+    <p class="tile-value">{{ sancionSeleccionada.fecha_fin }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Estado</p>
+    <p class="tile-value">{{ sancionSeleccionada.estado }}</p>
+  </div>
 </div>
 
 
