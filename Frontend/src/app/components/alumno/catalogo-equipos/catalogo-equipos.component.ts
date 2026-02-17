@@ -182,6 +182,29 @@ export class CatalogoEquiposComponent {
     return this.formatoDisponibilidad.format(fecha);
   }
 
+  bloqueoHorarioActivo(e: TipoEquipo): boolean {
+    return !!(
+      e.bloqueo_horario_activo ||
+      e.bloqueo_horario ||
+      e.bloqueado_horario ||
+      e.bloqueo_horario_hasta ||
+      e.bloqueo_hasta
+    );
+  }
+
+  getBloqueoHorarioTexto(e: TipoEquipo): string {
+    const base = e.bloqueo_horario_motivo || e.bloqueo_motivo || 'Bloqueado temporalmente por horario.';
+    const hasta = this.getBloqueoHastaFecha(e);
+    return hasta ? `${base} Disponible desde ${this.formatoDisponibilidad.format(hasta)}.` : base;
+  }
+
+  private getBloqueoHastaFecha(e: TipoEquipo): Date | null {
+    const raw = e.bloqueo_horario_hasta || e.bloqueo_hasta;
+    if (!raw) return null;
+    const fecha = new Date(raw);
+    return Number.isNaN(fecha.getTime()) ? null : fecha;
+  }
+
   // ===========================
   // CAMBIAR CANTIDAD (✅ ahora modifica el servicio)
   // ===========================
@@ -190,6 +213,10 @@ export class CatalogoEquiposComponent {
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
     if (!this.esAdmin) {
+      if (this.bloqueoHorarioActivo(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
       if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
         this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
         return;
@@ -253,6 +280,10 @@ export class CatalogoEquiposComponent {
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
     if (!this.esAdmin) {
+      if (this.bloqueoHorarioActivo(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
       if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
         this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
         return;
@@ -475,6 +506,12 @@ interface TipoEquipo {
   grupo_relacionados?: number[];
   bloqueado?: boolean;
   bloqueo_motivo?: string | null;
+  bloqueo_horario?: boolean;
+  bloqueado_horario?: boolean;
+  bloqueo_horario_activo?: boolean;
+  bloqueo_horario_hasta?: string | null;
+  bloqueo_hasta?: string | null;
+  bloqueo_horario_motivo?: string | null;
   proxima_disponibilidad?: string | null;
 }
 

@@ -2,7 +2,14 @@
   <div class="navbar-bg"></div>
 
   <div class="navbar-content">
-    <div class="navbar-brand">
+    <div
+      class="navbar-brand"
+      role="button"
+      tabindex="0"
+      (click)="irHome()"
+      (keyup.enter)="irHome()"
+      aria-label="Ir al dashboard"
+    >
       <img
         src="assets/logo-uta-white.png"
         alt="Universidad de Tarapacá"

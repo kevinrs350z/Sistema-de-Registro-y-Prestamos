@@ -24,6 +24,11 @@ export class NavbarAdminComponent {
     this.menuAbierto = !this.menuAbierto;
   }
 
+  irHome() {
+    this.menuAbierto = false;
+    this.router.navigate(['/admin/dashboard']);
+  }
+
   /** Navegar a sección - usa evento si está en dashboard, si no navega por ruta */
   navegarInterno(seccion: string) {
     this.menuAbierto = false;

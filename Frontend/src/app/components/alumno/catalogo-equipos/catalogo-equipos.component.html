@@ -78,7 +78,7 @@
       *ngFor="let e of tiposFiltrados()"
       class="card-equipo"
       [class.selected]="estaEnCarrito(e.id)"
-      [class.bloqueado]="!esAdmin && (e.bloqueado || (bloqueoPorComputador() && !estaComputadorSeleccionado(e)))"
+      [class.bloqueado]="!esAdmin && (bloqueoHorarioActivo(e) || e.bloqueado || (bloqueoPorComputador() && !estaComputadorSeleccionado(e)))"
     >
 
       <!-- IMAGEN -->
@@ -100,7 +100,10 @@
       <div class="controles-card">
         <p class="stock">Stock: {{ e.stock }}</p>
 
-        <p class="disponibilidad" *ngIf="obtenerMensajeDisponibilidad(e) as mensaje">
+        <p class="disponibilidad bloqueada" *ngIf="bloqueoHorarioActivo(e)">
+          Bloqueado por horario
+        </p>
+        <p class="disponibilidad" *ngIf="!bloqueoHorarioActivo(e) && obtenerMensajeDisponibilidad(e) as mensaje">
           {{ mensaje }}
         </p>
 
@@ -111,6 +114,11 @@
         <span class="badge bg-secondary" *ngIf="!esAdmin && bloqueoPorComputador() && !estaComputadorSeleccionado(e)">
           Bloqueado por computador
         </span>
+
+        <div class="alert-horario" *ngIf="!esAdmin && bloqueoHorarioActivo(e)">
+          <span class="alert-horario-title">Bloqueado por horario</span>
+          <span class="alert-horario-text">{{ getBloqueoHorarioTexto(e) }}</span>
+        </div>
 
       </div>
 
@@ -141,7 +149,7 @@
         class="btn-principal"
         *ngIf="!esAdmin"
         (click)="toggleProducto(e.id)"
-        [disabled]="e.bloqueado || (bloqueoPorComputador() && !estaComputadorSeleccionado(e))"
+        [disabled]="bloqueoHorarioActivo(e) || e.bloqueado || (bloqueoPorComputador() && !estaComputadorSeleccionado(e))"
       >
         {{ estaEnCarrito(e.id) ? 'Quitar de la solicitud' : 'Agregar a la solicitud' }}
       </button>

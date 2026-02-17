@@ -73,7 +73,7 @@
   padding: 8px 12px;
   font-size: 0.9rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff !important;
   text-decoration: none;
   background: none;
   border: none;
@@ -82,11 +82,11 @@
 }
 
 .nav-link:hover {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .nav-logout {
-  color: rgba(255, 255, 255, 0.85);
+  color: #ffffff;
 }
 
 .nav-logout:hover {
@@ -103,7 +103,7 @@
 .nav-user-name {
   font-size: 0.85rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
+  color: #ffb58c;
 }
 
 .navbar-toggler {

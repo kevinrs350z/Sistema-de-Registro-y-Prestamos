@@ -96,7 +96,7 @@
   font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff !important;
   text-decoration: none;
   background: none;
   border: none;
@@ -123,7 +123,7 @@
 }
 
 .nav-link:hover {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .nav-link:hover::after {
@@ -131,7 +131,7 @@
 }
 
 .nav-link.active {
-  color: #ffffff;
+  color: #ffffff !important;
   font-weight: 600;
 }
 
@@ -153,13 +153,13 @@
   font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
   font-size: 0.85rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
+  color: #ffb58c;
   margin-right: 4px;
 }
 
 /* Link salir - mismo estilo que navegación */
 .nav-logout {
-  color: rgba(255, 255, 255, 0.85);
+  color: #ffffff;
 }
 
 .nav-logout:hover {

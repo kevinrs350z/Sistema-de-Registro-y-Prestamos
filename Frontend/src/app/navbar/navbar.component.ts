@@ -44,6 +44,12 @@ export class NavbarComponent {
     this.router.navigate(['/equipos/catalogo']);
   }
 
+  irHome() {
+    this.menuAbierto = false;
+    const destino = this.esAdmin ? '/admin/dashboard' : '/equipos/catalogo';
+    this.router.navigate([destino]);
+  }
+
   getUserId(): string {
     try {
       const raw = sessionStorage.getItem('user');

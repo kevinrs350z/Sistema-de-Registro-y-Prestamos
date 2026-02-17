@@ -11,6 +11,8 @@ use App\Models\TipoEquipo;
 use App\Services\PrestamoService;
 use App\Enums\EstadoPrestamo;
 use Carbon\Carbon;
+use App\Models\BloqueoHorario;
+use App\Models\Bloque;
 use Illuminate\Support\Facades\DB;
 
 class TipoEquipoController extends Controller
@@ -134,11 +136,65 @@ class TipoEquipoController extends Controller
             $bloqueos = $prestamoService->obtenerBloqueoPorTipoUsuario($user->idUser);
         }
 
-        $tipos = $tipos->map(function ($t) use ($bloqueos, $proximas) {
+        $ahora = Carbon::now();
+        $semanaInicio = $ahora->copy()->startOfWeek(Carbon::MONDAY);
+        $bloquesHorarios = Bloque::all()->keyBy('idBloque');
+
+        $bloqueosHorario = BloqueoHorario::where('activo', true)
+            ->where('semana_inicio', $semanaInicio->toDateString())
+            ->get()
+            ->groupBy('idTipoEquipo')
+            ->map(function ($items) use ($bloquesHorarios, $ahora, $semanaInicio) {
+                $resultado = [
+                    'activo' => false,
+                    'hasta' => null,
+                    'motivo' => null,
+                ];
+
+                foreach ($items as $registro) {
+                    $bloque = $bloquesHorarios->get($registro->idBloque);
+                    if (!$bloque) {
+                        continue;
+                    }
+
+                    $dia = max(1, (int) $registro->dia_semana);
+                    $fechaDia = (clone $semanaInicio)->addDays($dia - 1);
+
+                    $inicio = Carbon::parse($fechaDia->toDateString() . ' ' . $bloque->hora_inicio);
+                    $fin = Carbon::parse($fechaDia->toDateString() . ' ' . $bloque->hora_fin);
+
+                    if ($fin->lessThan($inicio)) {
+                        $fin->addDay();
+                    }
+
+                    if ($ahora->between($inicio, $fin)) {
+                        $resultado['activo'] = true;
+                        $resultado['hasta'] = $fin;
+                        $resultado['motivo'] = $registro->motivo;
+                        break;
+                    }
+                }
+
+                return $resultado;
+            })
+            ->toArray();
+
+        $tipos = $tipos->map(function ($t) use ($bloqueos, $proximas, $bloqueosHorario) {
             $info = $bloqueos[$t->id] ?? null;
             $bloqueado = (bool) ($info['bloqueado'] ?? false);
             $bloqueadoPorSolicitud = (bool) ($info['bloqueado_por_solicitud'] ?? false);
             $grupoRelacionados = $info['grupo_relacionados'] ?? [$t->id];
+
+            $horario = $bloqueosHorario[$t->id] ?? [
+                'activo' => false,
+                'hasta' => null,
+                'motivo' => null,
+            ];
+            $bloqueoHorarioActivo = (bool) ($horario['activo'] ?? false);
+            $bloqueoHorarioHasta = $horario['hasta'] instanceof Carbon
+                ? $horario['hasta']->toIso8601String()
+                : ($horario['hasta'] ?? null);
+            $bloqueoHorarioMotivo = $horario['motivo'] ?? null;
 
             // imagen_url ya viene del modelo gracias al accessor
             return array_merge($t->toArray(), [
@@ -151,6 +207,12 @@ class TipoEquipoController extends Controller
                     : null,
                 'grupo_relacionados' => $grupoRelacionados,
                 'proxima_disponibilidad' => $proximas[$t->id] ?? null,
+                'bloqueo_horario' => $bloqueoHorarioActivo,
+                'bloqueado_horario' => $bloqueoHorarioActivo,
+                'bloqueo_horario_activo' => $bloqueoHorarioActivo,
+                'bloqueo_horario_hasta' => $bloqueoHorarioHasta,
+                'bloqueo_hasta' => $bloqueoHorarioHasta,
+                'bloqueo_horario_motivo' => $bloqueoHorarioMotivo,
             ]);
         });
 
