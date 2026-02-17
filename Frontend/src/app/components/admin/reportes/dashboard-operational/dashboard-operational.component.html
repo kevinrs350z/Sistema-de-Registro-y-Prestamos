@@ -1,203 +1,330 @@
 <div class="dash-operational">
-
-  <!-- ═══════════════════════════════════════════════════════════
-       HEADER
-  ═══════════════════════════════════════════════════════════ -->
   <header class="dash-header">
-    <div class="dash-header-left">
-      <h1 class="dash-title">Dashboard Operativo</h1>
-      <span class="dash-subtitle">Estado del servicio en tiempo real</span>
-    </div>
-    <div class="dash-header-right">
-      <span class="dash-timestamp">{{ today | date:'dd MMM yyyy, HH:mm' }}</span>
+    <div>
+      <h1 class="dash-title">Demanda histórica de préstamos</h1>
+      <span class="dash-subtitle">
+        {{ tipoSeleccionado === 'FUERA' ? 'Solicitudes externas por fecha' : 'Solicitudes internas por bloque horario' }}
+      </span>
     </div>
   </header>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       NIVEL 1 – KPIs CRÍTICOS (Requieren acción inmediata)
-  ═══════════════════════════════════════════════════════════ -->
-  <section class="level level-critical">
-    <h2 class="level-title">Requiere atención</h2>
-    <div class="kpi-row kpi-row-4">
+  <app-report-filters
+    [showAnioIngreso]="true"
+    [showExport]="false"
+    (filtersChanged)="onFiltersChanged($event)">
+  </app-report-filters>
 
-      <!-- Vencidos -->
-      <article class="kpi-card">
-        <div class="kpi-indicator" [class.indicator-danger]="kpis.prestamosVencidos > 0" [class.indicator-ok]="kpis.prestamosVencidos === 0"></div>
-        <div class="kpi-content">
-          <span class="kpi-value" [class.value-danger]="kpis.prestamosVencidos > 0">{{ kpis.prestamosVencidos }}</span>
-          <span class="kpi-label">Vencidos</span>
-        </div>
-      </article>
+  <section class="chart-card">
+    <div class="chart-toolbar">
+      <label for="tipoFiltro">Tipo:</label>
+      <select id="tipoFiltro" class="tipo-select" [value]="tipoSeleccionado" (change)="onTipoChange($event)">
+        <option value="FUERA">Externo (por días)</option>
+        <option value="DENTRO">Interno (por bloques)</option>
+      </select>
 
-      <!-- Atrasos -->
-      <article class="kpi-card">
-        <div class="kpi-indicator" [class.indicator-danger]="kpisMantenimientos.atrasos > 0" [class.indicator-ok]="kpisMantenimientos.atrasos === 0"></div>
-        <div class="kpi-content">
-          <span class="kpi-value" [class.value-danger]="kpisMantenimientos.atrasos > 0">{{ kpisMantenimientos.atrasos }}</span>
-          <span class="kpi-label">Atrasos</span>
-        </div>
-      </article>
+      <label for="estadoFiltro">Estado:</label>
+      <select id="estadoFiltro" class="estado-select" [value]="estadoSeleccionado" (change)="onEstadoChange($event)">
+        <option *ngFor="let estado of estadosDisponibles" [value]="estado">{{ estado }}</option>
+      </select>
+    </div>
 
-      <!-- Incidentes -->
-      <article class="kpi-card">
-        <div class="kpi-indicator" [class.indicator-warning]="kpisMantenimientos.incidentes > 0" [class.indicator-ok]="kpisMantenimientos.incidentes === 0"></div>
-        <div class="kpi-content">
-          <span class="kpi-value" [class.value-warning]="kpisMantenimientos.incidentes > 0">{{ kpisMantenimientos.incidentes }}</span>
-          <span class="kpi-label">Incidentes</span>
-        </div>
-      </article>
+    <div *ngIf="loading" class="ui-message">Cargando datos…</div>
+    <div *ngIf="!loading && error" class="ui-message error">{{ error }}</div>
+    <div *ngIf="!loading && !error && sinDatos" class="ui-message">Sin datos para los filtros seleccionados.</div>
 
-      <!-- Sanciones Activas -->
-      <article class="kpi-card">
-        <div class="kpi-indicator" [class.indicator-danger]="kpisSanciones.sancionesActivas > 0" [class.indicator-ok]="kpisSanciones.sancionesActivas === 0"></div>
-        <div class="kpi-content">
-          <span class="kpi-value" [class.value-danger]="kpisSanciones.sancionesActivas > 0">{{ kpisSanciones.sancionesActivas }}</span>
-          <span class="kpi-label">Sanciones activas</span>
-        </div>
-      </article>
+    <div class="chart-host" #demandChart [class.hidden]="loading || !!error || sinDatos"></div>
+  </section>
 
+  <section class="chart-card mt-3">
+    <h2 class="chart-section-title">Distribución de duración de préstamos</h2>
+    <div class="chart-toolbar">
+      <label for="durationTipo">Tipo:</label>
+      <select id="durationTipo" class="tipo-select" [value]="durationTipo" (change)="onDurationTipoChange($event)">
+        <option value="FUERA">Externo (días)</option>
+        <option value="DENTRO">Interno (minutos por bloque)</option>
+      </select>
+
+      <label for="durationGroupBy">Agrupar por:</label>
+      <select id="durationGroupBy" class="tipo-select" [value]="durationGroupBy" (change)="onDurationGroupByChange($event)">
+        <option *ngIf="durationTipo === 'FUERA'" value="period">Período</option>
+        <option value="categoria">Categoría</option>
+        <option value="asignatura">Asignatura</option>
+      </select>
+
+      <ng-container *ngIf="durationGroupBy === 'period' && durationTipo === 'FUERA'">
+        <label for="durationBucket">Bucket:</label>
+        <select id="durationBucket" class="tipo-select" [value]="durationBucket" (change)="onDurationBucketChange($event)">
+          <option value="week">Semana</option>
+          <option value="month">Mes</option>
+        </select>
+      </ng-container>
+    </div>
+
+    <div class="mediana-note">{{ medianaHint }}</div>
+
+    <div *ngIf="durationLoading" class="ui-message">Cargando distribución de duración…</div>
+    <div *ngIf="!durationLoading && durationError" class="ui-message error">{{ durationError }}</div>
+    <div *ngIf="!durationLoading && !durationError && durationSinDatos" class="ui-message">Sin datos de duración para los filtros seleccionados.</div>
+
+    <div class="chart-host" #durationChart [class.hidden]="durationLoading || !!durationError || durationSinDatos"></div>
+  </section>
+
+  <section class="chart-card mt-3">
+    <h2 class="chart-section-title">Scatter: Demanda vs Duración (capacidad amarrada)</h2>
+
+    <div class="chart-toolbar">
+      <label for="scatterTipo">Tipo:</label>
+      <select id="scatterTipo" class="tipo-select" [value]="scatterTipo" (change)="onScatterTipoChange($event)">
+        <option value="FUERA">Externo (días)</option>
+        <option value="DENTRO">Interno (minutos por bloque)</option>
+      </select>
+
+      <label for="scatterGroupBy">Segmentar por:</label>
+      <select id="scatterGroupBy" class="tipo-select" [value]="scatterGroupBy" (change)="onScatterGroupByChange($event)">
+        <option *ngIf="scatterTipo === 'FUERA'" value="period">Período</option>
+        <option value="categoria">Categoría</option>
+        <option value="asignatura">Asignatura</option>
+      </select>
+
+      <ng-container *ngIf="scatterTipo === 'FUERA' && scatterGroupBy === 'period'">
+        <label for="scatterBucket">Bucket:</label>
+        <select id="scatterBucket" class="tipo-select" [value]="scatterBucket" (change)="onScatterBucketChange($event)">
+          <option value="week">Semana</option>
+          <option value="month">Mes</option>
+        </select>
+      </ng-container>
+
+      <label for="scatterMetric">Duración típica:</label>
+      <select id="scatterMetric" class="tipo-select" [value]="scatterDurationMetric" (change)="onScatterDurationMetricChange($event)">
+        <option value="p50">P50 (mediana)</option>
+        <option value="p90">P90 (conservador)</option>
+      </select>
+    </div>
+
+    <div class="mediana-note">{{ scatterHint }}</div>
+
+    <div *ngIf="scatterLoading" class="ui-message">Cargando scatter demanda vs duración…</div>
+    <div *ngIf="!scatterLoading && scatterError" class="ui-message error">{{ scatterError }}</div>
+    <div *ngIf="!scatterLoading && !scatterError && scatterSinDatos" class="ui-message">Sin datos para construir el scatter con los filtros seleccionados.</div>
+
+    <div class="chart-host" #demandVsDurationChart [class.hidden]="scatterLoading || !!scatterError || scatterSinDatos"></div>
+
+    <div *ngIf="selectedScatterPoint" class="drilldown-panel mt-2">
+      <div class="drilldown-header">
+        <strong>Drill-down:</strong> {{ selectedScatterPoint.selectedLabel || selectedScatterPoint.label }}
+        <button type="button" class="btn-clear-drill" (click)="clearScatterDrilldown()">Limpiar</button>
+      </div>
+      <div class="drilldown-grid">
+        <div><span>Demanda:</span> <b>{{ selectedScatterPoint.demand || selectedScatterPoint.x }}</b></div>
+        <div><span>Duración típica:</span> <b>{{ selectedScatterPoint.durationTypical || selectedScatterPoint.y }}</b></div>
+        <div><span>Métrica:</span> <b>{{ (selectedScatterPoint.durationMetric || scatterDurationMetric).toUpperCase() }}</b></div>
+        <div><span>Rechazo stock:</span> <b>{{ selectedScatterPoint.stockoutRejectRate }}%</b></div>
+      </div>
+      <div class="drilldown-note" *ngIf="selectedScatterPoint.howToRead">{{ selectedScatterPoint.howToRead }}</div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       NIVEL 2 – ESTADO OPERATIVO (Contexto general)
-  ═══════════════════════════════════════════════════════════ -->
-  <section class="level level-operational">
-    <h2 class="level-title">Estado operativo</h2>
-    <div class="kpi-row kpi-row-4">
+  <section class="chart-card mt-3">
+    <h2 class="chart-section-title">Scatter: Demanda vs Stock (priorización de compra/redistribución)</h2>
 
-      <!-- Préstamos Activos -->
-      <article class="kpi-card">
-        <div class="kpi-indicator indicator-info"></div>
-        <div class="kpi-content">
-          <span class="kpi-value">{{ kpis.prestamosActivos }}</span>
-          <span class="kpi-label">Préstamos activos</span>
-        </div>
-      </article>
+    <div class="chart-toolbar">
+      <label for="stockScatterTipo">Tipo:</label>
+      <select id="stockScatterTipo" class="tipo-select" [value]="stockScatterTipo" (change)="onStockScatterTipoChange($event)">
+        <option value="FUERA">Externo (por días)</option>
+        <option value="DENTRO">Interno (por bloques)</option>
+      </select>
 
-      <!-- Próximos a vencer -->
-      <article class="kpi-card">
-        <div class="kpi-indicator" [class.indicator-warning]="kpis.prestamosProximosAVencer > 0" [class.indicator-muted]="kpis.prestamosProximosAVencer === 0"></div>
-        <div class="kpi-content">
-          <span class="kpi-value" [class.value-warning]="kpis.prestamosProximosAVencer > 0">{{ kpis.prestamosProximosAVencer }}</span>
-          <span class="kpi-label">Próximos a vencer</span>
-          <span class="kpi-hint">En 3 días</span>
-        </div>
-      </article>
+      <label for="stockScatterGroupBy">Agrupar por:</label>
+      <select id="stockScatterGroupBy" class="tipo-select" [value]="stockScatterGroupBy" (change)="onStockScatterGroupByChange($event)">
+        <option value="tipo_equipo">Tipo de equipo</option>
+        <option value="categoria">Categoría</option>
+      </select>
+    </div>
 
-      <!-- Equipos Disponibles -->
-      <article class="kpi-card">
-        <div class="kpi-indicator indicator-success"></div>
-        <div class="kpi-content">
-          <div class="kpi-value-group">
-            <span class="kpi-value">{{ kpis.equiposDisponibles }}</span>
-            <span class="kpi-value-secondary">/ {{ kpis.equiposTotales }}</span>
-          </div>
-          <span class="kpi-label">Equipos disponibles</span>
-          <div class="kpi-progress">
-            <div class="kpi-progress-bar" [style.width.%]="kpis.porcentajeDisponibilidad"></div>
-          </div>
-          <span class="kpi-percent">{{ kpis.porcentajeDisponibilidad }}%</span>
-        </div>
-      </article>
+    <div class="mediana-note">{{ stockScatterHint }}</div>
 
-      <!-- Fuera de servicio (Mantenimiento + Baja unificado) -->
-      <article class="kpi-card">
-        <div class="kpi-indicator indicator-muted"></div>
-        <div class="kpi-content">
-          <span class="kpi-value">{{ kpisInventario.mantenimiento + kpisInventario.baja }}</span>
-          <span class="kpi-label">Fuera de servicio</span>
-          <span class="kpi-hint">Mantenimiento o baja</span>
-        </div>
-      </article>
+    <div *ngIf="stockScatterLoading" class="ui-message">Cargando scatter demanda vs stock…</div>
+    <div *ngIf="!stockScatterLoading && stockScatterError" class="ui-message error">{{ stockScatterError }}</div>
+    <div *ngIf="!stockScatterLoading && !stockScatterError && stockScatterSinDatos" class="ui-message">Sin datos para construir el scatter con los filtros seleccionados.</div>
 
+    <div class="chart-host" #demandVsStockChart [class.hidden]="stockScatterLoading || !!stockScatterError || stockScatterSinDatos"></div>
+  </section>
+
+  <section class="chart-card mt-3">
+    <h2 class="chart-section-title">Ranking: Top solicitados (demanda)</h2>
+
+    <div class="chart-toolbar">
+      <label for="topRequestedTipo">Tipo:</label>
+      <select id="topRequestedTipo" class="tipo-select" [value]="topRequestedTipo" (change)="onTopRequestedTipoChange($event)">
+        <option value="FUERA">Externo (por fechas)</option>
+        <option value="DENTRO">Interno (por bloques)</option>
+      </select>
+
+      <label for="topRequestedGroupBy">Agrupar por:</label>
+      <select id="topRequestedGroupBy" class="tipo-select" [value]="topRequestedGroupBy" (change)="onTopRequestedGroupByChange($event)">
+        <option value="equipo">Equipo</option>
+        <option value="categoria">Categoría</option>
+        <option value="asignatura">Asignatura</option>
+      </select>
+
+      <label for="topRequestedTopN">Top:</label>
+      <select id="topRequestedTopN" class="tipo-select" [value]="topRequestedTopN" (change)="onTopRequestedTopNChange($event)">
+        <option value="10">Top 10</option>
+        <option value="20">Top 20</option>
+      </select>
+
+      <ng-container *ngIf="topRequestedTipo === 'FUERA'">
+        <label for="topRequestedBucket">Drill bucket:</label>
+        <select id="topRequestedBucket" class="tipo-select" [value]="topRequestedBucket" (change)="onTopRequestedBucketChange($event)">
+          <option value="week">Semana</option>
+          <option value="month">Mes</option>
+        </select>
+      </ng-container>
+    </div>
+
+    <div class="mediana-note">{{ topRequestedHint }}</div>
+
+    <div *ngIf="topRequestedLoading" class="ui-message">Cargando ranking top solicitados…</div>
+    <div *ngIf="!topRequestedLoading && topRequestedError" class="ui-message error">{{ topRequestedError }}</div>
+    <div *ngIf="!topRequestedLoading && !topRequestedError && topRequestedSinDatos" class="ui-message">Sin datos para construir el ranking con los filtros seleccionados.</div>
+
+    <div class="chart-host" #topRequestedChart [class.hidden]="topRequestedLoading || !!topRequestedError || topRequestedSinDatos"></div>
+
+    <div *ngIf="selectedTopRequested" class="drilldown-panel mt-2">
+      <div class="drilldown-header">
+        <strong>Drill-down temporal:</strong> {{ selectedTopRequested.selectedLabel || selectedTopRequested.label }}
+        <button type="button" class="btn-clear-drill" (click)="clearTopRequestedDrilldown()">Limpiar</button>
+      </div>
+      <div class="drilldown-grid">
+        <div><span>Demanda actual:</span> <b>{{ selectedTopRequested.currentPeriod || selectedTopRequested.demand }}</b></div>
+        <div><span>Demanda anterior:</span> <b>{{ selectedTopRequested.previousPeriod ?? 0 }}</b></div>
+        <div><span>Variación:</span> <b>{{ selectedTopRequested.variationPct ?? 0 }}%</b></div>
+        <div><span>Dimensión:</span> <b>{{ topRequestedGroupBy }}</b></div>
+      </div>
+      <div class="chart-host chart-host-sm mt-2" #topRequestedDrillChart></div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       NIVEL 3 – INVENTARIO + NIVEL 4 – ALERTAS (Side by side)
-  ═══════════════════════════════════════════════════════════ -->
-  <section class="level level-panels">
-    <div class="panels-row">
+  <section class="chart-card mt-3">
+    <h2 class="chart-section-title">Heatmap: Demanda por día y bloque horario</h2>
 
-      <!-- PANEL: Estado del Inventario -->
-      <article class="panel panel-inventory">
-        <header class="panel-header">
-          <h3 class="panel-title">Estado del inventario</h3>
-        </header>
-        <div class="panel-body">
-          <div class="inventory-chart">
-            <ng-container *ngIf="estadoInventario && estadoInventario.length; else noData">
-              <canvas #inventarioCanvas></canvas>
-            </ng-container>
-            <ng-template #noData>
-              <div class="empty-state">Sin datos</div>
-            </ng-template>
-          </div>
-          <div class="inventory-legend">
-            <div class="legend-item" *ngFor="let item of estadoInventario">
-              <span class="legend-color" [ngClass]="'color-' + item.estado.toLowerCase()"></span>
-              <span class="legend-text">{{ item.estado | titlecase }}</span>
-              <span class="legend-value">{{ item.total }}</span>
-            </div>
-          </div>
-        </div>
-      </article>
+    <div class="chart-toolbar">
+      <label for="heatmapTipo">Tipo:</label>
+      <select id="heatmapTipo" class="tipo-select" [value]="heatmapTipo" (change)="onHeatmapTipoChange($event)">
+        <option value="DENTRO">Interno (bloques)</option>
+        <option value="FUERA">Externo (horas)</option>
+      </select>
 
-      <!-- PANEL: Alertas Críticas -->
-      <article class="panel panel-alerts">
-        <header class="panel-header">
-          <h3 class="panel-title">Alertas pendientes</h3>
-          <span class="panel-badge" *ngIf="(alertas.totalSanciones + alertas.totalRetrasos) > 0">
-            {{ alertas.totalSanciones + alertas.totalRetrasos }}
-          </span>
-        </header>
-        <div class="panel-body">
+      <label for="heatmapPalette">Escala:</label>
+      <select id="heatmapPalette" class="tipo-select" [value]="heatmapPalette" (change)="onHeatmapPaletteChange($event)">
+        <option value="soft">Suave</option>
+        <option value="intense">Intensa</option>
+      </select>
 
-          <!-- Lista de alertas -->
-          <div class="alerts-list" *ngIf="alertas.sanciones.length > 0 || alertas.retrasos.length > 0">
-            
-            <!-- Sanciones -->
-            <ng-container *ngIf="alertas.sanciones.length > 0">
-              <div class="alert-item" *ngFor="let sancion of alertas.sanciones | slice:0:3">
-                <span class="alert-dot dot-red"></span>
-                <div class="alert-content">
-                  <span class="alert-primary">{{ sancion.nombre }}</span>
-                  <span class="alert-secondary">{{ sancion.nivel_sancion }} · vence {{ sancion.fecha_vencimiento | date:'dd/MM' }}</span>
-                </div>
-              </div>
-            </ng-container>
-
-            <!-- Retrasos -->
-            <ng-container *ngIf="alertas.retrasos.length > 0">
-              <div class="alert-item" *ngFor="let retraso of alertas.retrasos | slice:0:2">
-                <span class="alert-dot dot-amber"></span>
-                <div class="alert-content">
-                  <span class="alert-primary">{{ retraso.nombre }}</span>
-                  <span class="alert-secondary">{{ retraso.retrasos }} devolución(es) pendiente(s)</span>
-                </div>
-              </div>
-            </ng-container>
-
-          </div>
-
-          <!-- Sin alertas -->
-          <div class="alerts-empty" *ngIf="alertas.sanciones.length === 0 && alertas.retrasos.length === 0">
-            <span class="empty-icon">✓</span>
-            <span class="empty-text">Sin alertas pendientes</span>
-          </div>
-
-          <!-- Ver todas -->
-          <div class="alerts-footer" *ngIf="(alertas.totalSanciones + alertas.totalRetrasos) > 5">
-            <button class="btn-link">Ver todas →</button>
-          </div>
-
-        </div>
-      </article>
-
+      <label for="heatmapNormalize" style="margin-left: 8px;">Normalizar por semanas</label>
+      <input
+        id="heatmapNormalize"
+        type="checkbox"
+        [checked]="heatmapNormalizeByWeeks"
+        (change)="onHeatmapNormalizeChange($event)"
+      />
     </div>
+
+    <div class="mediana-note">{{ heatmapHint }}</div>
+
+    <div *ngIf="heatmapLoading" class="ui-message">Cargando heatmap de demanda…</div>
+    <div *ngIf="!heatmapLoading && heatmapError" class="ui-message error">{{ heatmapError }}</div>
+    <div *ngIf="!heatmapLoading && !heatmapError && heatmapSinDatos" class="ui-message">Sin datos para construir el heatmap con los filtros seleccionados.</div>
+
+    <div class="chart-host" #demandHeatmapChart [class.hidden]="heatmapLoading || !!heatmapError || heatmapSinDatos"></div>
   </section>
 
+  <section class="chart-card mt-3">
+    <h2 class="chart-section-title">Motivos de rechazo / estados</h2>
 
+    <div class="chart-toolbar">
+      <label for="rejectionsStatusTipo">Tipo:</label>
+      <select id="rejectionsStatusTipo" class="tipo-select" [value]="rejectionsStatusTipo" (change)="onRejectionsStatusTipoChange($event)">
+        <option value="FUERA">Externo</option>
+        <option value="DENTRO">Interno</option>
+      </select>
 
+      <label for="rejectionsStatusView">Vista:</label>
+      <select id="rejectionsStatusView" class="tipo-select" [value]="rejectionsStatusView" (change)="onRejectionsStatusViewChange($event)">
+        <option value="motivos">Motivos</option>
+        <option value="estados">Estados</option>
+      </select>
+    </div>
+
+    <div class="mediana-note">{{ rejectionsStatusHint }}</div>
+
+    <div *ngIf="!rejectionsStatusLoading && !rejectionsStatusError && !rejectionsStatusSinDatos" class="drilldown-panel">
+      <div class="drilldown-note"><strong>Resumen:</strong> {{ rejectionsStatusSummary }}</div>
+      <div class="drilldown-note"><strong>Interpretación:</strong> {{ rejectionsStatusInterpretation }}</div>
+    </div>
+
+    <div *ngIf="rejectionsStatusLoading" class="ui-message">Cargando distribución de motivos/estados…</div>
+    <div *ngIf="!rejectionsStatusLoading && rejectionsStatusError" class="ui-message error">{{ rejectionsStatusError }}</div>
+    <div *ngIf="!rejectionsStatusLoading && !rejectionsStatusError && rejectionsStatusSinDatos" class="ui-message">Sin datos para distribución de motivos/estados con los filtros seleccionados.</div>
+
+    <div class="chart-host" #rejectionsStatusChart [class.hidden]="rejectionsStatusLoading || !!rejectionsStatusError || rejectionsStatusSinDatos"></div>
+  </section>
+
+  <section class="chart-card mt-3">
+    <h2 class="chart-section-title">Tendencia + Forecast simple de demanda</h2>
+
+    <div class="chart-toolbar">
+      <label for="forecastTipo">Tipo:</label>
+      <select id="forecastTipo" class="tipo-select" [value]="forecastTipo" (change)="onForecastTipoChange($event)">
+        <option value="FUERA">Externo</option>
+        <option value="DENTRO">Interno</option>
+      </select>
+
+      <label for="forecastBucket">Bucket:</label>
+      <select id="forecastBucket" class="tipo-select" [value]="forecastBucket" (change)="onForecastBucketChange($event)">
+        <option value="week">Semana</option>
+        <option value="month">Mes</option>
+      </select>
+
+      <label for="forecastHorizon">Horizonte:</label>
+      <select id="forecastHorizon" class="tipo-select" [value]="forecastHorizon" (change)="onForecastHorizonChange($event)">
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+      <span class="dash-subtitle">periodos</span>
+    </div>
+
+    <div class="mediana-note">{{ forecastHint }}</div>
+    <div class="dash-subtitle" *ngIf="forecastMetricsText">{{ forecastMetricsText }}</div>
+
+    <div *ngIf="forecastLoading" class="ui-message">Cargando forecast de demanda…</div>
+    <div *ngIf="!forecastLoading && forecastError" class="ui-message error">{{ forecastError }}</div>
+    <div *ngIf="!forecastLoading && !forecastError && forecastSinDatos" class="ui-message">Sin datos suficientes para forecast con los filtros seleccionados.</div>
+
+    <div class="chart-host" #demandForecastChart [class.hidden]="forecastLoading || !!forecastError || forecastSinDatos"></div>
+  </section>
+
+  <section class="chart-card mt-3">
+    <h2 class="chart-section-title">Flujo de estados (Sankey)</h2>
+
+    <div class="chart-toolbar">
+      <label for="statusFlowTipo">Tipo:</label>
+      <select id="statusFlowTipo" class="tipo-select" [value]="statusFlowTipo" (change)="onStatusFlowTipoChange($event)">
+        <option value="FUERA">Externo</option>
+        <option value="DENTRO">Interno</option>
+      </select>
+    </div>
+
+    <div class="mediana-note">{{ statusFlowHint }}</div>
+    <div class="dash-subtitle" *ngIf="statusFlowSummary">{{ statusFlowSummary }}</div>
+
+    <div *ngIf="statusFlowLoading" class="ui-message">Cargando flujo de estados…</div>
+    <div *ngIf="!statusFlowLoading && statusFlowError" class="ui-message error">{{ statusFlowError }}</div>
+    <div *ngIf="!statusFlowLoading && !statusFlowError && statusFlowSinDatos" class="ui-message">Sin datos para flujo de estados con los filtros seleccionados.</div>
+
+    <div class="chart-host" #statusFlowChart [class.hidden]="statusFlowLoading || !!statusFlowError || statusFlowSinDatos"></div>
+  </section>
 </div>

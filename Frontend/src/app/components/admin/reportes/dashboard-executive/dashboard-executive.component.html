@@ -1,0 +1,113 @@
+<div class="executive-dashboard">
+
+  <!-- ═══ Filtros compartidos ═══ -->
+  <app-report-filters (filtersChanged)="onFiltersChanged($event)"></app-report-filters>
+
+  <!-- ═══ Toolbar tipo/estado ═══ -->
+  <div class="exec-toolbar">
+    <div class="toolbar-group">
+      <label>Tipo:</label>
+      <select class="tipo-select" [ngModel]="tipoSeleccionado" (ngModelChange)="onTipoChange($event)">
+        <option value="FUERA">Fuera (externo)</option>
+        <option value="DENTRO">Dentro (interno)</option>
+      </select>
+    </div>
+    <div class="toolbar-group">
+      <label>Estado:</label>
+      <select class="estado-select" [ngModel]="estadoSeleccionado" (ngModelChange)="onEstadoChange($event)">
+        <option *ngFor="let e of estadosDisponibles" [value]="e">{{ e }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ═══ Loading ═══ -->
+  <div *ngIf="loading" class="exec-loading">
+    <div class="spinner"></div>
+    <span>Calculando KPIs ejecutivos…</span>
+  </div>
+
+  <!-- ═══ Error ═══ -->
+  <div *ngIf="error && !loading" class="exec-error">
+    <i class="bi bi-exclamation-triangle"></i>
+    {{ error }}
+  </div>
+
+  <!-- ═══ KPI Cards Grid ═══ -->
+  <div *ngIf="!loading && !error && kpis.length > 0" class="kpi-grid">
+    <div
+      *ngFor="let kpi of kpis; trackBy: trackByKey"
+      class="kpi-card"
+      [class.kpi-green]="kpi.color === 'green'"
+      [class.kpi-red]="kpi.color === 'red'"
+      [class.kpi-amber]="kpi.color === 'amber'"
+      [class.kpi-blue]="kpi.color === 'blue'"
+      [class.kpi-gray]="kpi.color === 'gray'"
+      [title]="kpi.tooltip"
+    >
+      <!-- Label -->
+      <div class="kpi-label">
+        {{ kpi.label }}
+        <span class="kpi-info" [title]="kpi.tooltip">?</span>
+      </div>
+
+      <!-- Valor principal -->
+      <div class="kpi-value" *ngIf="kpi.key !== 'duracion' && kpi.key !== 'top_critica'">
+        {{ getDisplayValue(kpi) }}
+      </div>
+
+      <!-- Duración P50/P90 especial -->
+      <div class="kpi-value kpi-dual" *ngIf="kpi.key === 'duracion'">
+        <span class="dual-item">
+          <span class="dual-label">P50</span>
+          <span class="dual-number">{{ kpi.p50 }}</span>
+        </span>
+        <span class="dual-sep">/</span>
+        <span class="dual-item">
+          <span class="dual-label">P90</span>
+          <span class="dual-number">{{ kpi.p90 }}</span>
+        </span>
+        <span class="dual-unit">{{ kpi.unit }}</span>
+      </div>
+
+      <!-- Top categoría crítica especial -->
+      <div class="kpi-value kpi-critica" *ngIf="kpi.key === 'top_critica'">
+        <span class="critica-name">{{ kpi.value }}</span>
+        <span class="critica-detail" *ngIf="kpi.detail">{{ kpi.detail }}</span>
+      </div>
+
+      <!-- Variación -->
+      <div
+        class="kpi-variation"
+        *ngIf="kpi.variation != null"
+        [class.var-up]="kpi.direction === 'up'"
+        [class.var-down]="kpi.direction === 'down'"
+        [class.var-neutral]="kpi.direction === 'neutral'"
+      >
+        <span class="var-arrow">{{ getArrow(kpi.direction) }}</span>
+        <span class="var-pct">{{ getVariationText(kpi) }}</span>
+        <span class="var-label">vs periodo anterior</span>
+      </div>
+
+      <!-- Sin variación (categoría crítica) -->
+      <div class="kpi-variation var-neutral" *ngIf="kpi.variation == null && kpi.key === 'top_critica' && kpi.pressure != null">
+        <span class="var-label">Presión: {{ kpi.pressure }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Sin datos ═══ -->
+  <div *ngIf="!loading && !error && kpis.length === 0 && currentFilter" class="exec-empty">
+    No hay datos para el período seleccionado.
+  </div>
+
+  <!-- ═══ Meta info ═══ -->
+  <div *ngIf="meta && !loading" class="exec-meta">
+    <span *ngIf="meta.from && meta.to">
+      Período actual: {{ meta.from }} → {{ meta.to }}
+    </span>
+    <span *ngIf="meta.prevFrom && meta.prevTo" class="meta-prev">
+      | Comparado con: {{ meta.prevFrom }} → {{ meta.prevTo }}
+    </span>
+  </div>
+
+</div>

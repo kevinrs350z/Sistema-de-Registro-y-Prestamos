@@ -41,6 +41,7 @@ use App\Http\Controllers\EquipoEstadoController;
 use App\Http\Controllers\EquipoEstadisticasController;
 use App\Http\Controllers\Reportes\DashboardModelosController;
 use App\Http\Controllers\MotivoRechazoController;
+use App\Http\Controllers\Analytics\DemandAnalyticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +73,19 @@ Route::post('/login', [AuthController::class, 'login']);
 
 
 Route::post('/auth/google', [GoogleTokenController::class, 'login']);
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/analytics/executive-kpis', [DemandAnalyticsController::class, 'executiveKpis']);
+    Route::get('/analytics/demand-timeseries', [DemandAnalyticsController::class, 'demandTimeseries']);
+    Route::get('/analytics/loan-duration-distribution', [DemandAnalyticsController::class, 'loanDurationDistribution']);
+    Route::get('/analytics/demand-vs-duration', [DemandAnalyticsController::class, 'demandVsDuration']);
+    Route::get('/analytics/demand-vs-stock', [DemandAnalyticsController::class, 'demandVsStock']);
+    Route::get('/analytics/top-requested', [DemandAnalyticsController::class, 'topRequested']);
+    Route::get('/analytics/demand-heatmap', [DemandAnalyticsController::class, 'demandHeatmap']);
+    Route::get('/analytics/rejections-and-status', [DemandAnalyticsController::class, 'rejectionsAndStatus']);
+    Route::get('/analytics/demand-forecast', [DemandAnalyticsController::class, 'demandForecast']);
+    Route::get('/analytics/status-flow', [DemandAnalyticsController::class, 'statusFlow']);
+});
 
 
 // Ruta para registrar un nuevo usuario
@@ -291,7 +305,7 @@ Route::post('/equipos', [EquipoController::class, 'store']);
 // ---------------------------------------------------------------
 // Rutas de reportes (requieren autenticación)
 // ---------------------------------------------------------------
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'ocultar.reportes'])->group(function () {
     Route::get('/reportes/equipos-mas-solicitados', [ReportesController::class, 'equiposMasSolicitados']);
     Route::get('/reportes/uso-interno-externo', [ReportesController::class, 'usoInternoExterno']);
     Route::get('/reportes/sanciones-rechazos', [ReportesController::class, 'sancionesYRechazos']);
@@ -301,7 +315,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 
-Route::prefix('reportes/dashboard')->group(function () {
+Route::middleware(['ocultar.reportes'])->prefix('reportes/dashboard')->group(function () {
     Route::get('/kpis', [DashboardReportesController::class, 'getKPIs']);
     Route::get('/solicitudes-dia', [DashboardReportesController::class, 'getSolicitudesPorDia']);
     Route::get('/uso-interno-externo', [DashboardReportesController::class, 'getUsoInternoExterno']);
@@ -313,7 +327,7 @@ Route::prefix('reportes/dashboard')->group(function () {
 // ---------------------------------------------------------------
 // Rutas de reportes de equipos normalizados (métricas BI)
 // ---------------------------------------------------------------
-Route::middleware(['auth:sanctum'])
+Route::middleware(['auth:sanctum', 'ocultar.reportes'])
     ->prefix('reportes/equipos-normalizados')
     ->group(function () {
         Route::get('/kpis', [ReportesEquiposNormalizadosController::class, 'kpis']);
@@ -326,7 +340,7 @@ Route::middleware(['auth:sanctum'])
 
 
 
-    Route::middleware(['auth:sanctum'])
+    Route::middleware(['auth:sanctum', 'ocultar.reportes'])
     ->prefix('reportes/profesores')
     ->group(function () {
 
@@ -354,7 +368,7 @@ Route::middleware(['auth:sanctum'])
 
 
     //esto es de repotes tambien 
-    Route::middleware(['auth:sanctum'])
+        Route::middleware(['auth:sanctum', 'ocultar.reportes'])
       ->prefix('reportes/alumnos')
       ->group(function () {
           Route::get('/kpis', [ReportesAlumnosAdminController::class, 'kpis']);
@@ -372,7 +386,7 @@ Route::middleware(['auth:sanctum'])
           Route::get('/riesgo', [ReportesAlumnosAdminController::class, 'riesgo']);
       });
 
-        Route::middleware(['auth:sanctum'])
+        Route::middleware(['auth:sanctum', 'ocultar.reportes'])
             ->prefix('reportes/asignaturas')
             ->group(function () {
                     Route::get('/uso', [ReportesAsignaturasController::class, 'getUsoAsignaturas']);
@@ -380,7 +394,7 @@ Route::middleware(['auth:sanctum'])
                     Route::get('/equipos', [ReportesAsignaturasController::class, 'getEquiposPorAsignatura']);
             });
 
-        Route::middleware(['auth:sanctum'])
+        Route::middleware(['auth:sanctum', 'ocultar.reportes'])
             ->prefix('reportes/inventario')
             ->group(function () {
                     Route::get('/estado', [ReportesInventarioController::class, 'estado']);
@@ -391,7 +405,7 @@ Route::middleware(['auth:sanctum'])
                     Route::get('/demanda-vs-disponibilidad', [ReportesInventarioController::class, 'demandaVsDisponibilidad']);
             });
 
-        Route::middleware(['auth:sanctum'])
+        Route::middleware(['auth:sanctum', 'ocultar.reportes'])
             ->prefix('reportes/sanciones')
             ->group(function () {
                     Route::get('/kpis', [ReportesSancionesController::class, 'kpis']);
@@ -401,7 +415,7 @@ Route::middleware(['auth:sanctum'])
                     Route::get('/relacion-atrasos', [ReportesSancionesController::class, 'relacionAtrasos']);
             });
 
-        Route::middleware(['auth:sanctum'])
+        Route::middleware(['auth:sanctum', 'ocultar.reportes'])
             ->prefix('reportes/mantenimientos')
             ->group(function () {
                     Route::get('/atrasos', [ReportesMantenimientosController::class, 'atrasos']);
@@ -420,7 +434,7 @@ Route::middleware(['auth:sanctum'])
         //     });
 
     // Dashboard operacional (estado actual del sistema)
-    Route::middleware(['auth:sanctum'])
+        Route::middleware(['auth:sanctum', 'ocultar.reportes'])
       ->prefix('dashboard/operational')
       ->group(function () {
           Route::get('/kpis', [DashboardOperationalController::class, 'getKPIs']);
@@ -446,7 +460,7 @@ Route::middleware(['auth:sanctum'])
     // =========================================================================
     // DASHBOARD DE ESTADÍSTICAS POR MODELO (BI para decisiones de compra)
     // =========================================================================
-    Route::middleware(['auth:sanctum', 'admin'])
+    Route::middleware(['auth:sanctum', 'admin', 'ocultar.reportes'])
         ->prefix('estadisticas-modelos')
         ->group(function () {
             // Resumen ejecutivo con KPIs globales

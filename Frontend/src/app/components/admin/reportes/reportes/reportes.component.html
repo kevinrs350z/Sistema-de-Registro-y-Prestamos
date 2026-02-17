@@ -1,46 +1,21 @@
 <div class="reportes-page">
   <div class="reportes-wrapper container">
-
-    <!-- Header minimalista tipo toolbar -->
     <header class="reportes-header d-flex justify-content-between align-items-start py-3 border-bottom">
       <div>
         <h4 class="fw-semibold text-dark mb-1">Panel de Reportes</h4>
-        <small class="text-muted">Análisis institucional y visualización de indicadores clave</small>
+        <small class="text-muted">Módulo en refactorización por etapas</small>
       </div>
     </header>
 
-    <!-- Tabs de navegación minimalistas -->
     <nav class="reportes-nav nav nav-pills gap-1 flex-wrap py-3">
+      <a routerLink="executive" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2 me-1"></i>KPIs Ejecutivos
+      </a>
       <a routerLink="dashboard" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-speedometer2 me-1"></i>Dashboard
-      </a>
-      <a routerLink="equipos" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-laptop me-1"></i>Equipos
-      </a>
-      <a routerLink="alumnos" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-mortarboard me-1"></i>Alumnos
-      </a>
-      <a routerLink="profesores" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-person-badge me-1"></i>Profesores
-      </a>
-      <a routerLink="asignaturas" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-book me-1"></i>Asignaturas
-      </a>
-      <a routerLink="inventario" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-box-seam me-1"></i>Inventario
-      </a>
-      <a routerLink="sanciones" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-exclamation-triangle me-1"></i>Sanciones
-      </a>
-      <a routerLink="mantenimientos" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-tools me-1"></i>Mantenimientos
-      </a>
-      <a routerLink="modelos" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-bar-chart-steps me-1"></i>Modelos BI
+        <i class="bi bi-graph-up-arrow me-1"></i>Demanda histórica
       </a>
     </nav>
 
-    <!-- Contenedor de los subcomponentes -->
     <router-outlet></router-outlet>
 
   </div>

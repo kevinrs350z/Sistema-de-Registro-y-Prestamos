@@ -608,6 +608,7 @@ class PrestamoService
             EstadoPrestamo::APROBADO,
             EstadoPrestamo::PENDIENTE_ENTREGA,
             EstadoPrestamo::ENTREGADO,
+            EstadoPrestamo::ATRASADO,
         ];
 
         $conteos = [];

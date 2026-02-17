@@ -25,6 +25,7 @@ import { ReportesMantenimientosComponent } from './components/admin/reportes/rep
 import { ReportesEquiposComponent } from './components/admin/reportes/reportes-equipos/reportes-equipos.component';
 import { GestionarAsignaturasComponent } from './components/admin/asignaturas/gestionar-asignaturas.component';
 import { DashboardOperationalComponent } from './components/admin/reportes/dashboard-operational/dashboard-operational.component';
+import { DashboardExecutiveComponent } from './components/admin/reportes/dashboard-executive/dashboard-executive.component';
 import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
 import { DashboardModelosComponent } from './components/admin/reportes/dashboard-modelos/dashboard-modelos.component';
 import { CategoriasEncargadosComponent } from './components/admin/categorias-encargados/categorias-encargados.component';
@@ -78,19 +79,12 @@ export const routes: Routes = [
     path: 'admin/reportes',
     component: ReportesComponent,
     children: [
+      { path: 'executive', component: DashboardExecutiveComponent },
       { path: 'dashboard', component: DashboardOperationalComponent },
-      { path: 'equipos', component: ReportesEquiposComponent },
-      { path: 'alumnos', component: ReportesAlumnosComponent },
-      { path: 'profesores', component: ReportesProfesoresComponent },
-      { path: 'asignaturas', component: ReportesAsignaturasComponent },
-      { path: 'inventario', component: ReportesInventarioComponent },
-      { path: 'sanciones', component: ReportesSancionesComponent },
-      { path: 'mantenimientos', component: ReportesMantenimientosComponent },
-      { path: 'modelos', component: DashboardModelosComponent },
-
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+      { path: '', redirectTo: 'executive', pathMatch: 'full' }
     ]
   },
+  { path: 'admin/reportes/:seccion', redirectTo: 'admin/reportes/executive' },
 
 
   {
