@@ -665,7 +665,11 @@ export class SolicitarReservaComponent {
               this.notify.error('Hay integrantes bloqueados por límite de préstamos.');
               return;
             }
-            this.notify.error(err?.error?.error || 'Ocurrió un error al enviar la solicitud.');
+              if (err?.status === 409 && err?.error?.error === 'BLOQUEO_HORARIO') {
+                this.notify.error(err?.error?.message || 'Hay equipos bloqueados para el horario seleccionado.');
+                return;
+              }
+              this.notify.error(err?.error?.error || 'Ocurrió un error al enviar la solicitud.');
           }
         });
       },

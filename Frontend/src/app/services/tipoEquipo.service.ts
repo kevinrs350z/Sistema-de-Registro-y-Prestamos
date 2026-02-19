@@ -60,11 +60,21 @@ export class TipoEquipoService {
   }
 
   // ============================================================
-  // CATÁLOGO: tipo de equipos + stock
+  // CATÁLOGO: tipo de equipos + stock + disponibilidad
   // ============================================================
-  getCatalogo(): Observable<any[]> {
+  getCatalogo(params?: { fecha?: string; bloqueId?: number | string }): Observable<any[]> {
+    const query: Record<string, string> = {};
+
+    if (params?.fecha) {
+      query['fecha'] = params.fecha;
+    }
+    if (params?.bloqueId !== undefined && params?.bloqueId !== null && params?.bloqueId !== '') {
+      query['bloqueId'] = String(params.bloqueId);
+    }
+
     return this.http.get<any[]>(`${this.apiUrl}/catalogo-equipos`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      params: query
     });
   }
 

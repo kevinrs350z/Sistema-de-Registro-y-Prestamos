@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
 import { AuthService } from '../../../services/auth.service';
 import { Pack } from '../../../models/pack.model';
@@ -21,6 +21,7 @@ export class CatalogoEquiposComponent {
 
   private api = inject(TipoEquipoService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private carritoSrv = inject(CarritoService);
   private notify = inject(NotificationService);
   private imagenSrv = inject(ImagenService);
@@ -40,6 +41,7 @@ export class CatalogoEquiposComponent {
 
   categoriaSeleccionada = signal<string>('TODOS');
   busqueda = signal<string>('');
+  horarioSeleccionado = signal<{ fecha?: string | null; bloqueId?: number | null }>({});
 
   // ✅ carrito se lee desde el servicio (fuente única)
   carrito = computed(() => this.carritoSrv.getCarrito());
@@ -65,7 +67,20 @@ export class CatalogoEquiposComponent {
       return;
     }
 
-    this.api.getCatalogo().subscribe({
+    const queryParams = this.route.snapshot.queryParamMap;
+    const fecha = queryParams.get('fecha');
+    const bloqueParam = queryParams.get('bloqueId') ?? queryParams.get('bloque');
+    const bloqueId = bloqueParam !== null ? Number(bloqueParam) : undefined;
+
+    this.horarioSeleccionado.set({
+      fecha,
+      bloqueId: Number.isFinite(bloqueId) ? bloqueId : null,
+    });
+
+    this.api.getCatalogo({
+      fecha: fecha || undefined,
+      bloqueId: Number.isFinite(bloqueId) ? bloqueId : undefined,
+    }).subscribe({
       next: (data: TipoEquipo[]) => this.tipos.set(data),
       error: (err: any) => console.error('❌ Error catálogo:', err)
     });
@@ -104,6 +119,30 @@ export class CatalogoEquiposComponent {
 
   filtrarPorBusqueda(event: Event): void {
     this.busqueda.set((event.target as HTMLInputElement).value);
+  }
+
+  private getMotivoNoDisponible(e: TipoEquipo): string | null {
+    return e.motivoNoDisponible ?? e.motivo_no_disponible ?? null;
+  }
+
+  estaBloqueadoPorHorario(e: TipoEquipo): boolean {
+    const motivo = this.getMotivoNoDisponible(e);
+    return motivo === 'BLOQUEADO_HORARIO' || this.bloqueoHorarioActivo(e);
+  }
+
+  estaSinStock(e: TipoEquipo): boolean {
+    const motivo = this.getMotivoNoDisponible(e);
+    if (motivo === 'SIN_STOCK') {
+      return true;
+    }
+    return (e.stock ?? 0) <= 0;
+  }
+
+  estaDisponible(e: TipoEquipo): boolean {
+    if (typeof e.disponible === 'boolean') {
+      return e.disponible && !this.estaBloqueadoPorHorario(e);
+    }
+    return (e.stock ?? 0) > 0 && !this.bloqueoHorarioActivo(e);
   }
 
   // ===========================
@@ -161,13 +200,23 @@ export class CatalogoEquiposComponent {
   }
 
   obtenerMensajeDisponibilidad(e: TipoEquipo): string | null {
-    if (e.stock > 0) {
+    const motivo = this.getMotivoNoDisponible(e);
+
+    if (motivo === 'BLOQUEADO_HORARIO' || this.estaBloqueadoPorHorario(e)) {
+      return 'Bloqueado en este horario';
+    }
+
+    if (motivo === 'SIN_STOCK') {
+      return 'Sin stock';
+    }
+
+    if (this.estaDisponible(e)) {
       return 'Disponible ahora';
     }
 
-    if (e.proxima_disponibilidad) {
+    if (this.estaSinStock(e) && e.proxima_disponibilidad) {
       const fecha = this.formatearDisponibilidad(e.proxima_disponibilidad);
-      return fecha ? `Disponible desde ${fecha}` : null;
+      return fecha ? `Disponible desde ${fecha}` : 'Sin stock';
     }
 
     return 'Sin disponibilidad próxima';
@@ -195,7 +244,13 @@ export class CatalogoEquiposComponent {
   getBloqueoHorarioTexto(e: TipoEquipo): string {
     const base = e.bloqueo_horario_motivo || e.bloqueo_motivo || 'Bloqueado temporalmente por horario.';
     const hasta = this.getBloqueoHastaFecha(e);
-    return hasta ? `${base} Disponible desde ${this.formatoDisponibilidad.format(hasta)}.` : base;
+
+    if (hasta) {
+      return `${base} Disponible desde ${this.formatoDisponibilidad.format(hasta)}.`;
+    }
+
+    const fecha = this.horarioSeleccionado().fecha;
+    return fecha ? `${base} (${fecha}).` : base;
   }
 
   private getBloqueoHastaFecha(e: TipoEquipo): Date | null {
@@ -213,7 +268,7 @@ export class CatalogoEquiposComponent {
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
     if (!this.esAdmin) {
-      if (this.bloqueoHorarioActivo(e)) {
+      if (this.estaBloqueadoPorHorario(e)) {
         this.notify.warning(this.getBloqueoHorarioTexto(e));
         return;
       }
@@ -229,7 +284,7 @@ export class CatalogoEquiposComponent {
         return;
       }
     }
-    if (e.stock <= 0 && delta > 0) {
+    if (this.estaSinStock(e) && delta > 0) {
       this.notify.warning('Este equipo está agotado.');
       return;
     }
@@ -280,7 +335,7 @@ export class CatalogoEquiposComponent {
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
     if (!this.esAdmin) {
-      if (this.bloqueoHorarioActivo(e)) {
+      if (this.estaBloqueadoPorHorario(e)) {
         this.notify.warning(this.getBloqueoHorarioTexto(e));
         return;
       }
@@ -295,8 +350,12 @@ export class CatalogoEquiposComponent {
       if (!this.estaEnCarrito(idTipo) && !this.puedeAgregarCantidad(e, 1)) {
         return;
       }
+      if (!this.estaDisponible(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
     }
-    if (e.stock <= 0) {
+    if (this.estaSinStock(e)) {
       this.notify.warning('Este equipo está agotado.');
       return;
     }
@@ -383,6 +442,30 @@ export class CatalogoEquiposComponent {
       }
       return total;
     }, 0);
+  }
+
+  puedeSolicitar(e: TipoEquipo): boolean {
+    if (this.esAdmin) {
+      return true;
+    }
+
+    if (this.estaBloqueadoPorHorario(e)) {
+      return false;
+    }
+
+    if (e.bloqueado) {
+      return false;
+    }
+
+    if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+      return false;
+    }
+
+    if (this.estaSinStock(e)) {
+      return false;
+    }
+
+    return this.estaDisponible(e);
   }
 
   // ===========================
@@ -513,6 +596,9 @@ interface TipoEquipo {
   bloqueo_hasta?: string | null;
   bloqueo_horario_motivo?: string | null;
   proxima_disponibilidad?: string | null;
+  disponible?: boolean;
+  motivo_no_disponible?: string | null;
+  motivoNoDisponible?: string | null;
 }
 
 interface EquipoFisico {

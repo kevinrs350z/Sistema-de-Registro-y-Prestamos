@@ -100,10 +100,14 @@
       <div class="controles-card">
         <p class="stock">Stock: {{ e.stock }}</p>
 
-        <p class="disponibilidad bloqueada" *ngIf="bloqueoHorarioActivo(e)">
-          Bloqueado por horario
+        <span class="pill pill-bloqueado" *ngIf="estaBloqueadoPorHorario(e)">
+          Bloqueado
+        </span>
+
+        <p class="disponibilidad bloqueada" *ngIf="estaBloqueadoPorHorario(e)">
+          Bloqueado en este horario
         </p>
-        <p class="disponibilidad" *ngIf="!bloqueoHorarioActivo(e) && obtenerMensajeDisponibilidad(e) as mensaje">
+        <p class="disponibilidad" *ngIf="!estaBloqueadoPorHorario(e) && obtenerMensajeDisponibilidad(e) as mensaje">
           {{ mensaje }}
         </p>
 
@@ -115,7 +119,7 @@
           Bloqueado por computador
         </span>
 
-        <div class="alert-horario" *ngIf="!esAdmin && bloqueoHorarioActivo(e)">
+        <div class="alert-horario" *ngIf="!esAdmin && estaBloqueadoPorHorario(e)">
           <span class="alert-horario-title">Bloqueado por horario</span>
           <span class="alert-horario-text">{{ getBloqueoHorarioTexto(e) }}</span>
         </div>
@@ -149,7 +153,7 @@
         class="btn-principal"
         *ngIf="!esAdmin"
         (click)="toggleProducto(e.id)"
-        [disabled]="bloqueoHorarioActivo(e) || e.bloqueado || (bloqueoPorComputador() && !estaComputadorSeleccionado(e))"
+        [disabled]="!puedeSolicitar(e)"
       >
         {{ estaEnCarrito(e.id) ? 'Quitar de la solicitud' : 'Agregar a la solicitud' }}
       </button>

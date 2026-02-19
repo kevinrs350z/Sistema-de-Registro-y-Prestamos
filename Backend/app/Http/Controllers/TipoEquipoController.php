@@ -84,8 +84,32 @@ class TipoEquipoController extends Controller
 
         return response()->json($resultado, 200);
     }
-    public function catalogo(PrestamoService $prestamoService)
+    public function catalogo(Request $request, PrestamoService $prestamoService)
     {
+        $zonaHoraria = config('app.timezone', 'America/Santiago');
+
+        $fechaParam = $request->query('fecha');
+        $bloqueParam = $request->query('bloqueId', $request->query('bloque_id'));
+
+        $fechaReferencia = $fechaParam
+            ? Carbon::parse($fechaParam, $zonaHoraria)
+            : Carbon::now($zonaHoraria);
+
+        $diaSemanaSeleccion = $fechaReferencia->dayOfWeekIso; // 1 (Lunes) - 7 (Domingo)
+        $semanaInicioSeleccion = $fechaReferencia
+            ->copy()
+            ->startOfWeek(Carbon::MONDAY)
+            ->toDateString();
+
+        $bloqueIds = [];
+        if ($bloqueParam !== null) {
+            $bloqueIds = collect(explode(',', (string) $bloqueParam))
+                ->map(fn ($v) => (int) trim($v))
+                ->filter(fn ($v) => $v > 0)
+                ->values()
+                ->all();
+        }
+
         $tipos = TipoEquipo::select(
                 'tipo_equipos.id',
                 'tipo_equipos.nombre',
@@ -136,15 +160,16 @@ class TipoEquipoController extends Controller
             $bloqueos = $prestamoService->obtenerBloqueoPorTipoUsuario($user->idUser);
         }
 
-        $ahora = Carbon::now();
-        $semanaInicio = $ahora->copy()->startOfWeek(Carbon::MONDAY);
+        $ahora = Carbon::now($zonaHoraria);
         $bloquesHorarios = Bloque::all()->keyBy('idBloque');
 
         $bloqueosHorario = BloqueoHorario::where('activo', true)
-            ->where('semana_inicio', $semanaInicio->toDateString())
+            ->where('semana_inicio', $semanaInicioSeleccion)
+            ->where('dia_semana', $diaSemanaSeleccion)
+            ->when(!empty($bloqueIds), fn ($q) => $q->whereIn('idBloque', $bloqueIds))
             ->get()
             ->groupBy('idTipoEquipo')
-            ->map(function ($items) use ($bloquesHorarios, $ahora, $semanaInicio) {
+            ->map(function ($items) use ($bloquesHorarios, $fechaReferencia, $bloqueIds, $ahora) {
                 $resultado = [
                     'activo' => false,
                     'hasta' => null,
@@ -157,20 +182,32 @@ class TipoEquipoController extends Controller
                         continue;
                     }
 
-                    $dia = max(1, (int) $registro->dia_semana);
-                    $fechaDia = (clone $semanaInicio)->addDays($dia - 1);
-
-                    $inicio = Carbon::parse($fechaDia->toDateString() . ' ' . $bloque->hora_inicio);
-                    $fin = Carbon::parse($fechaDia->toDateString() . ' ' . $bloque->hora_fin);
+                    $inicio = Carbon::parse(
+                        $fechaReferencia->toDateString() . ' ' . $bloque->hora_inicio,
+                        $fechaReferencia->timezone
+                    );
+                    $fin = Carbon::parse(
+                        $fechaReferencia->toDateString() . ' ' . $bloque->hora_fin,
+                        $fechaReferencia->timezone
+                    );
 
                     if ($fin->lessThan($inicio)) {
                         $fin->addDay();
                     }
 
-                    if ($ahora->between($inicio, $fin)) {
+                    $resultado['motivo'] = $registro->motivo;
+
+                    // Si el alumno envió bloque(s), se marca bloqueado directamente cuando coincide.
+                    if (!empty($bloqueIds) && in_array($registro->idBloque, $bloqueIds, true)) {
                         $resultado['activo'] = true;
                         $resultado['hasta'] = $fin;
-                        $resultado['motivo'] = $registro->motivo;
+                        break;
+                    }
+
+                    // Sin bloque explícito: solo bloquear si el horario actual cae dentro del rango.
+                    if (empty($bloqueIds) && $ahora->between($inicio, $fin)) {
+                        $resultado['activo'] = true;
+                        $resultado['hasta'] = $fin;
                         break;
                     }
                 }
@@ -196,6 +233,15 @@ class TipoEquipoController extends Controller
                 : ($horario['hasta'] ?? null);
             $bloqueoHorarioMotivo = $horario['motivo'] ?? null;
 
+            $disponible = ($t->stock > 0) && !$bloqueado && !$bloqueoHorarioActivo;
+            $motivoNoDisponible = null;
+
+            if ($bloqueoHorarioActivo) {
+                $motivoNoDisponible = 'BLOQUEADO_HORARIO';
+            } elseif (($t->stock ?? 0) <= 0) {
+                $motivoNoDisponible = 'SIN_STOCK';
+            }
+
             // imagen_url ya viene del modelo gracias al accessor
             return array_merge($t->toArray(), [
                 'prestamos_activos' => $info['activos'] ?? 0,
@@ -213,6 +259,8 @@ class TipoEquipoController extends Controller
                 'bloqueo_horario_hasta' => $bloqueoHorarioHasta,
                 'bloqueo_hasta' => $bloqueoHorarioHasta,
                 'bloqueo_horario_motivo' => $bloqueoHorarioMotivo,
+                'disponible' => $disponible,
+                'motivo_no_disponible' => $motivoNoDisponible,
             ]);
         });
 

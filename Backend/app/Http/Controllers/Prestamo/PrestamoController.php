@@ -97,8 +97,15 @@ class PrestamoController extends Controller
                 $bloques = $request->bloques ?? [];
 
                 if (!empty($tiposSolicitados) && !empty($bloques)) {
-                    $diaSemana = Carbon::now()->dayOfWeekIso; // 1 = Lunes, 7 = Domingo
-                    $semanaInicio = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+                    $zonaHoraria = config('app.timezone', 'America/Santiago');
+                    $fechaReserva = $request->input('fecha_inicio');
+
+                    $fechaReferencia = $fechaReserva
+                        ? Carbon::parse($fechaReserva, $zonaHoraria)
+                        : Carbon::now($zonaHoraria);
+
+                    $diaSemana = $fechaReferencia->dayOfWeekIso; // 1 = Lunes, 7 = Domingo
+                    $semanaInicio = $fechaReferencia->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
 
                     $existeBloqueo = BloqueoHorario::where('activo', true)
                         ->where('semana_inicio', $semanaInicio)
@@ -110,8 +117,8 @@ class PrestamoController extends Controller
                     if ($existeBloqueo) {
                         return response()->json([
                             'error' => 'BLOQUEO_HORARIO',
-                            'message' => 'Hay equipos bloqueados para este bloque y dia. Elige otro horario o equipo.'
-                        ], 422);
+                            'message' => 'Este equipo está bloqueado para el horario seleccionado.',
+                        ], 409);
                     }
                 }
             }
