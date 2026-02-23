@@ -379,3 +379,53 @@
     color: #ff855c;
   }
 }
+
+/* =============================
+   CUENTA REGRESIVA
+============================= */
+.countdown-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #fff3cd, #ffeeba);
+  border: 1px solid #ffc107;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #856404;
+  animation: pulse-countdown 2s ease-in-out infinite;
+}
+
+.countdown-icon {
+  font-size: 1rem;
+}
+
+.countdown-expired {
+  color: #dc3545 !important;
+  font-weight: 700;
+}
+
+.countdown-detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #fff3cd, #ffeeba);
+  border: 1px solid #ffc107;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #856404;
+}
+
+.countdown-detail strong {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+@keyframes pulse-countdown {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}

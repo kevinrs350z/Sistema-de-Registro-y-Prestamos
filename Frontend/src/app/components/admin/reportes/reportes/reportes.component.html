@@ -1,49 +1,65 @@
 <div class="reportes-page">
   <div class="reportes-wrapper container">
-
-    <!-- Header minimalista tipo toolbar -->
     <header class="reportes-header d-flex justify-content-between align-items-start py-3 border-bottom">
       <div>
         <h4 class="fw-semibold text-dark mb-1">Panel de Reportes</h4>
-        <small class="text-muted">Análisis institucional y visualización de indicadores clave</small>
+        <small class="text-muted">Analítica avanzada del sistema de préstamos</small>
       </div>
     </header>
 
-    <!-- Tabs de navegación minimalistas -->
-    <nav class="reportes-nav nav nav-pills gap-1 flex-wrap py-3">
+    <!-- ═══ Grupo 1: Análisis de Demanda ═══ -->
+    <div class="nav-group-label">Análisis de Demanda</div>
+    <nav class="reportes-nav nav nav-pills gap-1 flex-wrap py-2">
+      <a routerLink="executive" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2 me-1"></i>KPIs Ejecutivos
+      </a>
       <a routerLink="dashboard" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-speedometer2 me-1"></i>Dashboard
+        <i class="bi bi-graph-up-arrow me-1"></i>Demanda histórica
       </a>
+      <a routerLink="stockout" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-box-seam me-1"></i>Demanda insatisfecha
+      </a>
+    </nav>
+
+    <!-- ═══ Grupo 2: Equipos e Inventario ═══ -->
+    <div class="nav-group-label">Equipos e Inventario</div>
+    <nav class="reportes-nav nav nav-pills gap-1 flex-wrap py-2">
       <a routerLink="equipos" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-laptop me-1"></i>Equipos
+        <i class="bi bi-pc-display me-1"></i>Equipos
       </a>
+      <a routerLink="inventario" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-clipboard-data me-1"></i>Inventario
+      </a>
+      <a routerLink="modelos" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-cpu me-1"></i>Modelos (BI)
+      </a>
+    </nav>
+
+    <!-- ═══ Grupo 3: Usuarios y Académico ═══ -->
+    <div class="nav-group-label">Usuarios y Académico</div>
+    <nav class="reportes-nav nav nav-pills gap-1 flex-wrap py-2">
       <a routerLink="alumnos" routerLinkActive="active" class="nav-link">
         <i class="bi bi-mortarboard me-1"></i>Alumnos
       </a>
       <a routerLink="profesores" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-person-badge me-1"></i>Profesores
+        <i class="bi bi-person-workspace me-1"></i>Profesores
       </a>
       <a routerLink="asignaturas" routerLinkActive="active" class="nav-link">
         <i class="bi bi-book me-1"></i>Asignaturas
       </a>
-      <a routerLink="inventario" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-box-seam me-1"></i>Inventario
-      </a>
+    </nav>
+
+    <!-- ═══ Grupo 4: Operaciones ═══ -->
+    <div class="nav-group-label">Operaciones</div>
+    <nav class="reportes-nav nav nav-pills gap-1 flex-wrap py-2">
       <a routerLink="sanciones" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-exclamation-triangle me-1"></i>Sanciones
+        <i class="bi bi-shield-exclamation me-1"></i>Sanciones
       </a>
       <a routerLink="mantenimientos" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-tools me-1"></i>Mantenimientos
-      </a>
-      <a routerLink="tendencias" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-graph-up me-1"></i>Tendencias
-      </a>
-      <a routerLink="modelos" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-bar-chart-steps me-1"></i>Modelos BI
+        <i class="bi bi-wrench-adjustable me-1"></i>Mantenimientos
       </a>
     </nav>
 
-    <!-- Contenedor de los subcomponentes -->
     <router-outlet></router-outlet>
 
   </div>

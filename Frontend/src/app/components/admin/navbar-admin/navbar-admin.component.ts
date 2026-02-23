@@ -67,6 +67,11 @@ export class NavbarAdminComponent {
     this.router.navigate(['/admin/bloqueos-horario']);
   }
 
+  irCategorias() {
+    this.menuAbierto = false;
+    this.router.navigate(['/admin/categorias']);
+  }
+
   getUserId(): string {
     try {
       const raw = sessionStorage.getItem('user');

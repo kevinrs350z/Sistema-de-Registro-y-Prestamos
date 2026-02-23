@@ -44,6 +44,7 @@ interface AlumnoRanking {
 export class ReportesAlumnosComponent implements OnInit, OnDestroy {
   // Subject para cleanup
   private destroy$ = new Subject<void>();
+  private pendingLoads = 0;
   
   // Filtro centralizado actual
   currentFilter: ReportFilter | null = null;
@@ -125,11 +126,18 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
 
   private cargarTodosLosDatos(): void {
     this.filterService.setLoading(true);
+    this.pendingLoads = 4;
     this.cargarKPIs();
     this.cargarSancionesPorNivel();
     this.cargarEvolucionPrestamos();
     this.cargarTopAlumnos();
-    setTimeout(() => this.filterService.setLoading(false), 1500);
+  }
+
+  private onLoadComplete(): void {
+    this.pendingLoads--;
+    if (this.pendingLoads <= 0) {
+      this.filterService.setLoading(false);
+    }
   }
 
    filtrarPorFecha() {
@@ -194,7 +202,9 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
       error: () => {
         this.loadingKpis = false;
         this.errorKpis = 'No se pudieron cargar los KPIs de alumnos.';
-      }
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 
@@ -255,7 +265,9 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
       error: () => {
         this.loadingSanciones = false;
         this.errorSanciones = 'No se pudieron cargar las sanciones por nivel.';
-      }
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 
@@ -348,7 +360,9 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
       error: () => {
         this.loadingEvolucion = false;
         this.errorEvolucion = 'No se pudo cargar la evolución de préstamos.';
-      }
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 
@@ -427,7 +441,9 @@ export class ReportesAlumnosComponent implements OnInit, OnDestroy {
       error: () => {
         this.loadingRanking = false;
         this.errorRanking = 'No se pudo cargar el ranking de alumnos.';
-      }
+        this.onLoadComplete();
+      },
+      complete: () => this.onLoadComplete()
     });
   }
 

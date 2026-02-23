@@ -22,7 +22,7 @@ class ResetPasswordController extends Controller
             'password' => 'required|min:8|confirmed',
         ]);
 
-        // Buscar el token en la tabla (siempre en minúsculas)
+        // Buscar el registro de password_resets por email
         $record = DB::table('password_resets')
             ->where('email', $email)
             ->first();
@@ -31,15 +31,18 @@ class ResetPasswordController extends Controller
             return response()->json(['message' => 'Token inválido o expirado (no encontrado en BD).'], 400);
         }
 
-        // Comparar el token directamente
-        if ($request->token !== $record->token) {
-            return response()->json([
-                'message' => 'El token no coincide.',
-                'debug' => [
-                    'enviado' => $request->token,
-                    'guardado' => $record->token,
-                ]
-            ], 400);
+        // Verificar expiración (tokens válidos por 60 minutos)
+        if (now()->diffInMinutes($record->created_at) > 60) {
+            DB::table('password_resets')->where('email', $email)->delete();
+            return response()->json(['message' => 'El token ha expirado. Solicita uno nuevo.'], 400);
+        }
+
+        // Comparar token con hash almacenado (compatible con ambos formatos)
+        $tokenValido = Hash::check($request->token, $record->token)
+                    || $request->token === $record->token;
+
+        if (!$tokenValido) {
+            return response()->json(['message' => 'El token no coincide.'], 400);
         }
 
         // Buscar usuario en tu tabla (campo "Email" con mayúscula)
@@ -58,17 +61,27 @@ class ResetPasswordController extends Controller
 
         return response()->json(['message' => 'Contraseña restablecida correctamente.']);
     }
+
     public function validateToken($token)
     {
-        $record = DB::table('password_resets')
-            ->where('token', $token)
-            ->first();
+        // Buscar en todos los registros de password_resets
+        $records = DB::table('password_resets')->get();
 
-        if (!$record) {
-            return response()->json(['message' => 'Token inválido o expirado.'], 400);
+        foreach ($records as $record) {
+            // Compatible: verificar hash o comparación directa (migración gradual)
+            $match = Hash::check($token, $record->token) || $token === $record->token;
+
+            if ($match) {
+                // Verificar expiración (60 minutos)
+                if (now()->diffInMinutes($record->created_at) > 60) {
+                    DB::table('password_resets')->where('email', $record->email)->delete();
+                    return response()->json(['message' => 'Token expirado. Solicita uno nuevo.'], 400);
+                }
+
+                return response()->json(['email' => $record->email]);
+            }
         }
 
-        return response()->json(['email' => $record->email]);
+        return response()->json(['message' => 'Token inválido o expirado.'], 400);
     }
-
 }

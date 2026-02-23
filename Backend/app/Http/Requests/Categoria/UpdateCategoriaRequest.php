@@ -13,7 +13,8 @@ class UpdateCategoriaRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $user = $this->user();
+        return $user && method_exists($user, 'isAdminOrSuper') && $user->isAdminOrSuper();
     }
 
     /**
@@ -25,8 +26,10 @@ class UpdateCategoriaRequest extends FormRequest
     {
         $id = $this->route('id');
         return [
-            'nombre'      => 'sometimes|required|string|unique:categorias,nombre,' .$id. ',id',
-            'descripcion' => 'sometimes|required|string|'
+            'nombre'      => 'sometimes|required|string|unique:categorias,nombre,' . $id . ',id',
+            'descripcion' => 'sometimes|nullable|string',
+            'icono'       => 'sometimes|nullable|string|max:100',
+            'activo'      => 'sometimes|boolean',
         ];
     }
 }

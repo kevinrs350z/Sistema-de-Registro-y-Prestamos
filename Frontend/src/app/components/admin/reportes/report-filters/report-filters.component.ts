@@ -32,8 +32,12 @@ import { EquiposService } from '../../../../services/equipos.service';
           <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill">{{ periodInfo?.daysCount }} días</span>
         </div>
 
-        <!-- Presets período -->
+        <!-- Navegación temporal -->
         <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-outline-secondary" (click)="navigatePeriod('prev')" title="Período anterior">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <!-- Presets período -->
           @for (preset of quickPresets; track preset.value) {
             <button 
               type="button"
@@ -42,6 +46,24 @@ import { EquiposService } from '../../../../services/equipos.service';
               [class.btn-outline-secondary]="currentFilter?.preset !== preset.value"
               (click)="applyPreset(preset.value)">
               {{ preset.label }}
+            </button>
+          }
+          <button type="button" class="btn btn-outline-secondary" (click)="navigatePeriod('next')" 
+            [disabled]="isAtCurrentPeriod()" title="Período siguiente">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+
+        <!-- Granularidad -->
+        <div class="btn-group btn-group-sm" role="group" title="Granularidad de agrupación">
+          @for (g of granularities; track g.value) {
+            <button 
+              type="button"
+              class="btn"
+              [class.btn-info]="currentFilter?.granularity === g.value"
+              [class.btn-outline-secondary]="currentFilter?.granularity !== g.value"
+              (click)="setGranularity(g.value)">
+              {{ g.label }}
             </button>
           }
         </div>
@@ -242,6 +264,17 @@ import { EquiposService } from '../../../../services/equipos.service';
       border-color: #7c3aed !important;
     }
 
+    /* Info style for granularity */
+    .btn-info {
+      background-color: #0dcaf0 !important;
+      border-color: #0dcaf0 !important;
+      color: #000 !important;
+    }
+    .btn-info:hover {
+      background-color: #31d2f2 !important;
+      border-color: #25cff2 !important;
+    }
+
     /* Advanced section animation */
     .advanced-section {
       background: rgba(0,0,0,0.02);
@@ -372,6 +405,53 @@ export class ReportFiltersComponent implements OnInit, OnDestroy {
 
   applyPreset(preset: PeriodPreset): void {
     this.filterService.applyPreset(preset);
+  }
+
+  /**
+   * Navigate to previous or next period based on current date range span
+   */
+  navigatePeriod(direction: 'prev' | 'next'): void {
+    if (!this.currentFilter) return;
+    
+    const from = new Date(this.currentFilter.from);
+    const to = new Date(this.currentFilter.to);
+    const diffMs = to.getTime() - from.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1;
+    
+    let newFrom: Date;
+    let newTo: Date;
+    
+    if (direction === 'prev') {
+      newTo = new Date(from);
+      newTo.setDate(newTo.getDate() - 1);
+      newFrom = new Date(newTo);
+      newFrom.setDate(newFrom.getDate() - diffDays + 1);
+    } else {
+      newFrom = new Date(to);
+      newFrom.setDate(newFrom.getDate() + 1);
+      newTo = new Date(newFrom);
+      newTo.setDate(newTo.getDate() + diffDays - 1);
+      // Do not go beyond today
+      const today = new Date();
+      if (newTo > today) newTo = today;
+    }
+    
+    this.filterService.applyCustomRange(
+      newFrom.toISOString().split('T')[0],
+      newTo.toISOString().split('T')[0],
+      this.currentFilter.granularity
+    );
+  }
+
+  /**
+   * Check if the current period end date is today or later
+   */
+  isAtCurrentPeriod(): boolean {
+    if (!this.currentFilter) return true;
+    const to = new Date(this.currentFilter.to);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return to >= today;
   }
 
   setGranularity(granularity: Granularity): void {

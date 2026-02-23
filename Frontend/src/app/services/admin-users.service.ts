@@ -29,8 +29,11 @@ export class AdminUsersService {
    * Buscar usuarios para autocompletado.
    * El backend retorna array directo, no paginado.
    */
-  search(q: string, limit = 10): Observable<AdminUser[]> {
-    const params = new HttpParams().set('q', q);
+  search(q: string, limit = 10, roles: string[] = []): Observable<AdminUser[]> {
+    let params = new HttpParams().set('q', q);
+    if (roles.length) {
+      params = params.set('roles', roles.join(','));
+    }
     return this.http.get<AdminUser[]>(this.apiUrl, {
       params,
       headers: this.getHeaders()

@@ -25,9 +25,27 @@
   font-size: 0.8125rem;
 }
 
+/* ===== NAV GROUP LABELS ===== */
+.nav-group-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+  padding-left: 0.25rem;
+}
+
 /* ===== TABS NAVEGACIÓN - Nav Pills Minimal ===== */
 .reportes-nav {
   border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.reportes-nav:last-of-type {
   margin-bottom: 1rem;
 }
 
@@ -86,5 +104,9 @@
 
   .reportes-nav .nav-link i {
     display: none;
+  }
+
+  .nav-group-label {
+    text-align: center;
   }
 }

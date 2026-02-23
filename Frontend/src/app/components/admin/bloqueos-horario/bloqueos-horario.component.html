@@ -1,48 +1,255 @@
-<div class="wrap">
-  <header class="head">
-    <div>
-      <h1>Bloqueos por horario</h1>
-      <p>Bloquea equipos por bloque y semana para alumnos.</p>
-    </div>
-    <div class="selector">
-      <label>Tipo de equipo</label>
-      <select [(ngModel)]="tipoSeleccionado" (ngModelChange)="onTipoChange()">
-        <option [ngValue]="null">Selecciona un tipo</option>
-        <option *ngFor="let t of tipos()" [ngValue]="t.id">{{ t.nombre }}</option>
-      </select>
-      <span class="tipo-seleccionado">Seleccionado: {{ tipoNombreSeleccionado() }}</span>
-    </div>
-    <div class="semana-controls">
-      <button type="button" (click)="cambiarSemana(-1)">Semana anterior</button>
-      <span class="semana-label">Semana de {{ semanaInicio() | date:'dd/MM/yyyy' }}</span>
-      <button type="button" (click)="cambiarSemana(1)">Semana siguiente</button>
-    </div>
+<section class="academic-wrap">
+  <header class="module-header">
+    <h1>Bloqueo Académico de Equipos</h1>
+    <p>Gestión de bloqueos por día y bloque horario para actividades académicas.</p>
   </header>
 
-  <div class="tabla">
-    <div class="tabla-row tabla-header">
-      <div class="tabla-cell bloque">Bloque</div>
-      <div class="tabla-cell" *ngFor="let d of dias()">{{ d.etiqueta }}</div>
-    </div>
+  <section class="month-row">
+    <article class="mini-month" *ngFor="let cal of miniCalendars()" [class.is-current]="cal.isCurrentMonth">
+      <button type="button" class="month-title" (click)="openQuickMonthPicker()">
+        {{ cal.monthTitle }}
+      </button>
 
-    <div class="tabla-row" *ngFor="let b of bloquesOrdenados()">
-      <div class="tabla-cell bloque">{{ b.texto }}</div>
-      <div class="tabla-cell" *ngFor="let d of dias()">
+      <div class="mini-day-names">
+        <span *ngFor="let dayName of cal.dayNames">{{ dayName }}</span>
+      </div>
+
+      <div class="mini-days">
         <button
           type="button"
-          class="toggle"
-          [class.activo]="isBloqueado(d.id, b.id)"
-          (click)="toggle(d.id, b.id)"
-          [disabled]="!tipoSeleccionado()"
+          class="mini-day"
+          *ngFor="let day of cal.days"
+          [class.out-month]="!day.inCurrentMonth"
+          [class.today]="day.isToday"
+          [class.selected]="day.isSelected"
+          (click)="selectMiniDay(day)"
         >
-          <span class="toggle-text">
-            {{ isBloqueado(d.id, b.id) ? 'Bloqueado' : 'Libre' }}
-          </span>
-          <span class="toggle-sub" *ngIf="isBloqueado(d.id, b.id)">
-            {{ tipoNombreSeleccionado() }}
-          </span>
+          {{ day.day }}
         </button>
       </div>
+    </article>
+  </section>
+
+  <section class="week-controls">
+    <button type="button" class="week-btn" (click)="goToPreviousWeek()">◀ Semana anterior</button>
+    <button type="button" class="week-btn is-accent" (click)="goToCurrentWeek()">Semana actual</button>
+    <button type="button" class="week-btn" (click)="goToNextWeek()">▶ Semana siguiente</button>
+  </section>
+
+  <p class="week-label">{{ weekRangeLabel() }}</p>
+
+  <section class="week-grid">
+    <div class="grid-header">Bloque</div>
+    <div class="grid-header" *ngFor="let day of weekDays()">
+      <span class="day-name">{{ day.nombre }}</span>
+      <span class="day-date">{{ day.fecha | date:'dd/MM' }}</span>
     </div>
-  </div>
+
+    <ng-container *ngFor="let block of bloquesOrdenados()">
+      <div class="grid-block-time">{{ block.etiqueta }}</div>
+
+      <button
+        type="button"
+        class="grid-cell"
+        *ngFor="let day of weekDays()"
+        [class.state-disponible]="getCellState(day, block) === 'disponible'"
+        [class.state-bloqueado]="getCellState(day, block) === 'bloqueado'"
+        [class.state-reservado]="getCellState(day, block) === 'reservado'"
+        [class.state-pasado]="getCellState(day, block) === 'pasado'"
+        (click)="onCellClick(day, block)"
+      >
+        <span class="cell-main">{{ getCellLabel(day, block) }}</span>
+        <span class="cell-sub" *ngIf="getCellSubLabel(day, block)">{{ getCellSubLabel(day, block) }}</span>
+        <span class="cell-count" *ngIf="getCellActivityCount(day, block) > 1">{{ getCellActivityCount(day, block) }} actividades</span>
+      </button>
+    </ng-container>
+  </section>
+</section>
+
+<div class="bh-overlay" *ngIf="quickMonthPickerOpen()" (click)="closeQuickMonthPicker()">
+  <section class="quick-month-picker" (click)="$event.stopPropagation()">
+    <header class="quick-head">
+      <button type="button" (click)="changeQuickPickerYear(-1)">◀ Año anterior</button>
+      <strong>{{ quickPickerYear() }}</strong>
+      <button type="button" (click)="changeQuickPickerYear(1)">Año siguiente ▶</button>
+      <button type="button" class="today-btn" (click)="jumpToTodayFromPicker()">Hoy</button>
+    </header>
+
+    <div class="month-tiles">
+      <button
+        type="button"
+        class="month-tile"
+        *ngFor="let month of monthTiles()"
+        [class.is-current]="month.isCurrent"
+        [class.is-selected]="month.isSelected"
+        (click)="pickMonth(month.date)"
+      >
+        {{ month.label }}
+      </button>
+    </div>
+  </section>
+</div>
+
+<div class="bh-overlay" *ngIf="modalOpen()" (click)="closeModal()">
+  <section class="bh-modal" (click)="$event.stopPropagation()">
+    <header class="bh-modal-head">
+      <h2>{{ modalMode() === 'edit' ? 'Editar bloqueo' : 'Crear bloqueo' }}</h2>
+      <button type="button" class="bh-close-btn" (click)="closeModal()">✕</button>
+    </header>
+
+    <div class="bh-modal-context" *ngIf="selectedCell() as cell">
+      <p><strong>Fecha seleccionada:</strong> {{ formatSelectedDateForModal() }}</p>
+      <p><strong>Bloque horario:</strong> {{ cell.block.etiqueta }}</p>
+      <p><strong>Semana:</strong> {{ formatWeekForModal() }}</p>
+      <p class="readonly-note" *ngIf="isSelectedCellReadOnly()"><strong>Modo:</strong> Solo lectura (bloque pasado)</p>
+    </div>
+
+    <div class="activities-tabs" *ngIf="cellActivities().length">
+      <span class="tabs-title">Actividades en este bloque:</span>
+      <button
+        type="button"
+        class="activity-tab"
+        *ngFor="let activity of cellActivities()"
+        [class.active]="editingBlock()?.id === activity.id && modalMode() === 'edit'"
+        (click)="openActivityForEdit(activity)"
+      >
+        {{ activity.nombreActividad }}
+      </button>
+      <button type="button" class="activity-tab is-new" [class.active]="modalMode() === 'create'" (click)="prepareNewActivityFromCell()">
+        + Nueva actividad
+      </button>
+    </div>
+
+    <div class="bh-modal-body">
+      <section class="left-column">
+        <h3>Datos de la actividad</h3>
+        <label class="field-label">Nombre de la actividad</label>
+        <input
+          type="text"
+          [ngModel]="form().nombreActividad"
+          (ngModelChange)="updateFormField('nombreActividad', $event)"
+          placeholder="Ej: Clase de iluminación"
+        />
+        <small class="error" *ngIf="formErrors().nombreActividad">{{ formErrors().nombreActividad }}</small>
+
+        <label class="field-label">Descripción (opcional)</label>
+        <textarea
+          rows="3"
+          [ngModel]="form().descripcion"
+          (ngModelChange)="updateFormField('descripcion', $event)"
+          placeholder="Detalle breve de la actividad"
+        ></textarea>
+
+        <h3>Repetición del bloqueo</h3>
+        <div class="weekday-checks">
+          <button
+            type="button"
+            *ngFor="let day of weekDays()"
+            class="day-pill"
+            [class.checked]="isDayChecked(day.id)"
+            [disabled]="form().tipoRepeticion === 'daily'"
+            (click)="toggleDiaRepeticion(day.id)"
+          >
+            {{ day.corto }}
+          </button>
+        </div>
+
+        <div class="repeat-types">
+          <label>
+            <input type="radio" name="repeat" [checked]="form().tipoRepeticion === 'none'" (change)="setRepetition('none')" />
+            No repetir
+          </label>
+          <label>
+            <input type="radio" name="repeat" [checked]="form().tipoRepeticion === 'daily'" (change)="setRepetition('daily')" />
+            Diaria
+          </label>
+          <label>
+            <input type="radio" name="repeat" [checked]="form().tipoRepeticion === 'weekly'" (change)="setRepetition('weekly')" />
+            Semanal
+          </label>
+          <label>
+            <input type="radio" name="repeat" [checked]="form().tipoRepeticion === 'monthly'" (change)="setRepetition('monthly')" />
+            Mensual
+          </label>
+        </div>
+
+        <div class="range-row" *ngIf="showRangeFields()">
+          <div>
+            <label class="field-label">Fecha inicio</label>
+            <input type="date" [ngModel]="form().fechaInicio" (ngModelChange)="updateFormField('fechaInicio', $event)" />
+          </div>
+          <div>
+            <label class="field-label">Fecha fin</label>
+            <input type="date" [ngModel]="form().fechaFin" (ngModelChange)="updateFormField('fechaFin', $event)" />
+          </div>
+        </div>
+        <small class="error" *ngIf="formErrors().rango">{{ formErrors().rango }}</small>
+      </section>
+
+      <aside class="right-column">
+        <h3>Agregar equipo a bloquear</h3>
+
+        <div class="mode-switch">
+          <label>
+            <input type="radio" name="mode" [checked]="form().modoBloqueo === 'modelo'" (change)="onModoBloqueoChange('modelo')" />
+            Por tipo de equipo
+          </label>
+          <label>
+            <input type="radio" name="mode" [checked]="form().modoBloqueo === 'fisico'" (change)="onModoBloqueoChange('fisico')" />
+            Por equipo físico
+          </label>
+        </div>
+
+        <div class="add-row">
+          <input
+            type="text"
+            [placeholder]="getSearchPlaceholder()"
+            [ngModel]="form().busquedaEquipo"
+            (ngModelChange)="updateFormField('busquedaEquipo', $event)"
+          />
+          <button type="button" (click)="addEquipo()">Agregar</button>
+        </div>
+
+        <div class="suggestions" *ngIf="filteredEquiposDisponibles().length">
+          <button
+            type="button"
+            *ngFor="let item of filteredEquiposDisponibles()"
+            (click)="updateFormField('busquedaEquipo', item.nombre)"
+          >
+            {{ item.nombre }}
+          </button>
+        </div>
+
+        <div class="chip-list">
+          <span class="chip" *ngFor="let item of selectedEquipos()">
+            {{ item.nombre }}
+            <button type="button" (click)="removeEquipo(item.id)">✕</button>
+          </span>
+        </div>
+        <small class="error" *ngIf="formErrors().equipos">{{ formErrors().equipos }}</small>
+
+        <div class="delete-mode" *ngIf="modalMode() === 'edit'">
+          <h4>Eliminar serie</h4>
+          <label>
+            <input type="radio" name="delete-series" [checked]="deletingSeriesOption() === 'solo'" (change)="deletingSeriesOption.set('solo')" />
+            Solo este
+          </label>
+          <label>
+            <input type="radio" name="delete-series" [checked]="deletingSeriesOption() === 'siguientes'" (change)="deletingSeriesOption.set('siguientes')" />
+            Este y siguientes
+          </label>
+          <label>
+            <input type="radio" name="delete-series" [checked]="deletingSeriesOption() === 'toda'" (change)="deletingSeriesOption.set('toda')" />
+            Toda la serie
+          </label>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="bh-modal-actions">
+      <button type="button" class="secondary" (click)="closeModal()">Cancelar</button>
+      <button type="button" class="danger" *ngIf="modalMode() === 'edit'" [disabled]="isSelectedCellReadOnly()" (click)="deleteCurrentBlock()">Eliminar bloqueo</button>
+      <button type="button" class="primary" [disabled]="!canSave()" (click)="saveBloqueo()">Guardar bloqueo</button>
+    </footer>
+  </section>
 </div>

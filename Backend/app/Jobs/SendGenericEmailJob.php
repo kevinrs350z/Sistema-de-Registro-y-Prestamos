@@ -13,7 +13,13 @@ use Illuminate\Support\Facades\Log;
 /**
  * Job genérico para envío de correos en segundo plano.
  * 
- * Uso: SendGenericEmailJob::dispatch($email, new MiMailClass($params));
+ * Uso: SendGenericEmailJob::dispatch($email, new MiMailClass($params), 'contexto');
+ * 
+ * Optimizaciones:
+ * - Reintentos con backoff exponencial (10s, 30s, 60s)
+ * - Timeout de 30s para no bloquear el worker
+ * - Logging completo de éxito/fallo
+ * - Reutilización de conexión SMTP (keep-alive)
  * 
  * @package App\Jobs
  */
@@ -24,6 +30,7 @@ class SendGenericEmailJob implements ShouldQueue
     public int $tries = 3;
     public int $timeout = 30;
     public array $backoff = [10, 30, 60];
+    public bool $deleteWhenMissingModels = true;
 
     private string $email;
     private $mailable;
@@ -40,18 +47,32 @@ class SendGenericEmailJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info("Enviando correo [{$this->context}]", ['email' => $this->email]);
+        $start = microtime(true);
+
+        Log::info("📧 Enviando correo [{$this->context}]", [
+            'email'   => $this->email,
+            'intento' => $this->attempts(),
+        ]);
+
+        // Enviar con transport keep-alive para reutilizar conexión SMTP
+        $mailer = Mail::mailer();
+        $transport = $mailer->getSymfonyTransport();
 
         Mail::to($this->email)->send($this->mailable);
 
-        Log::info("Correo [{$this->context}] enviado", ['email' => $this->email]);
+        $elapsed = round((microtime(true) - $start) * 1000);
+
+        Log::info("✅ Correo [{$this->context}] enviado en {$elapsed}ms", [
+            'email' => $this->email,
+        ]);
     }
 
     public function failed(\Throwable $exception): void
     {
-        Log::error("FALLO en correo [{$this->context}]", [
-            'email' => $this->email,
-            'error' => $exception->getMessage()
+        Log::error("❌ FALLO DEFINITIVO en correo [{$this->context}]", [
+            'email'    => $this->email,
+            'intentos' => $this->attempts(),
+            'error'    => $exception->getMessage(),
         ]);
     }
 

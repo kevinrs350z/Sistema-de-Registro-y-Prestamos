@@ -1,0 +1,421 @@
+/* ===== Executive Dashboard Styles ===== */
+.executive-dashboard {
+  padding: 0 0 32px;
+}
+
+/* ── Toolbar ── */
+.exec-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.tipo-select,
+.estado-select {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2937;
+  min-width: 170px;
+  cursor: pointer;
+}
+
+.tipo-select:focus,
+.estado-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+/* ── KPI Grid ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* ── KPI Card ── */
+.kpi-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  cursor: default;
+}
+
+.kpi-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Color accents via left border */
+.kpi-green { border-left: 4px solid #22c55e; }
+.kpi-red   { border-left: 4px solid #ef4444; }
+.kpi-amber { border-left: 4px solid #f59e0b; }
+.kpi-blue  { border-left: 4px solid #3b82f6; }
+.kpi-gray  { border-left: 4px solid #9ca3af; }
+
+/* ── Label ── */
+.kpi-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kpi-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #9ca3af;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.kpi-info:hover {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+/* ── Value ── */
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+/* Dual layout for P50/P90 */
+.kpi-dual {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 1.1rem;
+}
+
+.dual-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dual-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+.dual-number {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.dual-sep {
+  font-size: 1.2rem;
+  color: #d1d5db;
+  margin: 0 2px;
+  align-self: flex-end;
+  padding-bottom: 4px;
+}
+
+.dual-unit {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-left: 4px;
+  align-self: flex-end;
+  padding-bottom: 4px;
+}
+
+/* Top categoría crítica */
+.kpi-critica {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.critica-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.critica-detail {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ── Variation badge ── */
+.kpi-variation {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.var-up { color: #16a34a; }
+.var-down { color: #dc2626; }
+.var-neutral { color: #6b7280; }
+
+/* Invert for cards where up is bad (atrasos, rechazos) */
+.kpi-red .var-up { color: #dc2626; }
+.kpi-red .var-down { color: #16a34a; }
+
+.var-arrow {
+  font-size: 0.9rem;
+}
+
+.var-pct {
+  font-weight: 700;
+}
+
+.var-label {
+  font-weight: 400;
+  color: #9ca3af;
+  font-size: 0.72rem;
+}
+
+/* ── Loading ── */
+.exec-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Error ── */
+.exec-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ── Empty ── */
+.exec-empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 40px 0;
+  font-size: 0.9rem;
+}
+
+/* ── Meta ── */
+.exec-meta {
+  margin-top: 16px;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-align: right;
+}
+
+.meta-prev {
+  margin-left: 4px;
+}
+
+/* ── Equipos disponibles card ── */
+.kpi-equipos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.equipos-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.equipos-bar-container {
+  width: 100%;
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+.equipos-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.bar-green { background: #22c55e; }
+.bar-amber { background: #f59e0b; }
+.bar-red   { background: #ef4444; }
+
+.equipos-pct {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* ── Préstamos activos card ── */
+.kpi-activos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activos-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.activos-ahora {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.ahora-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .kpi-value {
+    font-size: 1.5rem;
+  }
+
+  .critica-name {
+    font-size: 1.1rem;
+  }
+
+  .dual-number {
+    font-size: 1.2rem;
+  }
+}
+
+/* ── Dual meta (count/users footnote inside dual cards) ── */
+.dual-meta {
+  display: block;
+  width: 100%;
+  font-size: 0.72rem;
+  color: #8094ae;
+  margin-top: 2px;
+  text-align: center;
+}
+
+/* ── Demanda pico ── */
+.kpi-pico {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.pico-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #364a63;
+}
+.pico-unit {
+  font-size: 0.78rem;
+  color: #8094ae;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pico-day {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #526484;
+  background: #f0f4f8;
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+.pico-day i {
+  font-size: 0.74rem;
+  color: #6576ff;
+}
+
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}

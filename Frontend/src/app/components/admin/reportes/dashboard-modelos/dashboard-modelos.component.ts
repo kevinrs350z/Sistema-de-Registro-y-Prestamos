@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Subject, forkJoin, takeUntil, debounceTime, switchMap, finalize, of, EMPTY } from 'rxjs';
 import { EstadisticasModeloService } from '../../../../services/reportes/estadisticas-modelo.service';
 import { ExportService } from '../../../../services/export.service';
+import { ReportFiltersService, ReportFilter } from '../../../../services/report-filters.service';
+import { ReportFiltersComponent } from '../report-filters/report-filters.component';
 import {
   ModeloFiltros, ResumenEjecutivo, DashboardTab,
   ScoreCompraResponse, UsoMensualResponse, PercentilesResponse,
@@ -32,7 +34,7 @@ interface MethodologyComponent {
 @Component({
   selector: 'app-dashboard-modelos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReportFiltersComponent],
   templateUrl: './dashboard-modelos.component.html',
   styleUrls: ['./dashboard-modelos.component.css']
 })
@@ -104,7 +106,8 @@ export class DashboardModelosComponent implements OnInit, OnDestroy {
 
   constructor(
     private api: EstadisticasModeloService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private filterService: ReportFiltersService
   ) { }
 
   ngOnInit(): void {
@@ -112,6 +115,16 @@ export class DashboardModelosComponent implements OnInit, OnDestroy {
     this.filterChange$
       .pipe(debounceTime(400), takeUntil(this.destroy$))
       .subscribe(() => this.loadData());
+
+    // Sincronizar con filtros centralizados
+    this.filterService.filter$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((filter: ReportFilter) => {
+        this.desde = filter.from;
+        this.hasta = filter.to;
+        this.activePreset = '';
+        this.loadData();
+      });
 
     // ── switchMap: cancela request anterior al seleccionar otro modelo ──
     this.selectModelo$

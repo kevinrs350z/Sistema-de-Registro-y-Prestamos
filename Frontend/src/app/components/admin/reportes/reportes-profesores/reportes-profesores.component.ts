@@ -1,13 +1,15 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from "@angular/core";
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
-import * as echarts from "echarts";
+import { Chart, registerables } from "chart.js";
 import { ReportesProfesoresService } from "../../../../services/reportes/reportes-profesores.service";
 import { ExportService, ReporteData } from "../../../../services/export.service";
 import { ExportButtonsComponent } from "../export-buttons/export-buttons.component";
 import { ReportFiltersComponent } from "../report-filters/report-filters.component";
 import { ReportFiltersService, ReportFilter } from "../../../../services/report-filters.service";
+
+Chart.register(...registerables);
 
 @Component({
   selector: "app-reportes-profesores",
@@ -49,18 +51,14 @@ export class ReportesProfesoresComponent
   errorEquipos: string | null = null;
 
   // =========================
-  // CHARTS
+  // CHARTS (Chart.js)
   // =========================
-  chartPrestamos!: echarts.ECharts;
-  chartTendencia!: echarts.ECharts;
+  private chartPrestamos: Chart | null = null;
+  private chartTendencia: Chart | null = null;
 
   prestamosPorProfesorData: { profesor: string; total: number }[] = [];
   tendenciaMeses: string[] = [];
   tendenciaSeries: any[] = [];
-
-  // Resize handlers so we can remove listeners later
-  private onResizePrestamos = () => { if (this.chartPrestamos) this.chartPrestamos.resize(); };
-  private onResizeTendencia = () => { if (this.chartTendencia) this.chartTendencia.resize(); };
 
   constructor(
     private reportesService: ReportesProfesoresService,
@@ -90,12 +88,12 @@ export class ReportesProfesoresComponent
     this.destroy$.complete();
     
     if (this.chartPrestamos) {
-      this.chartPrestamos.dispose();
-      window.removeEventListener('resize', this.onResizePrestamos);
+      this.chartPrestamos.destroy();
+      this.chartPrestamos = null;
     }
     if (this.chartTendencia) {
-      this.chartTendencia.dispose();
-      window.removeEventListener('resize', this.onResizeTendencia);
+      this.chartTendencia.destroy();
+      this.chartTendencia = null;
     }
   }
 
@@ -179,38 +177,49 @@ export class ReportesProfesoresComponent
   }
 
   // =============================================================
-  // GRÁFICO 1 – PRÉSTAMOS POR PROFESOR
+  // GRÁFICO 1 – PRÉSTAMOS POR PROFESOR (Chart.js horizontal bar)
   // =============================================================
-  initPrestamoChart(): void {
-    const dom = document.getElementById("profesorPrestamoChart");
-    if (!dom) return;
+  private renderPrestamoChart(profesores: string[], totales: number[]): void {
+    const canvas = document.getElementById("profesorPrestamoChart") as HTMLCanvasElement;
+    if (!canvas) return;
 
-    echarts.dispose(dom);
-    this.chartPrestamos = echarts.init(dom);
+    if (this.chartPrestamos) {
+      this.chartPrestamos.destroy();
+      this.chartPrestamos = null;
+    }
 
-    this.chartPrestamos.setOption({
-      tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-      grid: { left: "4%", right: "4%", bottom: "4%", containLabel: true },
-      xAxis: { type: "value" },
-      yAxis: { type: "category", data: [] },
-      series: [
-        {
-          name: "Préstamos",
-          type: "bar",
-          data: [],
-          barWidth: 18,
-          itemStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-              { offset: 0, color: "#6366f1" },
-              { offset: 1, color: "#818cf8" },
-            ]),
-            borderRadius: [0, 8, 8, 0],
-          },
+    // Top 12
+    const limit = 12;
+    const slicedProfesores = profesores.slice(0, limit);
+    const slicedTotales = totales.slice(0, limit);
+
+    this.chartPrestamos = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: slicedProfesores,
+        datasets: [{
+          label: 'Préstamos',
+          data: slicedTotales,
+          backgroundColor: 'rgba(99, 102, 241, 0.8)',
+          borderColor: 'rgba(99, 102, 241, 1)',
+          borderWidth: 1,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { mode: 'index', intersect: false }
         },
-      ],
+        scales: {
+          x: { beginAtZero: true, grid: { display: false } },
+          y: { grid: { display: false } }
+        }
+      }
     });
-
-    window.addEventListener('resize', this.onResizePrestamos);
   }
 
   cargarGraficoPrestamos(): void {
@@ -233,8 +242,7 @@ export class ReportesProfesoresComponent
         this.loadingPrestamos = false;
 
         requestAnimationFrame(() => {
-          this.initPrestamoChart();
-          this.setPrestamoChartOptions(profesores, totales);
+          this.renderPrestamoChart(profesores, totales);
         });
       },
       error: (err) => {
@@ -251,56 +259,64 @@ export class ReportesProfesoresComponent
     this.cargarGraficoPrestamos();
   }
 
-  setPrestamoChartOptions(
-    profesores: string[],
-    totales: number[]
-  ): void {
-    if (!this.chartPrestamos) return;
-
-    // Limitar a los top 12 para evitar overplotting
-    const limit = 12;
-    const slicedProfesores = profesores.slice(0, limit);
-    const slicedTotales = totales.slice(0, limit);
-
-    this.chartPrestamos.setOption(
-      {
-        yAxis: { data: slicedProfesores },
-        series: [{ data: slicedTotales }],
-      },
-      { notMerge: true }
-    );
-  }
-
   // =============================================================
-  // GRÁFICO 2 – TENDENCIA TEMPORAL
+  // GRÁFICO 2 – TENDENCIA TEMPORAL (Chart.js multi-line)
   // =============================================================
-  initTendenciaChart(): void {
-    const dom = document.getElementById("profesorTendenciaChart");
-    if (!dom) return;
+  private renderTendenciaChart(meses: string[], series: any[]): void {
+    const canvas = document.getElementById("profesorTendenciaChart") as HTMLCanvasElement;
+    if (!canvas) return;
 
-    echarts.dispose(dom);
-    this.chartTendencia = echarts.init(dom);
+    if (this.chartTendencia) {
+      this.chartTendencia.destroy();
+      this.chartTendencia = null;
+    }
 
-    this.chartTendencia.setOption({
-      tooltip: { trigger: "axis" },
-      legend: {
-        type: "scroll",
-        top: 10,
-        textStyle: { fontSize: 11 },
+    const colors = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#8b5cf6'];
+    
+    // Top 6 series by total
+    const seriesWithTotal = (series || [])
+      .filter((s: any) => s && Array.isArray(s.data))
+      .map((s: any) => ({
+        ...s,
+        _total: (s.data || []).reduce((a: number, b: number) => a + b, 0),
+      }));
+    seriesWithTotal.sort((a: any, b: any) => b._total - a._total);
+    const topSeries = seriesWithTotal.slice(0, 6);
+
+    const datasets = topSeries.map((s: any, i: number) => ({
+      label: s.name ?? 'Serie',
+      data: [...s.data],
+      borderColor: colors[i % colors.length],
+      backgroundColor: colors[i % colors.length] + '20',
+      tension: 0.3,
+      fill: false,
+      pointRadius: 3,
+      pointHoverRadius: 5
+    }));
+
+    this.chartTendencia = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: meses || [],
+        datasets
       },
-      grid: {
-        left: "6%",
-        right: "4%",
-        bottom: "8%",
-        top: "25%",
-        containLabel: true,
-      },
-      xAxis: { type: "category", data: [] },
-      yAxis: { type: "value" },
-      series: [],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { size: 11 }, usePointStyle: true }
+          },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true }
+        },
+        interaction: { mode: 'nearest', axis: 'x', intersect: false }
+      }
     });
-
-    window.addEventListener('resize', this.onResizeTendencia);
   }
 
   cargarGraficoTendencia(): void {
@@ -315,8 +331,7 @@ export class ReportesProfesoresComponent
         this.tendenciaSeries = Array.isArray(res?.series) ? res.series : [];
         this.loadingTendencia = false;
         requestAnimationFrame(() => {
-          this.initTendenciaChart();
-          this.setTendenciaChartOptions(this.tendenciaMeses, this.tendenciaSeries);
+          this.renderTendenciaChart(this.tendenciaMeses, this.tendenciaSeries);
         });
       },
       error: (err) => {
@@ -332,46 +347,6 @@ export class ReportesProfesoresComponent
   // Método legacy para compatibilidad
   loadGraficoTendencia(): void {
     this.cargarGraficoTendencia();
-  }
-
-  setTendenciaChartOptions(meses: string[], series: any[]): void {
-    if (!this.chartTendencia) return;
-
-    const maxSeries = 6;
-
-    const sanitizedSeries = (series || [])
-      .filter((s: any) => s && Array.isArray(s.data))
-      .map((s: any) => ({
-        name: s.name ?? 'Serie',
-        type: s.type ?? 'line',
-        smooth: s.smooth ?? true,
-        data: [...s.data],
-        yAxisIndex: s.yAxisIndex ?? 0
-      }));
-
-    const seriesWithTotal = sanitizedSeries.map((s: any) => ({
-      ...s,
-      _total: (s.data || []).reduce((a: number, b: number) => a + b, 0),
-    }));
-
-    seriesWithTotal.sort((a: any, b: any) => b._total - a._total);
-    const topSeries = seriesWithTotal.slice(0, maxSeries).map((s: any) => {
-      const copy = { ...s };
-      delete copy._total;
-      return copy;
-    });
-
-    const legendData = topSeries.map((s: any) => s.name ?? 'Serie');
-
-    this.chartTendencia.setOption(
-      {
-        xAxis: { data: meses || [] },
-        yAxis: { type: 'value' },
-        series: topSeries,
-        legend: { data: legendData },
-      },
-      { notMerge: true }
-    );
   }
 
   // =============================================================

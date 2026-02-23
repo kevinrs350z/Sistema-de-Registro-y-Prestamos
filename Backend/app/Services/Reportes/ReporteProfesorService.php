@@ -2,19 +2,43 @@
 
 namespace App\Services\Reportes;
 
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReporteProfesorService
 {
-    /* ============================================================
-       1. Préstamos por profesor (TOP)
-    ============================================================ */
-    public function getPrestamosPorProfesor()
+    /**
+     * Obtener rango de fechas desde request o default (12 meses)
+     */
+    private function getDateRange(?Request $request, int $defaultMonths = 12): array
     {
+        if ($request && $request->has('from') && $request->has('to')) {
+            return [
+                Carbon::parse($request->input('from'))->startOfDay(),
+                Carbon::parse($request->input('to'))->endOfDay()
+            ];
+        }
+        return [
+            Carbon::now()->subMonths($defaultMonths)->startOfMonth(),
+            Carbon::now()->endOfDay()
+        ];
+    }
+
+    /* ============================================================
+       1. Préstamos por profesor (TOP) — con filtro de fechas
+    ============================================================ */
+    public function getPrestamosPorProfesor(?Request $request = null)
+    {
+        [$start, $end] = $this->getDateRange($request);
+
         return DB::table('docentes AS d')
             ->join('persona AS pe', 'pe.idPersona', '=', 'd.idPersona')
             ->leftJoin('users AS u', 'u.idPersona', '=', 'pe.idPersona')
-            ->leftJoin('prestamos AS p', 'p.idUser', '=', 'u.idUser')
+            ->leftJoin('prestamos AS p', function ($join) use ($start, $end) {
+                $join->on('p.idUser', '=', 'u.idUser')
+                     ->whereBetween('p.created_at', [$start, $end]);
+            })
             ->selectRaw("CONCAT(pe.Nombre, ' ', pe.Apellido1) AS profesor")
             ->selectRaw("COUNT(p.idPrestamo) AS total")
             ->groupBy('d.idDocente', 'profesor')
@@ -23,14 +47,17 @@ class ReporteProfesorService
     }
 
     /* ============================================================
-       2. Tendencia mensual por profesor
+       2. Tendencia mensual por profesor — con filtro de fechas
     ============================================================ */
-public function getTendenciaMensual()
+public function getTendenciaMensual(?Request $request = null)
 {
-    // 1) Obtener todos los meses reales presentes en préstamos
+    [$start, $end] = $this->getDateRange($request);
+
+    // 1) Obtener todos los meses reales presentes en préstamos del período
     $periodos = DB::table('prestamos')
         ->selectRaw("DATE_FORMAT(fecha_inicio, '%Y-%m') AS periodo")
         ->whereNotNull('fecha_inicio')
+        ->whereBetween('fecha_inicio', [$start, $end])
         ->groupBy('periodo')
         ->orderBy('periodo')
         ->pluck('periodo')
@@ -47,11 +74,12 @@ public function getTendenciaMensual()
         )
         ->get();
 
-    // 3) Obtener totales por docente y periodo
+    // 3) Obtener totales por docente y periodo (filtrado por fechas)
     $totales = DB::table('prestamos AS p')
         ->join('users AS u', 'u.idUser', '=', 'p.idUser')
         ->join('persona AS pe', 'pe.idPersona', '=', 'u.idPersona')
         ->join('docentes AS d', 'd.idPersona', '=', 'pe.idPersona')
+        ->whereBetween('p.fecha_inicio', [$start, $end])
         ->selectRaw("
             d.idDocente,
             DATE_FORMAT(p.fecha_inicio, '%Y-%m') AS periodo,

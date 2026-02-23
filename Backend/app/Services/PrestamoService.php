@@ -9,6 +9,17 @@ use App\Models\TipoEquipoRelacionado;
 use App\Models\User;
 use App\Enums\EstadoPrestamo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Jobs\SendPrestamoSolicitudEncargadosJob;
+use App\Jobs\SendGenericEmailJob;
+use App\Mail\PrestamoSolicitudEncargadosMail;
+use App\Mail\PrestamoSolicitudConfirmacionMail;
+use App\Mail\PrestamoEntregadoMail;
+use App\Mail\PrestamoDevueltoMail;
+use App\Mail\PrestamoInventarioMail;
+use App\Mail\PrestamoAprobadoMail;
+use App\Mail\PrestamoRechazadoMail;
+use App\Models\Configuracion;
 
 class PrestamoService
 {
@@ -306,6 +317,256 @@ class PrestamoService
         return $bloqueos;
     }
 
+    /**
+     * Notificar encargados de categorias involucradas en un prestamo.
+     * Tambien envia confirmacion al alumno y notifica a inventario si es externo.
+     */
+    public function notificarEncargadosSolicitud(int $prestamoId): void
+    {
+        $prestamo = Prestamo::with(['user.persona', 'equipos.tipo.categoria'])
+            ->find($prestamoId);
+
+        if (!$prestamo) {
+            Log::warning('Prestamo no encontrado para notificacion de encargados', [
+                'prestamo_id' => $prestamoId,
+            ]);
+            return;
+        }
+
+        // 1. Enviar confirmacion al alumno
+        $this->notificarAlumnoSolicitud($prestamoId);
+
+        // 2. Notificar encargados
+        $categoriaIds = $prestamo->equipos
+            ->map(function ($equipo) {
+                return $equipo->tipo?->categoria_id;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $encargados = [];
+
+        if (!empty($categoriaIds)) {
+            $encargados = User::where('estado', 'ACTIVO')
+                ->whereHas('roles', function ($q) {
+                    $q->whereIn('Nombre', ['ADMIN', 'SUPER_USUARIO']);
+                })
+                ->whereHas('categoriasEncargadas', function ($q) use ($categoriaIds) {
+                    $q->whereIn('categorias.id', $categoriaIds)
+                        ->where('categorias.activo', true);
+                })
+                ->pluck('Email')
+                ->filter()
+                ->unique()
+                ->values()
+                ->toArray();
+        }
+
+        $fallback = Configuracion::obtener('prestamo_fallback_email');
+
+        if (empty($encargados)) {
+            Log::warning('Sin encargados para categorias del prestamo', [
+                'prestamo_id' => $prestamoId,
+                'categorias' => $categoriaIds,
+                'fallback' => $fallback,
+            ]);
+
+            if (!empty($fallback)) {
+                $mail = new PrestamoSolicitudEncargadosMail($prestamo);
+                SendPrestamoSolicitudEncargadosJob::dispatch($fallback, [], $mail, 'prestamo-solicitud-fallback');
+            }
+        } else {
+            $mail = new PrestamoSolicitudEncargadosMail($prestamo);
+            $to = $encargados[0];
+            $bcc = array_slice($encargados, 1);
+            SendPrestamoSolicitudEncargadosJob::dispatch($to, $bcc, $mail, 'prestamo-solicitud-encargados');
+        }
+
+        // 3. Si es externo (FUERA), notificar a inventario
+        $this->notificarInventarioSiExterno($prestamo, 'PENDIENTE');
+    }
+
+    /**
+     * Notificar al alumno que su solicitud fue registrada.
+     */
+    public function notificarAlumnoSolicitud(int $prestamoId): void
+    {
+        $prestamo = Prestamo::with(['user.persona', 'equipos.tipo'])
+            ->find($prestamoId);
+
+        if (!$prestamo) {
+            return;
+        }
+
+        $email = $prestamo->user?->Email ?? null;
+        if (empty($email)) {
+            Log::warning('Alumno sin email para notificacion de solicitud', [
+                'prestamo_id' => $prestamoId,
+            ]);
+            return;
+        }
+
+        $mail = new PrestamoSolicitudConfirmacionMail($prestamo);
+        SendGenericEmailJob::dispatch($email, $mail);
+    }
+
+    /**
+     * Notificar encargados cuando un prestamo es aprobado/rechazado.
+     */
+    public function notificarEncargadosCambioEstado(int $prestamoId, string $accion): void
+    {
+        $prestamo = Prestamo::with(['user.persona', 'equipos.tipo.categoria'])
+            ->find($prestamoId);
+
+        if (!$prestamo) {
+            return;
+        }
+
+        $encargadoEmails = $this->obtenerEmailsEncargados($prestamo);
+
+        if (empty($encargadoEmails)) {
+            return;
+        }
+
+        $persona = $prestamo->user?->persona;
+        $nombreAlumno = trim(($persona?->Nombre ?? '') . ' ' . ($persona?->apellido1 ?? ''));
+        $estadoTexto = $accion === 'aprobar' ? 'APROBADO' : 'RECHAZADO';
+
+        $mail = new PrestamoSolicitudEncargadosMail($prestamo);
+        $mail->subject("Prestamo #{$prestamo->idPrestamo} {$estadoTexto} - {$nombreAlumno}");
+
+        $to = $encargadoEmails[0];
+        $bcc = array_slice($encargadoEmails, 1);
+
+        SendPrestamoSolicitudEncargadosJob::dispatch($to, $bcc, $mail, "prestamo-{$accion}-encargados");
+    }
+
+    /**
+     * Notificar al alumno y encargados cuando un prestamo es entregado.
+     */
+    public function notificarEntregado(int $prestamoId, string $nombreAdmin): void
+    {
+        $prestamo = Prestamo::with(['user.persona', 'equipos.tipo.categoria'])
+            ->find($prestamoId);
+
+        if (!$prestamo) {
+            return;
+        }
+
+        // Notificar al alumno
+        $emailAlumno = $prestamo->user?->Email ?? null;
+        if (!empty($emailAlumno)) {
+            $mailAlumno = new PrestamoEntregadoMail($prestamo, $nombreAdmin, 'alumno');
+            SendGenericEmailJob::dispatch($emailAlumno, $mailAlumno);
+        }
+
+        // Notificar a encargados
+        $encargadoEmails = $this->obtenerEmailsEncargados($prestamo);
+        if (!empty($encargadoEmails)) {
+            $mailEncargado = new PrestamoEntregadoMail($prestamo, $nombreAdmin, 'encargado');
+            $to = $encargadoEmails[0];
+            $bcc = array_slice($encargadoEmails, 1);
+            SendPrestamoSolicitudEncargadosJob::dispatch($to, $bcc, $mailEncargado, 'prestamo-entregado-encargados');
+        }
+
+        // Si es externo (FUERA), notificar a inventario
+        $this->notificarInventarioSiExterno($prestamo, 'ENTREGADO');
+    }
+
+    /**
+     * Notificar al alumno y encargados cuando un prestamo es devuelto.
+     */
+    public function notificarDevuelto(int $prestamoId, ?string $motivo = null): void
+    {
+        $prestamo = Prestamo::with(['user.persona', 'equipos.tipo.categoria'])
+            ->find($prestamoId);
+
+        if (!$prestamo) {
+            return;
+        }
+
+        // Notificar al alumno
+        $emailAlumno = $prestamo->user?->Email ?? null;
+        if (!empty($emailAlumno)) {
+            $mailAlumno = new PrestamoDevueltoMail($prestamo, $motivo, 'alumno');
+            SendGenericEmailJob::dispatch($emailAlumno, $mailAlumno);
+        }
+
+        // Notificar a encargados
+        $encargadoEmails = $this->obtenerEmailsEncargados($prestamo);
+        if (!empty($encargadoEmails)) {
+            $mailEncargado = new PrestamoDevueltoMail($prestamo, $motivo, 'encargado');
+            $to = $encargadoEmails[0];
+            $bcc = array_slice($encargadoEmails, 1);
+            SendPrestamoSolicitudEncargadosJob::dispatch($to, $bcc, $mailEncargado, 'prestamo-devuelto-encargados');
+        }
+
+        // Si es externo (FUERA), notificar a inventario
+        $this->notificarInventarioSiExterno($prestamo, 'DEVUELTO');
+    }
+
+    /**
+     * Notificar a inventario cuando un prestamo externo (FUERA) cambia de estado.
+     */
+    public function notificarInventarioSiExterno($prestamo, string $estado): void
+    {
+        if (strtoupper($prestamo->tipo) !== 'FUERA') {
+            return;
+        }
+
+        $emailInventario = Configuracion::obtener('inventario_email');
+
+        if (empty($emailInventario)) {
+            Log::warning('No hay email de inventario configurado para prestamo externo', [
+                'prestamo_id' => $prestamo->idPrestamo,
+                'estado' => $estado,
+            ]);
+            return;
+        }
+
+        $mail = new PrestamoInventarioMail($prestamo, $estado);
+        SendGenericEmailJob::dispatch($emailInventario, $mail);
+
+        Log::info('Notificacion de inventario enviada para prestamo externo', [
+            'prestamo_id' => $prestamo->idPrestamo,
+            'estado' => $estado,
+            'email_inventario' => $emailInventario,
+        ]);
+    }
+
+    /**
+     * Obtener emails de encargados para las categorias del prestamo.
+     */
+    private function obtenerEmailsEncargados($prestamo): array
+    {
+        $categoriaIds = $prestamo->equipos
+            ->map(fn ($equipo) => $equipo->tipo?->categoria_id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($categoriaIds)) {
+            return [];
+        }
+
+        return User::where('estado', 'ACTIVO')
+            ->whereHas('roles', function ($q) {
+                $q->whereIn('Nombre', ['ADMIN', 'SUPER_USUARIO']);
+            })
+            ->whereHas('categoriasEncargadas', function ($q) use ($categoriaIds) {
+                $q->whereIn('categorias.id', $categoriaIds)
+                    ->where('categorias.activo', true);
+            })
+            ->pluck('Email')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+    }
+
     private function construirConteoSolicitado(array $equipos): array
     {
         $conteo = [];
@@ -347,6 +608,7 @@ class PrestamoService
             EstadoPrestamo::APROBADO,
             EstadoPrestamo::PENDIENTE_ENTREGA,
             EstadoPrestamo::ENTREGADO,
+            EstadoPrestamo::ATRASADO,
         ];
 
         $conteos = [];

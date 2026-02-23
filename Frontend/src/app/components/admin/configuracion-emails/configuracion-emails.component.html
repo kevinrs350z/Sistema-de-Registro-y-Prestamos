@@ -1,0 +1,94 @@
+<div class="config-emails-container">
+  <div class="config-header">
+    <h2><i class="bi bi-gear"></i> Configuracion de Correos</h2>
+    <p class="config-subtitle">
+      Administra los correos electronicos del sistema de notificaciones de prestamos.
+    </p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="cargando" class="loading-box">
+    <div class="spinner"></div>
+    <span>Cargando configuraciones...</span>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert-error">
+    <i class="bi bi-exclamation-triangle"></i>
+    {{ error }}
+    <button class="btn-close-alert" (click)="error = null">&times;</button>
+  </div>
+
+  <!-- Formulario -->
+  <div *ngIf="!cargando && configuraciones.length > 0" class="config-form">
+
+    <div *ngFor="let config of configuraciones" class="config-card">
+      <div class="config-card-header">
+        <i class="bi {{ getIcono(config.clave) }}"></i>
+        <div>
+          <h4>{{ getEtiqueta(config.clave) }}</h4>
+          <p class="config-desc">{{ getDescripcion(config.clave) || config.descripcion }}</p>
+        </div>
+      </div>
+
+      <div class="config-input-group">
+        <label [for]="config.clave">Correo electronico:</label>
+        <div class="input-wrapper">
+          <i class="bi bi-envelope input-icon"></i>
+          <input
+            [id]="config.clave"
+            type="email"
+            class="config-input"
+            [(ngModel)]="valores[config.clave]"
+            [placeholder]="'Ej: correo@uta.cl'"
+            [class.invalid]="valores[config.clave] && !esEmailValido(valores[config.clave])"
+          />
+        </div>
+        <small *ngIf="valores[config.clave] && !esEmailValido(valores[config.clave])" class="input-error">
+          Formato de email invalido
+        </small>
+        <small *ngIf="!valores[config.clave]" class="input-hint">
+          <i class="bi bi-info-circle"></i> Sin configurar. Se usara el valor del archivo .env si existe.
+        </small>
+      </div>
+    </div>
+
+    <div class="config-actions">
+      <button
+        class="btn-guardar"
+        (click)="guardar()"
+        [disabled]="guardando"
+      >
+        <span *ngIf="!guardando"><i class="bi bi-check-lg"></i> Guardar cambios</span>
+        <span *ngIf="guardando"><span class="spinner-sm"></span> Guardando...</span>
+      </button>
+      <button
+        class="btn-recargar"
+        (click)="cargarConfiguraciones()"
+        [disabled]="cargando"
+      >
+        <i class="bi bi-arrow-clockwise"></i> Recargar
+      </button>
+    </div>
+  </div>
+
+  <!-- Sin configuraciones -->
+  <div *ngIf="!cargando && configuraciones.length === 0 && !error" class="empty-state">
+    <i class="bi bi-inbox"></i>
+    <p>No hay configuraciones de correo disponibles.</p>
+    <small>Ejecuta las migraciones del backend para crear las configuraciones iniciales.</small>
+  </div>
+
+  <!-- Info adicional -->
+  <div class="info-box">
+    <i class="bi bi-lightbulb"></i>
+    <div>
+      <strong>Como funcionan las notificaciones:</strong>
+      <ul>
+        <li><strong>Email de Inventario:</strong> Solo se usa cuando un prestamo es de tipo <em>FUERA</em> (externo a la universidad). Se notifica en cada cambio de estado (solicitud, aprobacion, entrega, devolucion).</li>
+        <li><strong>Email de Respaldo:</strong> Se usa cuando un prestamo no tiene encargados asignados en sus categorias. Garantiza que alguien reciba la notificacion.</li>
+        <li><strong>Encargados de categoria:</strong> Se configuran desde <em>Categorias y Encargados</em> en el menu.</li>
+      </ul>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,303 @@
+<div class="stockout-dashboard">
+
+  <!-- ═══ Filtros compartidos ═══ -->
+  <app-report-filters (filtersChanged)="onFiltersChanged($event)"></app-report-filters>
+
+  <!-- ═══ Toolbar ═══ -->
+  <div class="so-toolbar">
+    <div class="toolbar-group">
+      <label>Tipo:</label>
+      <select class="so-select" [ngModel]="tipoSeleccionado" (ngModelChange)="onTipoChange($event)">
+        <option value="FUERA">Fuera (externo)</option>
+        <option value="DENTRO">Dentro (interno)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ═══ Loading ═══ -->
+  <div *ngIf="loading" class="so-loading">
+    <div class="spinner"></div>
+    <span>Analizando demanda insatisfecha…</span>
+  </div>
+
+  <!-- ═══ Error ═══ -->
+  <div *ngIf="error && !loading" class="so-error">
+    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- ═══ CONTENIDO PRINCIPAL ═══ -->
+  <div *ngIf="!loading && !error && kpiData" class="so-content">
+
+    <!-- ────────────── 1. KPI GLOBAL + ALERTAS ────────────── -->
+    <section class="so-section">
+      <div class="so-kpi-row">
+        <!-- KPI Principal -->
+        <div class="so-kpi-main" [class.kpi-green]="kpiData.kpi.color === 'green'"
+             [class.kpi-red]="kpiData.kpi.color === 'red'"
+             [class.kpi-gray]="kpiData.kpi.color === 'gray'"
+             [title]="kpiData.kpi.tooltip">
+          <div class="kpi-label">{{ kpiData.kpi.label }}</div>
+          <div class="kpi-value-big">{{ kpiData.kpi.value }}%</div>
+          <div class="kpi-absolutos">
+            {{ kpiData.absolutos.rechazos }} rechazos de {{ kpiData.absolutos.total }} solicitudes
+          </div>
+          <div class="kpi-variation"
+               [class.var-up]="kpiData.kpi.direction === 'up'"
+               [class.var-down]="kpiData.kpi.direction === 'down'"
+               [class.var-neutral]="kpiData.kpi.direction === 'neutral'"
+               *ngIf="kpiData.kpi.variation != null">
+            <span class="var-arrow">{{ getArrow(kpiData.kpi.direction) }}</span>
+            <span class="var-pct">{{ getVariationText(kpiData.kpi) }}</span>
+            <span class="var-label">vs periodo anterior</span>
+          </div>
+        </div>
+
+        <!-- Top categorías afectadas -->
+        <div class="so-kpi-cats" *ngIf="kpiData.topCategorias?.length">
+          <h6>Top categorías afectadas</h6>
+          <div class="cat-row" *ngFor="let cat of kpiData.topCategorias">
+            <span class="cat-name">{{ cat.categoria }}</span>
+            <span class="cat-bar-container">
+              <span class="cat-bar" [style.width.%]="kpiData.absolutos.rechazos > 0 ? (cat.rechazos / kpiData.absolutos.rechazos * 100) : 0"></span>
+            </span>
+            <span class="cat-count">{{ cat.rechazos }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alertas automáticas -->
+      <div class="so-alertas" *ngIf="kpiData.alertas?.length">
+        <div *ngFor="let a of kpiData.alertas"
+             class="alerta-item"
+             [class.alerta-danger]="a.tipo === 'danger'"
+             [class.alerta-warning]="a.tipo === 'warning'"
+             [class.alerta-info]="a.tipo === 'info'">
+          <i [class]="a.icono"></i>
+          <span>{{ a.mensaje }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ────────────── 2. LÍNEA TEMPORAL ────────────── -->
+    <section class="so-section">
+      <div class="section-header">
+        <h5><i class="bi bi-graph-up me-2"></i>Demanda vs Rechazos SIN_STOCK</h5>
+        <div class="section-controls">
+          <select class="so-select-sm" [ngModel]="bucketTimeseries" (ngModelChange)="onBucketChange($event)">
+            <option value="day">Día</option>
+            <option value="week">Semana</option>
+            <option value="month">Mes</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-container" *ngIf="timeseriesData?.hasData">
+        <div #timeseriesChart class="echart-box"></div>
+      </div>
+      <div class="so-empty" *ngIf="timeseriesData && !timeseriesData.hasData">
+        Sin datos para la línea temporal en este período.
+      </div>
+    </section>
+
+    <!-- ────────────── 3. SCATTER ────────────── -->
+    <section class="so-section">
+      <div class="section-header">
+        <h5><i class="bi bi-diagram-3 me-2"></i>Demanda vs Rechazos (cuadrante)</h5>
+        <div class="section-controls">
+          <select class="so-select-sm" [ngModel]="scatterGroupBy" (ngModelChange)="onScatterGroupByChange($event)">
+            <option value="categoria">Por categoría</option>
+            <option value="equipo">Por equipo</option>
+          </select>
+        </div>
+      </div>
+      <div class="scatter-legend">
+        <span class="quad-badge quad-critico">↗ Crítico</span>
+        <span class="quad-badge quad-buen">↘ Buen stock</span>
+        <span class="quad-badge quad-puntual">↖ Puntual</span>
+        <span class="quad-badge quad-irrel">↙ No relevante</span>
+      </div>
+      <div class="chart-container" *ngIf="scatterData?.hasData">
+        <div #scatterChart class="echart-box"></div>
+      </div>
+      <div class="so-empty" *ngIf="scatterData && !scatterData.hasData">
+        Sin datos para el scatter en este período.
+      </div>
+    </section>
+
+    <!-- ────────────── 4. RANKING ────────────── -->
+    <section class="so-section">
+      <div class="section-header">
+        <h5><i class="bi bi-list-ol me-2"></i>Ranking de Demanda Insatisfecha</h5>
+        <div class="section-controls">
+          <select class="so-select-sm" [ngModel]="rankingGroupBy" (ngModelChange)="onRankingGroupByChange($event)">
+            <option value="equipo">Por equipo</option>
+            <option value="categoria">Por categoría</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ranking-table-wrap" *ngIf="rankingData?.hasData">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{{ rankingGroupBy === 'equipo' ? 'Equipo' : 'Categoría' }}</th>
+              <th *ngIf="rankingGroupBy === 'equipo'">Categoría</th>
+              <th class="sortable" (click)="sortRanking('totalSol')">
+                Solicitudes <span class="sort-icon">{{ getSortIcon('totalSol') }}</span>
+              </th>
+              <th class="sortable" (click)="sortRanking('rechazos')">
+                Rechazos <span class="sort-icon">{{ getSortIcon('rechazos') }}</span>
+              </th>
+              <th class="sortable" (click)="sortRanking('pctPerdida')">
+                % Pérdida <span class="sort-icon">{{ getSortIcon('pctPerdida') }}</span>
+              </th>
+              <th class="sortable" (click)="sortRanking('tendencia')">
+                Tendencia <span class="sort-icon">{{ getSortIcon('tendencia') }}</span>
+              </th>
+              <th>Prioridad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of rankingData.ranking; let i = index">
+              <td class="rank-num">{{ i + 1 }}</td>
+              <td class="rank-name" [title]="row.nombre">{{ row.nombre }}</td>
+              <td *ngIf="rankingGroupBy === 'equipo'" class="rank-cat">{{ row.categoria }}</td>
+              <td class="rank-number">{{ row.totalSol }}</td>
+              <td class="rank-number rank-rechazos">{{ row.rechazos }}</td>
+              <td class="rank-number">
+                <span class="pct-badge" [class.pct-high]="row.pctPerdida >= 20"
+                      [class.pct-mid]="row.pctPerdida >= 10 && row.pctPerdida < 20"
+                      [class.pct-low]="row.pctPerdida < 10">
+                  {{ row.pctPerdida }}%
+                </span>
+              </td>
+              <td class="rank-number">
+                <span [class.trend-up]="row.tendencia > 0"
+                      [class.trend-down]="row.tendencia < 0"
+                      [class.trend-flat]="row.tendencia === 0">
+                  {{ row.tendencia > 0 ? '+' : '' }}{{ row.tendencia }}%
+                </span>
+              </td>
+              <td>
+                <span class="prio-badge" [style.background]="row.prioridad.color === 'red' ? '#ffe0de' : row.prioridad.color === 'amber' ? '#fff8dd' : '#f0f4f8'"
+                      [style.color]="row.prioridad.color === 'red' ? '#e85347' : row.prioridad.color === 'amber' ? '#b58105' : '#8094ae'">
+                  {{ row.prioridad.nivel }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="so-empty" *ngIf="rankingData && !rankingData.hasData">
+        Sin datos de ranking para este período.
+      </div>
+    </section>
+
+    <!-- ────────────── 5. PRIORIZACIÓN DE COMPRA ────────────── -->
+    <section class="so-section so-priority-section">
+      <div class="section-header">
+        <h5><i class="bi bi-cart-check me-2"></i>Priorización de Compra — Score (0–100)</h5>
+      </div>
+
+      <!-- Resumen rápido -->
+      <div class="prio-resumen" *ngIf="priorityData?.resumen">
+        <div class="prio-resumen-item prio-urgente">
+          <span class="prio-count">{{ priorityData.resumen.urgente }}</span>
+          <span class="prio-label">Comprar urgente</span>
+        </div>
+        <div class="prio-resumen-item prio-evaluar">
+          <span class="prio-count">{{ priorityData.resumen.evaluar }}</span>
+          <span class="prio-label">Evaluar compra</span>
+        </div>
+        <div class="prio-resumen-item prio-monitorear">
+          <span class="prio-count">{{ priorityData.resumen.monitorear }}</span>
+          <span class="prio-label">Monitorear</span>
+        </div>
+      </div>
+
+      <!-- Modelo explicativo -->
+      <div class="prio-formula" *ngIf="priorityData?.pesos">
+        <span class="formula-label">Modelo:</span>
+        <code>
+          score = {{ priorityData.pesos.demandaNorm }}×demanda + {{ priorityData.pesos.stockoutRate }}×stockout + {{ priorityData.pesos.tendencia }}×tendencia + {{ priorityData.pesos.durP90Norm }}×duración P90
+        </code>
+      </div>
+
+      <!-- Tabla de priorización -->
+      <div class="priority-table-wrap" *ngIf="priorityData?.hasData">
+        <table class="priority-table">
+          <thead>
+            <tr>
+              <th>Equipo</th>
+              <th>Categoría</th>
+              <th>Demanda</th>
+              <th>Rechazos</th>
+              <th>Stockout %</th>
+              <th>Tendencia</th>
+              <th>Dur. P90</th>
+              <th>Score</th>
+              <th>Clasificación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of priorityData.items" [title]="item.tooltip">
+              <td class="prio-name">{{ item.nombre }}</td>
+              <td class="prio-cat">{{ item.categoria }}</td>
+              <td class="prio-num">{{ item.demanda }}</td>
+              <td class="prio-num prio-rechazos">{{ item.rechazos }}</td>
+              <td class="prio-num">{{ item.stockoutRate }}%</td>
+              <td class="prio-num">
+                <span [class.trend-up]="item.tendencia > 0"
+                      [class.trend-down]="item.tendencia < 0"
+                      [class.trend-flat]="item.tendencia === 0">
+                  {{ item.tendencia > 0 ? '+' : '' }}{{ item.tendencia }}%
+                </span>
+              </td>
+              <td class="prio-num">{{ item.durP90 }}d</td>
+              <td class="prio-score-cell">
+                <div class="score-bar-bg">
+                  <div class="score-bar-fill"
+                       [style.width.%]="getScoreBarWidth(item.score)"
+                       [style.background]="getScoreBarColor(item.score)">
+                  </div>
+                </div>
+                <span class="score-num">{{ item.score }}</span>
+              </td>
+              <td>
+                <span class="clasif-badge" [ngClass]="getPriorityBadgeClass(item.clasificacion)">
+                  {{ item.clasificacion }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="so-empty" *ngIf="priorityData && !priorityData.hasData">
+        Sin equipos con datos suficientes para priorizar.
+      </div>
+
+      <!-- Interpretación -->
+      <div class="prio-footnote" *ngIf="priorityData?.hasData">
+        <i class="bi bi-info-circle me-1"></i>
+        «No es que se use mucho. Es que estamos perdiendo demanda real por falta de stock.» — Cada score combina volumen de demanda, tasa de rotura, tendencia creciente y tiempo de uso (duración P90).
+      </div>
+    </section>
+
+    <!-- ═══ Meta info ═══ -->
+    <div *ngIf="kpiData?.meta" class="so-meta">
+      <span *ngIf="kpiData.meta.from && kpiData.meta.to">
+        Período: {{ kpiData.meta.from }} → {{ kpiData.meta.to }}
+      </span>
+      <span *ngIf="kpiData.meta.prevFrom && kpiData.meta.prevTo" class="meta-prev">
+        | Comparado con: {{ kpiData.meta.prevFrom }} → {{ kpiData.meta.prevTo }}
+      </span>
+    </div>
+
+  </div>
+
+  <!-- ═══ Sin datos ═══ -->
+  <div *ngIf="!loading && !error && !kpiData && currentFilter" class="so-empty-global">
+    No hay datos de demanda insatisfecha para el período seleccionado.
+  </div>
+
+</div>

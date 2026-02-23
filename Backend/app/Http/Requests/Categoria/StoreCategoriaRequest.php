@@ -13,7 +13,8 @@ class StoreCategoriaRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $user = $this->user();
+        return $user && method_exists($user, 'isAdminOrSuper') && $user->isAdminOrSuper();
     }
 
     /**
@@ -25,7 +26,9 @@ class StoreCategoriaRequest extends FormRequest
     {
         return [
             'nombre'      => 'required|string|unique:categorias,nombre',
-            'descripcion' => 'nullable|string'
+            'descripcion' => 'nullable|string',
+            'icono'       => 'nullable|string|max:100',
+            'activo'      => 'nullable|boolean',
         ];
     }
 }

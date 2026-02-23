@@ -13,18 +13,18 @@ class ReporteProfesorController extends Controller
     ) {}
 
     // Gráfico: préstamos por profesor
-    public function prestamosPorProfesor()
+    public function prestamosPorProfesor(Request $request)
     {
         return response()->json(
-            $this->service->getPrestamosPorProfesor()
+            $this->service->getPrestamosPorProfesor($request)
         );
     }
 
     // Gráfico: tendencia mensual
-    public function tendencia()
+    public function tendencia(Request $request)
     {
         return response()->json(
-            $this->service->getTendenciaMensual()
+            $this->service->getTendenciaMensual($request)
         );
     }
 
@@ -42,6 +42,6 @@ class ReporteProfesorController extends Controller
     // Compatibilidad: ruta antigua '/reportes/profesores/prestamos'
     public function prestamos(Request $request)
     {
-        return $this->prestamosPorProfesor();
+        return $this->prestamosPorProfesor($request);
     }
 }

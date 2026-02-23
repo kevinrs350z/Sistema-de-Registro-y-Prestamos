@@ -6,8 +6,8 @@ use App\Models\User;
 use App\Models\Sancion;
 use App\Models\Prestamo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\SancionNotificacion; // la creamos más abajo
+use App\Mail\SancionNotificacion;
+use App\Jobs\SendGenericEmailJob;
 
 class UserSancionController extends Controller
 {
@@ -100,10 +100,14 @@ class UserSancionController extends Controller
             'updated_at'  => now(),
         ]);
 
-        // Enviar correo
-       // Mail::to($user->Email)->send(
-          //  new SancionNotificacion('asignada', $user, $sancion)
-       // );
+        // Enviar correo de sanción asignada (async)
+        if ($user->Email) {
+            SendGenericEmailJob::dispatch(
+                $user->Email,
+                new SancionNotificacion('asignada', $user, $sancion),
+                'sancion-asignada'
+            );
+        }
 
         return response()->json([
             'message' => 'Sanción creada y asignada correctamente.',
@@ -342,11 +346,14 @@ class UserSancionController extends Controller
         // tomamos el primer usuario asociado (puedes adaptar a más)
         $user = $sancion->users->first();
 
-        //if ($user) {
-          //  Mail::to($user->Email)->send(
-            //    new SancionNotificacion('ampliada', $user, $sancion, $request->motivo)
-            //);
-       // }
+        // Enviar correo de sanción ampliada (async)
+        if ($user && $user->Email) {
+            SendGenericEmailJob::dispatch(
+                $user->Email,
+                new SancionNotificacion('ampliada', $user, $sancion, $request->motivo),
+                'sancion-ampliada'
+            );
+        }
 
         return response()->json([
             'message' => 'Sanción ampliada 7 días correctamente.',
@@ -369,11 +376,14 @@ class UserSancionController extends Controller
 
         $user = $sancion->users->first();
 
-        //if ($user) {
-          //  Mail::to($user->Email)->send(
-            //    new SancionNotificacion('quitada', $user, $sancion, $request->motivo)
-           // );
-       // }
+        // Enviar correo de sanción levantada (async)
+        if ($user && $user->Email) {
+            SendGenericEmailJob::dispatch(
+                $user->Email,
+                new SancionNotificacion('quitada', $user, $sancion, $request->motivo),
+                'sancion-quitada'
+            );
+        }
 
         return response()->json([
             'message' => 'Sanción desactivada correctamente.',

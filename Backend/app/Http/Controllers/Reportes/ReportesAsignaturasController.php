@@ -16,14 +16,14 @@ class ReportesAsignaturasController extends Controller
         $this->service = $service;
     }
 
-    public function getUsoAsignaturas()
+    public function getUsoAsignaturas(Request $request)
     {
-        return response()->json($this->service->getUsoAsignaturas());
+        return response()->json($this->service->getUsoAsignaturas($request));
     }
 
-    public function getTendencia()
+    public function getTendencia(Request $request)
     {
-        return response()->json($this->service->getTendenciaAsignaturas());
+        return response()->json($this->service->getTendenciaAsignaturas($request));
     }
 
     public function getEquiposPorAsignatura(Request $request)

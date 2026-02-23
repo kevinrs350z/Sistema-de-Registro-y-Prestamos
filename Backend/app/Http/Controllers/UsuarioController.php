@@ -273,13 +273,19 @@ class UsuarioController extends Controller
     {
         try {
             $q = $request->query('q', '');
+            $rolesParam = $request->query('roles', '');
+            $roles = [];
+
+            if (!empty($rolesParam)) {
+                $roles = array_values(array_filter(array_map('trim', explode(',', $rolesParam))));
+            }
 
             // Mínimo 2 caracteres para buscar
             if (strlen($q) < 2) {
                 return response()->json([]);
             }
 
-            $usuarios = $service->buscarUsuarios($q, 20);
+            $usuarios = $service->buscarUsuarios($q, 20, $roles);
 
             return response()->json($usuarios);
 
