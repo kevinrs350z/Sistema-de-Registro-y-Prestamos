@@ -272,6 +272,82 @@
   margin-left: 4px;
 }
 
+/* ── Equipos disponibles card ── */
+.kpi-equipos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.equipos-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.equipos-bar-container {
+  width: 100%;
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+.equipos-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.bar-green { background: #22c55e; }
+.bar-amber { background: #f59e0b; }
+.bar-red   { background: #ef4444; }
+
+.equipos-pct {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* ── Préstamos activos card ── */
+.kpi-activos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activos-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.activos-ahora {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.ahora-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .kpi-grid {
@@ -290,6 +366,52 @@
   .dual-number {
     font-size: 1.2rem;
   }
+}
+
+/* ── Dual meta (count/users footnote inside dual cards) ── */
+.dual-meta {
+  display: block;
+  width: 100%;
+  font-size: 0.72rem;
+  color: #8094ae;
+  margin-top: 2px;
+  text-align: center;
+}
+
+/* ── Demanda pico ── */
+.kpi-pico {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.pico-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #364a63;
+}
+.pico-unit {
+  font-size: 0.78rem;
+  color: #8094ae;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pico-day {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #526484;
+  background: #f0f4f8;
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+.pico-day i {
+  font-size: 0.74rem;
+  color: #6576ff;
 }
 
 @media (max-width: 480px) {

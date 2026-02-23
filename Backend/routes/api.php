@@ -42,6 +42,7 @@ use App\Http\Controllers\EquipoEstadisticasController;
 use App\Http\Controllers\Reportes\DashboardModelosController;
 use App\Http\Controllers\MotivoRechazoController;
 use App\Http\Controllers\Analytics\DemandAnalyticsController;
+use App\Http\Controllers\Analytics\StockoutAnalyticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -85,6 +86,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/analytics/rejections-and-status', [DemandAnalyticsController::class, 'rejectionsAndStatus']);
     Route::get('/analytics/demand-forecast', [DemandAnalyticsController::class, 'demandForecast']);
     Route::get('/analytics/status-flow', [DemandAnalyticsController::class, 'statusFlow']);
+
+    // ── Stockout Analytics (Demanda Insatisfecha) ──
+    Route::get('/analytics/stockout/kpi', [StockoutAnalyticsController::class, 'kpi']);
+    Route::get('/analytics/stockout/timeseries', [StockoutAnalyticsController::class, 'timeseries']);
+    Route::get('/analytics/stockout/ranking', [StockoutAnalyticsController::class, 'ranking']);
+    Route::get('/analytics/stockout/scatter', [StockoutAnalyticsController::class, 'scatter']);
+    Route::get('/analytics/stockout/priority', [StockoutAnalyticsController::class, 'priority']);
 });
 
 

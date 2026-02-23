@@ -66,8 +66,26 @@ class DemandAnalyticsService
         // ── 6. Top categoría crítica ──
         $kpi6 = $this->kpiTopCritica($filters, $currentFrom, $currentTo);
 
+        // ── 7. Equipos disponibles ──
+        $kpi7 = $this->kpiEquiposDisponibles();
+
+        // ── 8. Préstamos activos ──
+        $kpi8 = $this->kpiPrestamosActivos($filters, $currentFrom, $currentTo, $prevFrom, $prevTo);
+
+        // ── 9. Fill Rate (nivel de servicio) ──
+        $kpi9 = $this->kpiFillRate($filters, $currentFrom, $currentTo, $prevFrom, $prevTo);
+
+        // ── 10. Tiempo de ciclo solicitud → aprobación P50/P90 ──
+        $kpi10 = $this->kpiTiempoCiclo($filters, $currentFrom, $currentTo);
+
+        // ── 11. Frecuencia de préstamo por usuario P50/P90 ──
+        $kpi11 = $this->kpiFrecuenciaUsuario($filters, $currentFrom, $currentTo);
+
+        // ── 12. Demanda pico del periodo ──
+        $kpi12 = $this->kpiDemandaPico($filters, $currentFrom, $currentTo, $prevFrom, $prevTo);
+
         return [
-            'kpis' => [$kpi1, $kpi2, $kpi3, $kpi4, $kpi5, $kpi6],
+            'kpis' => [$kpi1, $kpi9, $kpi7, $kpi8, $kpi2, $kpi3, $kpi4, $kpi5, $kpi10, $kpi11, $kpi12, $kpi6],
             'meta' => [
                 'tipo'        => $tipo,
                 'from'        => $currentFrom?->toDateString(),
@@ -234,9 +252,9 @@ class DemandAnalyticsService
         $pctCurr = $totCurr > 0 ? round(($rejCurr / $totCurr) * 100, 1) : 0;
         $pctPrev = $totPrev > 0 ? round(($rejPrev / $totPrev) * 100, 1) : 0;
 
-        $label = $hayStockReason ? '% Rechazos stock' : '% Rechazos total';
+        $label = $hayStockReason ? 'Stockout Rate' : '% Rechazos total';
         $tooltip = $hayStockReason
-            ? "Rechazos por falta de stock o conflicto horario ({$rejCurr}/{$totCurr})."
+            ? "Tasa de rotura de stock: {$pctCurr}% de solicitudes rechazadas por falta de equipo o conflicto horario ({$rejCurr}/{$totCurr}). Invertido: bajar es bueno."
             : "Rechazos totales ({$rejCurr}/{$totCurr}). No se detectaron motivos de stock específicos.";
 
         return $this->buildKpiCard($hayStockReason ? 'rechazos_stock' : 'rechazos_total', $label, $pctCurr, $pctPrev, '%', $tooltip, true);
@@ -366,6 +384,244 @@ class DemandAnalyticsService
             'color'     => $winner->pressure > 5 ? 'red' : ($winner->pressure > 2 ? 'amber' : 'green'),
             'tooltip'   => "Categoría con mayor presión (demanda/disponibilidad). Score: {$winner->pressure}. {$winner->demanda} solicitudes con {$winner->disponible} equipos libres de {$winner->stock} totales.",
         ];
+    }
+
+    private function kpiEquiposDisponibles(): array
+    {
+        $total = DB::table('equipos')
+            ->whereNull('deleted_at')
+            ->whereNotIn('estado', ['DADO_DE_BAJA'])
+            ->count();
+
+        $disponibles = DB::table('equipos')
+            ->whereNull('deleted_at')
+            ->where('estado', 'DISPONIBLE')
+            ->count();
+
+        $prestados = DB::table('equipos')
+            ->whereNull('deleted_at')
+            ->where('estado', 'PRESTADO')
+            ->count();
+
+        $mantenimiento = DB::table('equipos')
+            ->whereNull('deleted_at')
+            ->whereIn('estado', ['MANTENIMIENTO', 'BAJA_TEMPORAL'])
+            ->count();
+
+        $pctDisp = $total > 0 ? round(($disponibles / $total) * 100, 1) : 0;
+
+        $color = $pctDisp >= 50 ? 'green' : ($pctDisp >= 25 ? 'amber' : 'red');
+
+        return [
+            'key'        => 'equipos_disponibles',
+            'label'      => 'Equipos disponibles',
+            'value'      => $disponibles,
+            'unit'       => null,
+            'detail'     => "De {$total} activos · {$prestados} prestados · {$mantenimiento} en mtto.",
+            'pctDisp'    => $pctDisp,
+            'total'      => $total,
+            'prestados'  => $prestados,
+            'mantenimiento' => $mantenimiento,
+            'variation'  => null,
+            'direction'  => 'neutral',
+            'color'      => $color,
+            'tooltip'    => "Equipos en estado DISPONIBLE: {$disponibles} de {$total} activos ({$pctDisp}%). Prestados: {$prestados}. En mantenimiento/baja temporal: {$mantenimiento}.",
+        ];
+    }
+
+    private function kpiPrestamosActivos(array $f, ?Carbon $from, ?Carbon $to, ?Carbon $pFrom, ?Carbon $pTo): array
+    {
+        $activeStates = ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'];
+
+        // Préstamos activos AHORA (sin importar periodo)
+        $activosAhora = DB::table('prestamos')
+            ->whereIn(DB::raw('UPPER(estado)'), $activeStates)
+            ->count();
+
+        // Préstamos activos en periodo actual vs anterior (para variación)
+        $qCurr = $this->baseQuery($f)
+            ->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'))
+            ->whereIn(DB::raw('UPPER(p.estado)'), $activeStates);
+        $qPrev = $this->baseQuery($f)
+            ->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'))
+            ->whereIn(DB::raw('UPPER(p.estado)'), $activeStates);
+
+        if ($from && $to) {
+            $qCurr->whereBetween('p.fecha_inicio', [$from, $to]);
+            $qPrev->whereBetween('p.fecha_inicio', [$pFrom, $pTo]);
+        }
+
+        $curr = (int) ($qCurr->first()->total ?? 0);
+        $prev = (int) ($qPrev->first()->total ?? 0);
+
+        $card = $this->buildKpiCard(
+            'prestamos_activos',
+            'Préstamos activos',
+            $curr,
+            $prev,
+            null,
+            "Préstamos en curso (aprobados, pendientes de entrega, entregados o atrasados). Activos ahora: {$activosAhora}."
+        );
+
+        // Agregar dato extra: activos en este instante
+        $card['activosAhora'] = $activosAhora;
+
+        return $card;
+    }
+
+    private function kpiFillRate(array $f, ?Carbon $from, ?Carbon $to, ?Carbon $pFrom, ?Carbon $pTo): array
+    {
+        // Total solicitudes
+        $qTotCurr = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'));
+        $qTotPrev = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'));
+
+        // Solicitudes que terminaron en préstamo (aprobadas+)
+        $qOkCurr = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'))
+            ->whereIn(DB::raw('UPPER(p.estado)'), self::APPROVED_STATES);
+        $qOkPrev = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'))
+            ->whereIn(DB::raw('UPPER(p.estado)'), self::APPROVED_STATES);
+
+        if ($from && $to) {
+            $qTotCurr->whereBetween('p.fecha_inicio', [$from, $to]);
+            $qTotPrev->whereBetween('p.fecha_inicio', [$pFrom, $pTo]);
+            $qOkCurr->whereBetween('p.fecha_inicio', [$from, $to]);
+            $qOkPrev->whereBetween('p.fecha_inicio', [$pFrom, $pTo]);
+        }
+
+        $totCurr = (int) ($qTotCurr->first()->total ?? 0);
+        $totPrev = (int) ($qTotPrev->first()->total ?? 0);
+        $okCurr  = (int) ($qOkCurr->first()->total ?? 0);
+        $okPrev  = (int) ($qOkPrev->first()->total ?? 0);
+
+        $pctCurr = $totCurr > 0 ? round(($okCurr / $totCurr) * 100, 1) : 0;
+        $pctPrev = $totPrev > 0 ? round(($okPrev / $totPrev) * 100, 1) : 0;
+
+        return $this->buildKpiCard(
+            'fill_rate',
+            'Fill Rate (nivel de servicio)',
+            $pctCurr,
+            $pctPrev,
+            '%',
+            "Porcentaje de solicitudes que se convirtieron en préstamo ({$okCurr}/{$totCurr}). Es el indicador principal de cumplimiento de demanda."
+        );
+    }
+
+    private function kpiTiempoCiclo(array $f, ?Carbon $from, ?Carbon $to): array
+    {
+        // Tiempo desde created_at del préstamo hasta la primera transición a APROBADO en historial
+        $q = DB::table('prestamos as p')
+            ->join('prestamo_historial as ph', function ($join) {
+                $join->on('ph.idPrestamo', '=', 'p.idPrestamo')
+                    ->where(DB::raw('UPPER(ph.estado_nuevo)'), 'APROBADO');
+            })
+            ->select(DB::raw('TIMESTAMPDIFF(HOUR, p.created_at, MIN(ph.created_at)) as horas'))
+            ->groupBy('p.idPrestamo', 'p.created_at');
+
+        if ($from && $to) {
+            $q->whereBetween('p.fecha_inicio', [$from, $to]);
+        }
+
+        $horas = $q->pluck('horas')->filter(fn ($v) => $v !== null && $v >= 0)->sort()->values()->all();
+
+        $p50 = count($horas) > 0 ? $this->percentile($horas, 50) : 0;
+        $p90 = count($horas) > 0 ? $this->percentile($horas, 90) : 0;
+
+        // Convertir a días si > 48h
+        $unit = 'horas';
+        $p50Display = $p50;
+        $p90Display = $p90;
+        if ($p90 > 48) {
+            $p50Display = round($p50 / 24, 1);
+            $p90Display = round($p90 / 24, 1);
+            $unit = 'días';
+        }
+
+        return [
+            'key'       => 'tiempo_ciclo',
+            'label'     => 'Ciclo solicitud → aprobación',
+            'value'     => "P50: {$p50Display} · P90: {$p90Display}",
+            'p50'       => $p50Display,
+            'p90'       => $p90Display,
+            'unit'      => $unit,
+            'count'     => count($horas),
+            'variation' => null,
+            'direction' => 'neutral',
+            'color'     => $p90Display > 48 ? 'red' : ($p90Display > 24 ? 'amber' : 'blue'),
+            'tooltip'   => "Tiempo desde creación hasta aprobación. P50={$p50Display} {$unit}, P90={$p90Display} {$unit}. Basado en " . count($horas) . " solicitudes con historial. Si sube, el proceso se está tapando.",
+        ];
+    }
+
+    private function kpiFrecuenciaUsuario(array $f, ?Carbon $from, ?Carbon $to): array
+    {
+        $q = DB::table('prestamos as p')
+            ->select('p.idUser', DB::raw('COUNT(DISTINCT p.idPrestamo) as total'))
+            ->groupBy('p.idUser');
+
+        if ($from && $to) {
+            $q->whereBetween('p.fecha_inicio', [$from, $to]);
+        }
+
+        $counts = $q->pluck('total')->sort()->values()->all();
+
+        $p50 = count($counts) > 0 ? $this->percentile($counts, 50) : 0;
+        $p90 = count($counts) > 0 ? $this->percentile($counts, 90) : 0;
+        $totalUsers = count($counts);
+
+        return [
+            'key'       => 'frecuencia_usuario',
+            'label'     => 'Frecuencia por usuario',
+            'value'     => "P50: {$p50} · P90: {$p90}",
+            'p50'       => $p50,
+            'p90'       => $p90,
+            'unit'      => 'préstamos',
+            'totalUsers' => $totalUsers,
+            'variation' => null,
+            'direction' => 'neutral',
+            'color'     => 'blue',
+            'tooltip'   => "Préstamos por usuario: el típico hace {$p50} y los heavy-users llegan a {$p90}+. Total: {$totalUsers} usuarios activos. Útil para políticas y planificación.",
+        ];
+    }
+
+    private function kpiDemandaPico(array $f, ?Carbon $from, ?Carbon $to, ?Carbon $pFrom, ?Carbon $pTo): array
+    {
+        $qCurr = $this->baseQuery($f)
+            ->select(
+                DB::raw('DATE(p.fecha_inicio) as dia'),
+                DB::raw('COUNT(DISTINCT p.idPrestamo) as total')
+            )
+            ->groupBy(DB::raw('DATE(p.fecha_inicio)'));
+
+        $qPrev = $this->baseQuery($f)
+            ->select(
+                DB::raw('DATE(p.fecha_inicio) as dia'),
+                DB::raw('COUNT(DISTINCT p.idPrestamo) as total')
+            )
+            ->groupBy(DB::raw('DATE(p.fecha_inicio)'));
+
+        if ($from && $to) {
+            $qCurr->whereBetween('p.fecha_inicio', [$from, $to]);
+            $qPrev->whereBetween('p.fecha_inicio', [$pFrom, $pTo]);
+        }
+
+        $dailyCurr = $qCurr->pluck('total', 'dia');
+        $dailyPrev = $qPrev->pluck('total', 'dia');
+
+        $peakCurr    = $dailyCurr->max() ?? 0;
+        $peakDayCurr = $dailyCurr->search($peakCurr) ?: '—';
+        $peakPrev    = $dailyPrev->max() ?? 0;
+
+        $card = $this->buildKpiCard(
+            'demanda_pico',
+            'Demanda pico (día)',
+            (float) $peakCurr,
+            (float) $peakPrev,
+            'sol.',
+            "Máximo de solicitudes en un solo día: {$peakCurr} el {$peakDayCurr}. Periodo anterior: {$peakPrev}. Usar para justificar stock por picos."
+        );
+
+        $card['peakDay'] = (string) $peakDayCurr;
+
+        return $card;
     }
 
     private function buildKpiCard(string $key, string $label, float $value, float $prev, ?string $unit, string $tooltip, bool $invertColors = false): array

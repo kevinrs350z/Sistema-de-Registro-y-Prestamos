@@ -50,13 +50,35 @@
         <span class="kpi-info" [title]="kpi.tooltip">?</span>
       </div>
 
-      <!-- Valor principal -->
-      <div class="kpi-value" *ngIf="kpi.key !== 'duracion' && kpi.key !== 'top_critica'">
+      <!-- Valor principal (estándar) -->
+      <div class="kpi-value" *ngIf="kpi.key !== 'duracion' && kpi.key !== 'tiempo_ciclo' && kpi.key !== 'frecuencia_usuario' && kpi.key !== 'top_critica' && kpi.key !== 'equipos_disponibles' && kpi.key !== 'prestamos_activos' && kpi.key !== 'demanda_pico'">
         {{ getDisplayValue(kpi) }}
       </div>
 
+      <!-- Equipos disponibles: valor + barra de utilización -->
+      <div class="kpi-value kpi-equipos" *ngIf="kpi.key === 'equipos_disponibles'">
+        <span class="equipos-number">{{ kpi.value }}</span>
+        <div class="equipos-bar-container">
+          <div class="equipos-bar" [style.width.%]="kpi.pctDisp ?? 0"
+               [class.bar-green]="(kpi.pctDisp ?? 0) >= 50"
+               [class.bar-amber]="(kpi.pctDisp ?? 0) >= 25 && (kpi.pctDisp ?? 0) < 50"
+               [class.bar-red]="(kpi.pctDisp ?? 0) < 25"></div>
+        </div>
+        <span class="equipos-pct">{{ kpi.pctDisp }}% del inventario</span>
+        <span class="critica-detail" *ngIf="kpi.detail">{{ kpi.detail }}</span>
+      </div>
+
+      <!-- Préstamos activos: valor + badge activos ahora -->
+      <div class="kpi-value kpi-activos" *ngIf="kpi.key === 'prestamos_activos'">
+        <span class="activos-number">{{ kpi.value }}</span>
+        <span class="activos-ahora" *ngIf="kpi.activosAhora != null">
+          <span class="ahora-dot"></span>
+          {{ kpi.activosAhora }} activos ahora
+        </span>
+      </div>
+
       <!-- Duración P50/P90 especial -->
-      <div class="kpi-value kpi-dual" *ngIf="kpi.key === 'duracion'">
+      <div class="kpi-value kpi-dual" *ngIf="kpi.key === 'duracion' || kpi.key === 'tiempo_ciclo' || kpi.key === 'frecuencia_usuario'">
         <span class="dual-item">
           <span class="dual-label">P50</span>
           <span class="dual-number">{{ kpi.p50 }}</span>
@@ -67,6 +89,21 @@
           <span class="dual-number">{{ kpi.p90 }}</span>
         </span>
         <span class="dual-unit">{{ kpi.unit }}</span>
+        <span class="dual-meta" *ngIf="kpi.key === 'frecuencia_usuario' && kpi.totalUsers">
+          {{ kpi.totalUsers }} usuarios activos
+        </span>
+        <span class="dual-meta" *ngIf="kpi.key === 'tiempo_ciclo' && kpi.count">
+          {{ kpi.count }} solicitudes
+        </span>
+      </div>
+
+      <!-- Demanda pico: valor + día pico -->
+      <div class="kpi-value kpi-pico" *ngIf="kpi.key === 'demanda_pico'">
+        <span class="pico-number">{{ kpi.value }}</span>
+        <span class="pico-unit">{{ kpi.unit }}</span>
+        <span class="pico-day" *ngIf="kpi.peakDay">
+          <i class="bi bi-calendar-event"></i> {{ kpi.peakDay }}
+        </span>
       </div>
 
       <!-- Top categoría crítica especial -->
@@ -88,9 +125,12 @@
         <span class="var-label">vs periodo anterior</span>
       </div>
 
-      <!-- Sin variación (categoría crítica) -->
+      <!-- Sin variación (categoría crítica / dual cards) -->
       <div class="kpi-variation var-neutral" *ngIf="kpi.variation == null && kpi.key === 'top_critica' && kpi.pressure != null">
         <span class="var-label">Presión: {{ kpi.pressure }}</span>
+      </div>
+      <div class="kpi-variation var-neutral" *ngIf="kpi.variation == null && (kpi.key === 'tiempo_ciclo' || kpi.key === 'frecuencia_usuario')">
+        <span class="var-label">Percentiles del período</span>
       </div>
     </div>
   </div>

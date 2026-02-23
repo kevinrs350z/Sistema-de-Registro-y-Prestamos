@@ -28,6 +28,7 @@ import { DashboardOperationalComponent } from './components/admin/reportes/dashb
 import { DashboardExecutiveComponent } from './components/admin/reportes/dashboard-executive/dashboard-executive.component';
 import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
 import { DashboardModelosComponent } from './components/admin/reportes/dashboard-modelos/dashboard-modelos.component';
+import { DashboardStockoutComponent } from './components/admin/reportes/dashboard-stockout/dashboard-stockout.component';
 import { CategoriasEncargadosComponent } from './components/admin/categorias-encargados/categorias-encargados.component';
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
@@ -81,10 +82,18 @@ export const routes: Routes = [
     children: [
       { path: 'executive', component: DashboardExecutiveComponent },
       { path: 'dashboard', component: DashboardOperationalComponent },
+      { path: 'stockout', component: DashboardStockoutComponent },
+      { path: 'equipos', component: ReportesEquiposComponent },
+      { path: 'inventario', component: ReportesInventarioComponent },
+      { path: 'modelos', component: DashboardModelosComponent },
+      { path: 'alumnos', component: ReportesAlumnosComponent },
+      { path: 'profesores', component: ReportesProfesoresComponent },
+      { path: 'asignaturas', component: ReportesAsignaturasComponent },
+      { path: 'sanciones', component: ReportesSancionesComponent },
+      { path: 'mantenimientos', component: ReportesMantenimientosComponent },
       { path: '', redirectTo: 'executive', pathMatch: 'full' }
     ]
   },
-  { path: 'admin/reportes/:seccion', redirectTo: 'admin/reportes/executive' },
 
 
   {

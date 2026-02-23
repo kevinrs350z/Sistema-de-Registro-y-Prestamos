@@ -23,6 +23,14 @@ export interface KpiCard {
   p50?: number;
   p90?: number;
   pressure?: number;
+  pctDisp?: number;
+  total?: number;
+  prestados?: number;
+  mantenimiento?: number;
+  activosAhora?: number;
+  totalUsers?: number;
+  peakDay?: string;
+  count?: number;
 }
 
 @Component({
@@ -121,8 +129,12 @@ export class DashboardExecutiveComponent implements OnInit, OnDestroy {
   }
 
   getDisplayValue(kpi: KpiCard): string {
-    if (kpi.key === 'duracion') return '';
+    const dualKeys = ['duracion', 'tiempo_ciclo', 'frecuencia_usuario'];
+    if (dualKeys.includes(kpi.key)) return '';
     if (kpi.key === 'top_critica') return kpi.value;
+    if (kpi.key === 'equipos_disponibles') return '';
+    if (kpi.key === 'prestamos_activos') return '';
+    if (kpi.key === 'demanda_pico') return '';
     if (kpi.unit === '%') return `${kpi.value}%`;
     return `${kpi.value}`;
   }

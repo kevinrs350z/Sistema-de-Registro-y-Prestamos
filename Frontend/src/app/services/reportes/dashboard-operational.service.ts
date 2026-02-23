@@ -119,6 +119,35 @@ export interface ExecutiveKpisParams {
   estado?: string | null;
 }
 
+/* ── Stockout Analytics params ── */
+
+export interface StockoutBaseParams {
+  tipo: 'FUERA' | 'DENTRO';
+  from?: string;
+  to?: string;
+  categoria?: string | number | null;
+  equipo?: string | number | null;
+  asignatura?: number | null;
+  anioIngreso?: number | null;
+}
+
+export interface StockoutKpiParams extends StockoutBaseParams {}
+
+export interface StockoutTimeseriesParams extends StockoutBaseParams {
+  bucket?: 'day' | 'week' | 'month';
+}
+
+export interface StockoutRankingParams extends StockoutBaseParams {
+  groupBy?: 'equipo' | 'categoria';
+  topN?: number;
+}
+
+export interface StockoutScatterParams extends StockoutBaseParams {
+  groupBy?: 'equipo' | 'categoria';
+}
+
+export interface StockoutPriorityParams extends StockoutBaseParams {}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardOperationalService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api/dashboard/operational`;
@@ -208,5 +237,27 @@ export class DashboardOperationalService {
 
   getExecutiveKpis(params: ExecutiveKpisParams): Observable<any> {
     return this.http.get<any>(`${this.analyticsUrl}/executive-kpis`, { params: this.clean(params) });
+  }
+
+  /* ── Stockout Analytics ── */
+
+  getStockoutKpi(params: StockoutKpiParams): Observable<any> {
+    return this.http.get<any>(`${this.analyticsUrl}/stockout/kpi`, { params: this.clean(params) });
+  }
+
+  getStockoutTimeseries(params: StockoutTimeseriesParams): Observable<any> {
+    return this.http.get<any>(`${this.analyticsUrl}/stockout/timeseries`, { params: this.clean(params) });
+  }
+
+  getStockoutRanking(params: StockoutRankingParams): Observable<any> {
+    return this.http.get<any>(`${this.analyticsUrl}/stockout/ranking`, { params: this.clean(params) });
+  }
+
+  getStockoutScatter(params: StockoutScatterParams): Observable<any> {
+    return this.http.get<any>(`${this.analyticsUrl}/stockout/scatter`, { params: this.clean(params) });
+  }
+
+  getStockoutPriority(params: StockoutPriorityParams): Observable<any> {
+    return this.http.get<any>(`${this.analyticsUrl}/stockout/priority`, { params: this.clean(params) });
   }
 }
