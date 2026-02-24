@@ -55,12 +55,27 @@ export class DashboardStockoutComponent implements OnInit, AfterViewInit, OnDest
   // Priority
   priorityData: any = null;
 
-  ngOnInit(): void {}
-  ngAfterViewInit(): void {}
+  private resizeObserver?: ResizeObserver;
+  private resizeHandler = () => {
+    this.timeseriesInstance?.resize();
+    this.scatterInstance?.resize();
+  };
+
+  ngOnInit(): void {
+    window.addEventListener('resize', this.resizeHandler);
+  }
+
+  ngAfterViewInit(): void {
+    this.resizeObserver = new ResizeObserver(() => this.resizeHandler());
+    if (this.timeseriesRef?.nativeElement) this.resizeObserver.observe(this.timeseriesRef.nativeElement);
+    if (this.scatterRef?.nativeElement) this.resizeObserver.observe(this.scatterRef.nativeElement);
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    window.removeEventListener('resize', this.resizeHandler);
+    this.resizeObserver?.disconnect();
     this.timeseriesInstance?.dispose();
     this.scatterInstance?.dispose();
   }

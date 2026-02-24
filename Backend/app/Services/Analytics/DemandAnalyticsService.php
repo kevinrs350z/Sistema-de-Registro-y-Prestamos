@@ -214,12 +214,14 @@ class DemandAnalyticsService
         $qRejCurr = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'))
             ->where(DB::raw('UPPER(p.estado)'), 'RECHAZADO')
             ->where(function ($q) {
-                $q->whereIn(DB::raw('UPPER(COALESCE(p.otra_motivo, \'\'))'), self::STOCKOUT_REJECTION_REASONS);
+                $q->whereIn(DB::raw("UPPER(COALESCE(p.motivo_rechazo, ''))"), self::STOCKOUT_REJECTION_REASONS)
+                    ->orWhereIn(DB::raw("UPPER(COALESCE(p.otra_motivo, ''))"), self::STOCKOUT_REJECTION_REASONS);
             });
         $qRejPrev = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'))
             ->where(DB::raw('UPPER(p.estado)'), 'RECHAZADO')
             ->where(function ($q) {
-                $q->whereIn(DB::raw('UPPER(COALESCE(p.otra_motivo, \'\'))'), self::STOCKOUT_REJECTION_REASONS);
+                $q->whereIn(DB::raw("UPPER(COALESCE(p.motivo_rechazo, ''))"), self::STOCKOUT_REJECTION_REASONS)
+                    ->orWhereIn(DB::raw("UPPER(COALESCE(p.otra_motivo, ''))"), self::STOCKOUT_REJECTION_REASONS);
             });
 
         if ($from && $to) {
@@ -508,14 +510,16 @@ class DemandAnalyticsService
 
     private function kpiTiempoCiclo(array $f, ?Carbon $from, ?Carbon $to): array
     {
-        // Tiempo desde created_at del préstamo hasta la primera transición a APROBADO en historial
+        // Tiempo desde el primer evento del historial hasta la primera transición a APROBADO.
+        // Evita usar created_at/updated_at del préstamo como base estadística.
         $q = DB::table('prestamos as p')
-            ->join('prestamo_historial as ph', function ($join) {
-                $join->on('ph.idPrestamo', '=', 'p.idPrestamo')
-                    ->where(DB::raw('UPPER(ph.estado_nuevo)'), 'APROBADO');
+            ->join('prestamo_historial as ph_apr', function ($join) {
+                $join->on('ph_apr.idPrestamo', '=', 'p.idPrestamo')
+                    ->where(DB::raw('UPPER(ph_apr.estado_nuevo)'), 'APROBADO');
             })
-            ->select(DB::raw('TIMESTAMPDIFF(HOUR, p.created_at, MIN(ph.created_at)) as horas'))
-            ->groupBy('p.idPrestamo', 'p.created_at');
+            ->join('prestamo_historial as ph_ini', 'ph_ini.idPrestamo', '=', 'p.idPrestamo')
+            ->select(DB::raw('TIMESTAMPDIFF(HOUR, MIN(ph_ini.created_at), MIN(ph_apr.created_at)) as horas'))
+            ->groupBy('p.idPrestamo');
 
         if ($from && $to) {
             $q->whereBetween('p.fecha_inicio', [$from, $to]);
@@ -547,7 +551,7 @@ class DemandAnalyticsService
             'variation' => null,
             'direction' => 'neutral',
             'color'     => $p90Display > 48 ? 'red' : ($p90Display > 24 ? 'amber' : 'blue'),
-            'tooltip'   => "Tiempo desde creación hasta aprobación. P50={$p50Display} {$unit}, P90={$p90Display} {$unit}. Basado en " . count($horas) . " solicitudes con historial. Si sube, el proceso se está tapando.",
+            'tooltip'   => "Tiempo desde primer evento registrado hasta aprobación. P50={$p50Display} {$unit}, P90={$p90Display} {$unit}. Basado en " . count($horas) . " solicitudes con historial. Si sube, el proceso se está tapando.",
         ];
     }
 

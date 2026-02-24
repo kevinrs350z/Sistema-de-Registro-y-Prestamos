@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Servicio de analíticas de demanda insatisfecha por falta de stock (SIN_STOCK).
  *
- * Identifica rechazos vía prestamo_historial:
- *   estado_nuevo = 'RECHAZADO' AND descripcion LIKE '%SIN_STOCK%'
+ * Identifica rechazos vía prestamos.motivo_rechazo (principal)
+ * y usa prestamo_historial.descripcion como fallback de compatibilidad.
  *
  * Endpoints:
  *   1. KPI global stockout rate + variación
@@ -38,9 +38,9 @@ class StockoutAnalyticsService
 
         // Rechazos SIN_STOCK periodo actual
         $qSinCurr = $this->stockoutQuery($filters)
-            ->select(DB::raw('COUNT(DISTINCT ph.idPrestamo) AS total'));
+            ->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'));
         $qSinPrev = $this->stockoutQuery($filters)
-            ->select(DB::raw('COUNT(DISTINCT ph.idPrestamo) AS total'));
+            ->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'));
 
         if ($currentFrom && $currentTo) {
             $qTotCurr->whereBetween('p.fecha_inicio', [$currentFrom, $currentTo]);
@@ -74,7 +74,7 @@ class StockoutAnalyticsService
             ->join('equipos as e2', 'e2.id', '=', 'pe2.idEquipo')
             ->join('tipo_equipos as te2', 'te2.id', '=', 'e2.tipo_equipo_id')
             ->join('categorias as c2', 'c2.id', '=', 'te2.categoria_id')
-            ->select('c2.nombre as categoria', DB::raw('COUNT(DISTINCT ph.idPrestamo) AS rechazos'))
+            ->select('c2.nombre as categoria', DB::raw('COUNT(DISTINCT p.idPrestamo) AS rechazos'))
             ->groupBy('c2.nombre')
             ->orderByDesc('rechazos')
             ->limit(5);
@@ -124,7 +124,7 @@ class StockoutAnalyticsService
 
         // Serie 2: Rechazos SIN_STOCK
         $stockouts = $this->stockoutQuery($filters)
-            ->select(DB::raw("{$truncExpr} as periodo"), DB::raw('COUNT(DISTINCT ph.idPrestamo) as total'))
+            ->select(DB::raw("{$truncExpr} as periodo"), DB::raw('COUNT(DISTINCT p.idPrestamo) as total'))
             ->whereBetween('p.fecha_inicio', [$currentFrom, $currentTo])
             ->groupBy(DB::raw($truncExpr))
             ->orderBy(DB::raw($truncExpr))
@@ -193,7 +193,7 @@ class StockoutAnalyticsService
         if ($groupBy === 'categoria') {
             $qTotCurr->select('c2.id as grp_id', 'c2.nombre as nombre', DB::raw('COUNT(DISTINCT p.idPrestamo) as total_sol'));
             $qTotCurr->groupBy('c2.id', 'c2.nombre');
-            $qSinCurr->select('c3.id as grp_id', 'c3.nombre as nombre', DB::raw('COUNT(DISTINCT ph.idPrestamo) as rechazos'));
+            $qSinCurr->select('c3.id as grp_id', 'c3.nombre as nombre', DB::raw('COUNT(DISTINCT p.idPrestamo) as rechazos'));
             $qSinCurr->groupBy('c3.id', 'c3.nombre');
         } else {
             $qTotCurr->select(
@@ -207,7 +207,7 @@ class StockoutAnalyticsService
                 'te3.id as grp_id',
                 DB::raw("CONCAT(te3.nombre, ' — ', te3.marca, ' ', te3.modelo) as nombre"),
                 'c3.nombre as categoria',
-                DB::raw('COUNT(DISTINCT ph.idPrestamo) as rechazos')
+                DB::raw('COUNT(DISTINCT p.idPrestamo) as rechazos')
             );
             $qSinCurr->groupBy('te3.id', 'te3.nombre', 'te3.marca', 'te3.modelo', 'c3.nombre');
         }
@@ -231,10 +231,10 @@ class StockoutAnalyticsService
                 ->whereBetween('p.fecha_inicio', [$prevFrom, $prevTo]);
 
             if ($groupBy === 'categoria') {
-                $qSinPrev->select('c4.id as grp_id', DB::raw('COUNT(DISTINCT ph.idPrestamo) as rechazos'));
+                $qSinPrev->select('c4.id as grp_id', DB::raw('COUNT(DISTINCT p.idPrestamo) as rechazos'));
                 $qSinPrev->groupBy('c4.id');
             } else {
-                $qSinPrev->select('te4.id as grp_id', DB::raw('COUNT(DISTINCT ph.idPrestamo) as rechazos'));
+                $qSinPrev->select('te4.id as grp_id', DB::raw('COUNT(DISTINCT p.idPrestamo) as rechazos'));
                 $qSinPrev->groupBy('te4.id');
             }
 
@@ -324,7 +324,7 @@ class StockoutAnalyticsService
 
             $qSin->select(
                 'te3.id as grp_id',
-                DB::raw('COUNT(DISTINCT ph.idPrestamo) as rechazos')
+                DB::raw('COUNT(DISTINCT p.idPrestamo) as rechazos')
             )->groupBy('te3.id');
         } else {
             $qTot->select(
@@ -335,7 +335,7 @@ class StockoutAnalyticsService
 
             $qSin->select(
                 'c3.id as grp_id',
-                DB::raw('COUNT(DISTINCT ph.idPrestamo) as rechazos')
+                DB::raw('COUNT(DISTINCT p.idPrestamo) as rechazos')
             )->groupBy('c3.id');
         }
 
@@ -416,7 +416,7 @@ class StockoutAnalyticsService
             ->join('prestamo_equipo as pe3', 'pe3.idPrestamo', '=', 'p.idPrestamo')
             ->join('equipos as e3', 'e3.id', '=', 'pe3.idEquipo')
             ->join('tipo_equipos as te3', 'te3.id', '=', 'e3.tipo_equipo_id')
-            ->select('te3.id as grp_id', DB::raw('COUNT(DISTINCT ph.idPrestamo) as rechazos'))
+            ->select('te3.id as grp_id', DB::raw('COUNT(DISTINCT p.idPrestamo) as rechazos'))
             ->groupBy('te3.id');
 
         if ($currentFrom && $currentTo) {
@@ -434,7 +434,7 @@ class StockoutAnalyticsService
                 ->join('prestamo_equipo as pe4', 'pe4.idPrestamo', '=', 'p.idPrestamo')
                 ->join('equipos as e4', 'e4.id', '=', 'pe4.idEquipo')
                 ->join('tipo_equipos as te4', 'te4.id', '=', 'e4.tipo_equipo_id')
-                ->select('te4.id as grp_id', DB::raw('COUNT(DISTINCT ph.idPrestamo) as rechazos'))
+                ->select('te4.id as grp_id', DB::raw('COUNT(DISTINCT p.idPrestamo) as rechazos'))
                 ->whereBetween('p.fecha_inicio', [$prevFrom, $prevTo])
                 ->groupBy('te4.id')
                 ->pluck('rechazos', 'grp_id');
@@ -584,22 +584,29 @@ class StockoutAnalyticsService
     }
 
     /**
-     * Query base para rechazos SIN_STOCK:
-     * prestamo_historial WHERE estado_nuevo = 'RECHAZADO' AND descripcion LIKE '%SIN_STOCK%'
-     * JOIN a prestamos para tener acceso a filtros estándar.
+     * Query base para rechazos por stock.
+     *
+     * Fuente principal: prestamos.motivo_rechazo
+     * Fallback: prestamo_historial.descripcion (datos antiguos).
      */
     private function stockoutQuery(array $filters)
     {
-        $query = DB::table('prestamo_historial as ph')
-            ->join('prestamos as p', 'p.idPrestamo', '=', 'ph.idPrestamo')
+        $query = DB::table('prestamos as p')
+            ->leftJoin('prestamo_historial as ph', 'ph.idPrestamo', '=', 'p.idPrestamo')
             ->leftJoin('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
             ->leftJoin('equipos as e', 'e.id', '=', 'pe.idEquipo')
             ->leftJoin('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
             ->leftJoin('categorias as c', 'c.id', '=', 'te.categoria_id')
             ->leftJoin('grupo_prestamo as gp', 'gp.prestamo_id', '=', 'p.idPrestamo')
             ->leftJoin('grupos as g', 'g.id', '=', 'gp.grupo_id')
-            ->where(DB::raw('UPPER(ph.estado_nuevo)'), 'RECHAZADO')
-            ->where('ph.descripcion', 'like', '%SIN_STOCK%');
+            ->where(DB::raw('UPPER(p.estado)'), 'RECHAZADO')
+            ->where(function ($q) {
+                $q->whereIn(DB::raw('UPPER(COALESCE(p.motivo_rechazo, \'\'))'), ['SIN_STOCK', 'CONFLICTO_HORARIO'])
+                    ->orWhere(function ($legacy) {
+                        $legacy->whereRaw("UPPER(REPLACE(COALESCE(ph.descripcion, ''), ' ', '_')) LIKE '%SIN_STOCK%'")
+                            ->orWhereRaw("UPPER(REPLACE(COALESCE(ph.descripcion, ''), ' ', '_')) LIKE '%CONFLICTO_HORARIO%'");
+                    });
+            });
 
         $this->applySharedFilters($query, $filters);
 
@@ -790,7 +797,7 @@ class StockoutAnalyticsService
                 ->join('equipos as e_chk', 'e_chk.id', '=', 'pe_chk.idEquipo')
                 ->join('tipo_equipos as te_chk', 'te_chk.id', '=', 'e_chk.tipo_equipo_id')
                 ->join('categorias as c_chk', 'c_chk.id', '=', 'te_chk.categoria_id')
-                ->select('c_chk.nombre as cat', DB::raw('COUNT(DISTINCT ph.idPrestamo) as n'))
+                ->select('c_chk.nombre as cat', DB::raw('COUNT(DISTINCT p.idPrestamo) as n'))
                 ->whereBetween('p.fecha_inicio', [$from, $to])
                 ->groupBy('c_chk.nombre')
                 ->orderByDesc('n')

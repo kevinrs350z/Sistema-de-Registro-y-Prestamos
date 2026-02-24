@@ -146,7 +146,17 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
   private lastForecastPayload: any;
   private lastStatusFlowPayload: any;
   private destroy$ = new Subject<void>();
-  private resizeHandler = () => {
+  private resizeObserver?: ResizeObserver;
+  private resizeHandler = () => this.resizeAllCharts();
+
+  constructor(private dashboardService: DashboardOperationalService) {}
+
+  ngOnInit(): void {
+    window.addEventListener('resize', this.resizeHandler);
+  }
+
+  /** Resize all active chart instances */
+  private resizeAllCharts(): void {
     this.chart?.resize();
     this.durationChart?.resize();
     this.demandVsDurationChart?.resize();
@@ -157,12 +167,20 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
     this.rejectionsStatusChart?.resize();
     this.demandForecastChart?.resize();
     this.statusFlowChart?.resize();
-  };
+  }
 
-  constructor(private dashboardService: DashboardOperationalService) {}
-
-  ngOnInit(): void {
-    window.addEventListener('resize', this.resizeHandler);
+  /** Setup ResizeObserver to auto-resize charts when containers become visible */
+  private setupResizeObserver(): void {
+    const refs = [
+      this.demandChartRef, this.durationChartRef, this.demandVsDurationChartRef,
+      this.demandVsStockChartRef, this.topRequestedChartRef, this.topRequestedDrillChartRef,
+      this.demandHeatmapChartRef, this.rejectionsStatusChartRef,
+      this.demandForecastChartRef, this.statusFlowChartRef
+    ];
+    this.resizeObserver = new ResizeObserver(() => this.resizeAllCharts());
+    refs.forEach(ref => {
+      if (ref?.nativeElement) this.resizeObserver!.observe(ref.nativeElement);
+    });
   }
 
   ngAfterViewInit(): void {
@@ -176,6 +194,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
     this.initRejectionsStatusChart();
     this.initDemandForecastChart();
     this.initStatusFlowChart();
+    this.setupResizeObserver();
     if (this.lastChartPayload) {
       this.renderChart(this.lastChartPayload);
     }
@@ -212,6 +231,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
     this.destroy$.next();
     this.destroy$.complete();
     window.removeEventListener('resize', this.resizeHandler);
+    this.resizeObserver?.disconnect();
     this.chart?.dispose();
     this.durationChart?.dispose();
     this.demandVsDurationChart?.dispose();
@@ -459,8 +479,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
         next: (payload) => {
           this.lastChartPayload = payload;
           this.sinDatos = !payload?.hasData;
-          this.renderChart(payload);
           this.loading = false;
+          setTimeout(() => this.renderChart(payload));
         },
         error: () => {
           this.error = 'No se pudo cargar la información de demanda.';
@@ -499,8 +519,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
         next: (payload) => {
           this.lastDurationPayload = payload;
           this.durationSinDatos = !payload?.hasData;
-          this.renderDurationChart(payload);
           this.durationLoading = false;
+          setTimeout(() => this.renderDurationChart(payload));
         },
         error: () => {
           this.durationError = 'No se pudo cargar la distribución de duración.';
@@ -545,8 +565,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           if (payload?.drilldown) {
             this.selectedScatterPoint = payload.drilldown;
           }
-          this.renderDemandVsDurationChart(payload);
           this.scatterLoading = false;
+          setTimeout(() => this.renderDemandVsDurationChart(payload));
         },
         error: () => {
           this.scatterError = 'No se pudo cargar la relación demanda vs duración.';
@@ -846,8 +866,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
         next: (payload) => {
           this.lastStockScatterPayload = payload;
           this.stockScatterSinDatos = !payload?.hasData;
-          this.renderDemandVsStockChart(payload);
           this.stockScatterLoading = false;
+          setTimeout(() => this.renderDemandVsStockChart(payload));
         },
         error: () => {
           this.stockScatterError = 'No se pudo cargar la relación demanda vs stock.';
@@ -892,13 +912,15 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           if (payload?.drilldown) {
             this.selectedTopRequested = payload.drilldown;
           }
-          this.renderTopRequestedChart(payload);
-          if (payload?.drilldown) {
-            this.renderTopRequestedDrillChart(payload.drilldown);
-          } else {
-            this.topRequestedDrillChart?.clear();
-          }
           this.topRequestedLoading = false;
+          setTimeout(() => {
+            this.renderTopRequestedChart(payload);
+            if (payload?.drilldown) {
+              this.renderTopRequestedDrillChart(payload.drilldown);
+            } else {
+              this.topRequestedDrillChart?.clear();
+            }
+          });
         },
         error: () => {
           this.topRequestedError = 'No se pudo cargar el ranking Top solicitados.';
@@ -938,8 +960,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
         next: (payload) => {
           this.lastHeatmapPayload = payload;
           this.heatmapSinDatos = !payload?.hasData;
-          this.renderDemandHeatmapChart(payload);
           this.heatmapLoading = false;
+          setTimeout(() => this.renderDemandHeatmapChart(payload));
         },
         error: () => {
           this.heatmapError = 'No se pudo cargar el heatmap de demanda.';
@@ -980,8 +1002,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           this.rejectionsStatusSinDatos = !payload?.hasData;
           this.rejectionsStatusSummary = payload?.messages?.summary ?? '';
           this.rejectionsStatusInterpretation = payload?.messages?.interpretation ?? '';
-          this.renderRejectionsStatusChart(payload);
           this.rejectionsStatusLoading = false;
+          setTimeout(() => this.renderRejectionsStatusChart(payload));
         },
         error: () => {
           this.rejectionsStatusError = 'No se pudo cargar la distribución de motivos/estados.';
@@ -1029,8 +1051,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
             mape != null ? `MAPE: ${mape}%` : null,
           ].filter(Boolean).join(' · ');
 
-          this.renderDemandForecastChart(payload);
           this.forecastLoading = false;
+          setTimeout(() => this.renderDemandForecastChart(payload));
         },
         error: () => {
           this.forecastError = 'No se pudo cargar el forecast de demanda.';
@@ -1069,8 +1091,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           this.lastStatusFlowPayload = payload;
           this.statusFlowSinDatos = !payload?.hasData;
           this.statusFlowSummary = payload?.messages?.summary ?? '';
-          this.renderStatusFlowChart(payload);
           this.statusFlowLoading = false;
+          setTimeout(() => this.renderStatusFlowChart(payload));
         },
         error: () => {
           this.statusFlowError = 'No se pudo cargar el flujo de estados.';

@@ -16,18 +16,10 @@ import { DashboardAdminComponent } from './components/admin/dashboard-admin/dash
 import { NotificacionesComponent } from './components/admin/notificaciones/notificaciones.component';
 import { SolicitudesPendientesComponent } from './components/admin/solicitudes-pendientes/solicitudes-pendientes.component';
 import { ReportesComponent } from './components/admin/reportes/reportes/reportes.component';
-import { ReportesAlumnosComponent } from './components/admin/reportes/reportes-alumnos/reportes-alumnos.component';
-import { ReportesProfesoresComponent } from './components/admin/reportes/reportes-profesores/reportes-profesores.component';
-import { ReportesAsignaturasComponent } from './components/admin/reportes/reportes-asignaturas/reportes-asignaturas.component';
-import { ReportesInventarioComponent } from './components/admin/reportes/reportes-inventario/reportes-inventario.component';
-import { ReportesSancionesComponent } from './components/admin/reportes/reportes-sanciones/reportes-sanciones.component';
-import { ReportesMantenimientosComponent } from './components/admin/reportes/reportes-mantenimientos/reportes-mantenimientos.component';
-import { ReportesEquiposComponent } from './components/admin/reportes/reportes-equipos/reportes-equipos.component';
 import { GestionarAsignaturasComponent } from './components/admin/asignaturas/gestionar-asignaturas.component';
 import { DashboardOperationalComponent } from './components/admin/reportes/dashboard-operational/dashboard-operational.component';
 import { DashboardExecutiveComponent } from './components/admin/reportes/dashboard-executive/dashboard-executive.component';
 import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
-import { DashboardModelosComponent } from './components/admin/reportes/dashboard-modelos/dashboard-modelos.component';
 import { DashboardStockoutComponent } from './components/admin/reportes/dashboard-stockout/dashboard-stockout.component';
 import { CategoriasEncargadosComponent } from './components/admin/categorias-encargados/categorias-encargados.component';
 export const routes: Routes = [
@@ -83,14 +75,6 @@ export const routes: Routes = [
       { path: 'executive', component: DashboardExecutiveComponent },
       { path: 'dashboard', component: DashboardOperationalComponent },
       { path: 'stockout', component: DashboardStockoutComponent },
-      { path: 'equipos', component: ReportesEquiposComponent },
-      { path: 'inventario', component: ReportesInventarioComponent },
-      { path: 'modelos', component: DashboardModelosComponent },
-      { path: 'alumnos', component: ReportesAlumnosComponent },
-      { path: 'profesores', component: ReportesProfesoresComponent },
-      { path: 'asignaturas', component: ReportesAsignaturasComponent },
-      { path: 'sanciones', component: ReportesSancionesComponent },
-      { path: 'mantenimientos', component: ReportesMantenimientosComponent },
       { path: '', redirectTo: 'executive', pathMatch: 'full' }
     ]
   },
