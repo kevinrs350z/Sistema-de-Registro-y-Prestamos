@@ -79,6 +79,34 @@ export class SolicitudesPendientesComponent implements OnInit {
           next: (data: any) => {
         this.tiposEquipo = data || [];
         this.tipoAgregar = this.tiposEquipo[0]?.id ?? null;
+
+        // Enriquecer con stock disponible usando el catálogo (siempre que el endpoint lo entregue)
+        this.tiposSrv.getCatalogo().subscribe({
+          next: (catalogo) => {
+            const lista = Array.isArray(catalogo)
+              ? catalogo
+              : Array.isArray((catalogo as any)?.data)
+                ? (catalogo as any).data
+                : [];
+            if (!Array.isArray(lista) || lista.length === 0) return;
+
+            const porId = new Map<number, any>();
+            lista.forEach((c: any) => porId.set(Number(c.id), c));
+
+            this.tiposEquipo = (this.tiposEquipo || []).map((t: any) => {
+              const cat = porId.get(Number(t.id));
+              if (cat) {
+                const disponibles = cat.disponibles ?? cat.disponible ?? cat.stock_disponible ?? cat.stockDisponible ?? cat.stock;
+                const total = cat.total ?? cat.stock ?? t.stockTotal;
+                return { ...t, stock: typeof disponibles === 'number' ? disponibles : t.stock, stockTotal: total };
+              }
+              return t;
+            });
+          },
+          error: () => {
+            // si falla, continuamos con el listado base
+          }
+        });
       },
       error: () => this.notify.error('No se pudieron cargar los tipos de equipo.')
     });
@@ -278,7 +306,7 @@ export class SolicitudesPendientesComponent implements OnInit {
         idTipoEquipo,
         nombre: tipo?.nombre ?? 'Equipo',
         cantidad,
-        stock: tipo?.stock ?? undefined
+        stock: this.getStockTipo(idTipoEquipo) ?? undefined
       };
     });
 
@@ -306,7 +334,7 @@ export class SolicitudesPendientesComponent implements OnInit {
         idTipoEquipo: tipo.id,
         nombre: tipo.nombre,
         cantidad: this.cantidadAgregar,
-        stock: tipo?.stock ?? undefined
+        stock: this.getStockTipo(tipo.id) ?? undefined
       });
     }
     this.cantidadAgregar = 1;
@@ -365,10 +393,14 @@ export class SolicitudesPendientesComponent implements OnInit {
       .subscribe({
         next: () => {
           this.notify.success('Solicitud aprobada correctamente.');
+          this.actualizarEstadoLocal(solicitudId, 'APROBADO');
           this.cargarSolicitudes();
           this.solicitudSeleccionada = null;
         },
-        error: (err: any) => console.error('Error al aprobar:', err)
+        error: (err: any) => {
+          console.error('Error al aprobar:', err);
+          this.notify.error('No se pudo aprobar la solicitud.');
+        }
       });
   }
 
@@ -386,6 +418,7 @@ export class SolicitudesPendientesComponent implements OnInit {
       .subscribe({
         next: () => {
           this.notify.success('Solicitud rechazada correctamente.');
+          this.actualizarEstadoLocal(this.solicitudSeleccionada!.id!, 'RECHAZADO');
           this.cargarSolicitudes();
           this.cerrarModal();
           this.solicitudSeleccionada = null;
@@ -395,6 +428,7 @@ export class SolicitudesPendientesComponent implements OnInit {
           this.errorRechazo = 'Error al rechazar solicitud.';
           this.loadingRechazo = false;
           console.error('Error al rechazar:', err);
+          this.notify.error('No se pudo rechazar la solicitud.');
         }
       });
   }
@@ -432,6 +466,7 @@ export class SolicitudesPendientesComponent implements OnInit {
     this.prestamosAdmin.marcarEntregado(id || this.solicitudSeleccionada.id!).subscribe({
       next: () => {
         this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
+        this.actualizarEstadoLocal(id || this.solicitudSeleccionada!.id!, 'ENTREGADO');
         this.cargarSolicitudes();
       },
       error: (err: any) => console.error('Error al marcar como entregado:', err),
@@ -439,8 +474,21 @@ export class SolicitudesPendientesComponent implements OnInit {
   }
 
   getStockTipo(idTipoEquipo: number): number | null {
-    const tipo = this.tiposEquipo.find((t: any) => t.id === idTipoEquipo);
-    return typeof tipo?.stock === 'number' ? tipo.stock : null;
+    const idNum = Number(idTipoEquipo);
+    const tipo = this.tiposEquipo.find((t: any) => Number(t.id) === idNum);
+    if (!tipo) return null;
+
+    // Acepta distintas claves que pueda traer el API
+    const posibles = [
+      tipo.stock,
+      tipo.stock_disponible,
+      tipo.stockDisponible,
+      tipo.disponible,
+      tipo.disponibles
+    ];
+
+    const valor = posibles.find((v) => typeof v === 'number');
+    return typeof valor === 'number' ? valor : null;
   }
 
   getNombreTipo(idTipoEquipo: number): string {
@@ -459,6 +507,20 @@ export class SolicitudesPendientesComponent implements OnInit {
         return 'RECHAZADO';
       default:
         return 'PENDIENTE';
+    }
+  }
+
+  private actualizarEstadoLocal(id: number, estado: AdminSolicitud['estado']) {
+    const idx = this.solicitudes.findIndex((s) => s.id === id);
+    if (idx === -1) return;
+
+    const actualizado = { ...this.solicitudes[idx], estado };
+    const nuevas = [...this.solicitudes];
+    nuevas[idx] = actualizado;
+    this.solicitudes = nuevas;
+
+    if (this.solicitudSeleccionada?.id === id) {
+      this.solicitudSeleccionada = actualizado;
     }
   }
 }

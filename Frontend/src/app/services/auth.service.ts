@@ -132,6 +132,12 @@ export class AuthService {
     return this.http.get<any[]>(`${this.apiUrl}/prestamos`, { headers });
   }
 
+  cancelarPrestamo(id: number) {
+    return this.http.delete(`${this.apiUrl}/prestamos/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
   //muestra el usuario utenticado
   getUsuario(token: string) {
     const headers = {

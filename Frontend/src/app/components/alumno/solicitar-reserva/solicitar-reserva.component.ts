@@ -631,49 +631,36 @@ export class SolicitarReservaComponent {
     }
 
     const token = sessionStorage.getItem('token') ?? '';
-    this.api.validarMaximoPrestamo({
-      equipos: payload.equipos,
-      integrantes: payload.integrantes
-    }).subscribe({
-      next: res => {
-        const bloqueos = res?.bloqueos || {};
-        if (Object.keys(bloqueos).length > 0) {
-          this.aplicarBloqueos(bloqueos);
+    this.api.crearPrestamo(payload, token).subscribe({
+      next: () => {
+        this.notify.success('Solicitud enviada correctamente.');
+        this.limpiar();
+        this.carritoSrv.limpiar();
+        this.router.navigate(['/equipos/catalogo']);
+      },
+      error: err => {
+        if (err?.status === 403) {
+          this.notify.error(err?.error?.message || 'Tu cuenta está bloqueada.');
+          this.bloqueado = true;
+          this.bloqueadoMotivo = err?.error?.motivo ?? null;
+          this.bloqueadoFecha = err?.error?.fecha ?? null;
+          return;
+        }
+
+        if (err?.status === 422 && err?.error?.bloqueos) {
+          // El backend ya valida límites y devuelve los bloqueos detallados
+          this.aplicarBloqueos(err.error.bloqueos);
           this.notify.error('Hay integrantes bloqueados por límite de préstamos.');
           return;
         }
 
-        this.api.crearPrestamo(payload, token).subscribe({
-          next: () => {
-            this.notify.success('Solicitud enviada correctamente.');
-            this.limpiar();
-            this.carritoSrv.limpiar();
-            this.router.navigate(['/equipos/catalogo']);
-          },
-          error: err => {
-            if (err?.status === 403) {
-              this.notify.error(
-                err?.error?.message || 'Tu cuenta está bloqueada.'
-              );
-              this.bloqueado = true;
-              this.bloqueadoMotivo = err?.error?.motivo ?? null;
-              this.bloqueadoFecha = err?.error?.fecha ?? null;
-              return;
-            }
-            if (err?.status === 422 && err?.error?.bloqueos) {
-              this.aplicarBloqueos(err.error.bloqueos);
-              this.notify.error('Hay integrantes bloqueados por límite de préstamos.');
-              return;
-            }
-              if (err?.status === 409 && err?.error?.error === 'BLOQUEO_HORARIO') {
-                this.notify.error(err?.error?.message || 'Hay equipos bloqueados para el horario seleccionado.');
-                return;
-              }
-              this.notify.error(err?.error?.error || 'Ocurrió un error al enviar la solicitud.');
-          }
-        });
-      },
-      error: () => this.notify.error('No se pudo validar el máximo de préstamos.')
+        if (err?.status === 409 && err?.error?.error === 'BLOQUEO_HORARIO') {
+          this.notify.error(err?.error?.message || 'Hay equipos bloqueados para el horario seleccionado.');
+          return;
+        }
+
+        this.notify.error(err?.error?.error || 'Ocurrió un error al enviar la solicitud.');
+      }
     });
   }
 

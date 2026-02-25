@@ -50,7 +50,7 @@
 
   <div class="navbar-collapse admin-menu" [class.show]="menuAbierto">
     <button class="nav-link-mobile" (click)="navegarInterno('gestionar')">
-      Gestionar
+      Panel de administración
     </button>
     <button class="nav-link-mobile" (click)="navegarInterno('solicitudes')">
       Solicitudes pendientes
@@ -59,13 +59,13 @@
       Solicitudes finalizadas
     </button>
     <button class="nav-link-mobile" (click)="navegarInterno('inventario')">
-      Inventario
+      Gestionar Equipos
     </button>
     <button class="nav-link-mobile" (click)="navegarInterno('cuentas')">
-      Cuentas
+      Gestionar Cuentas
     </button>
     <button class="nav-link-mobile" (click)="navegarInterno('asignaturas')">
-      Asignaturas / Eventos
+      Gestionar Asignaturas / Eventos
     </button>
     <button class="nav-link-mobile" (click)="irCrearSolicitud()">
       Crear solicitud
@@ -74,14 +74,14 @@
       Bloqueos de horario
     </button>
     <button class="nav-link-mobile" (click)="irCategorias()">
-      Categorias y encargados
+      Gestionar Categorias
     </button>
     <button
       class="nav-link-mobile"
       *ngIf="auth.isAdmin()"
       (click)="irReportes()"
     >
-      Reportes
+      Visualizar Reportes
     </button>
   </div>
 </nav>

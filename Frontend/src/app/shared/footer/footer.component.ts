@@ -38,8 +38,11 @@ export class FooterComponent {
     { label: 'Bloqueos de horario', route: '/admin/bloqueos-horario' }
   ];
 
-  privacyLink: QuickLink = { label: 'Política de privacidad', route: '/privacidad', href: '#' };
-  termsLink: QuickLink = { label: 'Términos de uso', route: '/terminos', href: '#' };
+  readonly officialLinks: QuickLink[] = [
+    { label: 'UTA', href: 'https://www.uta.cl' },
+    { label: 'UTAMed', href: 'http://utamed.uta.cl/utamed/' },
+    { label: 'Diseño Multimedia', href: 'https://edit.uta.cl/dm/' }
+  ];
 
   get links(): QuickLink[] {
     return this.role === 'admin' ? this.adminLinks : this.alumnoLinks;

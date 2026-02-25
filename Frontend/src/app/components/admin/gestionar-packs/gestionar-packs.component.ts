@@ -46,6 +46,7 @@ export class GestionarPacksComponent implements OnInit {
   };
 
   equipoSeleccionado: Equipo | null = null;
+  tipoSeleccionado: string | null = null;
 
   /* ================================
      PAGINACIÓN
@@ -82,7 +83,13 @@ export class GestionarPacksComponent implements OnInit {
     // Equipos
     this.asignaturasService.getEquipos().subscribe({
       next: (r: any) => {
-        this.equipos = (r ?? []) as Equipo[];
+        this.equipos = (r ?? []).map((e: any) => ({
+          ...e,
+          // Asegura visibilidad del código de activo fijo con múltiples llaves posibles
+          codigo_activo: e.codigo_activo ?? e.codigo ?? e.codigoEquipo ?? e.codigo_equipo ?? null,
+          // Normaliza un nombre de tipo para filtros
+          tipo_nombre: this.getTipoNombre(e)
+        })) as Equipo[];
       },
       error: () => {
         this.error = 'Error al cargar equipos.';
@@ -233,6 +240,33 @@ export class GestionarPacksComponent implements OnInit {
   limpiarImagen(): void {
     this.imagenSeleccionada = null;
     this.previewImagen = null;
+  }
+
+  /* ================================
+     FILTROS Y HELPERS
+  ================================ */
+  get tiposEquipos(): string[] {
+    const tipos = new Set<string>();
+    this.equipos.forEach(e => {
+      const t = this.getTipoNombre(e);
+      if (t) tipos.add(t);
+    });
+    return Array.from(tipos).sort();
+  }
+
+  get equiposFiltrados(): Equipo[] {
+    if (!this.tipoSeleccionado) return this.equipos;
+    return this.equipos.filter(e => this.getTipoNombre(e) === this.tipoSeleccionado);
+  }
+
+  getTipoNombre(e: any): string {
+    return (
+      e?.tipo?.nombre ||
+      e?.tipo_nombre ||
+      e?.tipo_equipo?.nombre ||
+      e?.categoria ||
+      'Sin tipo'
+    );
   }
 
   /* ================================

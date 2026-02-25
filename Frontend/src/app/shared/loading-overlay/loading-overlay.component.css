@@ -8,26 +8,33 @@
   justify-content: center;
 }
 
-.box {
-  background: #fff;
-  padding: 30px 40px;
-  border-radius: 12px;
+.loop-box {
+  background: #050a14;
+  padding: 28px 40px 22px;
+  border-radius: 16px;
   text-align: center;
   min-width: 260px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
-.spinner {
-  width: 45px;
-  height: 45px;
-  border: 5px solid #ddd;
-  border-top: 5px solid #2f80ed;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
+.loop-box p {
+  color: rgba(255, 255, 255, 0.45);
+  margin: 6px 0 0;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  font-size: 0.85rem;
+  text-transform: lowercase;
+  font-family: 'Poppins', sans-serif;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.loader-svg {
+  width: 200px;
+  height: 110px;
+  overflow: visible;
+}
+
+.loader-svg circle {
+  fill: #e8ecf2;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))
+         drop-shadow(0 0 12px rgba(200, 220, 255, 0.35));
 }

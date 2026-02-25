@@ -242,62 +242,59 @@ Route::post('admin/prestamos/{id}/entregar', [PrestamoAdminController::class, 'm
     Route::get('/admin/users/search', [UsuarioController::class, 'search']);
 
 });
-Route::post('admin/prestamos', [PrestamoAdminController::class, 'store']);
-Route::get('/admin/reservas', [PrestamoAdminController::class, 'index']);
 
-
-
-
-//Rutas nuevas, provando
-
-Route::get('/motivos-rechazo', [MotivoRechazoController::class, 'index']);
-Route::get('/categoria', [CategoriaController::class, 'index']);
-Route::post('/categoria', [CategoriaController::class, 'store']);
-Route::get('/categoria/{id}', [CategoriaController::class, 'show']);
-Route::put('/categoria/{id}', [CategoriaController::class, 'update']);
-Route::delete('/categoria/{id}', [CategoriaController::class, 'destroy']);
-
-
-
-
-Route::get('/asignaturas', [AsignaturaController::class, 'index']);
-Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
-Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
-Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
-
-
-Route::get('/tipoEquipo', [TipoEquipoController::class, 'index']);
-Route::post('/tipoEquipo', [TipoEquipoController::class, 'store']);
-Route::get('/tipoEquipo/{id}', [TipoEquipoController::class, 'show']);
-Route::put('/tipoEquipo/{id}', [TipoEquipoController::class, 'update']);
-Route::delete('/tipoEquipo/{id}', [TipoEquipoController::class, 'destroy']);
-Route::get('/tipoEquipo/{id}/equipos-disponibles', [TipoEquipoController::class, 'equiposDisponibles']);
-
-// Rutas para relaciones entre tipos de equipo (límite compartido)
-Route::get('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'index']);
-Route::get('/tipoEquipo-relacionados/{id}', [TipoEquipoRelacionadoController::class, 'show']);
-Route::post('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'store']);
-Route::delete('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'destroy']);
-Route::get('/tipoEquipo-relacionados/{id}/sugerencias', [TipoEquipoRelacionadoController::class, 'sugerencias']);
-
-Route::get('/catalogo-equipos', [TipoEquipoController::class, 'catalogo']);
-
-
-// Rutas para gestión de grupos
+// ── Rutas que requieren autenticación (antes estaban sin proteger) ──
 use App\Http\Controllers\GrupoController;
-Route::get('/grupos', [GrupoController::class, 'index']);
-Route::get('/grupos/{id}', [GrupoController::class, 'show']);
-Route::post('/grupos', [GrupoController::class, 'store']);
-Route::put('/grupos/{id}', [GrupoController::class, 'update']);
-Route::delete('/grupos/{id}', [GrupoController::class, 'destroy']);
-Route::post('/grupos/{id}/add-usuario', [GrupoController::class, 'addUsuario']);
-Route::post('/grupos/{id}/remove-usuario', [GrupoController::class, 'removeUsuario']);
-Route::post('/grupos/{id}/asignar-prestamo', [GrupoController::class, 'asignarPrestamo']);
-Route::post('/grupos/{id}/quitar-prestamo', [GrupoController::class, 'quitarPrestamo']);
 
-Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
-Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
-Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('admin/prestamos', [PrestamoAdminController::class, 'store']);
+    Route::get('/admin/reservas', [PrestamoAdminController::class, 'index']);
+
+    Route::get('/motivos-rechazo', [MotivoRechazoController::class, 'index']);
+    Route::get('/categoria', [CategoriaController::class, 'index']);
+    Route::post('/categoria', [CategoriaController::class, 'store']);
+    Route::get('/categoria/{id}', [CategoriaController::class, 'show']);
+    Route::put('/categoria/{id}', [CategoriaController::class, 'update']);
+    Route::delete('/categoria/{id}', [CategoriaController::class, 'destroy']);
+
+    Route::get('/asignaturas', [AsignaturaController::class, 'index']);
+    Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
+    Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
+    Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
+
+    Route::get('/tipoEquipo', [TipoEquipoController::class, 'index']);
+    Route::post('/tipoEquipo', [TipoEquipoController::class, 'store']);
+    Route::get('/tipoEquipo/{id}', [TipoEquipoController::class, 'show']);
+    Route::put('/tipoEquipo/{id}', [TipoEquipoController::class, 'update']);
+    Route::delete('/tipoEquipo/{id}', [TipoEquipoController::class, 'destroy']);
+    Route::get('/tipoEquipo/{id}/equipos-disponibles', [TipoEquipoController::class, 'equiposDisponibles']);
+
+    // Rutas para relaciones entre tipos de equipo (límite compartido)
+    Route::get('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'index']);
+    Route::get('/tipoEquipo-relacionados/{id}', [TipoEquipoRelacionadoController::class, 'show']);
+    Route::post('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'store']);
+    Route::delete('/tipoEquipo-relacionados', [TipoEquipoRelacionadoController::class, 'destroy']);
+    Route::get('/tipoEquipo-relacionados/{id}/sugerencias', [TipoEquipoRelacionadoController::class, 'sugerencias']);
+
+    Route::get('/catalogo-equipos', [TipoEquipoController::class, 'catalogo']);
+
+    // Rutas para gestión de grupos
+    Route::get('/grupos', [GrupoController::class, 'index']);
+    Route::get('/grupos/{id}', [GrupoController::class, 'show']);
+    Route::post('/grupos', [GrupoController::class, 'store']);
+    Route::put('/grupos/{id}', [GrupoController::class, 'update']);
+    Route::delete('/grupos/{id}', [GrupoController::class, 'destroy']);
+    Route::post('/grupos/{id}/add-usuario', [GrupoController::class, 'addUsuario']);
+    Route::post('/grupos/{id}/remove-usuario', [GrupoController::class, 'removeUsuario']);
+    Route::post('/grupos/{id}/asignar-prestamo', [GrupoController::class, 'asignarPrestamo']);
+    Route::post('/grupos/{id}/quitar-prestamo', [GrupoController::class, 'quitarPrestamo']);
+
+    Route::post('/equipos/relacion', [EquipoRelacionadoController::class, 'store']);
+    Route::delete('/equipos/relacion', [EquipoRelacionadoController::class, 'destroy']);
+    Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class, 'recomendaciones']);
+
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -308,7 +305,7 @@ Route::get('/equipos/{id}/recomendaciones', [EquipoRelacionadoController::class,
 // ---------------------------------------------------------------
 // Registro de ruta para la creación de equipos
 // ---------------------------------------------------------------
-Route::post('/equipos', [EquipoController::class, 'store']);
+Route::middleware('auth:sanctum')->post('/equipos', [EquipoController::class, 'store']);
 
 // ---------------------------------------------------------------
 // Rutas de reportes (requieren autenticación)
@@ -365,7 +362,7 @@ Route::middleware(['auth:sanctum', 'ocultar.reportes'])
     });
 
 
-    Route::prefix('packs')->group(function () {
+    Route::middleware('auth:sanctum')->prefix('packs')->group(function () {
         Route::get('/', [PackController::class, 'index']);
         Route::post('/', [PackController::class, 'store']);
         Route::post('/{pack}/reactivar', [PackController::class, 'reactivar']);

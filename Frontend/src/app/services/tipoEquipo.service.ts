@@ -24,7 +24,7 @@ export class TipoEquipoService {
    * Headers específicos para FormData (sin Content-Type)
    */
   private getFormDataHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
     return new HttpHeaders({
       Authorization: `Bearer ${token}`,
       Accept: 'application/json'

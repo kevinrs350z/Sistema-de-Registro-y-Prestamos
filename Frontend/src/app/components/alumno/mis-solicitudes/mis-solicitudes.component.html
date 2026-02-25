@@ -93,7 +93,7 @@
       >
         <div class="card-header">
           <h3>
-            Solicitud #{{ s.id }} — {{ s.asignatura }}
+            Solicitud #{{ s.id }} — {{ s.asignatura || 'Solicitud externa' }}
             <span
               class="ajuste-dot"
               *ngIf="s.tieneAjuste"
@@ -108,7 +108,7 @@
         </div>
 
         <!-- ⏱️ Cuenta regresiva para PENDIENTE -->
-        <div class="countdown-badge" *ngIf="s.estado === 'PENDIENTE' && countdowns()[s.id]">
+        <div class="countdown-badge" *ngIf="s.estado === 'APROBADO' && countdowns()[s.id]">
           <span class="countdown-icon">⏱</span>
           <span [class.countdown-expired]="countdowns()[s.id] === 'Tiempo agotado'">
             {{ countdowns()[s.id] }}
@@ -118,11 +118,11 @@
         <div class="card-body">
           <div class="detalle-row">
             <span class="detalle-item">{{ s.tipo }}</span>
-            <span class="detalle-item">{{ s.bloqueTxt || '—' }}</span>
+            <span class="detalle-item" *ngIf="s.bloqueTxt && s.bloqueTxt !== '—'">{{ s.bloqueTxt }}</span>
           </div>
-          <p class="fecha">
+          <p class="fecha" *ngIf="s.fecha_inicio || s.fecha_fin">
             {{
-              s.fecha_fin && s.fecha_inicio !== s.fecha_fin
+              s.fecha_fin && s.fecha_inicio && s.fecha_inicio !== s.fecha_fin
                 ? 'Periodo: ' + (s.fecha_inicio | date : 'dd/MM') +
                   ' - ' +
                   (s.fecha_fin | date : 'dd/MM')
@@ -132,11 +132,8 @@
           <p class="fecha" *ngIf="s.created_at">
             Solicitado: {{ s.created_at | date : 'dd/MM/yyyy' }}
           </p>
-          <p class="extension-badge" *ngIf="s.tieneExtension">
-            Plazo extendido
-          </p>
           <p class="ajuste-badge" *ngIf="s.tieneAjuste">
-            Actualizada por administración
+            Editado por administración
           </p>
         </div>
       </div>
@@ -168,10 +165,11 @@
         <p><b>Asignatura:</b> {{ solicitudSeleccionada().asignatura }}</p>
         <p><b>Tipo:</b> {{ solicitudSeleccionada().tipo }}</p>
 
-        <p>
+        <p *ngIf="solicitudSeleccionada().fecha_inicio || solicitudSeleccionada().fecha_fin">
           <b>Periodo:</b>
           {{
             solicitudSeleccionada().fecha_fin &&
+            solicitudSeleccionada().fecha_inicio &&
             solicitudSeleccionada().fecha_inicio !== solicitudSeleccionada().fecha_fin
               ? (solicitudSeleccionada().fecha_inicio | date : 'dd/MM') +
                 ' - ' +
@@ -180,7 +178,7 @@
           }}
         </p>
 
-        <p><b>Bloque:</b> {{ solicitudSeleccionada().bloqueTxt }}</p>
+        <p *ngIf="solicitudSeleccionada().bloqueTxt && solicitudSeleccionada().bloqueTxt !== '—'"><b>Bloque:</b> {{ solicitudSeleccionada().bloqueTxt }}</p>
 
         <p><b>Equipos:</b></p>
 
@@ -194,12 +192,22 @@
         </ul>
 
         <!-- ⏱️ Cuenta regresiva detalle desktop -->
-        <div class="countdown-detail" *ngIf="solicitudSeleccionada().estado === 'PENDIENTE' && countdowns()[solicitudSeleccionada().id]">
+        <div class="countdown-detail" *ngIf="solicitudSeleccionada().estado === 'APROBADO' && countdowns()[solicitudSeleccionada().id]">
           <span class="countdown-icon">⏱</span>
           <span>Tiempo restante para retirar: </span>
           <strong [class.countdown-expired]="countdowns()[solicitudSeleccionada().id] === 'Tiempo agotado'">
             {{ countdowns()[solicitudSeleccionada().id] }}
           </strong>
+        </div>
+
+        <div class="card-actions">
+          <button
+            class="btn-cancelar"
+            *ngIf="['PENDIENTE','APROBADO'].includes(solicitudSeleccionada().estado)"
+            (click)="cancelarSolicitud(solicitudSeleccionada()); $event.stopPropagation()"
+          >
+            Cancelar
+          </button>
         </div>
 
         <ng-template #sinEquipos>

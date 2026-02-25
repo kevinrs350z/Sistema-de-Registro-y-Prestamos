@@ -48,7 +48,7 @@ class RechazarSolicitudesPendientesPorRetraso extends Command
     {
         $limite = $now->copy()->subMinutes(self::MINUTOS_TOLERANCIA);
 
-        $pendientes = Prestamo::where('estado', EstadoPrestamo::PENDIENTE)
+        $pendientes = Prestamo::where('estado', EstadoPrestamo::APROBADO)
             ->where('tipo', 'FUERA')
             ->where('fecha_inicio', '<', $limite)
             ->get();
@@ -72,7 +72,7 @@ class RechazarSolicitudesPendientesPorRetraso extends Command
     {
         $hoy = $now->toDateString(); // YYYY-MM-DD
 
-        $pendientes = Prestamo::where('estado', EstadoPrestamo::PENDIENTE)
+        $pendientes = Prestamo::where('estado', EstadoPrestamo::APROBADO)
             ->where('tipo', 'DENTRO')
             ->get();
 

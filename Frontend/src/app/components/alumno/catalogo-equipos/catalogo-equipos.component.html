@@ -23,7 +23,7 @@
 
     <div class="categorias-expedia">
       <div
-        *ngFor="let c of categorias()"
+        *ngFor="let c of categorias(); trackBy: trackByCategoria"
         class="categoria-item"
         [class.active]="categoriaSeleccionada() === c.nombre"
         (click)="categoriaSeleccionada.set(c.nombre)"
@@ -54,7 +54,7 @@
   <div class="grid-equipos" *ngIf="!esVistaPacks()">
 
     <div
-      *ngFor="let e of tiposFiltrados()"
+      *ngFor="let e of tiposFiltrados(); trackBy: trackByEquipo"
       class="card-equipo"
       [class.selected]="estaEnCarrito(e.id)"
       [class.bloqueado]="!esAdmin && (bloqueoHorarioActivo(e) || e.bloqueado || (bloqueoPorComputador() && !estaComputadorSeleccionado(e)))"
@@ -144,7 +144,7 @@
   <!-- ======== GRID PACKS ======== -->
   <div class="grid-equipos" *ngIf="esVistaPacks()">
 
-    <div *ngFor="let p of packs()" class="card-equipo pack" [class.agotado]="p.disponibles === 0">
+    <div *ngFor="let p of packs(); trackBy: trackByPack" class="card-equipo pack" [class.agotado]="p.disponibles === 0">
 
       <div class="imagen-wrapper">
         <img
@@ -179,7 +179,7 @@
           <div class="pack-tooltip">
             <h4>Equipos incluidos</h4>
             <ul>
-              <li *ngFor="let e of p.equipos">• {{ e.nombre }}</li>
+              <li *ngFor="let e of p.equipos; trackBy: trackByEquipoNombre">• {{ e.nombre }}</li>
             </ul>
             <p *ngIf="!hasEquipos(p)" class="texto-vacio">No hay equipos asociados a este pack.</p>
           </div>
