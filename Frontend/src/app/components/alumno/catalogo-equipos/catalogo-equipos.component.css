@@ -162,6 +162,10 @@
   box-shadow: 0 4px 12px rgba(68, 107, 169, 0.2);
 }
 
+.badge {
+  border-radius: 4px !important;
+}
+
 /* IMAGEN UNIFORME */
 .card-equipo .imagen-wrapper {
   width: 100%;
@@ -210,6 +214,32 @@
   margin: 4px 0;
 }
 
+.pill {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pill-bloqueado {
+  background: #fde2dc;
+  border: 1px solid #f5b3a5;
+  color: #c5472f;
+  margin: 6px auto;
+}
+
+.disponibilidad.bloqueada {
+  color: #c7652a;
+  background: #fff6ef;
+  border: 1px solid #f5b58b;
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: block;
+  text-align: center;
+}
+
 /* BOTÓN */
 .card-equipo > button {
   margin: 14px;
@@ -232,6 +262,12 @@
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.card-equipo .btn-principal:disabled {
+  background: #ffd9be;
+  color: #b66a3c;
+  cursor: not-allowed;
 }
 
 .cantidad-admin {
@@ -342,6 +378,29 @@
   gap: 8px;
 }
 
+
+/* Bloqueo por horario */
+.alert-horario {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff6ef;
+  border: 1px solid #f5b58b;
+  color: #c7652a;
+  font-size: 0.85rem;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.alert-horario-title {
+  font-weight: 700;
+  color: #b95c23;
+}
+
+.alert-horario-text {
+  line-height: 1.35;
+}
 .pack-info-icon {
   width: 36px;
   height: 36px;

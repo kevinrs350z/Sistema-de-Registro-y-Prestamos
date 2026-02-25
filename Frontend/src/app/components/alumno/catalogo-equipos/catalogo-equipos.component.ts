@@ -1,7 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
 import { AuthService } from '../../../services/auth.service';
 import { Pack } from '../../../models/pack.model';
@@ -15,12 +15,14 @@ import { ImagenService } from '../../../services/image.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './catalogo-equipos.component.html',
-  styleUrls: ['./catalogo-equipos.component.css']
+  styleUrls: ['./catalogo-equipos.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CatalogoEquiposComponent {
 
   private api = inject(TipoEquipoService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private carritoSrv = inject(CarritoService);
   private notify = inject(NotificationService);
   private imagenSrv = inject(ImagenService);
@@ -40,6 +42,7 @@ export class CatalogoEquiposComponent {
 
   categoriaSeleccionada = signal<string>('TODOS');
   busqueda = signal<string>('');
+  horarioSeleccionado = signal<{ fecha?: string | null; bloqueId?: number | null }>({});
 
   // ✅ carrito se lee desde el servicio (fuente única)
   carrito = computed(() => this.carritoSrv.getCarrito());
@@ -55,6 +58,97 @@ export class CatalogoEquiposComponent {
   esAdmin = this.auth.isAdmin();
 
   // ===========================
+  // MAPAS PRECOMPUTADOS (evitan llamadas repetidas en template)
+  // ===========================
+  private imagenMap = computed(() => {
+    const m = new Map<number, string | null>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this.imagenSrv.resolveTipoEquipoImage({
+        id: t.id, imagen_url: t.imagen_url, imagen: t.imagen, nombre: t.nombre
+      }));
+    }
+    return m;
+  });
+
+  private enCarritoMap = computed(() => {
+    const m = new Map<number, boolean>();
+    const carritoItems = this.carrito();
+    for (const t of this.tipos()) {
+      m.set(t.id, carritoItems.some(c => c.tipo === 'equipo' && c.idTipoEquipo === t.id));
+    }
+    return m;
+  });
+
+  private cantidadMap = computed(() => {
+    const m = new Map<number, number>();
+    for (const c of this.carrito()) {
+      if (c.tipo === 'equipo' && c.idTipoEquipo != null) {
+        m.set(c.idTipoEquipo, c.cantidad ?? 0);
+      }
+    }
+    return m;
+  });
+
+  private bloqueadoHorarioMap = computed(() => {
+    const m = new Map<number, boolean>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this._bloqueoHorarioActivo(t));
+    }
+    return m;
+  });
+
+  private disponibilidadMap = computed(() => {
+    const m = new Map<number, string | null>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this._obtenerMensajeDisponibilidad(t));
+    }
+    return m;
+  });
+
+  private disponibleMap = computed(() => {
+    const m = new Map<number, boolean>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this._estaDisponible(t));
+    }
+    return m;
+  });
+
+  private sinStockMap = computed(() => {
+    const m = new Map<number, boolean>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this._estaSinStock(t));
+    }
+    return m;
+  });
+
+  private puedeSolicitarMap = computed(() => {
+    const m = new Map<number, boolean>();
+    const carritoItems = this.carrito();
+    const compEnCarrito = this.computadoresEnCarrito();
+    const bloqueoPorComp = compEnCarrito.length > 0;
+    for (const t of this.tipos()) {
+      if (this.esAdmin) { m.set(t.id, true); continue; }
+      const bh = this.bloqueadoHorarioMap().get(t.id) ?? false;
+      const ss = this.sinStockMap().get(t.id) ?? false;
+      const disp = this.disponibleMap().get(t.id) ?? false;
+      if (bh || t.bloqueado || ss || !disp || (bloqueoPorComp && !compEnCarrito.includes(t.id))) {
+        m.set(t.id, false);
+      } else {
+        m.set(t.id, true);
+      }
+    }
+    return m;
+  });
+
+  // ===========================
+  // TRACK-BY FUNCTIONS
+  // ===========================
+  trackByCategoria = (_i: number, c: { nombre: string }): string => c.nombre;
+  trackByEquipo = (_i: number, e: TipoEquipo): number => e.id;
+  trackByPack = (_i: number, p: Pack): number => p.id;
+  trackByEquipoNombre = (_i: number, e: { nombre: string }): string => e.nombre;
+
+  // ===========================
   // INIT
   // ===========================
   ngOnInit(): void {
@@ -65,7 +159,20 @@ export class CatalogoEquiposComponent {
       return;
     }
 
-    this.api.getCatalogo().subscribe({
+    const queryParams = this.route.snapshot.queryParamMap;
+    const fecha = queryParams.get('fecha');
+    const bloqueParam = queryParams.get('bloqueId') ?? queryParams.get('bloque');
+    const bloqueId = bloqueParam !== null ? Number(bloqueParam) : undefined;
+
+    this.horarioSeleccionado.set({
+      fecha,
+      bloqueId: Number.isFinite(bloqueId) ? bloqueId : null,
+    });
+
+    this.api.getCatalogo({
+      fecha: fecha || undefined,
+      bloqueId: Number.isFinite(bloqueId) ? bloqueId : undefined,
+    }).subscribe({
       next: (data: TipoEquipo[]) => this.tipos.set(data),
       error: (err: any) => console.error('❌ Error catálogo:', err)
     });
@@ -116,35 +223,67 @@ export class CatalogoEquiposComponent {
     this.busqueda.set((event.target as HTMLInputElement).value);
   }
 
-  // ===========================
-  // IMÁGENES
-  // ===========================
-  /**
-   * Obtener URL de imagen para un tipo de equipo.
-   * Usa el servicio de imágenes que apunta al API con CORS.
-   */
-  getImagenEquipo(e: TipoEquipo): string | null {
-    return this.imagenSrv.resolveTipoEquipoImage({
-      id: e.id,
-      imagen_url: e.imagen_url,
-      imagen: e.imagen,
-      nombre: e.nombre
-    });
+  private getMotivoNoDisponible(e: TipoEquipo): string | null {
+    return e.motivoNoDisponible ?? e.motivo_no_disponible ?? null;
+  }
+
+  estaBloqueadoPorHorario(e: TipoEquipo): boolean {
+    return this.bloqueadoHorarioMap().get(e.id) ?? false;
+  }
+
+  estaSinStock(e: TipoEquipo): boolean {
+    return this.sinStockMap().get(e.id) ?? this._estaSinStock(e);
+  }
+
+  estaDisponible(e: TipoEquipo): boolean {
+    return this.disponibleMap().get(e.id) ?? this._estaDisponible(e);
+  }
+
+  private _estaSinStock(e: TipoEquipo): boolean {
+    const motivo = this.getMotivoNoDisponible(e);
+    if (motivo === 'SIN_STOCK') return true;
+    return (e.stock ?? 0) <= 0;
+  }
+
+  private _estaDisponible(e: TipoEquipo): boolean {
+    if (typeof e.disponible === 'boolean') {
+      return e.disponible && !this._bloqueoHorarioActivo(e);
+    }
+    return (e.stock ?? 0) > 0 && !this._bloqueoHorarioActivo(e);
+  }
+
+  private _obtenerMensajeDisponibilidad(e: TipoEquipo): string | null {
+    const motivo = this.getMotivoNoDisponible(e);
+    if (motivo === 'BLOQUEADO_HORARIO' || this._bloqueoHorarioActivo(e)) return 'Bloqueado en este horario';
+    if (motivo === 'SIN_STOCK') return 'Sin stock';
+    if (this._estaDisponible(e)) return 'Disponible ahora';
+    if (this._estaSinStock(e) && e.proxima_disponibilidad) {
+      const fecha = this.formatearDisponibilidad(e.proxima_disponibilidad);
+      return fecha ? `Disponible desde ${fecha}` : 'Sin stock';
+    }
+    return 'Sin disponibilidad próxima';
+  }
+
+  private _bloqueoHorarioActivo(e: TipoEquipo): boolean {
+    return !!(e.bloqueo_horario_activo || e.bloqueo_horario || e.bloqueado_horario || e.bloqueo_horario_hasta || e.bloqueo_hasta);
   }
 
   // ===========================
-  // CARRITO – EQUIPOS
+  // IMÁGENES (usa mapa precomputado)
+  // ===========================
+  getImagenEquipo(e: TipoEquipo): string | null {
+    return this.imagenMap().get(e.id) ?? null;
+  }
+
+  // ===========================
+  // CARRITO – EQUIPOS (usa mapas precomputados)
   // ===========================
   estaEnCarrito(idTipo: number): boolean {
-    return this.carrito().some(
-      c => c.tipo === 'equipo' && c.idTipoEquipo === idTipo
-    );
+    return this.enCarritoMap().get(idTipo) ?? false;
   }
 
   getCantidad(idTipo: number): number {
-    return this.carrito().find(
-      c => c.tipo === 'equipo' && c.idTipoEquipo === idTipo
-    )?.cantidad ?? 0;
+    return this.cantidadMap().get(idTipo) ?? 0;
   }
 
   getModo(idTipo: number): 'cualquiera' | 'especifico' {
@@ -171,16 +310,7 @@ export class CatalogoEquiposComponent {
   }
 
   obtenerMensajeDisponibilidad(e: TipoEquipo): string | null {
-    if (e.stock > 0) {
-      return 'Disponible ahora';
-    }
-
-    if (e.proxima_disponibilidad) {
-      const fecha = this.formatearDisponibilidad(e.proxima_disponibilidad);
-      return fecha ? `Disponible desde ${fecha}` : null;
-    }
-
-    return 'Sin disponibilidad próxima';
+    return this.disponibilidadMap().get(e.id) ?? this._obtenerMensajeDisponibilidad(e);
   }
 
   private formatearDisponibilidad(fechaIso: string): string | null {
@@ -192,6 +322,29 @@ export class CatalogoEquiposComponent {
     return this.formatoDisponibilidad.format(fecha);
   }
 
+  bloqueoHorarioActivo(e: TipoEquipo): boolean {
+    return this.bloqueadoHorarioMap().get(e.id) ?? this._bloqueoHorarioActivo(e);
+  }
+
+  getBloqueoHorarioTexto(e: TipoEquipo): string {
+    const base = e.bloqueo_horario_motivo || e.bloqueo_motivo || 'Bloqueado temporalmente por horario.';
+    const hasta = this.getBloqueoHastaFecha(e);
+
+    if (hasta) {
+      return `${base} Disponible desde ${this.formatoDisponibilidad.format(hasta)}.`;
+    }
+
+    const fecha = this.horarioSeleccionado().fecha;
+    return fecha ? `${base} (${fecha}).` : base;
+  }
+
+  private getBloqueoHastaFecha(e: TipoEquipo): Date | null {
+    const raw = e.bloqueo_horario_hasta || e.bloqueo_hasta;
+    if (!raw) return null;
+    const fecha = new Date(raw);
+    return Number.isNaN(fecha.getTime()) ? null : fecha;
+  }
+
   // ===========================
   // CAMBIAR CANTIDAD (✅ ahora modifica el servicio)
   // ===========================
@@ -200,6 +353,10 @@ export class CatalogoEquiposComponent {
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
     if (!this.esAdmin) {
+      if (this.estaBloqueadoPorHorario(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
       if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
         this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
         return;
@@ -212,7 +369,7 @@ export class CatalogoEquiposComponent {
         return;
       }
     }
-    if (e.stock <= 0 && delta > 0) {
+    if (this.estaSinStock(e) && delta > 0) {
       this.notify.warning('Este equipo está agotado.');
       return;
     }
@@ -263,6 +420,10 @@ export class CatalogoEquiposComponent {
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
     if (!this.esAdmin) {
+      if (this.estaBloqueadoPorHorario(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
       if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
         this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
         return;
@@ -274,8 +435,12 @@ export class CatalogoEquiposComponent {
       if (!this.estaEnCarrito(idTipo) && !this.puedeAgregarCantidad(e, 1)) {
         return;
       }
+      if (!this.estaDisponible(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
     }
-    if (e.stock <= 0) {
+    if (this.estaSinStock(e)) {
       this.notify.warning('Este equipo está agotado.');
       return;
     }
@@ -362,6 +527,30 @@ export class CatalogoEquiposComponent {
       }
       return total;
     }, 0);
+  }
+
+  puedeSolicitar(e: TipoEquipo): boolean {
+    if (this.esAdmin) {
+      return true;
+    }
+
+    if (this.estaBloqueadoPorHorario(e)) {
+      return false;
+    }
+
+    if (e.bloqueado) {
+      return false;
+    }
+
+    if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+      return false;
+    }
+
+    if (this.estaSinStock(e)) {
+      return false;
+    }
+
+    return this.estaDisponible(e);
   }
 
   // ===========================
@@ -486,7 +675,16 @@ interface TipoEquipo {
   grupo_relacionados?: number[];
   bloqueado?: boolean;
   bloqueo_motivo?: string | null;
+  bloqueo_horario?: boolean;
+  bloqueado_horario?: boolean;
+  bloqueo_horario_activo?: boolean;
+  bloqueo_horario_hasta?: string | null;
+  bloqueo_hasta?: string | null;
+  bloqueo_horario_motivo?: string | null;
   proxima_disponibilidad?: string | null;
+  disponible?: boolean;
+  motivo_no_disponible?: string | null;
+  motivoNoDisponible?: string | null;
 }
 
 interface EquipoFisico {

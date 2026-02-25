@@ -9,11 +9,12 @@ import { NavbarAdminComponent } from './components/admin/navbar-admin/navbar-adm
 import { LoadingOverlayComponent } from './shared/loading-overlay/loading-overlay.component';
 import { NotificationComponent } from './shared/notification/notification.component';
 import { FooterComponent } from './shared/footer/footer.component';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
+  imports: [ 
     RouterOutlet,
     NavbarComponent,
     NavbarAdminComponent,
@@ -52,16 +53,18 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.scheduleNavbarUpdate();
   }
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private auth: AuthService) {
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd)
       )
       .subscribe(event => {
         const url = event.urlAfterRedirects;
+        const isAdminUser = this.auth.isAdmin();
 
         this.esRutaAuth = url.startsWith('/auth');
-        this.esRutaAdmin = url.startsWith('/admin');
+        // Si un admin ingresa al flujo de creación de solicitudes (catálogo), mantenemos el navbar de admin
+        this.esRutaAdmin = url.startsWith('/admin') || (isAdminUser && url.startsWith('/equipos/catalogo'));
 
         this.scheduleNavbarUpdate();
       });

@@ -21,11 +21,18 @@
       </div>
 
       <div class="footer-col">
-        <p class="footer-heading">Contacto / Legal</p>
+        <p class="footer-heading">Contacto</p>
         <span>Contacto: soporte&#64;ejemplo.cl</span>
         <span>Horario: Lun–Vie 09:00–18:00</span>
-        <a [routerLink]="privacyLink.route" [attr.href]="privacyLink.href">{{ privacyLink.label }}</a>
-        <a [routerLink]="termsLink.route" [attr.href]="termsLink.href">{{ termsLink.label }}</a>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-heading">Links oficiales</p>
+        <a *ngFor="let link of officialLinks; trackBy: trackByLabel"
+           [attr.href]="link.href"
+           target="_blank"
+           rel="noopener noreferrer"
+        >{{ link.label }}</a>
       </div>
     </div>
   </div>

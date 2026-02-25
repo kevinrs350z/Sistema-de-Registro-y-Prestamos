@@ -107,23 +107,33 @@ class PrestamoAdminService
             'codigo' => $e->codigo ?? '—'
         ])->toArray();
 
-        // Envio de correo al alumno (NO BLOQUEA)
+        // Envio de correo al alumno (no debe bloquear ni romper la respuesta)
         if ($email) {
-            SendPrestamoEmailJob::dispatch(
-                $accion === 'aprobar' ? 'aprobado' : 'rechazado',
-                $email,
-                $nombre,
-                $prestamo->idPrestamo,
-                $prestamo->created_at->format('d/m/Y H:i'),
-                $motivo,
-                $accion === 'aprobar' ? $equipos : null
-            );
+            try {
+                SendPrestamoEmailJob::dispatch(
+                    $accion === 'aprobar' ? 'aprobado' : 'rechazado',
+                    $email,
+                    $nombre,
+                    $prestamo->idPrestamo,
+                    $prestamo->created_at->format('d/m/Y H:i'),
+                    $motivo,
+                    $accion === 'aprobar' ? $equipos : null
+                );
 
-            Log::info('Job de correo encolado', [
-                'prestamo_id' => $prestamo->idPrestamo,
-                'accion' => $accion,
-                'email' => $email
-            ]);
+                Log::info('Job de correo encolado', [
+                    'prestamo_id' => $prestamo->idPrestamo,
+                    'accion' => $accion,
+                    'email' => $email
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo encolar correo de préstamo', [
+                    'prestamo_id' => $prestamo->idPrestamo,
+                    'accion' => $accion,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+                // No se relanza la excepción para evitar que el front reciba 500
+            }
         }
 
         // Notificar encargados del cambio de estado

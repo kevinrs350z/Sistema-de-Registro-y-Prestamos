@@ -249,6 +249,10 @@ button[type="submit"] {
   color: #fff;
 }
 
+button[type="submit"]:not(:disabled) {
+  background-color: #ff8a4d;
+}
+
 button.ghost {
   background-color: #f2f4ff;
   color: var(--azul-2);
@@ -375,6 +379,10 @@ button.ghost {
 .mobile-actions .primary {
   background: var(--naranja-soft);
   color: #fff;
+}
+
+.mobile-actions .primary:not(:disabled) {
+  background: #ff8a4d;
 }
 
 .mobile-actions button {

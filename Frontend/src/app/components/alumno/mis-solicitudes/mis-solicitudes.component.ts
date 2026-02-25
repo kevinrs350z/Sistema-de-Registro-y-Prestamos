@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { trigger, style, transition, animate } from '@angular/animations';
 import { AuthService } from '../../../services/auth.service';
 import { ImagenService } from '../../../services/image.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-mis-solicitudes',
@@ -26,6 +27,7 @@ export class MisSolicitudesComponent implements OnInit, OnDestroy {
 
   private api = inject(AuthService);
   private imagenSrv = inject(ImagenService);
+  private notify = inject(NotificationService);
   private countdownInterval: any = null;
 
   solicitudes = signal<any[]>([]);
@@ -33,7 +35,8 @@ export class MisSolicitudesComponent implements OnInit, OnDestroy {
   estadoFiltro = signal('');
   orden = signal<'asc' | 'desc'>('desc');
   solicitudSeleccionada = signal<any | null>(null);
-  pageSize = 10;
+  // Se usa pageSize corto (5) para que en móvil la lista no se alargue demasiado
+  pageSize = 5;
   currentPage = signal(1);
 
   bloques = [
@@ -103,20 +106,24 @@ export class MisSolicitudesComponent implements OnInit, OnDestroy {
       const result: Record<number, string> = {};
 
       for (const s of this.solicitudes()) {
-        if (s.estado !== 'PENDIENTE') continue;
+        // Contamos tiempo solo para estados aprobados
+        if (s.estado !== 'APROBADO') continue;
 
         let deadlineMs: number | null = null;
 
+        // Tomar fecha_inicio o, si no existe, la fecha de creación como fallback
+        const fechaBase = s.fecha_inicio || (s.created_at ? s.created_at.split('T')[0] : null);
+
         if (s.tipoRaw === 'FUERA') {
           // Externos: fecha_inicio + 10 min
-          if (s.fecha_inicio) {
-            const fi = new Date(s.fecha_inicio);
+          if (fechaBase) {
+            const fi = new Date(fechaBase);
             deadlineMs = fi.getTime() + MINUTOS_TOLERANCIA * 60_000;
           }
         } else {
           // Internos: fecha_inicio + hora_inicio_bloque + 10 min
-          if (s.fecha_inicio && s.bloque_hora_inicio) {
-            const fechaStr = s.fecha_inicio.split('T')[0];
+          if (fechaBase && s.bloque_hora_inicio) {
+            const fechaStr = fechaBase.split('T')[0];
             const dt = new Date(`${fechaStr}T${s.bloque_hora_inicio}`);
             deadlineMs = dt.getTime() + MINUTOS_TOLERANCIA * 60_000;
           }
@@ -259,6 +266,19 @@ export class MisSolicitudesComponent implements OnInit, OnDestroy {
     const value = (event.target as HTMLSelectElement).value as 'asc' | 'desc';
     this.orden.set(value);
     this.currentPage.set(1);
+  }
+
+  cancelarSolicitud(s: any) {
+    const confirmacion = window.confirm('¿Deseas cancelar esta solicitud? Se liberarán los equipos.');
+    if (!confirmacion) return;
+
+    this.api.cancelarPrestamo(s.id).subscribe({
+      next: () => {
+        this.notify.success('Solicitud cancelada y equipos liberados.');
+        this.cargarSolicitudes();
+      },
+      error: () => this.notify.error('No se pudo cancelar la solicitud.')
+    });
   }
 
   cambiarPagina(delta: number) {

@@ -9,32 +9,33 @@ import { LoadingService } from '../../services/loading.service';
   imports: [CommonModule],
   template: `
     <div class="overlay" *ngIf="loading$ | async">
-      <div class="loader-wrap">
-        <svg class="dot-arc" width="180" height="48" viewBox="0 0 180 48" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="6"   cy="4"   r="3" style="animation-delay:0s"/>
-          <circle cx="14"  cy="9"   r="3" style="animation-delay:-0.1s"/>
-          <circle cx="22"  cy="15"  r="3" style="animation-delay:-0.2s"/>
-          <circle cx="30"  cy="20"  r="3" style="animation-delay:-0.3s"/>
-          <circle cx="38"  cy="25"  r="3" style="animation-delay:-0.4s"/>
-          <circle cx="46"  cy="29"  r="3" style="animation-delay:-0.5s"/>
-          <circle cx="54"  cy="33"  r="3" style="animation-delay:-0.6s"/>
-          <circle cx="62"  cy="36"  r="3" style="animation-delay:-0.7s"/>
-          <circle cx="70"  cy="38"  r="3" style="animation-delay:-0.8s"/>
-          <circle cx="78"  cy="40"  r="3" style="animation-delay:-0.9s"/>
-          <circle cx="86"  cy="40"  r="3" style="animation-delay:-1.0s"/>
-          <circle cx="94"  cy="40"  r="3" style="animation-delay:-1.1s"/>
-          <circle cx="102" cy="40"  r="3" style="animation-delay:-1.2s"/>
-          <circle cx="110" cy="38"  r="3" style="animation-delay:-1.3s"/>
-          <circle cx="118" cy="36"  r="3" style="animation-delay:-1.4s"/>
-          <circle cx="126" cy="33"  r="3" style="animation-delay:-1.5s"/>
-          <circle cx="134" cy="29"  r="3" style="animation-delay:-1.6s"/>
-          <circle cx="142" cy="25"  r="3" style="animation-delay:-1.7s"/>
-          <circle cx="150" cy="20"  r="3" style="animation-delay:-1.8s"/>
-          <circle cx="158" cy="15"  r="3" style="animation-delay:-1.9s"/>
-          <circle cx="166" cy="9"   r="3" style="animation-delay:-2.0s"/>
-          <circle cx="174" cy="4"   r="3" style="animation-delay:-2.1s"/>
+      <div class="loop-box">
+        <svg class="loader-svg" viewBox="0 0 240 120" aria-hidden="true">
+          <defs>
+            <path id="inf" d="M 40 60 C 40 20, 80 20, 120 60 C 160 100, 200 100, 200 60 C 200 20, 160 20, 120 60 C 80 100, 40 100, 40 60 Z" />
+          </defs>
+          <circle r="4"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="0.12s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="0.24s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="0.36s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="0.48s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="0.60s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="0.72s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="0.84s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="0.96s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="1.08s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="1.20s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="1.32s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="1.44s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="1.56s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="1.68s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="1.80s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="1.92s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="2.04s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="2.16s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
+          <circle r="4"><animateMotion dur="2.4s" begin="2.28s" repeatCount="indefinite"><mpath href="#inf"/></animateMotion></circle>
         </svg>
-        <span class="loader-text">loading</span>
+        <p>loading</p>
       </div>
     </div>
   `,

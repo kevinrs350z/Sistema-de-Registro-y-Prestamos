@@ -100,13 +100,21 @@ class UserSancionController extends Controller
             'updated_at'  => now(),
         ]);
 
-        // Enviar correo de sanción asignada (async)
+        // Enviar correo de sanción asignada (async, no debe romper la respuesta)
         if ($user->Email) {
-            SendGenericEmailJob::dispatch(
-                $user->Email,
-                new SancionNotificacion('asignada', $user, $sancion),
-                'sancion-asignada'
-            );
+            try {
+                SendGenericEmailJob::dispatch(
+                    $user->Email,
+                    new SancionNotificacion('asignada', $user, $sancion),
+                    'sancion-asignada'
+                );
+            } catch (\Throwable $e) {
+                // Registrar advertencia pero no fallar
+                \Log::warning('No se pudo encolar correo de sanción', [
+                    'user' => $user->Email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return response()->json([

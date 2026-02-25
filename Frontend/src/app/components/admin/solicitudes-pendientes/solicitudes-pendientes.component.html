@@ -232,7 +232,7 @@
             Rechazar
           </button>
           <button class="btn-editar" (click)="abrirEditarEquipos()">
-            Editar equipos
+            Editar solicitud
           </button>
         </ng-container>
 
@@ -257,14 +257,14 @@
       <h4>Motivo del rechazo</h4>
       <div *ngIf="loadingRechazo" class="loader">Cargando motivos...</div>
       <div *ngIf="errorRechazo" class="error">{{ errorRechazo }}</div>
-      <div *ngIf="!loadingRechazo && motivos.length">
-        <label for="motivoSelect">Motivo:</label>
-        <select id="motivoSelect" [(ngModel)]="motivoRechazo">
-          <option value="" disabled>Selecciona un motivo</option>
-          <option *ngFor="let m of motivos" [value]="m.motivo">{{ m.motivo }}</option>
-        </select>
-        <label for="observacion">Observación adicional:</label>
-        <textarea id="observacion" [(ngModel)]="motivoObservacion" rows="3" placeholder="Observación adicional..."></textarea>
+      <div *ngIf="!loadingRechazo">
+        <label for="motivoTexto">Escribe el motivo (obligatorio)</label>
+        <textarea
+          id="motivoTexto"
+          [(ngModel)]="motivoRechazo"
+          rows="4"
+          placeholder="Ej: No hay stock disponible para el horario solicitado"
+        ></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn-confirmar" (click)="confirmarRechazo()" [disabled]="loadingRechazo">
@@ -313,11 +313,17 @@
       </div>
 
       <div class="agregar-equipo">
-        <select [(ngModel)]="tipoAgregar">
-          <option [ngValue]="null">Selecciona un tipo</option>
-          <option *ngFor="let t of tiposEquipo" [ngValue]="t.id">{{ t.nombre }}</option>
-        </select>
-        <input type="number" min="1" [(ngModel)]="cantidadAgregar" />
+        <div class="field">
+          <label>Equipo</label>
+          <select [(ngModel)]="tipoAgregar">
+            <option [ngValue]="null">Selecciona un tipo</option>
+            <option *ngFor="let t of tiposEquipo" [ngValue]="t.id">{{ t.nombre }}</option>
+          </select>
+        </div>
+        <div class="field field-cantidad">
+          <label>Cantidad</label>
+          <input type="number" min="1" [(ngModel)]="cantidadAgregar" placeholder="1" />
+        </div>
         <button
           type="button"
           class="btn-agregar"

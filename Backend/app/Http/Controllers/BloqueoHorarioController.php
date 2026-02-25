@@ -13,9 +13,11 @@ class BloqueoHorarioController extends Controller
         $tipoEquipoId = $request->query('tipo_equipo_id');
         $weekStart = $request->query('week_start');
 
+        $zonaHoraria = config('app.timezone', 'America/Santiago');
+
         $semanaInicio = $weekStart
-            ? Carbon::parse($weekStart)->startOfWeek(Carbon::MONDAY)->toDateString()
-            : Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+            ? Carbon::parse($weekStart, $zonaHoraria)->startOfWeek(Carbon::MONDAY)->toDateString()
+            : Carbon::now($zonaHoraria)->startOfWeek(Carbon::MONDAY)->toDateString();
 
         $query = BloqueoHorario::query()
             ->where('activo', true)
@@ -39,9 +41,11 @@ class BloqueoHorarioController extends Controller
             'week_start' => ['nullable', 'date'],
         ]);
 
+        $zonaHoraria = config('app.timezone', 'America/Santiago');
+
         $data['semana_inicio'] = isset($data['week_start'])
-            ? Carbon::parse($data['week_start'])->startOfWeek(Carbon::MONDAY)->toDateString()
-            : Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+            ? Carbon::parse($data['week_start'], $zonaHoraria)->startOfWeek(Carbon::MONDAY)->toDateString()
+            : Carbon::now($zonaHoraria)->startOfWeek(Carbon::MONDAY)->toDateString();
 
         $data['creado_por'] = auth()->user()?->idUser;
 

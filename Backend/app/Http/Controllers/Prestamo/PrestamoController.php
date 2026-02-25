@@ -11,6 +11,9 @@ use App\Models\Prestamo;
 use App\Models\BloquePrestamo;
 use App\Models\Asignatura;
 use App\Models\BloqueoHorario;
+use App\Models\PrestamoHistorial;
+use App\Enums\EstadoPrestamo;
+use App\Enums\EstadoEquipo;
 use App\Services\PrestamoService;
 use Carbon\Carbon;
 
@@ -97,8 +100,15 @@ class PrestamoController extends Controller
                 $bloques = $request->bloques ?? [];
 
                 if (!empty($tiposSolicitados) && !empty($bloques)) {
-                    $diaSemana = Carbon::now()->dayOfWeekIso; // 1 = Lunes, 7 = Domingo
-                    $semanaInicio = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+                    $zonaHoraria = config('app.timezone', 'America/Santiago');
+                    $fechaReserva = $request->input('fecha_inicio');
+
+                    $fechaReferencia = $fechaReserva
+                        ? Carbon::parse($fechaReserva, $zonaHoraria)
+                        : Carbon::now($zonaHoraria);
+
+                    $diaSemana = $fechaReferencia->dayOfWeekIso; // 1 = Lunes, 7 = Domingo
+                    $semanaInicio = $fechaReferencia->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
 
                     $existeBloqueo = BloqueoHorario::where('activo', true)
                         ->where('semana_inicio', $semanaInicio)
@@ -110,8 +120,8 @@ class PrestamoController extends Controller
                     if ($existeBloqueo) {
                         return response()->json([
                             'error' => 'BLOQUEO_HORARIO',
-                            'message' => 'Hay equipos bloqueados para este bloque y dia. Elige otro horario o equipo.'
-                        ], 422);
+                            'message' => 'Este equipo está bloqueado para el horario seleccionado.',
+                        ], 409);
                     }
                 }
             }
@@ -223,6 +233,60 @@ class PrestamoController extends Controller
         return response()->json([
             'bloqueos' => $bloqueos
         ], 200);
+    }
+
+    // =========================================================
+    // CANCELAR SOLICITUD (ALUMNO)
+    // =========================================================
+    public function destroy(int $id)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no autenticado'], 401);
+        }
+
+        $prestamo = Prestamo::with('equipos')->find($id);
+
+        if (!$prestamo || $prestamo->idUser !== $user->idUser) {
+            return response()->json(['error' => 'No encontrado'], 404);
+        }
+
+        // Solo permitir cancelar si aún no se ha entregado
+        if (!in_array($prestamo->estado, [EstadoPrestamo::PENDIENTE, EstadoPrestamo::APROBADO, EstadoPrestamo::PENDIENTE_ENTREGA], true)) {
+            return response()->json(['error' => 'No se puede cancelar en el estado actual'], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $estadoAnterior = $prestamo->estado;
+
+            $prestamo->estado = EstadoPrestamo::RECHAZADO;
+            $prestamo->motivo_rechazo = 'CANCELADO_POR_ALUMNO';
+            $prestamo->observacion = ($prestamo->observacion ? $prestamo->observacion . ' | ' : '') . '[ALUMNO] Cancelado por el solicitante';
+            $prestamo->save();
+
+            foreach ($prestamo->equipos as $equipo) {
+                $equipo->estado = EstadoEquipo::DISPONIBLE;
+                $equipo->save();
+            }
+
+            PrestamoHistorial::create([
+                'idPrestamo'      => $prestamo->idPrestamo,
+                'idUser'          => $user->idUser,
+                'estado_anterior' => $estadoAnterior,
+                'estado_nuevo'    => EstadoPrestamo::RECHAZADO,
+                'descripcion'     => '[ALUMNO] Cancelación voluntaria'
+            ]);
+
+            DB::commit();
+
+            return response()->json(['message' => 'Solicitud cancelada y equipos liberados'], 200);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'No se pudo cancelar la solicitud'], 500);
+        }
     }
 
 

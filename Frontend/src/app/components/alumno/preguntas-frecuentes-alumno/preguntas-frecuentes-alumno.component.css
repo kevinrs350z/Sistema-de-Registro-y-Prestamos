@@ -46,6 +46,7 @@
   border: 1.5px solid #ccd7ff;
   box-shadow: 0 4px 10px rgba(0, 40, 150, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
 
 .faq-card:hover {
@@ -58,39 +59,20 @@
   box-shadow: 0 8px 18px rgba(90, 121, 255, 0.14);
 }
 
+.faq-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+}
+
 /* =============================
    TEXTO
 ============================= */
-.faq-trigger {
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  cursor: pointer;
-  text-align: left;
-}
-
 .faq-pregunta {
   font-size: 1.05rem;
   font-weight: 600;
   color: #3451b2;
-}
-
-.faq-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: #f2f4ff;
-  color: #3451b2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 700;
 }
 
 .faq-respuesta {
