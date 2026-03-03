@@ -1,18 +1,29 @@
 /* =============================================
-   ADMIN SIDEBAR – Minimalista con acordeón
-   Usa los mismos colores existentes (morado admin)
-   Solo transparencias (rgba) y sombras sutiles
+   ADMIN SIDEBAR – SaaS Minimalista
+   Colores base intactos · Solo rgba + sombras
 ============================================= */
+
+/* ---------- Entrada sutil ---------- */
+@keyframes sidebarIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes indicatorIn {
+  from { height: 0; opacity: 0; }
+  to   { height: 18px; opacity: 1; }
+}
 
 /* ---------- Overlay (mobile) ---------- */
 .sidebar-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1049;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease;
+  backdrop-filter: blur(2px);
 }
 
 .sidebar-overlay.visible {
@@ -25,77 +36,77 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 270px;
+  width: 260px;
   height: 100vh;
   z-index: 1050;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-
-  /* Mismo gradiente morado del navbar admin actual */
   background:
     linear-gradient(
       180deg,
-      rgba(45, 27, 78, 0.99) 0%,
-      rgba(58, 35, 95, 0.98) 40%,
-      rgba(74, 44, 122, 0.97) 100%
+      rgba(42, 25, 72, 0.99) 0%,
+      rgba(52, 32, 88, 0.99) 50%,
+      rgba(62, 38, 105, 0.98) 100%
     );
-
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
-  font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 1px 0 8px rgba(0, 0, 0, 0.10);
+  font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: sidebarIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ---------- Header ---------- */
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 20px 20px 16px;
+  gap: 10px;
+  padding: 18px 18px 14px;
   flex-shrink: 0;
 }
 
 .sidebar-logo {
-  height: 34px;
+  height: 28px;
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
+  opacity: 0.92;
 }
 
 .sidebar-title {
-  font-size: 0.85rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
-  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 1.2px;
   text-transform: uppercase;
 }
 
 .sidebar-close {
   display: none;
   margin-left: auto;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 8px;
-  color: #fff;
-  font-size: 1rem;
-  width: 34px;
-  height: 34px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease;
+  transition: background 0.18s ease, color 0.18s ease;
 }
 
 .sidebar-close:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 /* ---------- Divider ---------- */
 .sidebar-divider {
   height: 1px;
-  margin: 0 16px;
-  background: rgba(255, 255, 255, 0.10);
+  margin: 0 18px;
+  background: rgba(255, 255, 255, 0.07);
   flex-shrink: 0;
 }
 
@@ -104,13 +115,13 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px 0;
+  padding: 8px 0 12px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.10) transparent;
 }
 
 .sidebar-nav::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 .sidebar-nav::-webkit-scrollbar-track {
@@ -118,8 +129,8 @@
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 3px;
 }
 
 /* ---------- Sección header (acordeón) ---------- */
@@ -128,42 +139,43 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 10px 20px;
+  padding: 8px 18px;
+  margin-top: 4px;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.675rem;
   font-weight: 700;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition: color 0.18s ease;
 }
 
 .section-header:hover {
-  color: rgba(255, 255, 255, 0.80);
-  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .section-header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .section-icon {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  font-size: 0.72rem;
+  opacity: 0.55;
 }
 
 .section-chevron {
-  font-size: 0.65rem;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0.5;
+  font-size: 0.6rem;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0.4;
 }
 
 .section-chevron.rotated {
   transform: rotate(180deg);
+  opacity: 0.6;
 }
 
 /* ---------- Items del acordeón ---------- */
@@ -172,13 +184,12 @@
   overflow: hidden;
   opacity: 0;
   transition:
-    max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.25s ease;
+    max-height 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
 }
 
 .section-items.expanded {
-  /* max-height calculado con JS variable --item-count */
-  max-height: calc(var(--item-count, 5) * 52px);
+  max-height: calc(var(--item-count, 5) * 44px);
   opacity: 1;
 }
 
@@ -187,66 +198,61 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: calc(100% - 16px);
-  margin: 2px 8px;
-  padding: 10px 14px 10px 32px;
+  gap: 9px;
+  width: calc(100% - 20px);
+  margin: 1px 10px;
+  padding: 8px 12px 8px 28px;
   background: none;
   border: none;
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
+  line-height: 1.3;
   transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.95);
   transform: translateX(2px);
 }
 
 .sidebar-item.active {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.10);
   color: #ffffff;
   font-weight: 600;
 }
 
-/* Barra lateral indicadora de item activo */
+/* Barra lateral indicadora activa */
 .active-indicator {
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 3px;
-  height: 20px;
-  background: rgba(245, 164, 116, 0.85); /* --primary pastel existente */
-  border-radius: 0 3px 3px 0;
-  animation: indicatorIn 0.3s ease;
-}
-
-@keyframes indicatorIn {
-  from {
-    height: 0;
-    opacity: 0;
-  }
-  to {
-    height: 20px;
-    opacity: 1;
-  }
+  width: 2.5px;
+  height: 18px;
+  background: rgba(245, 164, 116, 0.80);
+  border-radius: 0 2px 2px 0;
+  animation: indicatorIn 0.25s ease;
 }
 
 .item-icon {
-  font-size: 0.92rem;
-  opacity: 0.75;
+  font-size: 0.88rem;
+  opacity: 0.60;
   flex-shrink: 0;
-  width: 18px;
+  width: 16px;
   text-align: center;
+  transition: opacity 0.18s ease;
+}
+
+.sidebar-item:hover .item-icon {
+  opacity: 0.85;
 }
 
 .sidebar-item.active .item-icon {
@@ -257,22 +263,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* ---------- Footer ---------- */
-.sidebar-footer {
-  flex-shrink: 0;
-  padding-bottom: 16px;
-}
-
-.sidebar-footer-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 20px;
-  color: rgba(255, 255, 255, 0.35);
-  font-size: 0.75rem;
-  font-weight: 500;
 }
 
 /* ============================
@@ -298,7 +288,8 @@
 @media (max-width: 991.98px) {
   .admin-sidebar {
     transform: translateX(-100%);
-    box-shadow: 6px 0 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+    animation: none;
   }
 
   .admin-sidebar.open {

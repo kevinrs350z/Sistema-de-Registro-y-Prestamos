@@ -91,10 +91,10 @@ app-navbar-admin {
   display: block;
   position: fixed;
   top: 0;
-  left: 270px;
+  left: 260px;
   right: 0;
   z-index: 1040;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: left 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (max-width: 991.98px) {

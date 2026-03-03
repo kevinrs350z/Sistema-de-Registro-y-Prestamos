@@ -5,12 +5,12 @@
 .admin-navbar-slim {
   position: fixed;
   top: 0;
-  left: 270px;       /* Deja espacio para sidebar en desktop */
+  left: 260px;       /* Sincronizado con sidebar width */
   right: 0;
   z-index: 1040;
-  height: 56px;
-  font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 52px;
+  font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+  transition: left 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .navbar-bg {
