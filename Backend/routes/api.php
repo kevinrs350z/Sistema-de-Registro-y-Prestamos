@@ -190,6 +190,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::get('/admin/bloqueos-horario', [BloqueoHorarioController::class, 'index']);
     Route::post('/admin/bloqueos-horario', [BloqueoHorarioController::class, 'store']);
+    Route::post('/verificar-bloqueos-horario', [BloqueoHorarioController::class, 'verificar']);
 
     Route::patch('/admin/alumnos/{id}/bloquear', [UsuarioController::class, 'bloquear']);
     Route::patch('/admin/alumnos/{id}/desbloquear', [UsuarioController::class, 'desbloquear']);

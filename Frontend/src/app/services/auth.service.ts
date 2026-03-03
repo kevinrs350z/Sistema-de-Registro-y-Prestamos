@@ -108,6 +108,12 @@ export class AuthService {
       headers: this.getHeaders()
     });
   }
+
+  verificarBloqueosHorario(payload: { fecha: string; bloques: number[]; tipo_equipo_ids: number[] }): Observable<any[]> {
+    return this.http.post<any[]>(`${this.apiUrl}/verificar-bloqueos-horario`, payload, {
+      headers: this.getHeaders()
+    });
+  }
     getPrestamos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/admin/prestamos`, {
       headers: this.getHeaders(),

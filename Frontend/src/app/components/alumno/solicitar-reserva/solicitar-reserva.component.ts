@@ -75,6 +75,9 @@ export class SolicitarReservaComponent {
   equipos = signal<Equipo[]>([]);
   carrito: CarritoItem[] = [];
 
+  // Bloqueos horario detectados en el carrito
+  equiposBloqueadosHorario: { idTipoEquipo: number; nombre: string; bloques_afectados: number[]; motivo: string | null }[] = [];
+
   asignaturas = signal<{ nombre: string }[]>([
     { nombre: 'Taller de fotografía Digital' },
     { nombre: 'Taller de fotografía Publicitaria' },
@@ -259,7 +262,8 @@ export class SolicitarReservaComponent {
     return this.carrito.map(item => ({
       nombre: item.nombre ?? 'Equipo',
       categoria: item.categoria ?? '',
-      cantidad: item.cantidad
+      cantidad: item.cantidad,
+      idTipoEquipo: item.idTipoEquipo as number,
     }));
   });
 
@@ -439,6 +443,7 @@ export class SolicitarReservaComponent {
       // Verificar si el nuevo conjunto es continuo
       if (this.sonBloquesContinuos(nuevoArr)) {
         this.f.bloques.setValue(nuevoArr);
+        this.verificarBloqueosHorario();
       } else {
         // No permitir, revertir el checkbox
         target.checked = false;
@@ -451,6 +456,7 @@ export class SolicitarReservaComponent {
       // Si quedan bloques, verificar que sigan siendo continuos
       if (nuevoArr.length === 0 || this.sonBloquesContinuos(nuevoArr)) {
         this.f.bloques.setValue(nuevoArr);
+        this.verificarBloqueosHorario();
       } else {
         // No permitir quitar si rompe la continuidad
         target.checked = true;
@@ -505,6 +511,66 @@ export class SolicitarReservaComponent {
     const [hh, mm] = hora.split(':').map(x => Number(x));
     if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
     return hh * 60 + mm;
+  }
+
+  /**
+   * Verifica si algún equipo del carrito está bloqueado para los bloques seleccionados.
+   * Llama al backend con la fecha de hoy y los bloques/tipos del carrito.
+   */
+  verificarBloqueosHorario() {
+    const bloquesSeleccionados: number[] = this.f.bloques.value ?? [];
+    if (!this.esDentro() || bloquesSeleccionados.length === 0 || this.carrito.length === 0) {
+      this.equiposBloqueadosHorario = [];
+      return;
+    }
+
+    const tipoIds = this.carrito
+      .filter(c => c.tipo === 'equipo' && c.idTipoEquipo)
+      .map(c => c.idTipoEquipo as number);
+
+    if (tipoIds.length === 0) {
+      this.equiposBloqueadosHorario = [];
+      return;
+    }
+
+    const hoy = new Date();
+    const fecha = hoy.getFullYear() + '-'
+      + String(hoy.getMonth() + 1).padStart(2, '0') + '-'
+      + String(hoy.getDate()).padStart(2, '0');
+
+    this.api.verificarBloqueosHorario({
+      fecha,
+      bloques: bloquesSeleccionados,
+      tipo_equipo_ids: tipoIds,
+    }).subscribe({
+      next: (bloqueados) => {
+        this.equiposBloqueadosHorario = bloqueados ?? [];
+        if (bloqueados.length > 0) {
+          const nombres = bloqueados.map((b: any) => b.nombre).join(', ');
+          this.notify.warning(`Equipos bloqueados para el horario seleccionado: ${nombres}. Cambia los bloques o retíralos del carrito.`);
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.equiposBloqueadosHorario = [];
+      }
+    });
+  }
+
+  /** Devuelve true si un item del carrito está bloqueado por horario */
+  itemBloqueadoHorario(idTipoEquipo: number | undefined): boolean {
+    if (!idTipoEquipo) return false;
+    return this.equiposBloqueadosHorario.some(b => b.idTipoEquipo === idTipoEquipo);
+  }
+
+  /** Quita un equipo bloqueado del carrito */
+  quitarEquipoBloqueado(idTipoEquipo: number | undefined) {
+    if (!idTipoEquipo) return;
+    this.carrito = this.carrito.filter(c => c.idTipoEquipo !== idTipoEquipo);
+    this.carritoSrv.setCarrito(this.carrito);
+    this.equiposBloqueadosHorario = this.equiposBloqueadosHorario.filter(b => b.idTipoEquipo !== idTipoEquipo);
+    this.notify.info('Equipo retirado del carrito.');
+    this.cdr.markForCheck();
   }
 
   toggleIntegrante(id: number) {
@@ -625,6 +691,11 @@ export class SolicitarReservaComponent {
       this.notify.error('Tu cuenta está bloqueada. No puedes solicitar equipos.');
       return;
     }
+    if (this.equiposBloqueadosHorario.length > 0) {
+      const nombres = this.equiposBloqueadosHorario.map(b => b.nombre).join(', ');
+      this.notify.error(`Tienes equipos bloqueados para el horario seleccionado: ${nombres}. Retíralos del carrito o cambia los bloques.`);
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.notify.warning('Completa todos los campos obligatorios.');
@@ -682,7 +753,11 @@ export class SolicitarReservaComponent {
         }
 
         if (err?.status === 409 && err?.error?.error === 'BLOQUEO_HORARIO') {
-          this.notify.error(err?.error?.message || 'Hay equipos bloqueados para el horario seleccionado.');
+          // Actualizar los bloqueos en la UI con el detalle del backend
+          if (err.error.detalle?.length) {
+            this.equiposBloqueadosHorario = err.error.detalle;
+          }
+          this.notify.error(err?.error?.message || 'Hay equipos bloqueados para el horario seleccionado. Puedes solicitar estos equipos en otros bloques.');
           return;
         }
 

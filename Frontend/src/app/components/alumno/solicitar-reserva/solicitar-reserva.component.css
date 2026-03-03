@@ -622,6 +622,69 @@ button.ghost {
   font-size: 0.85rem;
 }
 
+/* === BLOQUEO HORARIO EN CARRITO === */
+.equipos-item.bloqueado-horario {
+  background: #fff5f5;
+  border-left: 3px solid #e53e3e;
+}
+
+.equipos-bloqueo-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #e53e3e;
+  background: #fed7d7;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 0.2rem;
+}
+
+.btn-quitar-bloqueado {
+  background: none;
+  border: none;
+  color: #e53e3e;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.btn-quitar-bloqueado:hover {
+  background: #fed7d7;
+}
+
+.alerta-bloqueo-horario {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.85rem 1rem;
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  margin: 0.75rem 1rem;
+  font-size: 0.82rem;
+  color: #92400e;
+}
+
+.alerta-bloqueo-horario i {
+  font-size: 1.1rem;
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.alerta-bloqueo-horario strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.alerta-bloqueo-horario p {
+  margin: 0;
+  line-height: 1.4;
+}
+
 
 /* === PROYECTO OPCIONAL === */
 .proyecto-wrapper {

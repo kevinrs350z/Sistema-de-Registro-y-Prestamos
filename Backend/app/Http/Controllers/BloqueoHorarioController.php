@@ -3,11 +3,54 @@
 namespace App\Http\Controllers;
 
 use App\Models\BloqueoHorario;
+use App\Models\TipoEquipo;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class BloqueoHorarioController extends Controller
 {
+    /**
+     * Verifica qué tipos de equipo están bloqueados para los bloques y fecha dados.
+     * Endpoint liviano para validaciones en solicitar-reserva.
+     */
+    public function verificar(Request $request)
+    {
+        $request->validate([
+            'fecha'            => 'required|date',
+            'bloques'          => 'required|array|min:1',
+            'bloques.*'        => 'integer',
+            'tipo_equipo_ids'  => 'required|array|min:1',
+            'tipo_equipo_ids.*'=> 'integer',
+        ]);
+
+        $zona = config('app.timezone', 'America/Santiago');
+        $fecha = Carbon::parse($request->fecha, $zona);
+        $diaSemana = $fecha->dayOfWeekIso;
+        $semanaInicio = $fecha->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+
+        $bloqueados = BloqueoHorario::where('activo', true)
+            ->where('semana_inicio', $semanaInicio)
+            ->where('dia_semana', $diaSemana)
+            ->whereIn('idBloque', $request->bloques)
+            ->whereIn('idTipoEquipo', $request->tipo_equipo_ids)
+            ->get();
+
+        // Nombres de los tipos afectados
+        $nombres = TipoEquipo::whereIn('id', $bloqueados->pluck('idTipoEquipo')->unique())
+            ->pluck('nombre', 'id');
+
+        $resultado = $bloqueados->groupBy('idTipoEquipo')->map(function ($items, $tipoId) use ($nombres) {
+            return [
+                'idTipoEquipo'     => (int) $tipoId,
+                'nombre'           => $nombres[$tipoId] ?? '—',
+                'bloques_afectados'=> $items->pluck('idBloque')->values()->all(),
+                'motivo'           => $items->first()->motivo,
+            ];
+        })->values();
+
+        return response()->json($resultado);
+    }
+
     public function index(Request $request)
     {
         $tipoEquipoId = $request->query('tipo_equipo_id');

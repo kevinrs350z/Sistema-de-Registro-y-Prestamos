@@ -12,6 +12,7 @@ use App\Models\BloquePrestamo;
 use App\Models\Asignatura;
 use App\Models\BloqueoHorario;
 use App\Models\PrestamoHistorial;
+use App\Models\TipoEquipo;
 use App\Enums\EstadoPrestamo;
 use App\Enums\EstadoEquipo;
 use App\Enums\EstadoSancion;
@@ -156,17 +157,29 @@ class PrestamoController extends Controller
                     $diaSemana = $fechaReferencia->dayOfWeekIso; // 1 = Lunes, 7 = Domingo
                     $semanaInicio = $fechaReferencia->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
 
-                    $existeBloqueo = BloqueoHorario::where('activo', true)
+                    $bloqueos = BloqueoHorario::where('activo', true)
                         ->where('semana_inicio', $semanaInicio)
                         ->where('dia_semana', $diaSemana)
                         ->whereIn('idBloque', $bloques)
                         ->whereIn('idTipoEquipo', $tiposSolicitados)
-                        ->exists();
+                        ->get();
 
-                    if ($existeBloqueo) {
+                    if ($bloqueos->isNotEmpty()) {
+                        $nombres = TipoEquipo::whereIn('id', $bloqueos->pluck('idTipoEquipo')->unique())
+                            ->pluck('nombre', 'id');
+
+                        $detalle = $bloqueos->groupBy('idTipoEquipo')->map(function ($items, $tipoId) use ($nombres) {
+                            return [
+                                'idTipoEquipo'      => (int) $tipoId,
+                                'nombre'             => $nombres[$tipoId] ?? '—',
+                                'bloques_afectados'  => $items->pluck('idBloque')->values()->all(),
+                            ];
+                        })->values();
+
                         return response()->json([
-                            'error' => 'BLOQUEO_HORARIO',
-                            'message' => 'Este equipo está bloqueado para el horario seleccionado.',
+                            'error'   => 'BLOQUEO_HORARIO',
+                            'message' => 'Hay equipos bloqueados para el horario seleccionado. Puedes solicitar estos equipos en bloques donde no estén bloqueados.',
+                            'detalle' => $detalle,
                         ], 409);
                     }
                 }
