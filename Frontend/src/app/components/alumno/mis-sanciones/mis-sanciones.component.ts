@@ -3,15 +3,19 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
 
 interface SancionItem {
-  idSancion: number;
+  id: number;
+  idSancion?: number;
   nivel: string;
   descripcion?: string | null;
-  estado: 'ACTIVA' | 'EXPIRADA' | string;
+  categoria_falta?: string | null;
+  estado: string;
   fecha_inicio?: string | null;
   fecha_fin?: string | null;
   detalle?: string | null;
   prestamo_id?: number | null;
   accion?: string | null;
+  escalada_desde_id?: number | null;
+  periodo_academico?: string | null;
   asignada_por?: string | null;
   asignada_por_email?: string | null;
   asignada_en?: string | null;

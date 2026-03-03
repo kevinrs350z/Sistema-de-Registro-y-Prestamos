@@ -10,6 +10,7 @@ import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
 import { CarritoService } from '../../../services/carrito.service';
 import { UsuariosService } from '../../../services/usuarios.service';
 import { GrupoService } from '../../../services/grupo.service';
+import { SancionesService } from '../../../services/sanciones.service';
 import { Grupo } from '../../../models/grupo.model';
 
 /* =========================
@@ -66,6 +67,7 @@ export class SolicitarReservaComponent {
   bloqueado = false;
   bloqueadoMotivo: string | null = null;
   bloqueadoFecha: string | null = null;
+  sancionInfo: { nivel: string; fecha_fin: string | null; estado: string; categoria: string } | null = null;
 
   // Términos y condiciones
   aceptaTerminos = false;
@@ -309,6 +311,28 @@ export class SolicitarReservaComponent {
         rut: data.persona?.Rut,
         telefono: data.persona?.telefono,
         email: data.Email,
+      });
+
+      // Verificar sanciones activas del alumno
+      this.api.getMisSanciones(token).subscribe(res => {
+        const activa = (res.sanciones || []).find((s: any) =>
+          s.estado === 'ACTIVA' || s.estado === 'EN_REVISION_COMITE'
+        );
+        if (activa) {
+          this.bloqueado = true;
+          this.sancionInfo = {
+            nivel: activa.nivel,
+            fecha_fin: activa.fecha_fin,
+            estado: activa.estado,
+            categoria: activa.categoria_falta
+          };
+          if (activa.nivel === 'GRAVISIMA') {
+            this.bloqueadoMotivo = 'Sanción GRAVÍSIMA activa — bloqueado hasta resolución legal/comité.';
+          } else {
+            this.bloqueadoMotivo = `Sanción ${activa.nivel} activa hasta el ${activa.fecha_fin ? new Date(activa.fecha_fin).toLocaleDateString('es-CL') : '—'}.`;
+          }
+          this.bloqueadoFecha = activa.fecha_inicio ?? null;
+        }
       });
 
       this.cargarIntegrantes();
@@ -644,6 +668,9 @@ export class SolicitarReservaComponent {
           this.bloqueado = true;
           this.bloqueadoMotivo = err?.error?.motivo ?? null;
           this.bloqueadoFecha = err?.error?.fecha ?? null;
+          if (err?.error?.sancion) {
+            this.sancionInfo = err.error.sancion;
+          }
           return;
         }
 

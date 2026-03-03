@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('app:rechazar-solicitudes-pendientes-por-retraso')->everyMinute();
+        $schedule->command('sanciones:expirar')->dailyAt('02:00');
     }
 
     /**

@@ -17,13 +17,20 @@
       </div>
 
       <div class="alert-bloqueo" *ngIf="bloqueado">
-        <strong>Cuenta bloqueada.</strong>
-        <span>
+        <strong>Cuenta bloqueada por sanción.</strong>
+        <span *ngIf="!sancionInfo">
           No puedes solicitar equipos hasta resolver el incidente.
         </span>
-        <div class="alert-detalle" *ngIf="bloqueadoMotivo || bloqueadoFecha">
+        <span *ngIf="sancionInfo && sancionInfo.nivel === 'GRAVISIMA'">
+          Tienes una sanción <b>GRAVÍSIMA</b> activa. No puedes solicitar equipos hasta que se resuelva el proceso legal o comité disciplinario.
+        </span>
+        <span *ngIf="sancionInfo && sancionInfo.nivel !== 'GRAVISIMA'">
+          Tienes una sanción <b>{{ sancionInfo.nivel }}</b> activa. No puedes solicitar equipos hasta el
+          <b>{{ sancionInfo.fecha_fin | date:'dd/MM/yyyy' }}</b>.
+        </span>
+        <div class="alert-detalle" *ngIf="bloqueadoMotivo || sancionInfo">
           <div *ngIf="bloqueadoMotivo"><b>Motivo:</b> {{ bloqueadoMotivo }}</div>
-          <div *ngIf="bloqueadoFecha"><b>Desde:</b> {{ bloqueadoFecha | date:'dd MMM yyyy · HH:mm' }}</div>
+          <div *ngIf="sancionInfo?.categoria"><b>Categoría:</b> {{ sancionInfo?.categoria }}</div>
         </div>
       </div>
 

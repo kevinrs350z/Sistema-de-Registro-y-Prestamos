@@ -14,6 +14,9 @@ use App\Models\BloqueoHorario;
 use App\Models\PrestamoHistorial;
 use App\Enums\EstadoPrestamo;
 use App\Enums\EstadoEquipo;
+use App\Enums\EstadoSancion;
+use App\Enums\NivelSancion;
+use App\Models\UserSancion;
 use App\Services\PrestamoService;
 use Carbon\Carbon;
 
@@ -80,6 +83,49 @@ class PrestamoController extends Controller
                     'motivo' => $user->bloqueado_motivo,
                     'fecha' => $user->bloqueado_fecha
                 ], 403);
+            }
+
+            // ═══════════════════════════════════════════════════════
+            // VERIFICAR SANCIONES ACTIVAS (doble check — seguridad)
+            // LEVE/MEDIA/GRAVE: bloqueado durante el periodo asignado
+            // GRAVISIMA: bloqueado hasta resolución legal (sin fecha)
+            // ═══════════════════════════════════════════════════════
+            if ($user) {
+                $sancionActiva = UserSancion::where('idUser', $user->idUser)
+                    ->whereIn('estado_sancion', [EstadoSancion::ACTIVA, EstadoSancion::EN_REVISION_COMITE])
+                    ->where(function ($q) {
+                        // GRAVISIMA sin importar fecha / resto con fecha_fin vigente
+                        $q->where('nivel', NivelSancion::GRAVISIMA)
+                          ->orWhere(function ($q2) {
+                              $q2->where('fecha_fin', '>=', now()->toDateString());
+                          });
+                    })
+                    ->orderByRaw("FIELD(nivel, 'GRAVISIMA','GRAVE','MEDIA','LEVE') ASC")
+                    ->first();
+
+                if ($sancionActiva) {
+                    $nivel = $sancionActiva->nivel;
+                    if ($nivel === NivelSancion::GRAVISIMA) {
+                        $msg = 'Tienes una sanción GRAVÍSIMA activa. No puedes solicitar equipos hasta que se resuelva el proceso legal/comité.';
+                    } else {
+                        $fechaFin = $sancionActiva->fecha_fin
+                            ? Carbon::parse($sancionActiva->fecha_fin)->format('d/m/Y')
+                            : '—';
+                        $msg = "Tienes una sanción {$nivel} activa. No puedes solicitar equipos hasta el {$fechaFin}.";
+                    }
+
+                    return response()->json([
+                        'message' => $msg,
+                        'motivo'  => $msg,
+                        'fecha'   => $sancionActiva->fecha_inicio,
+                        'sancion' => [
+                            'nivel'       => $nivel,
+                            'fecha_fin'   => $sancionActiva->fecha_fin,
+                            'estado'      => $sancionActiva->estado_sancion,
+                            'categoria'   => $sancionActiva->categoria_falta,
+                        ],
+                    ], 403);
+                }
             }
 
             if ($user && $user->hasRole('ALUMNO')) {

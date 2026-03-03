@@ -177,12 +177,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/admin/prestamos/{id}/entregar', [PrestamoAdminController::class, 'marcarEntregado']);
     Route::get('/admin/sanciones/prefill', [UserSancionController::class, 'prefill']);
     Route::get('/admin/sanciones/catalogo', [UserSancionController::class, 'catalogo']);
+    Route::get('/admin/sanciones/configuracion', [UserSancionController::class, 'getConfiguracion']);
+    Route::put('/admin/sanciones/configuracion', [UserSancionController::class, 'updateConfiguracion']);
     Route::get('/admin/sanciones', [UserSancionController::class, 'listarSanciones']);
     Route::get('/admin/sanciones/activa', [UserSancionController::class, 'listarSancionesActivas']);
     Route::get('/admin/sanciones/usuario/{idUser}', [UserSancionController::class, 'sancionesPorUsuario']);
     Route::post('/admin/sanciones/asignar', [UserSancionController::class, 'asignarSancion']);
     Route::patch('/admin/sanciones/{id}/ampliar', [UserSancionController::class, 'ampliarSancion']);
     Route::patch('/admin/sanciones/{id}/quitar', [UserSancionController::class, 'quitarSancion']);
+    Route::get('/admin/sanciones/{id}/historial', [UserSancionController::class, 'historial']);
     Route::post('/admin/devolucion', [DevolucionAdminController::class, 'devolverEquipo']);
 
     Route::get('/admin/bloqueos-horario', [BloqueoHorarioController::class, 'index']);
