@@ -1,0 +1,345 @@
+<div class="audit-dashboard">
+
+  <!-- ═══ Filtros compartidos ═══ -->
+  <app-report-filters (filtersChanged)="onFiltersChanged($event)"></app-report-filters>
+
+  <!-- ═══ Sección Nav (Pills) ═══ -->
+  <div class="audit-nav">
+    <button [class.active]="activeSection === 'overview'" (click)="onSectionChange('overview')">
+      <i class="bi bi-grid-1x2"></i> Resumen
+    </button>
+    <button [class.active]="activeSection === 'fill-rate'" (click)="onSectionChange('fill-rate')">
+      <i class="bi bi-check-circle"></i> Fill Rate
+    </button>
+    <button [class.active]="activeSection === 'atraso'" (click)="onSectionChange('atraso')">
+      <i class="bi bi-clock-history"></i> Atrasos
+    </button>
+    <button [class.active]="activeSection === 'pareto'" (click)="onSectionChange('pareto')">
+      <i class="bi bi-bar-chart-steps"></i> Rechazos
+    </button>
+    <button [class.active]="activeSection === 'throughput'" (click)="onSectionChange('throughput')">
+      <i class="bi bi-speedometer"></i> Throughput
+    </button>
+    <button [class.active]="activeSection === 'huerfanos'" (click)="onSectionChange('huerfanos')">
+      <i class="bi bi-box-seam"></i> Huérfanos
+    </button>
+    <button [class.active]="activeSection === 'abc'" (click)="onSectionChange('abc')">
+      <i class="bi bi-layers"></i> ABC
+    </button>
+    <button [class.active]="activeSection === 'heatmap'" (click)="onSectionChange('heatmap')">
+      <i class="bi bi-grid-3x3"></i> Heatmap
+    </button>
+  </div>
+
+  <!-- ═══ Loading ═══ -->
+  <div *ngIf="loading" class="audit-loading">
+    <div class="spinner"></div>
+    <span>Calculando KPIs de auditoría…</span>
+  </div>
+
+  <!-- ═══ Error ═══ -->
+  <div *ngIf="error && !loading" class="audit-error">
+    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: RESUMEN GENERAL                               -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && !error && activeSection === 'overview'" class="audit-content">
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div *ngFor="let card of cards; trackBy: trackByKey"
+           class="kpi-card" [ngClass]="getCardColor(card)"
+           [title]="card.tooltip">
+        <div class="kpi-label">{{ card.label }}</div>
+        <div class="kpi-value">{{ card.value }}<span class="kpi-unit" *ngIf="card.unit">{{ card.unit }}</span></div>
+      </div>
+    </div>
+
+    <!-- Mini charts row -->
+    <div class="charts-row">
+      <div class="chart-container half">
+        <h6 class="section-title"><i class="bi bi-bar-chart-steps"></i> Pareto de Rechazos</h6>
+        <div #paretoChart class="chart-canvas"></div>
+      </div>
+      <div class="chart-container half">
+        <h6 class="section-title"><i class="bi bi-speedometer"></i> Throughput</h6>
+        <div #throughputChart class="chart-canvas"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: FILL RATE                                     -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && !error && activeSection === 'fill-rate'" class="audit-content">
+    <div class="section-header">
+      <h5><i class="bi bi-check-circle text-success"></i> Fill Rate por Tipo de Equipo</h5>
+      <span class="badge-global" [class.bg-success]="globalFillRate >= 80"
+            [class.bg-warning]="globalFillRate >= 60 && globalFillRate < 80"
+            [class.bg-danger]="globalFillRate < 60">
+        Global: {{ globalFillRate }}%
+      </span>
+    </div>
+    <p class="section-desc">Porcentaje de solicitudes satisfechas (no rechazadas) por modelo de equipo.</p>
+
+    <div class="audit-table-wrapper">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Satisfechas</th>
+            <th class="text-end">Rechazadas</th>
+            <th>Fill Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of fillRateData">
+            <td class="fw-semibold">{{ item.modelo }}</td>
+            <td class="text-end">{{ item.total }}</td>
+            <td class="text-end text-success">{{ item.satisfechas }}</td>
+            <td class="text-end text-danger">{{ item.rechazadas }}</td>
+            <td>
+              <div class="fill-bar-container">
+                <div class="fill-bar" [style.width.%]="item.fill_rate"
+                     [class.fill-green]="item.fill_rate >= 80"
+                     [class.fill-amber]="item.fill_rate >= 60 && item.fill_rate < 80"
+                     [class.fill-red]="item.fill_rate < 60"></div>
+                <span class="fill-label">{{ item.fill_rate }}%</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: TASA DE ATRASO                                -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && !error && activeSection === 'atraso'" class="audit-content">
+    <div class="section-header">
+      <h5><i class="bi bi-clock-history text-warning"></i> Tasa de Atraso por Tipo de Equipo</h5>
+      <span class="badge-global" [class.bg-success]="globalAtraso <= 10"
+            [class.bg-warning]="globalAtraso > 10 && globalAtraso <= 25"
+            [class.bg-danger]="globalAtraso > 25">
+        Global: {{ globalAtraso }}%
+      </span>
+    </div>
+    <p class="section-desc">Porcentaje de préstamos devueltos fuera de plazo por modelo.</p>
+
+    <div class="audit-table-wrapper">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Atrasados</th>
+            <th>Tasa Atraso</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of atrasoData">
+            <td class="fw-semibold">{{ item.modelo }}</td>
+            <td class="text-end">{{ item.total }}</td>
+            <td class="text-end">{{ item.atrasados }}</td>
+            <td>
+              <div class="fill-bar-container">
+                <div class="fill-bar"
+                     [style.width.%]="item.tasa_atraso"
+                     [class.fill-green]="item.tasa_atraso <= 10"
+                     [class.fill-amber]="item.tasa_atraso > 10 && item.tasa_atraso <= 25"
+                     [class.fill-red]="item.tasa_atraso > 25"></div>
+                <span class="fill-label">{{ item.tasa_atraso }}%</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: PARETO RECHAZOS                               -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && !error && activeSection === 'pareto'" class="audit-content">
+    <div class="section-header">
+      <h5><i class="bi bi-bar-chart-steps text-danger"></i> Pareto de Rechazos por Motivo</h5>
+      <span class="badge-global bg-danger">{{ totalRechazos }} rechazos</span>
+    </div>
+    <p class="section-desc">Diagrama 80/20 — los motivos que generan la mayor parte de los rechazos.</p>
+
+    <div class="chart-container full">
+      <div #paretoChart class="chart-canvas-tall"></div>
+    </div>
+
+    <div class="audit-table-wrapper mt-3">
+      <table class="audit-table">
+        <thead>
+          <tr><th>Motivo</th><th class="text-end">Cantidad</th><th class="text-end">%</th><th class="text-end">Acumulado</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of paretoData" [class.row-highlight]="item.acumulado <= 80">
+            <td>{{ item.motivo.replace('_', ' ') }}</td>
+            <td class="text-end">{{ item.cantidad }}</td>
+            <td class="text-end">{{ item.porcentaje }}%</td>
+            <td class="text-end fw-semibold">{{ item.acumulado }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: THROUGHPUT                                    -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && !error && activeSection === 'throughput'" class="audit-content">
+    <div class="section-header">
+      <h5><i class="bi bi-speedometer text-primary"></i> Throughput del Sistema</h5>
+      <span class="badge-global bg-primary">Promedio: {{ throughputAvg }}/{{ bucketThroughput === 'day' ? 'día' : bucketThroughput === 'week' ? 'semana' : 'mes' }}</span>
+    </div>
+    <p class="section-desc">Préstamos procesados por período (excluye pendientes).</p>
+
+    <div class="toolbar-group mb-3">
+      <label>Granularidad:</label>
+      <select class="audit-select" [ngModel]="bucketThroughput" (ngModelChange)="onBucketChange($event)">
+        <option value="day">Día</option>
+        <option value="week">Semana</option>
+        <option value="month">Mes</option>
+      </select>
+    </div>
+
+    <div class="chart-container full">
+      <div #throughputChart class="chart-canvas-tall"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: MODELOS HUÉRFANOS                             -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && !error && activeSection === 'huerfanos'" class="audit-content">
+    <div class="section-header">
+      <h5><i class="bi bi-box-seam text-secondary"></i> Modelos Huérfanos</h5>
+      <span class="badge-global" [class.bg-success]="huerfanosPct <= 15"
+            [class.bg-warning]="huerfanosPct > 15 && huerfanosPct <= 30"
+            [class.bg-danger]="huerfanosPct > 30">
+        {{ huerfanosTotal }} modelos ({{ huerfanosPct }}%)
+      </span>
+    </div>
+    <p class="section-desc">Tipos de equipo sin préstamos en los últimos <strong>{{ mesesHuerfanos }}</strong> meses — candidatos a redistribución o baja.</p>
+
+    <div class="toolbar-group mb-3">
+      <label>Umbral (meses):</label>
+      <select class="audit-select" [ngModel]="mesesHuerfanos" (ngModelChange)="onMesesChange(+$event)">
+        <option [value]="1">1 mes</option>
+        <option [value]="2">2 meses</option>
+        <option [value]="3">3 meses</option>
+        <option [value]="6">6 meses</option>
+        <option [value]="12">12 meses</option>
+      </select>
+    </div>
+
+    <div class="audit-table-wrapper" *ngIf="huerfanosData.length > 0">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th class="text-end">Unidades</th>
+            <th>Último Préstamo</th>
+            <th class="text-end">Días sin uso</th>
+            <th class="text-end">Préstamos Históricos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of huerfanosData">
+            <td class="fw-semibold">{{ item.modelo }}</td>
+            <td class="text-end">{{ item.unidades }}</td>
+            <td>{{ item.ultimo_prestamo ? (item.ultimo_prestamo | date:'dd/MM/yyyy') : 'Nunca' }}</td>
+            <td class="text-end">{{ item.dias_sin_uso != null ? (item.dias_sin_uso | number:'1.0-0') : '∞' }}</td>
+            <td class="text-end">{{ item.total_prestamos }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="huerfanosData.length === 0" class="empty-state">
+      <i class="bi bi-emoji-smile"></i>
+      <p>No hay modelos huérfanos con el umbral seleccionado.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: SEGMENTACIÓN ABC                              -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && !error && activeSection === 'abc'" class="audit-content">
+    <div class="section-header">
+      <h5><i class="bi bi-layers text-indigo"></i> Segmentación ABC de Modelos</h5>
+    </div>
+    <p class="section-desc">Clasificación de modelos por volumen de uso: <strong class="text-danger">A</strong> = 70% del uso (críticos), <strong class="text-warning">B</strong> = 20% (intermedios), <strong class="text-success">C</strong> = 10% (bajo uso).</p>
+
+    <!-- Resumen Cards -->
+    <div class="abc-summary" *ngIf="abcResumen">
+      <div class="abc-card abc-a">
+        <div class="abc-clase">A</div>
+        <div class="abc-detail">{{ abcResumen.A.modelos }} modelos · {{ abcResumen.A.prestamos }} préstamos</div>
+        <div class="abc-desc">{{ abcResumen.A.descripcion }}</div>
+      </div>
+      <div class="abc-card abc-b">
+        <div class="abc-clase">B</div>
+        <div class="abc-detail">{{ abcResumen.B.modelos }} modelos · {{ abcResumen.B.prestamos }} préstamos</div>
+        <div class="abc-desc">{{ abcResumen.B.descripcion }}</div>
+      </div>
+      <div class="abc-card abc-c">
+        <div class="abc-clase">C</div>
+        <div class="abc-detail">{{ abcResumen.C.modelos }} modelos · {{ abcResumen.C.prestamos }} préstamos</div>
+        <div class="abc-desc">{{ abcResumen.C.descripcion }}</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container full mt-3">
+      <div #abcChart class="chart-canvas-tall"></div>
+    </div>
+
+    <!-- Table -->
+    <div class="audit-table-wrapper mt-3">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Clase</th>
+            <th>Modelo</th>
+            <th class="text-end">Préstamos</th>
+            <th class="text-end">%</th>
+            <th class="text-end">Acumulado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of abcData" [ngClass]="getABCClass(item.clase)">
+            <td><span class="badge-abc" [ngClass]="'badge-' + item.clase.toLowerCase()">{{ item.clase }}</span></td>
+            <td class="fw-semibold">{{ item.modelo }}</td>
+            <td class="text-end">{{ item.prestamos }}</td>
+            <td class="text-end">{{ item.porcentaje }}%</td>
+            <td class="text-end">{{ item.acumulado }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: HEATMAP                                       -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && !error && activeSection === 'heatmap'" class="audit-content">
+    <div class="section-header">
+      <h5><i class="bi bi-grid-3x3 text-indigo"></i> Heatmap: Demanda por Bloque × Día</h5>
+    </div>
+    <p class="section-desc">Mapa de calor de la demanda de préstamos por bloque horario y día de la semana.</p>
+
+    <div class="chart-container full">
+      <div #heatmapChart class="chart-canvas-xl"></div>
+    </div>
+  </div>
+
+</div>

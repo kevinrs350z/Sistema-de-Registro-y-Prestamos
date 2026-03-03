@@ -21,6 +21,7 @@ import { DashboardOperationalComponent } from './components/admin/reportes/dashb
 import { DashboardExecutiveComponent } from './components/admin/reportes/dashboard-executive/dashboard-executive.component';
 import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
 import { DashboardStockoutComponent } from './components/admin/reportes/dashboard-stockout/dashboard-stockout.component';
+import { DashboardAuditComponent } from './components/admin/reportes/dashboard-audit/dashboard-audit.component';
 import { CategoriasEncargadosComponent } from './components/admin/categorias-encargados/categorias-encargados.component';
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
@@ -75,6 +76,7 @@ export const routes: Routes = [
       { path: 'executive', component: DashboardExecutiveComponent },
       { path: 'dashboard', component: DashboardOperationalComponent },
       { path: 'stockout', component: DashboardStockoutComponent },
+      { path: 'audit', component: DashboardAuditComponent },
       { path: '', redirectTo: 'executive', pathMatch: 'full' }
     ]
   },

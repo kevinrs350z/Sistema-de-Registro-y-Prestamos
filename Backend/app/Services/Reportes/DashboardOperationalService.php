@@ -12,7 +12,7 @@ class DashboardOperationalService
     ) {}
     /**
      * KPIs OPERATIVOS PRINCIPALES
-     * - Préstamos activos (estado APROBADO)
+     * - Préstamos activos (estados en curso)
      * - Préstamos próximos a vencer (3 días)
      * - Préstamos vencidos (fecha_fin < hoy)
      * - Equipos disponibles
@@ -22,21 +22,24 @@ class DashboardOperationalService
         $hoy = Carbon::now();
         $en3Dias = Carbon::now()->addDays(3);
 
-        // Préstamos activos (APROBADO)
+        // Estados que representan préstamos activos (en curso)
+        $estadosActivos = ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'];
+
+        // Préstamos activos
         $activosCount = DB::table('prestamos')
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', $estadosActivos)
             ->count();
 
         // Préstamos próximos a vencer (fecha_fin entre hoy y +3 días)
         $proximosAVencerCount = DB::table('prestamos')
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', $estadosActivos)
             ->whereNotNull('fecha_fin')
             ->whereBetween('fecha_fin', [$hoy, $en3Dias])
             ->count();
 
         // Préstamos vencidos (fecha_fin < hoy)
         $vencidosCount = DB::table('prestamos')
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', $estadosActivos)
             ->whereNotNull('fecha_fin')
             ->where('fecha_fin', '<', $hoy)
             ->count();
@@ -113,8 +116,8 @@ class DashboardOperationalService
             ->join('users as u', 'u.idUser', '=', 'p.idUser')
             ->join('persona as per', 'per.idPersona', '=', 'u.idPersona')
             ->where('pe.idEquipo', $idEquipo)
-            ->selectRaw("p.idPrestamo as prestamoId, p.estado as tipo_evento, p.created_at as fecha, CONCAT(per.Nombre,' ',per.apellido1) as usuario, p.observacion as nota")
-            ->orderBy('p.created_at', 'desc')
+            ->selectRaw("p.idPrestamo as prestamoId, p.estado as tipo_evento, p.fecha_inicio as fecha, CONCAT(per.Nombre,' ',per.apellido1) as usuario, p.observacion as nota")
+            ->orderBy('p.fecha_inicio', 'desc')
             ->first();
 
         return $evento;
@@ -127,7 +130,7 @@ class DashboardOperationalService
     {
         return DB::table('prestamos')
             ->where('idUser', $idUser)
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'])
             ->select('idPrestamo as idPrestamo', 'tipo', 'fecha_inicio', 'fecha_fin')
             ->get();
     }
@@ -142,7 +145,7 @@ class DashboardOperationalService
 
         return DB::table('prestamos')
             ->where('idUser', $idUser)
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'])
             ->whereNotNull('fecha_fin')
             ->whereBetween('fecha_fin', [$hoy, $en3])
             ->select('idPrestamo as idPrestamo', 'tipo', 'fecha_inicio', 'fecha_fin')
@@ -184,7 +187,7 @@ class DashboardOperationalService
             ->join('equipos as e', 'e.id', '=', 'pe.idEquipo')
             ->join('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
             ->where('p.idUser', $idUser)
-            ->where('p.estado', 'APROBADO')
+            ->whereIn('p.estado', ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'])
             ->select('e.id as id', 'e.codigo', 'te.nombre as tipo', 'e.estado', 'p.fecha_fin as fecha_asignacion')
             ->get();
     }
@@ -284,7 +287,7 @@ class DashboardOperationalService
                 CONCAT(per.Nombre,' ',per.apellido1) as usuario,
                 p.estado as estado_prestamo,
                 p.tipo as tipo_prestamo,
-                p.created_at as fecha_solicitud,
+                p.fecha_inicio as fecha_solicitud,
                 p.fecha_fin as fecha_vencimiento,
                 CASE 
                     WHEN p.estado = 'APROBADO' AND p.fecha_fin < NOW() THEN 'Vencido'
@@ -294,7 +297,7 @@ class DashboardOperationalService
                     ELSE 'Otro'
                 END as estado_actual
             ")
-            ->orderBy('p.created_at', 'desc')
+            ->orderBy('p.fecha_inicio', 'desc')
             ->take(8)
             ->get();
     }

@@ -592,11 +592,14 @@ class PrestamoAdminService
         } else {
 
             // 2️⃣ ASIGNATURA / NORMAL
-           
+            // Siempre guardar fecha_inicio (para DENTRO = fecha del día)
+            $fechaInicio = $request->fecha_inicio ?? now()->toDateString();
+            $fechaFin    = $request->fecha_fin ?? $fechaInicio;
+
             $prestamo = Prestamo::create(
                 array_merge($data, [
-                    'fecha_inicio' => null, 
-                    'fecha_fin'    => null, 
+                    'fecha_inicio' => $fechaInicio,
+                    'fecha_fin'    => $fechaFin,
                 ])
             );
 

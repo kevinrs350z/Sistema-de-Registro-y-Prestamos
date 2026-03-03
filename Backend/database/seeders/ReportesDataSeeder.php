@@ -71,12 +71,18 @@ class ReportesDataSeeder extends Seeder
                 $tipo = $tipos[array_rand($tipos)];
                 $estado = $estados[array_rand($estados)];
 
-                // Para préstamos FUERA, definir fechas
-                $fechaInicio = null;
+                // Para préstamos FUERA, definir fechas. Para DENTRO, siempre fecha_inicio.
+                $fechaInicio = $fechaBase->copy()->toDateString();
                 $fechaFin = null;
                 if ($tipo === 'FUERA') {
-                    $fechaInicio = $fechaBase->copy()->toDateString();
                     $fechaFin = $fechaBase->copy()->addDays(rand(1, 7))->toDateString();
+                }
+
+                // Motivo de rechazo para préstamos RECHAZADO
+                $motivoRechazo = null;
+                if ($estado === 'RECHAZADO') {
+                    $motivosRechazo = ['SIN_STOCK', 'CONFLICTO_HORARIO', 'SANCION_USUARIO', 'DOCUMENTACION', 'LIMITE_PRESTAMOS', null];
+                    $motivoRechazo = $motivosRechazo[array_rand($motivosRechazo)];
                 }
 
                 $prestamosData[] = [
@@ -85,6 +91,7 @@ class ReportesDataSeeder extends Seeder
                     'fecha_fin' => $fechaFin,
                     'estado' => $estado,
                     'tipo' => $tipo,
+                    'motivo_rechazo' => $motivoRechazo,
                     'otra_motivo' => $motivos[array_rand($motivos)],
                     'observacion' => rand(0, 3) === 0 ? 'Observación de prueba' : null,
                     'created_at' => $fechaBase,
@@ -248,6 +255,7 @@ class ReportesDataSeeder extends Seeder
         }
 
         // Generar préstamos rechazados (para estadísticas de rechazos)
+        $motivosRechazo = ['SIN_STOCK', 'CONFLICTO_HORARIO', 'SANCION_USUARIO', 'DOCUMENTACION', 'LIMITE_PRESTAMOS'];
         for ($i = 0; $i < 25; $i++) {
             $fecha = Carbon::now()->subDays(rand(1, 180));
             $userId = $userIds[array_rand($userIds)];
@@ -258,6 +266,7 @@ class ReportesDataSeeder extends Seeder
                 'fecha_fin' => $fecha->copy()->addDays(rand(1, 5))->toDateString(),
                 'estado' => 'RECHAZADO',
                 'tipo' => ['DENTRO', 'FUERA'][rand(0, 1)],
+                'motivo_rechazo' => $motivosRechazo[array_rand($motivosRechazo)],
                 'otra_motivo' => 'Solicitud de prueba',
                 'observacion' => 'Rechazado por falta de disponibilidad',
                 'created_at' => $fecha,

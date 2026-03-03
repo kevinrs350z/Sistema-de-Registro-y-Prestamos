@@ -14,7 +14,7 @@ class OcultarReportesMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $ocultarReportes = filter_var(env('REPORTES_OCULTOS', true), FILTER_VALIDATE_BOOLEAN);
+        $ocultarReportes = filter_var(config('reportes.ocultos', false), FILTER_VALIDATE_BOOLEAN);
 
         if ($ocultarReportes) {
             return response()->json([

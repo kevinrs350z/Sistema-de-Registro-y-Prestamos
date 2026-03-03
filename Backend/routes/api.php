@@ -30,6 +30,7 @@ use App\Http\Controllers\EquipoEstadoController;
 use App\Http\Controllers\MotivoRechazoController;
 use App\Http\Controllers\Analytics\DemandAnalyticsController;
 use App\Http\Controllers\Analytics\StockoutAnalyticsController;
+use App\Http\Controllers\Reportes\Dashboard\KpiAuditoriaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,7 +63,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/auth/google', [GoogleTokenController::class, 'login']);
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/analytics/executive-kpis', [DemandAnalyticsController::class, 'executiveKpis']);
     Route::get('/analytics/demand-timeseries', [DemandAnalyticsController::class, 'demandTimeseries']);
     Route::get('/analytics/loan-duration-distribution', [DemandAnalyticsController::class, 'loanDurationDistribution']);
@@ -297,8 +298,22 @@ Route::middleware('auth:sanctum')->post('/equipos', [EquipoController::class, 's
     });
 
 
+    // ── KPIs de Auditoría ──
+    Route::middleware(['auth:sanctum', 'admin', 'ocultar.reportes'])
+      ->prefix('dashboard/audit')
+      ->group(function () {
+          Route::get('/resumen',           [KpiAuditoriaController::class, 'resumen']);
+          Route::get('/fill-rate',         [KpiAuditoriaController::class, 'fillRate']);
+          Route::get('/tasa-atraso',       [KpiAuditoriaController::class, 'tasaAtraso']);
+          Route::get('/pareto-rechazos',   [KpiAuditoriaController::class, 'paretoRechazos']);
+          Route::get('/throughput',        [KpiAuditoriaController::class, 'throughput']);
+          Route::get('/equipos-huerfanos', [KpiAuditoriaController::class, 'equiposHuerfanos']);
+          Route::get('/segmentacion-abc',  [KpiAuditoriaController::class, 'segmentacionABC']);
+          Route::get('/heatmap',           [KpiAuditoriaController::class, 'heatmap']);
+      });
+
     // Dashboard operacional (estado actual del sistema)
-        Route::middleware(['auth:sanctum', 'ocultar.reportes'])
+        Route::middleware(['auth:sanctum', 'admin', 'ocultar.reportes'])
       ->prefix('dashboard/operational')
       ->group(function () {
           Route::get('/kpis', [DashboardOperationalController::class, 'getKPIs']);

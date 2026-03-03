@@ -578,6 +578,12 @@ class StockoutAnalyticsService
             ->leftJoin('grupo_prestamo as gp', 'gp.prestamo_id', '=', 'p.idPrestamo')
             ->leftJoin('grupos as g', 'g.id', '=', 'gp.grupo_id');
 
+        // Filtro por tipo FUERA/DENTRO
+        $tipo = $filters['tipo'] ?? null;
+        if ($tipo && in_array(strtoupper(trim($tipo)), ['FUERA', 'DENTRO'])) {
+            $query->where('p.tipo', strtoupper(trim($tipo)));
+        }
+
         $this->applySharedFilters($query, $filters);
 
         return $query;
@@ -592,7 +598,6 @@ class StockoutAnalyticsService
     private function stockoutQuery(array $filters)
     {
         $query = DB::table('prestamos as p')
-            ->leftJoin('prestamo_historial as ph', 'ph.idPrestamo', '=', 'p.idPrestamo')
             ->leftJoin('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
             ->leftJoin('equipos as e', 'e.id', '=', 'pe.idEquipo')
             ->leftJoin('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
@@ -601,12 +606,25 @@ class StockoutAnalyticsService
             ->leftJoin('grupos as g', 'g.id', '=', 'gp.grupo_id')
             ->where(DB::raw('UPPER(p.estado)'), 'RECHAZADO')
             ->where(function ($q) {
+                // Fuente principal: motivo_rechazo
                 $q->whereIn(DB::raw('UPPER(COALESCE(p.motivo_rechazo, \'\'))'), ['SIN_STOCK', 'CONFLICTO_HORARIO'])
-                    ->orWhere(function ($legacy) {
-                        $legacy->whereRaw("UPPER(REPLACE(COALESCE(ph.descripcion, ''), ' ', '_')) LIKE '%SIN_STOCK%'")
-                            ->orWhereRaw("UPPER(REPLACE(COALESCE(ph.descripcion, ''), ' ', '_')) LIKE '%CONFLICTO_HORARIO%'");
+                    // Fallback legacy: subquery en prestamo_historial (evita JOIN para no multiplicar filas)
+                    ->orWhereExists(function ($sub) {
+                        $sub->select(DB::raw(1))
+                            ->from('prestamo_historial as ph')
+                            ->whereColumn('ph.idPrestamo', 'p.idPrestamo')
+                            ->where(function ($legacy) {
+                                $legacy->whereRaw("UPPER(REPLACE(COALESCE(ph.descripcion, ''), ' ', '_')) LIKE '%SIN_STOCK%'")
+                                    ->orWhereRaw("UPPER(REPLACE(COALESCE(ph.descripcion, ''), ' ', '_')) LIKE '%CONFLICTO_HORARIO%'");
+                            });
                     });
             });
+
+        // Filtro por tipo FUERA/DENTRO
+        $tipo = $filters['tipo'] ?? null;
+        if ($tipo && in_array(strtoupper(trim($tipo)), ['FUERA', 'DENTRO'])) {
+            $query->where('p.tipo', strtoupper(trim($tipo)));
+        }
 
         $this->applySharedFilters($query, $filters);
 
@@ -628,9 +646,10 @@ class StockoutAnalyticsService
                         ->orWhere('te.id', $num);
                 });
             } else {
-                $query->where(function ($sub) use ($categoria) {
-                    $sub->where('c.nombre', 'like', "%{$categoria}%")
-                        ->orWhere('te.nombre', 'like', "%{$categoria}%");
+                $categoriaSafe = str_replace(['%', '_'], ['\%', '\_'], $categoria);
+                $query->where(function ($sub) use ($categoriaSafe) {
+                    $sub->where('c.nombre', 'like', "%{$categoriaSafe}%")
+                        ->orWhere('te.nombre', 'like', "%{$categoriaSafe}%");
                 });
             }
         }
@@ -641,7 +660,8 @@ class StockoutAnalyticsService
             if (is_numeric($equipo)) {
                 $query->where('te.id', (int) $equipo);
             } else {
-                $query->where('te.nombre', 'like', "%{$equipo}%");
+                $equipoSafe = str_replace(['%', '_'], ['\%', '\_'], $equipo);
+                $query->where('te.nombre', 'like', "%{$equipoSafe}%");
             }
         }
 

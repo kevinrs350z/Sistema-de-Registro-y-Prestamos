@@ -39,7 +39,7 @@ trait ReportDateHelpers
      * @param string $column Columna de fecha
      * @return string SQL expression
      */
-    protected function getGranularityFormat(string $granularity, string $column = 'created_at'): string
+    protected function getGranularityFormat(string $granularity, string $column = 'fecha_inicio'): string
     {
         return match ($granularity) {
             'day' => "DATE($column)",

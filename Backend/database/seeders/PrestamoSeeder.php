@@ -19,8 +19,8 @@ class PrestamoSeeder extends Seeder
         */
         $p1 = DB::table('prestamos')->insertGetId([
             'idUser'       => 1,
-            'fecha_inicio' => null,
-            'fecha_fin'    => null,
+            'fecha_inicio' => $now->toDateString(),
+            'fecha_fin'    => $now->toDateString(),
             'estado'       => 'PENDIENTE',
             'tipo'         => 'DENTRO',
             'otra_motivo'  => 'Clase práctica',
@@ -70,8 +70,8 @@ class PrestamoSeeder extends Seeder
         */
         $p3 = DB::table('prestamos')->insertGetId([
             'idUser'       => 1,
-            'fecha_inicio' => null,
-            'fecha_fin'    => null,
+            'fecha_inicio' => $now->toDateString(),
+            'fecha_fin'    => $now->toDateString(),
             'estado'       => 'APROBADO',
             'tipo'         => 'DENTRO',
             'otra_motivo'  => 'Práctica guiada',
@@ -119,8 +119,8 @@ class PrestamoSeeder extends Seeder
         */
         $p5 = DB::table('prestamos')->insertGetId([
             'idUser'       => 2,
-            'fecha_inicio' => null,
-            'fecha_fin'    => null,
+            'fecha_inicio' => $now->toDateString(),
+            'fecha_fin'    => $now->toDateString(),
             'estado'       => 'PENDIENTE',
             'tipo'         => 'DENTRO',
             'otra_motivo'  => 'Clases prácticas',
@@ -142,12 +142,14 @@ class PrestamoSeeder extends Seeder
         // GENERAR MUCHOS MÁS PRÉSTAMOS PARA VISUALIZAR EL RANKING
         for ($i = 2; $i <= 5; $i++) {
             for ($j = 0; $j < 8; $j++) {
+                $fechaRand = Carbon::now()->subDays(rand(1, 30));
+                $tipoRand = ['DENTRO', 'FUERA'][rand(0, 1)];
                 DB::table('prestamos')->insert([
                     'idUser'       => $i,
-                    'fecha_inicio' => null,
-                    'fecha_fin'    => null,
+                    'fecha_inicio' => $fechaRand->toDateString(),
+                    'fecha_fin'    => $tipoRand === 'FUERA' ? $fechaRand->copy()->addDays(rand(1, 5))->toDateString() : $fechaRand->toDateString(),
                     'estado'       => ['PENDIENTE', 'APROBADO', 'DEVUELTO'][rand(0, 2)],
-                    'tipo'         => ['DENTRO', 'FUERA'][rand(0, 1)],
+                    'tipo'         => $tipoRand,
                     'otra_motivo'  => 'Préstamo ' . $j,
                     'observacion'  => null,
                     'created_at'   => Carbon::now()->subDays(rand(1, 30)),

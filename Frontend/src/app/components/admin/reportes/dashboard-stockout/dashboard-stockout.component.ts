@@ -4,14 +4,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
+import * as echarts from 'echarts';
 import {
   DashboardOperationalService,
   StockoutBaseParams
 } from '../../../../services/reportes/dashboard-operational.service';
 import { ReportFiltersComponent } from '../report-filters/report-filters.component';
 import { ReportFilter } from '../../../../services/report-filters.service';
-
-declare const echarts: any;
 
 @Component({
   selector: 'app-dashboard-stockout',

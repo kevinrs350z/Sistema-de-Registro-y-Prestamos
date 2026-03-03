@@ -34,6 +34,17 @@ class PrestamoService
                 throw new \Exception('ALUMNO_BLOQUEADO', 403);
             }
         }
+
+        // Normalizar: DENTRO siempre debe tener fecha_inicio (mismo día, usan bloques para el horario)
+        if (($data['tipo'] ?? '') === 'DENTRO') {
+            if (empty($data['fecha_inicio'])) {
+                $data['fecha_inicio'] = now()->toDateString();
+            }
+            if (empty($data['fecha_fin'])) {
+                $data['fecha_fin'] = $data['fecha_inicio'];
+            }
+        }
+
         return Prestamo::create($data);
     }
 

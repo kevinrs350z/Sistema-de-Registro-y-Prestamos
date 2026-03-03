@@ -210,19 +210,13 @@ class DemandAnalyticsService
         $qTotCurr = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'));
         $qTotPrev = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'));
 
-        // Rechazados por stock
+        // Rechazados por stock (solo motivo_rechazo, no otra_motivo que es campo libre del usuario)
         $qRejCurr = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'))
             ->where(DB::raw('UPPER(p.estado)'), 'RECHAZADO')
-            ->where(function ($q) {
-                $q->whereIn(DB::raw("UPPER(COALESCE(p.motivo_rechazo, ''))"), self::STOCKOUT_REJECTION_REASONS)
-                    ->orWhereIn(DB::raw("UPPER(COALESCE(p.otra_motivo, ''))"), self::STOCKOUT_REJECTION_REASONS);
-            });
+            ->whereIn(DB::raw("UPPER(COALESCE(p.motivo_rechazo, ''))"), self::STOCKOUT_REJECTION_REASONS);
         $qRejPrev = $this->baseQuery($f)->select(DB::raw('COUNT(DISTINCT p.idPrestamo) AS total'))
             ->where(DB::raw('UPPER(p.estado)'), 'RECHAZADO')
-            ->where(function ($q) {
-                $q->whereIn(DB::raw("UPPER(COALESCE(p.motivo_rechazo, ''))"), self::STOCKOUT_REJECTION_REASONS)
-                    ->orWhereIn(DB::raw("UPPER(COALESCE(p.otra_motivo, ''))"), self::STOCKOUT_REJECTION_REASONS);
-            });
+            ->whereIn(DB::raw("UPPER(COALESCE(p.motivo_rechazo, ''))"), self::STOCKOUT_REJECTION_REASONS);
 
         if ($from && $to) {
             $qTotCurr->whereBetween('p.fecha_inicio', [$from, $to]);
@@ -270,18 +264,19 @@ class DemandAnalyticsService
             // Duración en minutos por bloques
             $qCurr = DB::table('prestamos as p')
                 ->join('bloque_prestamos as bp', 'bp.idPrestamo', '=', 'p.idPrestamo')
-                ->join('bloques as b', 'b.id', '=', 'bp.bloque_id')
+                ->join('bloques as b', 'b.idBloque', '=', 'bp.idBloque')
                 ->whereIn(DB::raw('UPPER(p.estado)'), self::APPROVED_STATES)
                 ->select(DB::raw('TIMESTAMPDIFF(MINUTE, b.hora_inicio, b.hora_fin) as duracion'));
 
             $durations = $qCurr->pluck('duracion')->filter(fn ($v) => $v > 0)->sort()->values()->all();
             $unit = 'min';
         } else {
-            // Duración en días
-            $qCurr = $this->baseQuery($f)
+            // Duración en días — query directa sin join a prestamo_equipo para evitar multiplicación de filas
+            $qCurr = DB::table('prestamos as p')
                 ->whereIn(DB::raw('UPPER(p.estado)'), self::APPROVED_STATES)
+                ->where('p.tipo', 'FUERA')
                 ->whereNotNull('p.fecha_inicio')->whereNotNull('p.fecha_fin')
-                ->select(DB::raw('DATEDIFF(p.fecha_fin, p.fecha_inicio) as duracion'));
+                ->select('p.idPrestamo', DB::raw('DATEDIFF(p.fecha_fin, p.fecha_inicio) as duracion'));
 
             if ($from && $to) {
                 $qCurr->whereBetween('p.fecha_inicio', [$from, $to]);
@@ -1360,6 +1355,12 @@ class DemandAnalyticsService
             ->leftJoin('grupo_prestamo as gp', 'gp.prestamo_id', '=', 'p.idPrestamo')
             ->leftJoin('grupos as g', 'g.id', '=', 'gp.grupo_id');
 
+        // ── Filtro por tipo FUERA/DENTRO ──
+        $tipo = $filters['tipo'] ?? null;
+        if ($tipo && in_array(strtoupper(trim($tipo)), ['FUERA', 'DENTRO'])) {
+            $query->where('p.tipo', strtoupper(trim($tipo)));
+        }
+
         // Categoría o tipo de equipo
         $categoria = $filters['categoria'] ?? null;
         if (!is_null($categoria) && $categoria !== '') {
@@ -1370,9 +1371,11 @@ class DemandAnalyticsService
                         ->orWhere('te.id', $num);
                 });
             } else {
-                $query->where(function ($sub) use ($categoria) {
-                    $sub->where('c.nombre', 'like', "%{$categoria}%")
-                        ->orWhere('te.nombre', 'like', "%{$categoria}%");
+                // Sanitizar wildcards en input del usuario
+                $categoriaSafe = str_replace(['%', '_'], ['\%', '\_'], $categoria);
+                $query->where(function ($sub) use ($categoriaSafe) {
+                    $sub->where('c.nombre', 'like', "%{$categoriaSafe}%")
+                        ->orWhere('te.nombre', 'like', "%{$categoriaSafe}%");
                 });
             }
         }
