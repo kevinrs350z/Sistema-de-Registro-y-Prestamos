@@ -1,7 +1,17 @@
-<nav class="navbar-uta admin-navbar" [class.menu-open]="menuAbierto">
+<nav class="navbar-uta admin-navbar-slim">
   <div class="navbar-bg"></div>
 
   <div class="navbar-content">
+    <!-- Botón hamburguesa para mobile (abre sidebar) -->
+    <button
+      type="button"
+      class="sidebar-toggle-btn"
+      (click)="toggleSidebar()"
+      aria-label="Abrir menú lateral"
+    >
+      <i class="bi bi-list"></i>
+    </button>
+
     <div
       class="navbar-brand"
       role="button"
@@ -18,20 +28,11 @@
     </div>
 
     <div class="navbar-admin-tools">
-      <button
-        type="button"
-        class="navbar-toggler"
-        (click)="toggleMenu()"
-        [attr.aria-expanded]="menuAbierto"
-        aria-label="Abrir menú"
-      >
-        <span class="toggler-icon"></span>
-        <span class="toggler-icon"></span>
-        <span class="toggler-icon"></span>
-      </button>
-
+      <span class="nav-user-name">
+        <i class="bi bi-person-circle"></i>
+        {{ getUserId() }}
+      </span>
       <span class="nav-separator">|</span>
-      <span class="nav-user-name">{{ getUserId() }}</span>
       <a
         href="javascript:void(0)"
         class="nav-link nav-logout"
@@ -41,42 +42,5 @@
         Salir
       </a>
     </div>
-  </div>
-
-  <div class="navbar-collapse admin-menu" [class.show]="menuAbierto">
-    <button class="nav-link-mobile" (click)="navegarInterno('gestionar')">
-      Panel de administración
-    </button>
-    <button class="nav-link-mobile" (click)="navegarInterno('solicitudes')">
-      Solicitudes pendientes
-    </button>
-    <button class="nav-link-mobile" (click)="navegarInterno('finalizadas')">
-      Solicitudes finalizadas
-    </button>
-    <button class="nav-link-mobile" (click)="navegarInterno('inventario')">
-      Gestionar Equipos
-    </button>
-    <button class="nav-link-mobile" (click)="navegarInterno('cuentas')">
-      Gestionar Cuentas
-    </button>
-    <button class="nav-link-mobile" (click)="navegarInterno('asignaturas')">
-      Gestionar Asignaturas / Eventos
-    </button>
-    <button class="nav-link-mobile" (click)="irCrearSolicitud()">
-      Crear solicitud
-    </button>
-    <button class="nav-link-mobile" (click)="irBloqueosHorario()">
-      Bloqueos de horario
-    </button>
-    <button class="nav-link-mobile" (click)="irCategorias()">
-      Gestionar Categorias
-    </button>
-    <button
-      class="nav-link-mobile"
-      *ngIf="auth.isAdmin()"
-      (click)="irReportes()"
-    >
-      Visualizar Reportes
-    </button>
   </div>
 </nav>

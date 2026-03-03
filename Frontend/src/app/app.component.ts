@@ -6,6 +6,7 @@ import { filter, debounceTime } from 'rxjs/operators';
 
 import { NavbarComponent } from './navbar/navbar.component';
 import { NavbarAdminComponent } from './components/admin/navbar-admin/navbar-admin.component';
+import { AdminSidebarComponent } from './components/admin/admin-sidebar/admin-sidebar.component';
 import { LoadingOverlayComponent } from './shared/loading-overlay/loading-overlay.component';
 import { NotificationComponent } from './shared/notification/notification.component';
 import { FooterComponent } from './shared/footer/footer.component';
@@ -18,6 +19,7 @@ import { AuthService } from './services/auth.service';
     RouterOutlet,
     NavbarComponent,
     NavbarAdminComponent,
+    AdminSidebarComponent,
     LoadingOverlayComponent, 
     NgIf,
     NotificationComponent,
@@ -40,6 +42,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   private _userNavbar?: ElementRef<HTMLElement>;
   private _adminNavbar?: ElementRef<HTMLElement>;
+
+  @ViewChild('adminSidebar') adminSidebar?: AdminSidebarComponent;
 
   @ViewChild('userNav', { read: ElementRef })
   set userNavbarRef(ref: ElementRef<HTMLElement> | undefined) {
@@ -68,6 +72,17 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
         this.scheduleNavbarUpdate();
       });
+  }
+
+  /** Abrir/cerrar sidebar en mobile */
+  onToggleSidebar(): void {
+    if (this.adminSidebar) {
+      if (this.adminSidebar.isOpen) {
+        this.adminSidebar.onOverlayClick();
+      } else {
+        this.adminSidebar.open();
+      }
+    }
   }
 
   ngAfterViewInit(): void {

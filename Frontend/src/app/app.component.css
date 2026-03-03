@@ -1,4 +1,24 @@
 .app-content {
     min-height: 100vh;
-    transition: padding-top 0.2s ease;
+    transition: padding-top 0.2s ease, margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Contenido desplazado a la derecha cuando hay sidebar admin */
+.app-content.with-admin-sidebar {
+    margin-left: 270px;
+}
+
+/* Footer también desplazado en admin */
+.admin-footer-wrapper {
+    margin-left: 270px;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 991.98px) {
+    .app-content.with-admin-sidebar {
+        margin-left: 0;
+    }
+    .admin-footer-wrapper {
+        margin-left: 0;
+    }
 }

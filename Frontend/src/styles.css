@@ -91,19 +91,26 @@ app-navbar-admin {
   display: block;
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1100;
-  transition: transform 0.3s ease;
+  left: 270px;
+  right: 0;
+  z-index: 1040;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 991.98px) {
+  app-navbar-admin {
+    left: 0;
+    width: 100%;
+  }
 }
 
 app-navbar-admin.navbar-hidden {
   transform: translateY(-100%);
 }
 
-/* Agregar espacio para el navbar fijo en rutas admin */
+/* Espacio para el navbar fijo en rutas admin (slim 56px + buffer) */
 app-navbar-admin + div {
-  padding-top: 130px;
+  padding-top: 80px;
   transition: padding-top 0.3s ease;
 }
 

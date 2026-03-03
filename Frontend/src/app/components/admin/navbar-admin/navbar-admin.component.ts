@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
@@ -13,63 +13,20 @@ import { NotificationService } from '../../../services/notification.service';
 })
 export class NavbarAdminComponent {
 
-  menuAbierto = false;
+  /** Emitir cuando se pulse el botón hamburguesa (mobile) */
+  @Output() toggleSidebarEvent = new EventEmitter<void>();
 
   public auth = inject(AuthService);
   private notify = inject(NotificationService);
 
   constructor(private router: Router) {}
 
-  toggleMenu() {
-    this.menuAbierto = !this.menuAbierto;
+  toggleSidebar() {
+    this.toggleSidebarEvent.emit();
   }
 
   irHome() {
-    this.menuAbierto = false;
     this.router.navigate(['/admin/dashboard']);
-  }
-
-  /** Navegar a sección - usa evento si está en dashboard, si no navega por ruta */
-  navegarInterno(seccion: string) {
-    this.menuAbierto = false;
-
-    // Si estamos en el dashboard, usar eventos
-    if (this.router.url === '/admin/dashboard' || this.router.url.startsWith('/admin/dashboard')) {
-      window.dispatchEvent(
-        new CustomEvent('admin-navegacion', { detail: seccion })
-      );
-    } else {
-      // Si no estamos en dashboard, navegar a la ruta correspondiente
-      this.router.navigate(['/admin/dashboard']).then(() => {
-        // Pequeño delay para que el dashboard cargue y escuche el evento
-        setTimeout(() => {
-          window.dispatchEvent(
-            new CustomEvent('admin-navegacion', { detail: seccion })
-          );
-        }, 100);
-      });
-    }
-  }
-
-  /** 📊 IR A REPORTES (ruta real) */
-  irReportes() {
-    this.menuAbierto = false;
-    this.router.navigate(['/admin/reportes']);
-  }
-
-  irCrearSolicitud() {
-    this.menuAbierto = false;
-    this.router.navigate(['/equipos/catalogo']);
-  }
-
-  irBloqueosHorario() {
-    this.menuAbierto = false;
-    this.router.navigate(['/admin/bloqueos-horario']);
-  }
-
-  irCategorias() {
-    this.menuAbierto = false;
-    this.router.navigate(['/admin/categorias']);
   }
 
   getUserId(): string {
