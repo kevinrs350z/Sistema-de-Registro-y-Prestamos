@@ -42,15 +42,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(42, 25, 72, 0.99) 0%,
-      rgba(52, 32, 88, 0.99) 50%,
-      rgba(62, 38, 105, 0.98) 100%
-    );
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 1px 0 8px rgba(0, 0, 0, 0.10);
+
+  /* Morado institucional SÓLIDO — sin translucencia que deje pasar el fondo */
+  background: linear-gradient(180deg, #2a1948 0%, #342058 50%, #3e2669 100%);
+
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 1px 0 8px rgba(0, 0, 0, 0.12);
   font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   animation: sidebarIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -76,7 +73,7 @@
 .sidebar-title {
   font-size: 0.68rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.50);
   letter-spacing: 1.2px;
   text-transform: uppercase;
 }
@@ -111,6 +108,7 @@
 }
 
 /* ---------- Navegación ---------- */
+/* Anula los estilos globales de 'nav' (bg-elev celeste, box-shadow) */
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
@@ -118,6 +116,14 @@
   padding: 8px 0 12px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.10) transparent;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Anula la regla global nav a { color: var(--muted) !important } */
+.sidebar-nav button,
+.sidebar-nav a {
+  color: inherit !important;
 }
 
 .sidebar-nav::-webkit-scrollbar {
@@ -143,8 +149,8 @@
   margin-top: 4px;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.42);
-  font-size: 0.675rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.69rem;
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -153,7 +159,7 @@
 }
 
 .section-header:hover {
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .section-header-left {
@@ -164,7 +170,7 @@
 
 .section-icon {
   font-size: 0.72rem;
-  opacity: 0.55;
+  opacity: 0.65;
 }
 
 .section-chevron {
@@ -205,7 +211,7 @@
   background: none;
   border: none;
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.88);
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
@@ -218,13 +224,13 @@
 }
 
 .sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
   transform: translateX(2px);
 }
 
 .sidebar-item.active {
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
   font-weight: 600;
 }
@@ -237,14 +243,14 @@
   transform: translateY(-50%);
   width: 2.5px;
   height: 18px;
-  background: rgba(245, 164, 116, 0.80);
+  background: rgba(255, 255, 255, 0.75);
   border-radius: 0 2px 2px 0;
   animation: indicatorIn 0.25s ease;
 }
 
 .item-icon {
   font-size: 0.88rem;
-  opacity: 0.60;
+  opacity: 0.80;
   flex-shrink: 0;
   width: 16px;
   text-align: center;
@@ -252,7 +258,7 @@
 }
 
 .sidebar-item:hover .item-icon {
-  opacity: 0.85;
+  opacity: 0.95;
 }
 
 .sidebar-item.active .item-icon {
@@ -290,6 +296,8 @@
     transform: translateX(-100%);
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
     animation: none;
+    /* Fondo sólido en mobile también */
+    background: linear-gradient(180deg, #2a1948 0%, #342058 50%, #3e2669 100%);
   }
 
   .admin-sidebar.open {
