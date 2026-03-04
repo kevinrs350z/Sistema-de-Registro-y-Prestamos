@@ -5,9 +5,10 @@
 
 <!-- Admin layout: sidebar + slim navbar -->
 <ng-container *ngIf="esRutaAdmin">
-  <app-admin-sidebar #adminSidebar></app-admin-sidebar>
+  <app-admin-sidebar #adminSidebar (collapsedChange)="sidebarCollapsed = $event"></app-admin-sidebar>
   <app-navbar-admin
     #adminNav
+    [class.sidebar-collapsed]="sidebarCollapsed"
     (toggleSidebarEvent)="onToggleSidebar()"
   ></app-navbar-admin>
 </ng-container>
@@ -16,12 +17,13 @@
   class="app-content"
   [class.with-user-navbar]="!esRutaAuth && !esRutaAdmin"
   [class.with-admin-sidebar]="esRutaAdmin"
+  [class.sidebar-collapsed]="esRutaAdmin && sidebarCollapsed"
   [style.paddingTop.px]="navbarOffset"
 >
   <router-outlet></router-outlet>
 </div>
 
-<div [class.admin-footer-wrapper]="esRutaAdmin">
+<div [class.admin-footer-wrapper]="esRutaAdmin" [class.sidebar-collapsed]="esRutaAdmin && sidebarCollapsed">
   <app-footer
     [role]="esRutaAdmin ? 'admin' : 'alumno'"
     [showLinks]="!esRutaAuth"

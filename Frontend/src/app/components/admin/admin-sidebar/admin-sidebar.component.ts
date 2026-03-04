@@ -29,6 +29,7 @@ interface MenuSection {
 export class AdminSidebarComponent implements OnInit, OnDestroy {
 
   @Output() sidebarClosed = new EventEmitter<void>();
+  @Output() collapsedChange = new EventEmitter<boolean>();
 
   public auth = inject(AuthService);
   private router = inject(Router);
@@ -36,6 +37,9 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
 
   /** Estado del sidebar mobile */
   isOpen = false;
+
+  /** Estado colapsado (desktop) */
+  collapsed = false;
 
   /** Sección activa actual (para resaltar) */
   activeSection = 'gestionar';
@@ -110,6 +114,11 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
+    // Restaurar estado colapsado de localStorage
+    this.collapsed = localStorage.getItem('admin-sidebar-collapsed') === 'true';
+    // Notificar estado inicial al padre
+    setTimeout(() => this.collapsedChange.emit(this.collapsed));
+
     // Escuchar cambios de ruta para actualizar el item activo
     this.routerSub = this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd)
@@ -211,6 +220,13 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       return this.activeSection === '__route__' + item.route;
     }
     return false;
+  }
+
+  /** Toggle colapsar/expandir (desktop) */
+  toggleCollapse(): void {
+    this.collapsed = !this.collapsed;
+    localStorage.setItem('admin-sidebar-collapsed', String(this.collapsed));
+    this.collapsedChange.emit(this.collapsed);
   }
 
   /** Abrir sidebar mobile */

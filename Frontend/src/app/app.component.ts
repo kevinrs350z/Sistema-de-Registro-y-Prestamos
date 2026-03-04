@@ -34,6 +34,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   esRutaAuth = false;
   esRutaAdmin = false;
   navbarOffset = 0;
+  sidebarCollapsed = false;
   readonly versionStamp = this.computeVersionStamp();
 
   private resizeSub?: Subscription;

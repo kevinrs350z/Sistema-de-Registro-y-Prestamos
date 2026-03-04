@@ -6,16 +6,15 @@
 ></div>
 
 <!-- Sidebar -->
-<aside class="admin-sidebar" [class.open]="isOpen">
+<aside class="admin-sidebar" [class.open]="isOpen" [class.collapsed]="collapsed">
 
-  <!-- Header del sidebar -->
+  <!-- ─── Header: solo logo + close mobile ─── -->
   <div class="sidebar-header">
     <img
       src="assets/logo-carrera-white.png"
       alt="Diseño Multimedia"
       class="sidebar-logo"
     />
-    <span class="sidebar-title">Administración</span>
 
     <!-- Botón cerrar en mobile -->
     <button class="sidebar-close" (click)="onOverlayClick()" aria-label="Cerrar menú">
@@ -23,12 +22,14 @@
     </button>
   </div>
 
-  <!-- Separador -->
-  <div class="sidebar-divider"></div>
+  <div class="sidebar-divider header-divider"></div>
 
-  <!-- Navegación con acordeones -->
+  <!-- ─── Navegación con acordeones ─── -->
   <nav class="sidebar-nav">
-    <ng-container *ngFor="let section of visibleSections">
+    <ng-container *ngFor="let section of visibleSections; let first = first">
+      <!-- Separador entre secciones (no antes de la primera) -->
+      <div class="section-divider" *ngIf="!first"></div>
+
       <!-- Cabecera de la sección -->
       <button
         class="section-header"
@@ -37,7 +38,7 @@
       >
         <div class="section-header-left">
           <i class="bi {{ section.icon }} section-icon"></i>
-          <span>{{ section.label }}</span>
+          <span class="section-label">{{ section.label }}</span>
         </div>
         <i
           class="bi bi-chevron-down section-chevron"
@@ -56,6 +57,7 @@
           class="sidebar-item"
           [class.active]="isItemActive(item)"
           (click)="onItemClick(item)"
+          [attr.title]="collapsed ? item.label : null"
         >
           <i class="bi {{ item.icon }} item-icon"></i>
           <span class="item-label">{{ item.label }}</span>
@@ -64,5 +66,19 @@
       </div>
     </ng-container>
   </nav>
+
+  <!-- ─── Toggle colapsar/expandir (solo desktop) ─── -->
+  <div class="sidebar-footer">
+    <div class="sidebar-divider"></div>
+    <button
+      class="toggle-btn"
+      (click)="toggleCollapse()"
+      [attr.aria-label]="collapsed ? 'Expandir menú' : 'Contraer menú'"
+      [attr.title]="collapsed ? 'Expandir' : 'Contraer'"
+    >
+      <i class="bi" [class.bi-layout-sidebar-inset]="collapsed" [class.bi-layout-sidebar]="!collapsed"></i>
+      <span class="toggle-text">{{ collapsed ? 'Expandir' : 'Contraer' }}</span>
+    </button>
+  </div>
 
 </aside>

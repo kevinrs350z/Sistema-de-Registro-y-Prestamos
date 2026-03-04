@@ -38,16 +38,8 @@
   width: 100%;
 }
 
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.logo-carrera {
-  height: 30px;
-  width: auto;
-  object-fit: contain;
+.navbar-spacer {
+  flex: 1;
 }
 
 /* Botón hamburguesa – solo visible en mobile */
@@ -124,10 +116,6 @@
   .sidebar-toggle-btn {
     display: flex;
   }
-
-  .navbar-brand .logo-carrera {
-    display: none;  /* Logo ya está en el sidebar */
-  }
 }
 
 @media (max-width: 576px) {
@@ -138,5 +126,12 @@
   .nav-separator {
     display: none;
   }
+}
+
+/* ============================
+   COLLAPSED STATE (desde host class)
+============================ */
+:host(.sidebar-collapsed) .admin-navbar-slim {
+  left: 64px;
 }
 
