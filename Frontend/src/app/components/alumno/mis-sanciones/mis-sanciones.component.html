@@ -16,13 +16,20 @@
   <div class="grid" *ngIf="!cargando() && !error()">
     <div class="card" *ngFor="let s of sancionesPaginadas()">
       <div class="card-head">
-        <span class="badge" [class.activa]="s.estado === 'ACTIVA'">
-          {{ s.estado === 'ACTIVA' ? 'Activa' : 'Pasada' }}
+        <span class="badge"
+              [class.activa]="s.estado === 'ACTIVA'"
+              [class.escalada]="s.estado === 'ESCALADA'"
+              [class.comite]="s.estado === 'EN_REVISION_COMITE'">
+          {{ s.estado }}
         </span>
         <span class="nivel">{{ s.nivel }}</span>
       </div>
 
       <p class="desc">{{ s.descripcion || '—' }}</p>
+
+      <div class="categoria" *ngIf="s.categoria_falta">
+        <strong>Categoría:</strong> {{ s.categoria_falta }}
+      </div>
 
       <div class="detalle" *ngIf="s.detalle">
         <strong>Detalle:</strong> {{ s.detalle }}
@@ -36,6 +43,10 @@
       <div class="asignacion" *ngIf="s.asignada_por || s.asignada_en">
         <div *ngIf="s.asignada_por"><strong>Asignada por:</strong> {{ s.asignada_por }}</div>
         <div *ngIf="s.asignada_en"><strong>Asignada en:</strong> {{ s.asignada_en | date:'dd/MM/yyyy HH:mm' }}</div>
+      </div>
+
+      <div class="escalamiento-info" *ngIf="s.escalada_desde_id">
+        <strong>Generada por escalamiento</strong> desde sanción #{{ s.escalada_desde_id }}
       </div>
     </div>
 

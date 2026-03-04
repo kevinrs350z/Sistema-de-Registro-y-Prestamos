@@ -85,8 +85,19 @@ class User extends Authenticatable implements CanResetPasswordContract
     public function sanciones()
     {
         return $this->belongsToMany(Sancion::class, 'user_sancion', 'idUser', 'idSancion')
-            ->withPivot(['assigned_by', 'prestamo_id', 'descripcion', 'accion', 'created_at'])
+            ->withPivot([
+                'id', 'assigned_by', 'prestamo_id', 'descripcion', 'accion',
+                'nivel', 'estado_sancion', 'categoria_falta',
+                'fecha_inicio', 'fecha_fin', 'escalada_desde_id', 'periodo_academico',
+                'created_at',
+            ])
             ->withTimestamps();
+    }
+
+    /** Registros individuales de sanciones (relación directa al pivot). */
+    public function sancionesIndividuales()
+    {
+        return $this->hasMany(\App\Models\UserSancion::class, 'idUser', 'idUser');
     }
 
      // Verifica si el usuario tiene un rol específico

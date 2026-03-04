@@ -17,13 +17,20 @@
       </div>
 
       <div class="alert-bloqueo" *ngIf="bloqueado">
-        <strong>Cuenta bloqueada.</strong>
-        <span>
+        <strong>Cuenta bloqueada por sanción.</strong>
+        <span *ngIf="!sancionInfo">
           No puedes solicitar equipos hasta resolver el incidente.
         </span>
-        <div class="alert-detalle" *ngIf="bloqueadoMotivo || bloqueadoFecha">
+        <span *ngIf="sancionInfo && sancionInfo.nivel === 'GRAVISIMA'">
+          Tienes una sanción <b>GRAVÍSIMA</b> activa. No puedes solicitar equipos hasta que se resuelva el proceso legal o comité disciplinario.
+        </span>
+        <span *ngIf="sancionInfo && sancionInfo.nivel !== 'GRAVISIMA'">
+          Tienes una sanción <b>{{ sancionInfo.nivel }}</b> activa. No puedes solicitar equipos hasta el
+          <b>{{ sancionInfo.fecha_fin | date:'dd/MM/yyyy' }}</b>.
+        </span>
+        <div class="alert-detalle" *ngIf="bloqueadoMotivo || sancionInfo">
           <div *ngIf="bloqueadoMotivo"><b>Motivo:</b> {{ bloqueadoMotivo }}</div>
-          <div *ngIf="bloqueadoFecha"><b>Desde:</b> {{ bloqueadoFecha | date:'dd MMM yyyy · HH:mm' }}</div>
+          <div *ngIf="sancionInfo?.categoria"><b>Categoría:</b> {{ sancionInfo?.categoria }}</div>
         </div>
       </div>
 
@@ -116,6 +123,7 @@
             <li
               *ngFor="let e of equiposResumen()"
               class="equipos-item d-flex align-items-center justify-content-between"
+              [class.bloqueado-horario]="itemBloqueadoHorario(e.idTipoEquipo)"
             >
               <div class="d-flex align-items-center gap-3">
                 <div class="equipos-icon">
@@ -127,10 +135,31 @@
                     Cantidad:
                     <span class="cantidad">{{ e.cantidad }}</span>
                   </div>
+                  <div class="equipos-bloqueo-tag" *ngIf="itemBloqueadoHorario(e.idTipoEquipo)">
+                    Bloqueado en este horario
+                  </div>
                 </div>
               </div>
+              <button
+                *ngIf="itemBloqueadoHorario(e.idTipoEquipo)"
+                type="button"
+                class="btn-quitar-bloqueado"
+                (click)="quitarEquipoBloqueado(e.idTipoEquipo)"
+                title="Quitar equipo bloqueado"
+              >
+                <i class="bi bi-x-circle"></i>
+              </button>
             </li>
           </ul>
+
+          <!-- Alerta de bloqueo horario -->
+          <div class="alerta-bloqueo-horario" *ngIf="equiposBloqueadosHorario.length > 0">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>
+              <strong>Equipos bloqueados para el horario seleccionado</strong>
+              <p>Los equipos marcados no están disponibles en los bloques elegidos. Puedes retirarlos del carrito o seleccionar bloques diferentes donde estén disponibles.</p>
+            </div>
+          </div>
 
           <div class="equipos-footer d-flex justify-content-between">
             <span class="muted">Total de equipos</span>

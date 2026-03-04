@@ -280,58 +280,106 @@
 
 .bh-modal {
   display: block;
-  width: min(1040px, 100%);
+  width: min(1080px, 100%);
   max-height: 92vh;
   overflow: auto;
   background: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 14px;
-  padding: 16px;
+  border: 1px solid #e2e6ef;
+  border-radius: 18px;
+  padding: 0;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
 }
 
 .bh-modal-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #eef0f4;
 }
 
 .bh-modal-head h2 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2b478b;
 }
 
 .bh-close-btn {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  background: #fff;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-}
-
-.bh-modal-context {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #e2e6ef;
   border-radius: 10px;
-  background: #f8f9fa;
+  background: #f8fafc;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #6b7280;
+  transition: 0.2s;
 }
 
-.bh-modal-context p {
-  margin: 4px 0;
-  font-size: 14px;
+.bh-close-btn:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+/* ── Contexto ── */
+.bh-modal-context {
+  margin: 0;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #eef0f4;
+}
+
+.context-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.context-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.context-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.context-label {
+  display: block;
+  font-size: 0.78rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.context-value {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1f2a44;
+  margin-top: 2px;
 }
 
 .readonly-note {
-  color: #8a6d3b;
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 6px 10px;
+  border-radius: 8px;
+  display: inline-block;
 }
 
+/* ── Tabs actividades ── */
 .activities-tabs {
-  margin-top: 12px;
-  border: 1px solid #dee2e6;
-  border-radius: 10px;
-  padding: 10px;
+  margin: 0;
+  border-bottom: 1px solid #eef0f4;
+  padding: 12px 24px;
   background: #fff;
   display: flex;
   gap: 8px;
@@ -340,125 +388,276 @@
 }
 
 .tabs-title {
-  font-size: 13px;
-  color: #666;
-  margin-right: 2px;
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-right: 4px;
+  font-weight: 600;
 }
 
 .activity-tab {
-  border: 1px solid #dee2e6;
+  border: 1px solid #e2e6ef;
   border-radius: 999px;
-  background: #f8f9fa;
-  font-size: 12px;
-  color: #2d2d2d;
-  padding: 6px 10px;
+  background: #f8fafc;
+  font-size: 0.8rem;
+  color: #374151;
+  padding: 6px 14px;
   cursor: pointer;
+  transition: 0.2s;
+  font-weight: 500;
+}
+
+.activity-tab:hover {
+  background: #eef2ff;
 }
 
 .activity-tab.active {
-  border-color: var(--primary);
-  background: rgba(245, 164, 116, 0.2);
+  border-color: #446ba9;
+  background: #e9efff;
+  color: #2b478b;
 }
 
 .activity-tab.is-new {
   background: #fff;
+  border-style: dashed;
+  color: #446ba9;
 }
 
+/* ── Cuerpo ── */
 .bh-modal-body {
-  margin-top: 16px;
+  padding: 20px 24px;
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: 1.15fr 1fr;
   gap: 20px;
 }
 
-.bh-modal-body h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
-  font-weight: 500;
+/* ── Section cards ── */
+.section-card {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+
+.section-card:last-child {
+  margin-bottom: 0;
+}
+
+.section-card h3 {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2b478b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-icon {
+  font-size: 1.1rem;
 }
 
 .field-label {
   display: block;
-  margin: 10px 0 6px;
-  font-size: 14px;
+  margin: 12px 0 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
 }
 
-input,
-textarea {
+.section-card input[type="text"],
+.section-card input[type="date"],
+.section-card textarea {
   width: 100%;
-  border: 1px solid #dee2e6;
+  border: 1px solid #d7ddee;
   border-radius: 10px;
-  padding: 10px;
-  font-size: 14px;
-  color: #2d2d2d;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: #1f2a44;
   background: #fff;
+  transition: border-color 0.2s;
 }
 
+.section-card input:focus,
+.section-card textarea:focus {
+  outline: none;
+  border-color: #446ba9;
+  box-shadow: 0 0 0 3px rgba(68, 107, 169, 0.08);
+}
+
+.section-card textarea {
+  resize: vertical;
+}
+
+/* ── Días de la semana (pills) ── */
 .weekday-checks {
   display: grid;
-  grid-template-columns: repeat(7, minmax(40px, 1fr));
+  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
+  margin-bottom: 14px;
 }
 
 .day-pill {
-  border: 1px solid #dee2e6;
+  border: 1px solid #d7ddee;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 8px 0;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  transition: 0.2s;
+}
+
+.day-pill:hover:not(:disabled) {
+  background: #eef2ff;
+  border-color: #c7d2fe;
 }
 
 .day-pill.checked {
-  border-color: var(--primary);
-  background: rgba(245, 164, 116, 0.18);
+  border-color: #446ba9;
+  background: #e9efff;
+  color: #2b478b;
 }
 
-.repeat-types {
-  margin-top: 12px;
+.day-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Repeat cards ── */
+.repeat-cards {
   display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
-.repeat-types label,
-.mode-switch label,
-.delete-mode label {
+.repeat-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1.5px solid #e2e6ef;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: center;
+}
+
+.repeat-card:hover {
+  background: #f3f6ff;
+  border-color: #c7d2fe;
+}
+
+.repeat-card.active {
+  border-color: #446ba9;
+  background: #e9efff;
+  box-shadow: 0 0 0 3px rgba(68, 107, 169, 0.1);
+}
+
+.repeat-card-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.repeat-card-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+.repeat-card-desc {
+  font-size: 0.72rem;
+  color: #6b7280;
 }
 
 .range-row {
-  margin-top: 10px;
+  margin-top: 12px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
+/* ── Mode switch (botones) ── */
 .mode-switch {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-bottom: 12px;
 }
 
+.mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 1.5px solid #e2e6ef;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  transition: 0.2s;
+}
+
+.mode-btn:hover {
+  background: #f3f6ff;
+}
+
+.mode-btn.active {
+  border-color: #446ba9;
+  background: #e9efff;
+  color: #2b478b;
+}
+
+.mode-btn-icon {
+  font-size: 1rem;
+}
+
+/* ── Add row ── */
 .add-row {
-  margin-top: 10px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
 }
 
-.add-row button,
-.suggestions button,
-.modal-actions button {
-  border: 1px solid #dee2e6;
+.add-row input {
+  border: 1px solid #d7ddee;
   border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  width: 100%;
+  color: #1f2a44;
   background: #fff;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 14px;
 }
 
+.add-row input:focus {
+  outline: none;
+  border-color: #446ba9;
+}
+
+.add-btn {
+  border: 1px solid #446ba9;
+  border-radius: 10px;
+  background: #446ba9;
+  color: #fff;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.add-btn:hover {
+  background: #365a8f;
+}
+
+/* ── Sugerencias ── */
 .suggestions {
   margin-top: 8px;
   display: flex;
@@ -467,83 +666,211 @@ textarea {
 }
 
 .suggestions button {
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border: 1px solid #e2e6ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+  transition: 0.15s;
 }
 
-.chip-list {
-  margin-top: 10px;
+.suggestions button:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+/* ── Equipos seleccionados (grid de cards) ── */
+.equipos-selected-section {
+  margin-top: 14px;
+}
+
+.equipos-count {
+  margin-bottom: 8px;
+  color: #2b478b;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.equipos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.equipo-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e2e6ef;
+  border-radius: 10px;
+  transition: 0.2s;
 }
 
-.chip {
-  border: 1px solid #dee2e6;
-  border-radius: 999px;
-  padding: 6px 10px;
-  background: #f8f9fa;
-  font-size: 13px;
-  display: inline-flex;
+.equipo-card:hover {
+  border-color: #c7d2fe;
+  background: #fafbff;
+}
+
+.equipo-card-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.equipo-card-name {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1f2a44;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.equipo-card-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: 0.15s;
+  flex-shrink: 0;
+}
+
+.equipo-card-remove:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.equipos-empty {
+  margin-top: 14px;
+  padding: 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  border: 1px dashed #e2e6ef;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 
-.chip button {
-  border: none;
-  background: transparent;
+.equipos-empty-icon {
+  font-size: 1.4rem;
+  opacity: 0.5;
+}
+
+/* ── Delete section ── */
+.delete-section {
+  border-color: #fecaca;
+  background: #fef8f8;
+}
+
+.delete-section h3 {
+  color: #991b1b;
+}
+
+.delete-options {
+  display: grid;
+  gap: 6px;
+}
+
+.delete-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e6ef;
+  border-radius: 10px;
+  background: #fff;
   cursor: pointer;
-  color: #666;
-  font-size: 12px;
-  padding: 0;
+  text-align: left;
+  transition: 0.2s;
 }
 
-.delete-mode {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid #dee2e6;
+.delete-option:hover {
+  border-color: #fca5a5;
+  background: #fff5f5;
 }
 
-.delete-mode h4 {
-  margin: 0 0 8px;
-  font-size: 14px;
-  font-weight: 600;
+.delete-option.active {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.delete-option-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+.delete-option-desc {
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 
 .error {
   display: block;
   margin-top: 6px;
   color: #bb2d3b;
-  font-size: 12px;
+  font-size: 0.78rem;
 }
 
+/* ── Footer acciones ── */
 .bh-modal-actions {
-  margin-top: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid #eef0f4;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 10px;
+}
+
+.bh-modal-actions button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  border: 1px solid #e2e6ef;
 }
 
 .bh-modal-actions .primary {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: #446ba9;
+  border-color: #446ba9;
   color: #fff;
 }
 
+.bh-modal-actions .primary:hover {
+  background: #365a8f;
+}
+
 .bh-modal-actions .secondary {
-  background: #fff;
+  background: #f8fafc;
+  color: #374151;
+}
+
+.bh-modal-actions .secondary:hover {
+  background: #eef2ff;
 }
 
 .bh-modal-actions .danger {
-  border-color: #d7a3a8;
-  color: #8f2f3c;
+  border-color: #fecaca;
+  color: #991b1b;
+  background: #fff;
 }
 
-.bh-modal-actions .primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.bh-modal-actions .danger:hover {
+  background: #fef2f2;
 }
 
+.bh-modal-actions .primary:disabled,
 .bh-modal-actions .danger:disabled,
 .bh-modal-actions .secondary:disabled {
   opacity: 0.5;

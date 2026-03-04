@@ -50,13 +50,36 @@ export class SancionesService {
   }
 
   getCatalogo() {
-    return this.http.get<{ sanciones: any[] }>(`${this.apiUrl}/catalogo`, {
+    return this.http.get<{
+      sanciones: any[];
+      categorias_por_nivel: Record<string, { value: string; label: string }[]>;
+      niveles: string[];
+      estados: string[];
+    }>(`${this.apiUrl}/catalogo`, {
       headers: this.getAuthHeaders()
     });
   }
 
   getSancionesUsuario(idUser: number) {
     return this.http.get<{ resumen: any; sanciones: any[] }>(`${this.apiUrl}/usuario/${idUser}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getConfiguracion() {
+    return this.http.get<{ configuracion: any[] }>(`${this.apiUrl}/configuracion`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateConfiguracion(data: { clave: string; valor: string }[]) {
+    return this.http.put(`${this.apiUrl}/configuracion`, { items: data }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getHistorial(sancionId: number) {
+    return this.http.get<{ historial: any[] }>(`${this.apiUrl}/${sancionId}/historial`, {
       headers: this.getAuthHeaders()
     });
   }

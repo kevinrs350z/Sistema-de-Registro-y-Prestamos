@@ -12,8 +12,12 @@ use App\Models\BloquePrestamo;
 use App\Models\Asignatura;
 use App\Models\BloqueoHorario;
 use App\Models\PrestamoHistorial;
+use App\Models\TipoEquipo;
 use App\Enums\EstadoPrestamo;
 use App\Enums\EstadoEquipo;
+use App\Enums\EstadoSancion;
+use App\Enums\NivelSancion;
+use App\Models\UserSancion;
 use App\Services\PrestamoService;
 use Carbon\Carbon;
 
@@ -82,6 +86,49 @@ class PrestamoController extends Controller
                 ], 403);
             }
 
+            // ═══════════════════════════════════════════════════════
+            // VERIFICAR SANCIONES ACTIVAS (doble check — seguridad)
+            // LEVE/MEDIA/GRAVE: bloqueado durante el periodo asignado
+            // GRAVISIMA: bloqueado hasta resolución legal (sin fecha)
+            // ═══════════════════════════════════════════════════════
+            if ($user) {
+                $sancionActiva = UserSancion::where('idUser', $user->idUser)
+                    ->whereIn('estado_sancion', [EstadoSancion::ACTIVA, EstadoSancion::EN_REVISION_COMITE])
+                    ->where(function ($q) {
+                        // GRAVISIMA sin importar fecha / resto con fecha_fin vigente
+                        $q->where('nivel', NivelSancion::GRAVISIMA)
+                          ->orWhere(function ($q2) {
+                              $q2->where('fecha_fin', '>=', now()->toDateString());
+                          });
+                    })
+                    ->orderByRaw("FIELD(nivel, 'GRAVISIMA','GRAVE','MEDIA','LEVE') ASC")
+                    ->first();
+
+                if ($sancionActiva) {
+                    $nivel = $sancionActiva->nivel;
+                    if ($nivel === NivelSancion::GRAVISIMA) {
+                        $msg = 'Tienes una sanción GRAVÍSIMA activa. No puedes solicitar equipos hasta que se resuelva el proceso legal/comité.';
+                    } else {
+                        $fechaFin = $sancionActiva->fecha_fin
+                            ? Carbon::parse($sancionActiva->fecha_fin)->format('d/m/Y')
+                            : '—';
+                        $msg = "Tienes una sanción {$nivel} activa. No puedes solicitar equipos hasta el {$fechaFin}.";
+                    }
+
+                    return response()->json([
+                        'message' => $msg,
+                        'motivo'  => $msg,
+                        'fecha'   => $sancionActiva->fecha_inicio,
+                        'sancion' => [
+                            'nivel'       => $nivel,
+                            'fecha_fin'   => $sancionActiva->fecha_fin,
+                            'estado'      => $sancionActiva->estado_sancion,
+                            'categoria'   => $sancionActiva->categoria_falta,
+                        ],
+                    ], 403);
+                }
+            }
+
             if ($user && $user->hasRole('ALUMNO')) {
                 $usuariosValidar = array_merge([$user->idUser], $integrantes);
                 $bloqueos = $service->validarMaximoPrestamo($usuariosValidar, $request->equipos);
@@ -110,17 +157,29 @@ class PrestamoController extends Controller
                     $diaSemana = $fechaReferencia->dayOfWeekIso; // 1 = Lunes, 7 = Domingo
                     $semanaInicio = $fechaReferencia->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
 
-                    $existeBloqueo = BloqueoHorario::where('activo', true)
+                    $bloqueos = BloqueoHorario::where('activo', true)
                         ->where('semana_inicio', $semanaInicio)
                         ->where('dia_semana', $diaSemana)
                         ->whereIn('idBloque', $bloques)
                         ->whereIn('idTipoEquipo', $tiposSolicitados)
-                        ->exists();
+                        ->get();
 
-                    if ($existeBloqueo) {
+                    if ($bloqueos->isNotEmpty()) {
+                        $nombres = TipoEquipo::whereIn('id', $bloqueos->pluck('idTipoEquipo')->unique())
+                            ->pluck('nombre', 'id');
+
+                        $detalle = $bloqueos->groupBy('idTipoEquipo')->map(function ($items, $tipoId) use ($nombres) {
+                            return [
+                                'idTipoEquipo'      => (int) $tipoId,
+                                'nombre'             => $nombres[$tipoId] ?? '—',
+                                'bloques_afectados'  => $items->pluck('idBloque')->values()->all(),
+                            ];
+                        })->values();
+
                         return response()->json([
-                            'error' => 'BLOQUEO_HORARIO',
-                            'message' => 'Este equipo está bloqueado para el horario seleccionado.',
+                            'error'   => 'BLOQUEO_HORARIO',
+                            'message' => 'Hay equipos bloqueados para el horario seleccionado. Puedes solicitar estos equipos en bloques donde no estén bloqueados.',
+                            'detalle' => $detalle,
                         ], 409);
                     }
                 }

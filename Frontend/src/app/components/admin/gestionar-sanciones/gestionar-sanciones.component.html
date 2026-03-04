@@ -2,6 +2,14 @@
 <h1 class="titulo-pagina">Gestión de Sanciones</h1>
 <p class="subtitulo-pagina">Visualizar y administrar sanciones registradas</p>
 
+<!-- Alerta de escalamientos automáticos -->
+<div class="escalamiento-alert" *ngIf="escalamientosAlert.length > 0">
+  <div class="escalamiento-card" *ngFor="let msg of escalamientosAlert">
+    {{ msg }}
+  </div>
+  <button class="btn-outline" type="button" (click)="escalamientosAlert = []" style="margin-top:8px">Cerrar alertas</button>
+</div>
+
 <div class="cuentas-container"
      [class.form-activo]="formularioVisible || formularioAsignar" style="position: relative;">
 
@@ -46,14 +54,21 @@
            (click)="seleccionar(s)">
 
         <p><strong>{{ s.usuario }}</strong></p>
-        <p>{{ s.motivo }}</p>
+        <p>
+          <span class="badge-nivel" [attr.data-nivel]="s.nivel">{{ s.nivel }}</span>
+          <span *ngIf="s.categoria_falta" style="font-size:0.8rem; color:#6b7280; margin-left:6px">{{ s.categoria_falta }}</span>
+        </p>
         <p class="meta-asignacion" *ngIf="s.asignada_por || s.asignada_en">
           <span>{{ s.asignada_por || '—' }}</span>
           <span class="dot">•</span>
           <span>{{ s.asignada_en ? (s.asignada_en | date:'dd MMM yyyy · HH:mm') : '—' }}</span>
         </p>
 
-        <p class="estado" [class.activa]="s.estado === 'ACTIVA'">
+        <p class="estado"
+           [class.activa]="s.estado === 'ACTIVA'"
+           [class.escalada]="s.estado === 'ESCALADA'"
+           [class.pendiente]="s.estado === 'PENDIENTE'"
+           [class.comite]="s.estado === 'EN_REVISION_COMITE'">
           {{ s.estado }}
         </p>
       </div>
@@ -100,10 +115,15 @@
     <p class="tile-label">RUT</p>
     <p class="tile-value">{{ sancionSeleccionada.rut }}</p>
   </div>
-
   <div class="detail-tile">
-    <p class="tile-label">Motivo</p>
-    <p class="tile-value">{{ sancionSeleccionada.motivo }}</p>
+    <p class="tile-label">Nivel</p>
+    <p class="tile-value">
+      <span class="badge-nivel" [attr.data-nivel]="sancionSeleccionada.nivel">{{ sancionSeleccionada.nivel }}</span>
+    </p>
+  </div>
+  <div class="detail-tile" *ngIf="sancionSeleccionada.categoria_falta">
+    <p class="tile-label">Categoría de falta</p>
+    <p class="tile-value">{{ sancionSeleccionada.categoria_falta }}</p>
   </div>
   <div class="detail-tile col-100">
     <p class="tile-label">Descripción</p>
@@ -119,15 +139,28 @@
   </div>
   <div class="detail-tile">
     <p class="tile-label">Fecha inicio</p>
-    <p class="tile-value">{{ sancionSeleccionada.fecha_inicio }}</p>
+    <p class="tile-value">{{ sancionSeleccionada.fecha_inicio | date:'dd/MM/yyyy' }}</p>
   </div>
   <div class="detail-tile">
     <p class="tile-label">Fecha fin</p>
-    <p class="tile-value">{{ sancionSeleccionada.fecha_fin }}</p>
+    <p class="tile-value">{{ sancionSeleccionada.fecha_fin ? (sancionSeleccionada.fecha_fin | date:'dd/MM/yyyy') : 'Indefinido' }}</p>
   </div>
   <div class="detail-tile">
     <p class="tile-label">Estado</p>
-    <p class="tile-value">{{ sancionSeleccionada.estado }}</p>
+    <p class="tile-value"
+       [class.estado-activa]="sancionSeleccionada.estado === 'ACTIVA'"
+       [class.estado-escalada]="sancionSeleccionada.estado === 'ESCALADA'"
+       [class.estado-comite]="sancionSeleccionada.estado === 'EN_REVISION_COMITE'">
+      {{ sancionSeleccionada.estado }}
+    </p>
+  </div>
+  <div class="detail-tile" *ngIf="sancionSeleccionada.escalada_desde_id">
+    <p class="tile-label">Escalada desde</p>
+    <p class="tile-value">Sanción #{{ sancionSeleccionada.escalada_desde_id }}</p>
+  </div>
+  <div class="detail-tile" *ngIf="sancionSeleccionada.periodo_academico">
+    <p class="tile-label">Periodo académico</p>
+    <p class="tile-value">{{ sancionSeleccionada.periodo_academico }}</p>
   </div>
 </div>
 
@@ -252,10 +285,20 @@
 
       <div class="col-100">
         <label>Tipo de sanción</label>
-        <select [(ngModel)]="asignarTipo" [disabled]="tiposSancion.length === 0">
+        <select [(ngModel)]="asignarTipo" (ngModelChange)="onTipoSancionChange()" [disabled]="tiposSancion.length === 0">
           <option [ngValue]="0" disabled>Selecciona un tipo</option>
           <option *ngFor="let t of tiposSancion" [ngValue]="t.id">
             {{ t.nivel }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-100" *ngIf="categoriasFiltradas.length > 0">
+        <label>Categoría de falta</label>
+        <select [(ngModel)]="asignarCategoria">
+          <option value="">Selecciona la falta cometida</option>
+          <option *ngFor="let c of categoriasFiltradas" [value]="c.value">
+            {{ c.label }}
           </option>
         </select>
       </div>

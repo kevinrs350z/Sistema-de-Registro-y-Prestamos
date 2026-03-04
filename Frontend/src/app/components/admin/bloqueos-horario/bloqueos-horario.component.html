@@ -97,13 +97,35 @@
       <button type="button" class="bh-close-btn" (click)="closeModal()">✕</button>
     </header>
 
+    <!-- Contexto -->
     <div class="bh-modal-context" *ngIf="selectedCell() as cell">
-      <p><strong>Fecha seleccionada:</strong> {{ formatSelectedDateForModal() }}</p>
-      <p><strong>Bloque horario:</strong> {{ cell.block.etiqueta }}</p>
-      <p><strong>Semana:</strong> {{ formatWeekForModal() }}</p>
-      <p class="readonly-note" *ngIf="isSelectedCellReadOnly()"><strong>Modo:</strong> Solo lectura (bloque pasado)</p>
+      <div class="context-row">
+        <div class="context-item">
+
+          <div>
+            <span class="context-label">Fecha seleccionada</span>
+            <span class="context-value">{{ formatSelectedDateForModal() }}</span>
+          </div>
+        </div>
+        <div class="context-item">
+
+          <div>
+            <span class="context-label">Bloque horario</span>
+            <span class="context-value">{{ cell.block.etiqueta }}</span>
+          </div>
+        </div>
+        <div class="context-item">
+
+          <div>
+            <span class="context-label">Semana</span>
+            <span class="context-value">{{ formatWeekForModal() }}</span>
+          </div>
+        </div>
+      </div>
+      <p class="readonly-note" *ngIf="isSelectedCellReadOnly()">Solo lectura — bloque pasado</p>
     </div>
 
+    <!-- Tabs de actividades -->
     <div class="activities-tabs" *ngIf="cellActivities().length">
       <span class="tabs-title">Actividades en este bloque:</span>
       <button
@@ -120,128 +142,153 @@
       </button>
     </div>
 
+    <!-- Cuerpo del modal -->
     <div class="bh-modal-body">
+      <!-- COLUMNA IZQUIERDA -->
       <section class="left-column">
-        <h3>Datos de la actividad</h3>
-        <label class="field-label">Nombre de la actividad</label>
-        <input
-          type="text"
-          [ngModel]="form().nombreActividad"
-          (ngModelChange)="updateFormField('nombreActividad', $event)"
-          placeholder="Ej: Clase de iluminación"
-        />
-        <small class="error" *ngIf="formErrors().nombreActividad">{{ formErrors().nombreActividad }}</small>
-
-        <label class="field-label">Descripción (opcional)</label>
-        <textarea
-          rows="3"
-          [ngModel]="form().descripcion"
-          (ngModelChange)="updateFormField('descripcion', $event)"
-          placeholder="Detalle breve de la actividad"
-        ></textarea>
-
-        <h3>Repetición del bloqueo</h3>
-        <div class="weekday-checks">
-          <button
-            type="button"
-            *ngFor="let day of weekDays()"
-            class="day-pill"
-            [class.checked]="isDayChecked(day.id)"
-            [disabled]="form().tipoRepeticion === 'daily'"
-            (click)="toggleDiaRepeticion(day.id)"
-          >
-            {{ day.corto }}
-          </button>
-        </div>
-
-        <div class="repeat-types">
-          <label>
-            <input type="radio" name="repeat" [checked]="form().tipoRepeticion === 'none'" (change)="setRepetition('none')" />
-            No repetir
-          </label>
-          <label>
-            <input type="radio" name="repeat" [checked]="form().tipoRepeticion === 'daily'" (change)="setRepetition('daily')" />
-            Diaria
-          </label>
-          <label>
-            <input type="radio" name="repeat" [checked]="form().tipoRepeticion === 'weekly'" (change)="setRepetition('weekly')" />
-            Semanal
-          </label>
-          <label>
-            <input type="radio" name="repeat" [checked]="form().tipoRepeticion === 'monthly'" (change)="setRepetition('monthly')" />
-            Mensual
-          </label>
-        </div>
-
-        <div class="range-row" *ngIf="showRangeFields()">
-          <div>
-            <label class="field-label">Fecha inicio</label>
-            <input type="date" [ngModel]="form().fechaInicio" (ngModelChange)="updateFormField('fechaInicio', $event)" />
-          </div>
-          <div>
-            <label class="field-label">Fecha fin</label>
-            <input type="date" [ngModel]="form().fechaFin" (ngModelChange)="updateFormField('fechaFin', $event)" />
-          </div>
-        </div>
-        <small class="error" *ngIf="formErrors().rango">{{ formErrors().rango }}</small>
-      </section>
-
-      <aside class="right-column">
-        <h3>Agregar equipo a bloquear</h3>
-
-        <div class="mode-switch">
-          <label>
-            <input type="radio" name="mode" [checked]="form().modoBloqueo === 'modelo'" (change)="onModoBloqueoChange('modelo')" />
-            Por tipo de equipo
-          </label>
-          <label>
-            <input type="radio" name="mode" [checked]="form().modoBloqueo === 'fisico'" (change)="onModoBloqueoChange('fisico')" />
-            Por equipo físico
-          </label>
-        </div>
-
-        <div class="add-row">
+        <div class="section-card">
+          <h3>Datos de la actividad</h3>
+          <label class="field-label">Nombre de la actividad</label>
           <input
             type="text"
-            [placeholder]="getSearchPlaceholder()"
-            [ngModel]="form().busquedaEquipo"
-            (ngModelChange)="updateFormField('busquedaEquipo', $event)"
+            [ngModel]="form().nombreActividad"
+            (ngModelChange)="updateFormField('nombreActividad', $event)"
+            placeholder="Ej: Clase de iluminación"
           />
-          <button type="button" (click)="addEquipo()">Agregar</button>
+          <small class="error" *ngIf="formErrors().nombreActividad">{{ formErrors().nombreActividad }}</small>
+
+          <label class="field-label">Descripción (opcional)</label>
+          <textarea
+            rows="3"
+            [ngModel]="form().descripcion"
+            (ngModelChange)="updateFormField('descripcion', $event)"
+            placeholder="Detalle breve de la actividad"
+          ></textarea>
         </div>
 
-        <div class="suggestions" *ngIf="filteredEquiposDisponibles().length">
-          <button
-            type="button"
-            *ngFor="let item of filteredEquiposDisponibles()"
-            (click)="updateFormField('busquedaEquipo', item.nombre)"
-          >
-            {{ item.nombre }}
-          </button>
+        <div class="section-card">
+          <h3>Repetición del bloqueo</h3>
+
+          <div class="weekday-checks">
+            <button
+              type="button"
+              *ngFor="let day of weekDays()"
+              class="day-pill"
+              [class.checked]="isDayChecked(day.id)"
+              [disabled]="form().tipoRepeticion === 'daily'"
+              (click)="toggleDiaRepeticion(day.id)"
+            >
+              {{ day.corto }}
+            </button>
+          </div>
+
+          <div class="repeat-cards">
+            <button type="button" class="repeat-card" [class.active]="form().tipoRepeticion === 'none'" (click)="setRepetition('none')">
+
+              <span class="repeat-card-label">No repetir</span>
+              <span class="repeat-card-desc">Solo este día</span>
+            </button>
+            <button type="button" class="repeat-card" [class.active]="form().tipoRepeticion === 'daily'" (click)="setRepetition('daily')">
+
+              <span class="repeat-card-label">Diaria</span>
+              <span class="repeat-card-desc">Todos los días</span>
+            </button>
+            <button type="button" class="repeat-card" [class.active]="form().tipoRepeticion === 'weekly'" (click)="setRepetition('weekly')">
+
+              <span class="repeat-card-label">Semanal</span>
+              <span class="repeat-card-desc">Mismos días cada semana</span>
+            </button>
+            <button type="button" class="repeat-card" [class.active]="form().tipoRepeticion === 'monthly'" (click)="setRepetition('monthly')">
+
+              <span class="repeat-card-label">Mensual</span>
+              <span class="repeat-card-desc">Mismo día cada mes</span>
+            </button>
+          </div>
+
+          <div class="range-row" *ngIf="showRangeFields()">
+            <div>
+              <label class="field-label">Fecha inicio</label>
+              <input type="date" [ngModel]="form().fechaInicio" (ngModelChange)="updateFormField('fechaInicio', $event)" />
+            </div>
+            <div>
+              <label class="field-label">Fecha fin</label>
+              <input type="date" [ngModel]="form().fechaFin" (ngModelChange)="updateFormField('fechaFin', $event)" />
+            </div>
+          </div>
+          <small class="error" *ngIf="formErrors().rango">{{ formErrors().rango }}</small>
+        </div>
+      </section>
+
+      <!-- COLUMNA DERECHA -->
+      <aside class="right-column">
+        <div class="section-card">
+          <h3>Agregar equipo a bloquear</h3>
+
+          <div class="mode-switch">
+            <button type="button" class="mode-btn" [class.active]="form().modoBloqueo === 'modelo'" (click)="onModoBloqueoChange('modelo')">
+Por tipo de equipo
+            </button>
+            <button type="button" class="mode-btn" [class.active]="form().modoBloqueo === 'fisico'" (click)="onModoBloqueoChange('fisico')">
+Por equipo físico
+            </button>
+          </div>
+
+          <div class="add-row">
+            <input
+              type="text"
+              [placeholder]="getSearchPlaceholder()"
+              [ngModel]="form().busquedaEquipo"
+              (ngModelChange)="updateFormField('busquedaEquipo', $event)"
+            />
+            <button type="button" class="add-btn" (click)="addEquipo()">Agregar</button>
+          </div>
+
+          <div class="suggestions" *ngIf="filteredEquiposDisponibles().length">
+            <button
+              type="button"
+              *ngFor="let item of filteredEquiposDisponibles()"
+              (click)="updateFormField('busquedaEquipo', item.nombre)"
+            >
+              {{ item.nombre }}
+            </button>
+          </div>
+
+          <!-- Equipos seleccionados -->
+          <div class="equipos-selected-section" *ngIf="selectedEquipos().length">
+            <label class="field-label equipos-count">Equipos a bloquear ({{ selectedEquipos().length }})</label>
+            <div class="equipos-grid">
+              <div class="equipo-card" *ngFor="let item of selectedEquipos()">
+
+                <span class="equipo-card-name">{{ item.nombre }}</span>
+                <button type="button" class="equipo-card-remove" (click)="removeEquipo(item.id)" title="Quitar equipo">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="equipos-empty" *ngIf="!selectedEquipos().length">
+
+            <span>Aún no has agregado equipos</span>
+          </div>
+
+          <small class="error" *ngIf="formErrors().equipos">{{ formErrors().equipos }}</small>
         </div>
 
-        <div class="chip-list">
-          <span class="chip" *ngFor="let item of selectedEquipos()">
-            {{ item.nombre }}
-            <button type="button" (click)="removeEquipo(item.id)">✕</button>
-          </span>
-        </div>
-        <small class="error" *ngIf="formErrors().equipos">{{ formErrors().equipos }}</small>
-
-        <div class="delete-mode" *ngIf="modalMode() === 'edit'">
-          <h4>Eliminar serie</h4>
-          <label>
-            <input type="radio" name="delete-series" [checked]="deletingSeriesOption() === 'solo'" (change)="deletingSeriesOption.set('solo')" />
-            Solo este
-          </label>
-          <label>
-            <input type="radio" name="delete-series" [checked]="deletingSeriesOption() === 'siguientes'" (change)="deletingSeriesOption.set('siguientes')" />
-            Este y siguientes
-          </label>
-          <label>
-            <input type="radio" name="delete-series" [checked]="deletingSeriesOption() === 'toda'" (change)="deletingSeriesOption.set('toda')" />
-            Toda la serie
-          </label>
+        <div class="section-card delete-section" *ngIf="modalMode() === 'edit'">
+          <h3>Eliminar serie</h3>
+          <div class="delete-options">
+            <button type="button" class="delete-option" [class.active]="deletingSeriesOption() === 'solo'" (click)="deletingSeriesOption.set('solo')">
+              <span class="delete-option-label">Solo este</span>
+              <span class="delete-option-desc">Eliminar solo esta ocurrencia</span>
+            </button>
+            <button type="button" class="delete-option" [class.active]="deletingSeriesOption() === 'siguientes'" (click)="deletingSeriesOption.set('siguientes')">
+              <span class="delete-option-label">Este y siguientes</span>
+              <span class="delete-option-desc">Desde este en adelante</span>
+            </button>
+            <button type="button" class="delete-option" [class.active]="deletingSeriesOption() === 'toda'" (click)="deletingSeriesOption.set('toda')">
+              <span class="delete-option-label">Toda la serie</span>
+              <span class="delete-option-desc">Eliminar todas las ocurrencias</span>
+            </button>
+          </div>
         </div>
       </aside>
     </div>
