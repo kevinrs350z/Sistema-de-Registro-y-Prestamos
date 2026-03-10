@@ -12,11 +12,12 @@ import {
 } from '../../../../services/reportes/audit-dashboard.service';
 import { ReportFiltersComponent } from '../report-filters/report-filters.component';
 import { ReportFilter } from '../../../../services/report-filters.service';
+import { DmLoaderComponent } from '../../../../shared/dm-loader/dm-loader.component';
 
 @Component({
   selector: 'app-dashboard-audit',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReportFiltersComponent],
+  imports: [CommonModule, FormsModule, ReportFiltersComponent, DmLoaderComponent],
   templateUrl: './dashboard-audit.component.html',
   styleUrls: ['./dashboard-audit.component.css']
 })

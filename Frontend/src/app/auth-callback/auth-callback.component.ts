@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service'; 
+import { SessionService } from '../services/session.service';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-auth-callback',
@@ -16,7 +18,8 @@ export class AuthCallbackComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private sessionService: SessionService
   ) {}
 
   ngOnInit() {
@@ -26,24 +29,28 @@ export class AuthCallbackComponent implements OnInit {
 
       if (error) {
         console.error('Error al iniciar sesión con Google:', error);
-        this.router.navigate(['/auth/login']);
+        this.router.navigate(['/auth/login'], { replaceUrl: true });
         return;
       }
 
       if (token) {
+        // 🔐 Guardar autenticación
         sessionStorage.setItem('token', token);
+        
+        // 🌐 Guardar URL base de API para SSE
+        localStorage.setItem('apiBaseUrl', environment.apiBaseUrl);
+        console.log('[AuthCallbackComponent] Guardado apiBaseUrl:', environment.apiBaseUrl);
 
         // pedir el usuario
         this.authService.getUsuario(token).subscribe({
           next: user => {
             sessionStorage.setItem('user', JSON.stringify(user));
-            // En esta app la raíz redirige a /auth/login; mandamos al catálogo por defecto.
-            // (Si luego quieres, aquí podemos detectar rol y mandar a /admin/dashboard)
-            this.router.navigate(['/equipos/catalogo']);
+            this.sessionService.start();
+            this.router.navigate(['/equipos/catalogo'], { replaceUrl: true });
           },
           error: err => {
             console.error(err);
-            this.router.navigate(['/auth/login']);
+            this.router.navigate(['/auth/login'], { replaceUrl: true });
           }
         });
       }

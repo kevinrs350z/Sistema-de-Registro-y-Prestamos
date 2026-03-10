@@ -15,10 +15,7 @@
   </div>
 
   <!-- ═══ Loading ═══ -->
-  <div *ngIf="loading" class="so-loading">
-    <div class="spinner"></div>
-    <span>Analizando demanda insatisfecha…</span>
-  </div>
+  <app-dm-loader *ngIf="loading" size="md">Analizando demanda insatisfecha…</app-dm-loader>
 
   <!-- ═══ Error ═══ -->
   <div *ngIf="error && !loading" class="so-error">

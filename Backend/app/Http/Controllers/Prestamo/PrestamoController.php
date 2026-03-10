@@ -19,6 +19,7 @@ use App\Enums\EstadoSancion;
 use App\Enums\NivelSancion;
 use App\Models\UserSancion;
 use App\Services\PrestamoService;
+use App\Events\PrestamoCreated;
 use Carbon\Carbon;
 
 class PrestamoController extends Controller
@@ -238,6 +239,9 @@ class PrestamoController extends Controller
             }
 
             DB::commit();
+
+            // 🔔 EMITIR EVENTO SSE: Nueva solicitud de préstamo
+            event(new PrestamoCreated($prestamo));
 
             try {
                 $service->notificarEncargadosSolicitud($prestamo->idPrestamo);

@@ -83,4 +83,28 @@ rechazarPrestamo(id: number, motivo: string, accion: string) {
   });
 }
 
+// 🔄 OPERACIONES MASIVAS
+
+/**
+ * Devolver todos los préstamos en estado ENTREGADO
+ */
+devolverTodosMasivo(motivo?: string): Observable<any> {
+  return this.http.post(
+    `${environment.apiBaseUrl}/api/admin/prestamos/masivo/devolver-todos`,
+    { motivo: motivo || 'Devolución masiva' },
+    { headers: this.getAuthHeaders() }
+  );
+}
+
+/**
+ * Cancelar todos los préstamos PENDIENTES
+ */
+cancelarTodosPendientesMasivo(motivo?: string): Observable<any> {
+  return this.http.post(
+    `${environment.apiBaseUrl}/api/admin/prestamos/masivo/cancelar-pendientes`,
+    { motivo: motivo || 'Cancelación masiva' },
+    { headers: this.getAuthHeaders() }
+  );
+}
+
 }

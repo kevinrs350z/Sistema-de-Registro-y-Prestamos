@@ -16,11 +16,12 @@ import {
 } from '../../../../services/reportes/dashboard-operational.service';
 import { ReportFiltersComponent } from '../report-filters/report-filters.component';
 import { ReportFilter } from '../../../../services/report-filters.service';
+import { DmLoaderComponent } from '../../../../shared/dm-loader/dm-loader.component';
 
 @Component({
   selector: 'app-dashboard-operational',
   standalone: true,
-  imports: [CommonModule, ReportFiltersComponent],
+  imports: [CommonModule, ReportFiltersComponent, DmLoaderComponent],
   templateUrl: './dashboard-operational.component.html',
   styleUrls: ['./dashboard-operational.component.css']
 })
@@ -43,16 +44,15 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
   durationLoading = true;
   durationError = '';
   durationSinDatos = false;
-  medianaHint = 'Usar P50 (mediana) para describir la duración típica evita sesgo por casos extremos.';
+  medianaHint = 'Cada caja muestra el rango de duración (mínimo, percentiles 25/50/75, máximo). El punto marca el P90.';
+  durationTipo: 'FUERA' | 'DENTRO' = 'FUERA';
+  durationGroupBy: 'period' | 'categoria' | 'asignatura' = 'period';
+  durationBucket: 'week' | 'month' = 'week';
 
   scatterLoading = true;
   scatterError = '';
   scatterSinDatos = false;
-  scatterHint = 'Interpretación: arriba-derecha = zona crítica (alta demanda + alta duración).';
-
-  durationTipo: 'FUERA' | 'DENTRO' = 'FUERA';
-  durationGroupBy: 'period' | 'categoria' | 'asignatura' = 'period';
-  durationBucket: 'week' | 'month' = 'week';
+  scatterHint = 'Cada punto es un segmento. Arriba a la derecha = mucha demanda y préstamos largos.';
 
   scatterTipo: 'FUERA' | 'DENTRO' = 'FUERA';
   scatterGroupBy: 'period' | 'categoria' | 'asignatura' = 'period';
@@ -63,14 +63,14 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
   stockScatterLoading = true;
   stockScatterError = '';
   stockScatterSinDatos = false;
-  stockScatterHint = 'Arriba-izquierda = sobrestock (redistribuir). Abajo-derecha = falta stock (comprar).';
+  stockScatterHint = 'Arriba a la izquierda = sobra stock. Abajo a la derecha = falta stock.';
   stockScatterTipo: 'FUERA' | 'DENTRO' = 'FUERA';
   stockScatterGroupBy: 'tipo_equipo' | 'categoria' = 'tipo_equipo';
 
   topRequestedLoading = true;
   topRequestedError = '';
   topRequestedSinDatos = false;
-  topRequestedHint = 'Top de demanda con variación vs mes anterior. Click en barra para drill-down temporal.';
+  topRequestedHint = 'Los equipos más pedidos y cuánto cambió respecto al mes anterior. Click en una barra para ver el detalle.';
   topRequestedTipo: 'FUERA' | 'DENTRO' = 'FUERA';
   topRequestedGroupBy: 'equipo' | 'categoria' | 'asignatura' = 'equipo';
   topRequestedTopN: 10 | 20 = 10;
@@ -80,7 +80,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
   heatmapLoading = true;
   heatmapError = '';
   heatmapSinDatos = false;
-  heatmapHint = 'Detecta picos por día y bloque/hora. Activa normalización para comparar periodos de distinta duración.';
+  heatmapHint = 'Muestra en qué días y horarios se piden más equipos. La normalización permite comparar períodos distintos.';
   heatmapTipo: 'FUERA' | 'DENTRO' = 'DENTRO';
   heatmapNormalizeByWeeks = true;
   heatmapPalette: 'soft' | 'intense' = 'soft';
@@ -90,7 +90,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
   rejectionsStatusSinDatos = false;
   rejectionsStatusTipo: 'FUERA' | 'DENTRO' = 'FUERA';
   rejectionsStatusView: 'motivos' | 'estados' = 'motivos';
-  rejectionsStatusHint = 'Visualiza causas de no satisfacción de demanda y estados que afectan capacidad.';
+  rejectionsStatusHint = 'Por qué se rechazan solicitudes y en qué estados quedan los préstamos.';
   rejectionsStatusSummary = '';
   rejectionsStatusInterpretation = '';
 
@@ -100,14 +100,14 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
   forecastTipo: 'FUERA' | 'DENTRO' = 'FUERA';
   forecastBucket: 'week' | 'month' = 'week';
   forecastHorizon = 6;
-  forecastHint = 'Predicción basada en tendencia + estacionalidad simple.';
+  forecastHint = 'Estimación de demanda futura usando los datos históricos.';
   forecastMetricsText = '';
 
   statusFlowLoading = true;
   statusFlowError = '';
   statusFlowSinDatos = false;
   statusFlowTipo: 'FUERA' | 'DENTRO' = 'FUERA';
-  statusFlowHint = 'Muestra la ruta de solicitudes hacia estados finales y cuellos de botella operativos.';
+  statusFlowHint = 'Cuántas solicitudes llegan a cada etapa del proceso de préstamo.';
   statusFlowSummary = '';
 
   /** Tipo de préstamo: FUERA = por días, DENTRO = por bloques */
@@ -275,9 +275,17 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
     this.loadStatusFlow();
   }
 
+  onScatterTipoChange(event: Event): void {
+    this.scatterTipo = (event.target as HTMLSelectElement).value as 'FUERA' | 'DENTRO';
+    if (this.scatterTipo === 'DENTRO' && this.scatterGroupBy === 'period') {
+      this.scatterGroupBy = 'categoria';
+    }
+    this.selectedScatterPoint = null;
+    this.loadDemandVsDuration();
+  }
+
   onDurationTipoChange(event: Event): void {
     this.durationTipo = (event.target as HTMLSelectElement).value as 'FUERA' | 'DENTRO';
-    // DENTRO no soporta agrupación por periodo
     if (this.durationTipo === 'DENTRO' && this.durationGroupBy === 'period') {
       this.durationGroupBy = 'categoria';
     }
@@ -292,15 +300,6 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
   onDurationBucketChange(event: Event): void {
     this.durationBucket = (event.target as HTMLSelectElement).value as 'week' | 'month';
     this.loadLoanDurationDistribution();
-  }
-
-  onScatterTipoChange(event: Event): void {
-    this.scatterTipo = (event.target as HTMLSelectElement).value as 'FUERA' | 'DENTRO';
-    if (this.scatterTipo === 'DENTRO' && this.scatterGroupBy === 'period') {
-      this.scatterGroupBy = 'categoria';
-    }
-    this.selectedScatterPoint = null;
-    this.loadDemandVsDuration();
   }
 
   onScatterGroupByChange(event: Event): void {
@@ -1006,7 +1005,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           setTimeout(() => this.renderRejectionsStatusChart(payload));
         },
         error: () => {
-          this.rejectionsStatusError = 'No se pudo cargar la distribución de motivos/estados.';
+          this.rejectionsStatusError = 'No se pudo cargar los motivos/estados.';
           this.rejectionsStatusLoading = false;
           this.rejectionsStatusChart?.clear();
         }
@@ -1047,8 +1046,8 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           const mae = payload?.metrics?.mae;
           const mape = payload?.metrics?.mape;
           this.forecastMetricsText = [
-            mae != null ? `MAE: ${mae}` : null,
-            mape != null ? `MAPE: ${mape}%` : null,
+            mae != null ? `Error promedio: ${mae}` : null,
+            mape != null ? `Error porcentual: ${mape}%` : null,
           ].filter(Boolean).join(' · ');
 
           this.forecastLoading = false;
@@ -1559,7 +1558,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
       grid: { left: 54, right: 24, top: 64, bottom: 56 },
       legend: {
         top: 8,
-        data: ['Histórico real', 'Ajuste modelo', 'Forecast', 'Banda P90']
+        data: ['Datos reales', 'Línea de ajuste', 'Proyección', 'Margen P90']
       },
       tooltip: {
         trigger: 'axis',
@@ -1587,7 +1586,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
       },
       series: [
         {
-          name: 'Histórico real',
+          name: 'Datos reales',
           type: 'line',
           smooth: true,
           showSymbol: false,
@@ -1595,7 +1594,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           lineStyle: { width: 2 },
         },
         {
-          name: 'Ajuste modelo',
+          name: 'Línea de ajuste',
           type: 'line',
           smooth: true,
           showSymbol: false,
@@ -1612,7 +1611,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           itemStyle: { color: '#2563eb' },
         },
         {
-          name: 'Banda P90',
+          name: 'Margen P90',
           type: 'line',
           data: padLowerP90,
           lineStyle: { opacity: 0 },
@@ -1620,7 +1619,7 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
           symbol: 'none',
         },
         {
-          name: 'Banda P90',
+          name: 'Margen P90',
           type: 'line',
           data: padUpperP90.map((upper, idx) => {
             const low = padLowerP90[idx] as number | null;
@@ -1644,6 +1643,33 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
 
     const nodes: any[] = payload?.nodes ?? [];
     const links: any[] = payload?.links ?? [];
+    const totalSolicitudes: number = payload?.meta?.totalSolicitudes ?? 0;
+
+    // Build funnel data: for each node, compute how many requests reached that stage
+    const stageCount: Record<string, number> = {};
+
+    // The first node ("Solicitud registrada") uses totalSolicitudes
+    if (nodes.length > 0) {
+      stageCount[nodes[0].name] = totalSolicitudes;
+    }
+
+    // For subsequent stages, count inbound links
+    for (const link of links) {
+      stageCount[link.target] = (stageCount[link.target] ?? 0) + (link.value ?? 0);
+    }
+
+    // Build ordered funnel data from nodes
+    const funnelData = nodes.map((node: any) => ({
+      name: node.name,
+      value: stageCount[node.name] ?? 0,
+    }));
+
+    const colorPalette = [
+      '#10b981', '#34d399', '#6ee7b7',
+      '#3b82f6', '#60a5fa', '#93c5fd',
+      '#f59e0b', '#fbbf24',
+      '#ef4444', '#f87171',
+    ];
 
     const option: echarts.EChartsOption = {
       animation: true,
@@ -1655,28 +1681,13 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
         borderWidth: 0,
         textStyle: { color: '#fff' },
         formatter: (params: any) => {
-          if (params?.dataType === 'edge') {
-            const data = params?.data ?? {};
-            return [
-              `<div style="margin-bottom:6px;font-weight:600">${data.source} → ${data.target}</div>`,
-              `Casos: <b>${data.value ?? 0}</b>`,
-              `% del total: <b>${data.percentTotal ?? 0}%</b>`,
-              `% desde origen: <b>${data.percentFromSource ?? 0}%</b>`,
-            ].join('<br/>');
-          }
-
-          const nodeName = params?.name ?? '';
-          const outbound = links
-            .filter((link) => link.source === nodeName)
-            .reduce((acc, link) => acc + Number(link.value ?? 0), 0);
-          const inbound = links
-            .filter((link) => link.target === nodeName)
-            .reduce((acc, link) => acc + Number(link.value ?? 0), 0);
-
+          const name = params?.name ?? '';
+          const value = params?.value ?? 0;
+          const pct = totalSolicitudes > 0 ? ((value / totalSolicitudes) * 100).toFixed(1) : '0';
           return [
-            `<div style="margin-bottom:6px;font-weight:600">${nodeName}</div>`,
-            `Entradas: <b>${inbound}</b>`,
-            `Salidas: <b>${outbound}</b>`,
+            `<div style="margin-bottom:6px;font-weight:600">${name}</div>`,
+            `Solicitudes: <b>${value}</b>`,
+            `Del total: <b>${pct}%</b>`,
           ].join('<br/>');
         }
       },
@@ -1689,29 +1700,39 @@ export class DashboardOperationalComponent implements OnInit, AfterViewInit, OnD
       },
       series: [
         {
-          type: 'sankey',
-          left: 18,
-          right: 18,
+          type: 'funnel',
+          left: '10%',
+          right: '10%',
           top: 14,
           bottom: 14,
-          nodeAlign: 'justify',
-          draggable: false,
-          emphasis: { focus: 'adjacency' },
-          lineStyle: {
-            color: 'gradient',
-            curveness: 0.5,
-            opacity: 0.35,
-          },
+          width: '80%',
+          min: 0,
+          max: totalSolicitudes || 1,
+          minSize: '8%',
+          maxSize: '100%',
+          sort: 'none',
+          gap: 4,
           label: {
-            fontSize: 12,
+            show: true,
+            position: 'inside',
+            fontSize: 13,
+            formatter: (params: any) => {
+              const pct = totalSolicitudes > 0
+                ? ((params.value / totalSolicitudes) * 100).toFixed(0)
+                : '0';
+              return `${params.name}\n${params.value} (${pct}%)`;
+            },
           },
-          data: nodes.map((node) => ({ name: node.name })),
-          links: links.map((link) => ({
-            source: link.source,
-            target: link.target,
-            value: link.value,
-            percentTotal: link.percentTotal,
-            percentFromSource: link.percentFromSource,
+          emphasis: {
+            label: { fontSize: 15 }
+          },
+          itemStyle: {
+            borderColor: '#fff',
+            borderWidth: 1,
+          },
+          data: funnelData.map((item, idx) => ({
+            ...item,
+            itemStyle: { color: colorPalette[idx % colorPalette.length] },
           })),
         }
       ]

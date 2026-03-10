@@ -8,11 +8,19 @@ import { LoadingService } from '../services/loading.service';
  *
  * Muestra el overlay "Procesando solicitud…" para requests mutacionales.
  * Se puede omitir enviando el header `X-Skip-Loading: true`
- * (usado por endpoints de lectura BI/reportes).
+ * (usado por endpoints de lectura BI/reportes y SSE).
  */
 export const LoadingInterceptor: HttpInterceptorFn = (req, next) => {
 
   const loadingService = inject(LoadingService);
+
+  // ── Skip para SSE streams (EventSource) ────────────────────
+  // Las conexiones SSE usan GET /admin/stream/cambios y son long-polling
+  const isSSEStream = req.url.includes('/stream/cambios');
+
+  if (isSSEStream) {
+    return next(req);
+  }
 
   // ── Skip para requests de lectura BI ────────────────────
   const skipLoading = req.headers.has('X-Skip-Loading');

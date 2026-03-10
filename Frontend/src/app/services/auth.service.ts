@@ -64,7 +64,7 @@ export class AuthService {
     });
   }
   loginWithGoogle(token: string) {
-    return this.http.post('http://localhost:8000/api/auth/google', { token });
+    return this.http.post(`${this.apiUrl}/auth/google`, { token });
   }
 
 
@@ -184,13 +184,38 @@ export class AuthService {
 
   
 
+  /**
+   * ISO 27001 — A.9.2.1 / A.9.4.2
+   * Cierre de sesión completo:
+   *  1. Revoca el token en el backend.
+   *  2. Limpia sessionStorage.
+   *  3. Redirige al login reemplazando el historial.
+   */
   logout(): void {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('rol');
+    const token = sessionStorage.getItem('token');
+
+    // Intentar revocar token en backend (fire-and-forget)
+    if (token) {
+      this.http.post(`${this.apiUrl}/logout`, {}, {
+        headers: new HttpHeaders({
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json'
+        })
+      }).subscribe({ error: () => { /* ignore — sesión ya limpia */ } });
+    }
+
+    // Limpiar todo el almacenamiento de sesión
+    sessionStorage.clear();
   }
 
   isLoggedIn(): boolean {
     return !!sessionStorage.getItem('token');
+  }
+
+  /**
+   * Obtener token actual del usuario autenticado
+   */
+  getToken(): string | null {
+    return sessionStorage.getItem('token');
   }
 }

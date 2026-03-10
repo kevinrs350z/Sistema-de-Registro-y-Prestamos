@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
+import { SessionService } from '../services/session.service';
 
 @Component({
   selector: 'app-navbar',
@@ -18,6 +19,7 @@ export class NavbarComponent {
 
   private auth = inject(AuthService);
   private notify = inject(NotificationService);
+  private session = inject(SessionService);
 
   constructor(private router: Router) {
     // Detectar rol inicial
@@ -65,10 +67,10 @@ export class NavbarComponent {
 
   cerrarSesion() {
     this.menuAbierto = false;
+    this.session.stop();
     this.auth.logout();
-    sessionStorage.clear();
     this.notify.info('Sesión cerrada.');
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/auth/login'], { replaceUrl: true });
   }
 
 }

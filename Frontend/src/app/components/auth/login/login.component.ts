@@ -3,6 +3,8 @@ import { FormBuilder, Validators, FormGroup, ReactiveFormsModule } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
+import { SessionService } from '../../../services/session.service';
+import { environment } from '../../../../environments/environment';
 declare var google: any;
 
 
@@ -28,7 +30,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private sessionService: SessionService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -58,14 +61,21 @@ export class LoginComponent {
     console.log('TOKEN QUE ENVÍO AL BACKEND:', token);
     this.authService.loginWithGoogle(token).subscribe({
       next: (res: any) => {
+        // 🔐 Guardar autenticación
         sessionStorage.setItem('token', res.token);
         sessionStorage.setItem('user', JSON.stringify(res.user));
         sessionStorage.setItem('rol', res.user.rol.nombre);
+        
+        // 🌐 Guardar URL base de API para SSE
+        localStorage.setItem('apiBaseUrl', environment.apiBaseUrl);
+        console.log('[LoginComponent] Guardado apiBaseUrl:', environment.apiBaseUrl);
+
+        this.sessionService.start();
 
         if (res.user.rol.nombre.toLowerCase() === 'admin') {
-          this.router.navigate(['/admin/dashboard']);
+          this.router.navigate(['/admin/dashboard'], { replaceUrl: true });
         } else {
-          this.router.navigate(['/equipos/catalogo']);
+          this.router.navigate(['/equipos/catalogo'], { replaceUrl: true });
         }
       },
       error: () => {
@@ -87,13 +97,20 @@ export class LoginComponent {
       next: (res) => {
         this.loading = false;
 
+        // 🔐 Guardar autenticación
         sessionStorage.setItem('token', res.token);
         sessionStorage.setItem('user', JSON.stringify(res.user));
         sessionStorage.setItem('rol', res.user.rol.nombre);
+        
+        // 🌐 Guardar URL base de API para SSE
+        localStorage.setItem('apiBaseUrl', environment.apiBaseUrl);
+        console.log('[LoginComponent] Guardado apiBaseUrl:', environment.apiBaseUrl);
+
+        this.sessionService.start();
 
         const rol = res.user.rol.nombre.toLowerCase();
-        if (rol === 'admin') this.router.navigate(['/admin/dashboard']);
-        else this.router.navigate(['/equipos/catalogo']);
+        if (rol === 'admin') this.router.navigate(['/admin/dashboard'], { replaceUrl: true });
+        else this.router.navigate(['/equipos/catalogo'], { replaceUrl: true });
       },
       error: () => {
         this.loading = false;

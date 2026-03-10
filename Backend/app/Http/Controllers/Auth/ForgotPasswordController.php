@@ -26,7 +26,6 @@ class ForgotPasswordController extends Controller
         if (!$email) {
             return response()->json([
                 'message' => 'El correo no fue recibido correctamente.',
-                'debug' => $request->all()
             ], 400);
         }
 
@@ -35,8 +34,9 @@ class ForgotPasswordController extends Controller
 
         $user = User::where('Email', $email)->first();
 
+        // ISO 27001 — A.9.4.2: Respuesta genérica para no enumerar cuentas
         if (!$user) {
-            return response()->json(['message' => 'No existe un usuario con ese correo.'], 404);
+            return response()->json(['message' => 'Si el correo está registrado, recibirás un enlace de recuperación.']);
         }
 
         // Eliminar tokens anteriores para este email
@@ -51,7 +51,7 @@ class ForgotPasswordController extends Controller
             'created_at' => now(),
         ]);
 
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:4200') . "/reset-password#$token";
+        $frontendUrl = config('app.frontend_url', 'http://localhost:4200') . "/reset-password#$token";
 
         // ✅ Envío ASÍNCRONO del correo via Job (respuesta instantánea al usuario)
         SendGenericEmailJob::dispatch(
@@ -60,6 +60,7 @@ class ForgotPasswordController extends Controller
             'password-reset'
         );
 
-        return response()->json(['message' => 'Correo de recuperación enviado correctamente.']);
+        // ISO 27001 — A.9.4.2: Misma respuesta tanto si existe como si no
+        return response()->json(['message' => 'Si el correo está registrado, recibirás un enlace de recuperación.']);
     }
 }

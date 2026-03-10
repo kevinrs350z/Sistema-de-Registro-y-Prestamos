@@ -1,6 +1,9 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
+import { SancionStateService } from '../../../services/sancion-state.service';
 
 interface SancionItem {
   id: number;
@@ -28,8 +31,10 @@ interface SancionItem {
   templateUrl: './mis-sanciones.component.html',
   styleUrls: ['./mis-sanciones.component.css']
 })
-export class MisSancionesComponent implements OnInit {
+export class MisSancionesComponent implements OnInit, OnDestroy {
   private api = inject(AuthService);
+  private sancionState = inject(SancionStateService);
+  private destroy$ = new Subject<void>();
 
   sanciones = signal<SancionItem[]>([]);
   cargando = signal(false);
@@ -65,18 +70,42 @@ export class MisSancionesComponent implements OnInit {
       return;
     }
 
+    // Obtener ID de usuario del token o del sessionStorage
+    const userStr = sessionStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const idUser = user?.idUser;
+
+    if (!idUser) {
+      this.error.set('No se pudo identificar tu usuario.');
+      return;
+    }
+
+    // Conectar a sanciones del usuario usando state service
     this.cargando.set(true);
-    this.api.getMisSanciones(token).subscribe({
-      next: (res) => {
-        this.sanciones.set(res?.sanciones ?? []);
-        this.normalizarPagina();
-        this.cargando.set(false);
-      },
-      error: () => {
-        this.error.set('No se pudo cargar el historial de sanciones.');
-        this.cargando.set(false);
-      }
-    });
+    this.sancionState.refrescarPorUsuario(idUser)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.sanciones.set(res?.sanciones ?? []);
+          this.normalizarPagina();
+          this.cargando.set(false);
+        },
+        error: () => {
+          this.error.set('No se pudo cargar el historial de sanciones.');
+          this.cargando.set(false);
+        }
+      });
+
+    // ⚠️ NO iniciar polling manual
+    // SancionStateService gestionará esto automáticamente:
+    // - Si SSE conecta → sin polling
+    // - Si SSE falla → polling fallback activado
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.sancionState.detenerPolling();
   }
 
   setFiltro(f: 'TODAS' | 'ACTIVAS' | 'PASADAS') {

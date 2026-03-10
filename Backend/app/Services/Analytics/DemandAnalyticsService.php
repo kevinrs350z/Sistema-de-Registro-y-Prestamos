@@ -995,10 +995,10 @@ class DemandAnalyticsService
     private function quadrantGuide(): array
     {
         return [
-            'alta_demanda_alta_duracion' => 'Zona crítica: alta presión de demanda y préstamos largos. Priorizar capacidad/rotación.',
-            'baja_demanda_alta_duracion' => 'Demanda moderada pero ciclos largos. Revisar reglas de duración o asignación.',
-            'alta_demanda_baja_duracion' => 'Alta rotación con buena velocidad. Mantener monitoreo de stock para picos.',
-            'baja_demanda_baja_duracion' => 'Zona estable: baja carga y préstamos cortos.',
+            'alta_demanda_alta_duracion' => 'Mucha demanda y préstamos largos. Conviene revisar la disponibilidad.',
+            'baja_demanda_alta_duracion' => 'Poca demanda pero los préstamos duran mucho. Revisar plazos de devolución.',
+            'alta_demanda_baja_duracion' => 'Se piden mucho y se devuelven rápido. Buena rotación.',
+            'baja_demanda_baja_duracion' => 'Poca demanda y préstamos cortos. Sin problemas.',
         ];
     }
 
@@ -1746,10 +1746,10 @@ class DemandAnalyticsService
     private function stockQuadrantGuide(): array
     {
         return [
-            'alta_demanda_bajo_stock' => 'Zona crítica: demanda alta con poco stock. Priorizar compra o redistribución urgente.',
-            'alta_demanda_alto_stock' => 'Buena cobertura: stock suficiente para la demanda. Monitorear tendencia.',
-            'baja_demanda_bajo_stock' => 'Bajo uso y poco stock. Evaluar si el equipo sigue siendo necesario.',
-            'baja_demanda_alto_stock' => 'Sobrestock: bajo uso con mucho inventario. Candidato a redistribución.',
+            'alta_demanda_bajo_stock' => 'Se pide mucho y hay poco stock. Considerar compra.',
+            'alta_demanda_alto_stock' => 'Stock suficiente para la demanda actual.',
+            'baja_demanda_bajo_stock' => 'Poco uso y poco stock. Verificar si el equipo se necesita.',
+            'baja_demanda_alto_stock' => 'Sobra stock para la demanda que hay.',
         ];
     }
 
@@ -2383,13 +2383,13 @@ class DemandAnalyticsService
         $topFlow = $links[0] ?? null;
         $summary = $topFlow
             ? sprintf(
-                'Flujo dominante: %s → %s (%s casos, %.2f%% del total).',
+                'Transición principal: %s → %s (%s casos, %.2f%% del total).',
                 $topFlow['source'],
                 $topFlow['target'],
                 $topFlow['value'],
                 $topFlow['percentTotal']
             )
-            : 'Sin transiciones relevantes para los filtros seleccionados.';
+            : 'No hay transiciones con los filtros seleccionados.';
 
         return [
             'meta' => array_merge([
@@ -2500,12 +2500,12 @@ class DemandAnalyticsService
 
         $interpretation = $view === 'motivos'
             ? sprintf(
-                'Pérdida potencial por falta de stock: %s caso(s) de %s total (%.2f%%). Priorizar capacidad en categorías con mayor rechazo.',
+                'Rechazos por falta de stock: %s de %s solicitudes (%.2f%%).',
                 $stockLossCount,
                 $total,
                 $total > 0 ? round(($stockLossCount / $total) * 100, 2) : 0
             )
-            : 'Usa esta distribución para identificar cuellos de botella operativos en ciclo de préstamo.';
+            : 'Revisa en qué estados se acumulan más solicitudes para detectar demoras.';
 
         return [
             'meta' => [

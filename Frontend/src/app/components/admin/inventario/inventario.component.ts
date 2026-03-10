@@ -1,6 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
 import { ImagenService } from '../../../services/image.service';
 
 import { EquiposService } from '../../../services/equipos.service';
@@ -16,10 +17,11 @@ import { NotificationService } from '../../../services/notification.service';
   templateUrl: './inventario.component.html',
   styleUrls: ['./inventario.component.css']
 })
-export class InventarioComponent implements OnInit {
+export class InventarioComponent implements OnInit, OnDestroy {
 
   private notify = inject(NotificationService);
   private relacionadosSrv = inject(TipoEquipoRelacionadoService);
+  private destroy$ = new Subject<void>();
 
   equipos: any[] = [];
   equiposFiltrados: any[] = [];
@@ -555,4 +557,8 @@ private getTipoEquipoById(tipoId: number): any | null {
     });
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 }

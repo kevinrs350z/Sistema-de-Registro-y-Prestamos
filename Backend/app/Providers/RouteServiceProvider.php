@@ -59,5 +59,18 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });
+
+        /**
+         * ISO 27001 — A.9.4.2: Rate limiting estricto para endpoints de autenticación.
+         * Máximo 5 intentos por minuto por IP para prevenir fuerza bruta.
+         */
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Demasiados intentos. Intenta de nuevo en un minuto.',
+                    ], 429);
+                });
+        });
     }
 }

@@ -18,6 +18,8 @@ use App\Models\Equipo;
 use App\Services\PrestamoService;
 use App\Models\Evento;
 use Carbon\Carbon;
+use App\Events\PrestamoCreated;
+use App\Events\PrestamoActualizado;
 
 
 class PrestamoAdminService
@@ -81,7 +83,10 @@ class PrestamoAdminService
 
         $prestamo->save();
 
-        // 🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
+        // � DISPARAR EVENTO DE ACTUALIZACIÓN
+        event(new PrestamoActualizado($prestamo, 'cambio_estado'));
+
+        // �🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
         $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
         $this->registrarHistorial(
             $prestamo->idPrestamo,
@@ -177,7 +182,10 @@ class PrestamoAdminService
         $prestamo->estado = EstadoPrestamo::DEVUELTO;
         $prestamo->save();
 
-        // 🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
+        // � DISPARAR EVENTO DE ACTUALIZACIÓN
+        event(new PrestamoActualizado($prestamo, 'marcado_devuelto'));
+
+        // �🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
         $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
         $motivoFinal = $motivo && trim($motivo) !== ''
             ? $motivo
@@ -253,6 +261,9 @@ class PrestamoAdminService
                 $estadoAnterior = $prestamo->estado;
                 $prestamo->estado = EstadoPrestamo::DEVUELTO;
                 $prestamo->save();
+
+                // 🔔 DISPARAR EVENTO DE ACTUALIZACIÓN
+                event(new PrestamoActualizado($prestamo, 'todos_equipos_devueltos'));
 
                 $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
                 $this->registrarHistorial(
@@ -399,6 +410,10 @@ class PrestamoAdminService
     /* ============================================================
         LISTADOS
     ============================================================ */
+    /**
+     * Obtener TODOS los préstamos (sin filtros de estado)
+     * Devuelve: PENDIENTE, APROBADO, ENTREGADO, DEVUELTO, RECHAZADO, etc.
+     */
     public function obtenerPendientes()
     {
         return Prestamo::with([
@@ -407,10 +422,7 @@ class PrestamoAdminService
             'bloquePrestamo.bloque',
             'integrantes.persona'
         ])
-        ->whereIn('estado', [
-            EstadoPrestamo::PENDIENTE,
-            EstadoPrestamo::APROBADO,
-        ])
+        // 🔓 SIN FILTRO DE ESTADO - Devuelve ABSOLUTAMENTE TODO
         ->get()
         ->map(function ($p) {
 
@@ -455,6 +467,15 @@ class PrestamoAdminService
                 'bloquePrestamo' => $bloquesTexto,
 
                 'equipos' => $p->equipos->map(function ($e) {
+                    // 📊 Obtener stock TOTAL disponible del tipo de equipo
+                    $stockDisponible = \App\Models\Equipo::where('tipo_equipo_id', $e->tipo_equipo_id)
+                        ->where('estado', EstadoEquipo::DISPONIBLE)
+                        ->count();
+
+                    // 📊 Obtener stock TOTAL del tipo de equipo (sin filtrar estado)
+                    $stockTotal = \App\Models\Equipo::where('tipo_equipo_id', $e->tipo_equipo_id)
+                        ->count();
+
                     return [
                         'id' => $e->id,
                         'codigo' => $e->codigo,
@@ -462,6 +483,8 @@ class PrestamoAdminService
                         'imagen' => $e->imagen,
                         'tipo_equipo_id' => $e->tipo_equipo_id,
                         'devuelto' => (bool) ($e->pivot->devuelto ?? false),
+                        'stock_disponible' => $stockDisponible,    // 📦 Stock disponible
+                        'stock_total' => $stockTotal,               // 📦 Stock total
                     ];
                 }),
 
@@ -470,7 +493,6 @@ class PrestamoAdminService
         });
 
     }
-
     public function actualizarEquiposPrestamo(
         int $idPrestamo,
         array $equipos,
@@ -616,6 +638,9 @@ class PrestamoAdminService
             $request->equipos
         );
 
+        // 🔔 DISPARAR EVENTO DE CREACIÓN
+        event(new PrestamoCreated($prestamo));
+
         return $prestamo;
     }
 
@@ -654,6 +679,9 @@ class PrestamoAdminService
             // 4. CAMBIAR ESTADO
             $prestamo->estado = EstadoPrestamo::ENTREGADO;
             $prestamo->save();
+
+            // 🔔 DISPARAR EVENTO DE ACTUALIZACIÓN
+            event(new PrestamoActualizado($prestamo, 'marcado_entregado'));
 
             // 5. REGISTRAR EN HISTORIAL DE CAMBIOS
             $this->registrarHistorial(
@@ -703,6 +731,126 @@ class PrestamoAdminService
             'descripcion'    => $descripcion,
         ]);
     }
+
+    /* ============================================================
+        DEVOLUCIONES MASIVAS
+    ============================================================ */
+    /**
+     * Marcar como DEVUELTO todas las solicitudes ENTREGADAS
+     * (que aún no han sido devueltas)
+     */
+    public function devolverTodosMasivo(?string $motivo = null): array
+    {
+        $prestamosActualizados = [];
+        $errores = [];
+
+        // Obtener todos los préstamos SIN FILTRO DE ESTADO (temporalmente para testing)
+        $prestamos = Prestamo::get();
+
+        foreach ($prestamos as $prestamo) {
+            try {
+                // Marcar equipos como devueltos
+                DB::table('prestamo_equipo')
+                    ->where('idPrestamo', $prestamo->idPrestamo)
+                    ->update(['devuelto' => true]);
+
+                // Cambiar estado a DEVUELTO
+                $estadoAnterior = $prestamo->estado;
+                $prestamo->estado = EstadoPrestamo::DEVUELTO;
+                $prestamo->save();
+
+                // Registrar en historial (sin usuario si no está autenticado)
+                PrestamoHistorial::create([
+                    'idPrestamo' => $prestamo->idPrestamo,
+                    'idUser' => auth()->id(),
+                    'estado_anterior' => $estadoAnterior,
+                    'estado_nuevo' => EstadoPrestamo::DEVUELTO,
+                    'descripcion' => $motivo ?? 'Devolución masiva automática',
+                ]);
+
+                // 🔔 Emitir evento
+                event(new PrestamoActualizado($prestamo, 'devuelto_masivo'));
+
+                $prestamosActualizados[] = [
+                    'idPrestamo' => $prestamo->idPrestamo,
+                    'estado' => EstadoPrestamo::DEVUELTO,
+                ];
+            } catch (\Exception $e) {
+                $errores[] = [
+                    'idPrestamo' => $prestamo->idPrestamo,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return [
+            'procesados' => count($prestamosActualizados),
+            'actualizados' => $prestamosActualizados,
+            'errores' => $errores,
+            'mensaje' => count($prestamosActualizados) . ' préstamos marcados como devueltos (todos los estados)',
+        ];
+    }
+
+    /**
+     * Cancelar todas las solicitudes PENDIENTES
+     * (rechazarlas automáticamente)
+     */
+    public function cancelarTodosPendientesMasivo(?string $motivo = null): array
+    {
+        $prestamosActualizados = [];
+        $errores = [];
+
+        // Obtener todos los préstamos en estado PENDIENTE
+        $prestamos = Prestamo::where('estado', EstadoPrestamo::PENDIENTE)->get();
+
+        foreach ($prestamos as $prestamo) {
+            try {
+                // Liberar equipos (marcar como disponibles nuevamente)
+                $equipos = DB::table('prestamo_equipo')
+                    ->where('idPrestamo', $prestamo->idPrestamo)
+                    ->pluck('idEquipo');
+
+                foreach ($equipos as $idEquipo) {
+                    Equipo::find($idEquipo)?->update(['estado' => EstadoEquipo::DISPONIBLE]);
+                }
+
+                // Cambiar estado a RECHAZADO
+                $estadoAnterior = $prestamo->estado;
+                $prestamo->estado = EstadoPrestamo::RECHAZADO;
+                $prestamo->save();
+
+                // Registrar en historial (sin usuario si no está autenticado)
+                PrestamoHistorial::create([
+                    'idPrestamo' => $prestamo->idPrestamo,
+                    'idUser' => auth()->id(),
+                    'estado_anterior' => $estadoAnterior,
+                    'estado_nuevo' => EstadoPrestamo::RECHAZADO,
+                    'descripcion' => $motivo ?? 'Cancelación masiva automática',
+                ]);
+
+                // 🔔 Emitir evento
+                event(new PrestamoActualizado($prestamo, 'cancelado_masivo'));
+
+                $prestamosActualizados[] = [
+                    'idPrestamo' => $prestamo->idPrestamo,
+                    'estado' => EstadoPrestamo::RECHAZADO,
+                ];
+            } catch (\Exception $e) {
+                $errores[] = [
+                    'idPrestamo' => $prestamo->idPrestamo,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return [
+            'procesados' => count($prestamosActualizados),
+            'actualizados' => $prestamosActualizados,
+            'errores' => $errores,
+            'mensaje' => count($prestamosActualizados) . ' préstamos cancelados',
+        ];
+    }
+
 
 
 

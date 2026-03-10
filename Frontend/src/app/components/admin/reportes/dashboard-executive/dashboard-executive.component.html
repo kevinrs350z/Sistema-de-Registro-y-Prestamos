@@ -21,10 +21,7 @@
   </div>
 
   <!-- ═══ Loading ═══ -->
-  <div *ngIf="loading" class="exec-loading">
-    <div class="spinner"></div>
-    <span>Calculando KPIs ejecutivos…</span>
-  </div>
+  <app-dm-loader *ngIf="loading" size="md">Calculando KPIs ejecutivos…</app-dm-loader>
 
   <!-- ═══ Error ═══ -->
   <div *ngIf="error && !loading" class="exec-error">
