@@ -67,18 +67,6 @@
     </ng-container>
   </nav>
 
-  <!-- ─── Toggle colapsar/expandir (solo desktop) ─── -->
-  <div class="sidebar-footer">
-    <div class="sidebar-divider"></div>
-    <button
-      class="toggle-btn"
-      (click)="toggleCollapse()"
-      [attr.aria-label]="collapsed ? 'Expandir menú' : 'Contraer menú'"
-      [attr.title]="collapsed ? 'Expandir' : 'Contraer'"
-    >
-      <i class="bi" [class.bi-layout-sidebar-inset]="collapsed" [class.bi-layout-sidebar]="!collapsed"></i>
-      <span class="toggle-text">{{ collapsed ? 'Expandir' : 'Contraer' }}</span>
-    </button>
-  </div>
+
 
 </aside>

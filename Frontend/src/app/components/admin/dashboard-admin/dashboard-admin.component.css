@@ -220,6 +220,24 @@
   box-shadow: 0 10px 25px rgba(245, 164, 116, 0.15);
 }
 
+.action-card.solicitudes-pendientes:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.18);
+}
+
+.action-card.solicitudes-pendientes .action-icon i {
+  color: #f59e0b;
+}
+
+.action-card.solicitudes-finalizadas:hover {
+  border-color: #10b981;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.18);
+}
+
+.action-card.solicitudes-finalizadas .action-icon i {
+  color: #10b981;
+}
+
 .action-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(68, 107, 169, 0.15);

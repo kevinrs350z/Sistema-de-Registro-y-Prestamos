@@ -296,51 +296,6 @@
 }
 
 /* ============================
-   TOGGLE BUTTON (colapsar/expandir)
-============================ */
-.sidebar-footer {
-  flex-shrink: 0;
-  padding: 0 10px 12px;
-}
-
-.sidebar-footer .sidebar-divider {
-  margin: 0 8px 8px;
-}
-
-.toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  padding: 9px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.80) !important;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-.toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.10);
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.toggle-btn i {
-  font-size: 1rem;
-  flex-shrink: 0;
-  width: 18px;
-  text-align: center;
-}
-
-.toggle-text {
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-/* ============================
    COLLAPSED STATE (desktop only)
 ============================ */
 .admin-sidebar {
@@ -362,7 +317,6 @@
 
 /* ---------- Text hiding when collapsed (not hovered) ---------- */
 .sidebar-badge,
-.toggle-text,
 .section-header-left > span,
 .section-chevron,
 .item-label {
@@ -370,7 +324,6 @@
 }
 
 .admin-sidebar.collapsed:not(:hover) .sidebar-badge,
-.admin-sidebar.collapsed:not(:hover) .toggle-text,
 .admin-sidebar.collapsed:not(:hover) .section-header-left > span,
 .admin-sidebar.collapsed:not(:hover) .section-chevron {
   opacity: 0;
@@ -432,16 +385,6 @@
   margin: 4px 12px;
 }
 
-/* Toggle button just icon */
-.admin-sidebar.collapsed:not(:hover) .toggle-btn {
-  justify-content: center;
-  padding: 9px 0;
-}
-
-.admin-sidebar.collapsed:not(:hover) .sidebar-footer {
-  padding: 0 8px 12px;
-}
-
 /* Hide close button when collapsed on desktop */
 .admin-sidebar.collapsed:not(:hover) .sidebar-close {
   display: none !important;
@@ -492,14 +435,8 @@
     display: flex;
   }
 
-  /* Hide toggle button on mobile */
-  .sidebar-footer {
-    display: none;
-  }
-
   /* Show all text on mobile even if collapsed */
   .admin-sidebar.collapsed .sidebar-badge,
-  .admin-sidebar.collapsed .toggle-text,
   .admin-sidebar.collapsed .section-header-left > span,
   .admin-sidebar.collapsed .section-chevron,
   .admin-sidebar.collapsed .item-label {

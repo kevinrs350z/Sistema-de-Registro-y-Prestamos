@@ -114,9 +114,9 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
-    // Restaurar estado colapsado de localStorage
-    this.collapsed = localStorage.getItem('admin-sidebar-collapsed') === 'true';
-    // Notificar estado inicial al padre
+    // Sidebar siempre colapsado en desktop, se expande con hover
+    this.collapsed = true;
+    localStorage.setItem('admin-sidebar-collapsed', 'true');
     setTimeout(() => this.collapsedChange.emit(this.collapsed));
 
     // Escuchar cambios de ruta para actualizar el item activo
