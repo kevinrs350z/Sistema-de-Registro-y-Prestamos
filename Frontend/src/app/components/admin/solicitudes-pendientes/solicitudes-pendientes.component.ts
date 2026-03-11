@@ -1,19 +1,13 @@
-import { Component, OnInit, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 import { SolicitudEquipo } from '../../../shared/models';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
-import { PrestamoStateService } from '../../../services/prestamo-state.service';
-import { DataSyncService } from '../../../services/data-sync.service';
-import { RealtimeSyncService } from '../../../services/realtime-sync.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ImagenService } from '../../../services/image.service';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
 import { MotivosRechazoService } from '../../../services/motivos-rechazo.service';
 import { SancionesService } from '../../../services/sanciones.service';
-import { AuthService } from '../../../services/auth.service';
 
 type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
@@ -38,22 +32,13 @@ type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   templateUrl: './solicitudes-pendientes.component.html',
   styleUrls: ['./solicitudes-pendientes.component.css']
 })
-export class SolicitudesPendientesComponent implements OnInit, OnDestroy {
+export class SolicitudesPendientesComponent implements OnInit {
 
   private notify = inject(NotificationService);
   private imagenSrv = inject(ImagenService);
   private tiposSrv = inject(TipoEquipoService);
   private sancionesSrv = inject(SancionesService);
-  private prestamoState = inject(PrestamoStateService);
-  private dataSync = inject(DataSyncService);
-  private realtimeSync = inject(RealtimeSyncService);
-  private authService = inject(AuthService);
-  private destroy$ = new Subject<void>();
 
-  // Observable reactivo de solicitudes (se actualiza automáticamente)
-  solicitudes$!: Observable<any[]>;
-  
-  // Copia local para filtrado y cálculos (se actualiza desde el observable)
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
 
@@ -86,99 +71,10 @@ export class SolicitudesPendientesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarTipos();
-    
-    // 🔌 CONECTAR A SERVICIOS SSE + ESTADO REACTIVO
-    this.intentarConectarSSE();
-    
-    // Conectar a estado reactivo de préstamos
-    this.solicitudes$ = this.prestamoState.solicitudes$;
-    
-    // Suscribir a cambios de solicitudes para mantener copia local
-    this.solicitudes$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(data => {
-        this.solicitudes = (data || []).map((p: any) => this.transformarPrestamo(p));
-        this.paginaPendientes = 1;
-        this.paginaPendientesEntrega = 1;
-        this.solicitudSeleccionada = null;
-      });
-    
-    // Escuchar estado de conexión SSE
-    this.realtimeSync.conectado$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(conectado => {
-        console.log('[SolicitudesPendientesComponent] 🔌 SSE ' + (conectado ? 'CONECTADO ✅' : 'DESCONECTADO ❌'));
-      });
-    
-    // ⚠️ NO iniciar polling manual ahora
-    // El PrestamoStateService gestionará esto automáticamente:
-    // - Si SSE conecta → sin polling
-    // - Si SSE falla → polling fallback activado
+    this.cargarSolicitudes();
   }
 
-  /**
-   * Intentar conectar a SSE con reintentos
-   */
-  private intentarConectarSSE(): void {
-    const token = this.authService.getToken();
-    
-    if (!token) {
-      console.warn('[SolicitudesPendientesComponent] ⚠️ No hay token disponible, reintentando en 2s...');
-      setTimeout(() => this.intentarConectarSSE(), 2000);
-      return;
-    }
-
-    console.log('[SolicitudesPendientesComponent] 🔗 Conectando a SSE con token...');
-    this.realtimeSync.iniciarConexion(token);
-  }
-
-  ngOnDestroy(): void {
-    this.prestamoState.detenerPolling();
-    this.realtimeSync.cerrarConexion();
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  /**
-   * Transformar respuesta del API a formato del componente
-   */
-  private transformarPrestamo(p: any): AdminSolicitud {
-    const esExterno = p.tipo === 'FUERA';
-
-    const equipos = Array.isArray(p.equipos)
-      ? p.equipos.map((eq: any) => {
-          if (typeof eq === 'string') {
-            return { codigo: '—', nombre: eq, imagen: null };
-          }
-          return {
-            id: eq.id,
-            codigo: eq.codigo_activo ?? eq.codigo ?? '—',
-            nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
-            imagen: this.imagenSrv.getStorageImage(eq.imagen) ?? null,
-            tipoEquipoId: eq.tipo_equipo_id
-          };
-        })
-      : [];
-
-    return {
-      id: p.idPrestamo,
-      estudiante: p.user?.nombre ?? 'Desconocido',
-      email: p.user?.email ?? '',
-      userId: p.user?.idUser ?? undefined,
-      tipo: p.tipo,
-      bloque: p.bloquePrestamo ?? '—',
-      equipos,
-      integrantes: Array.isArray(p.integrantes) ? p.integrantes : [],
-      observacion: p.observacion ?? 'Sin observación',
-      fechaSolicitud: p.created_at,
-      fechaInicio: p.fecha_inicio ?? null,
-      fechaFin: p.fecha_fin ?? null,
-      periodo: esExterno ? `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}` : '—',
-      estado: p.estado
-    };
-  }
-
-  cargarTipos(): void {
+  private cargarTipos() {
     this.tiposSrv.getTipos().subscribe({
           next: (data: any) => {
         this.tiposEquipo = data || [];
@@ -213,6 +109,53 @@ export class SolicitudesPendientesComponent implements OnInit, OnDestroy {
         });
       },
       error: () => this.notify.error('No se pudieron cargar los tipos de equipo.')
+    });
+  }
+
+  cargarSolicitudes() {
+    this.prestamosAdmin.getPendientes().subscribe({
+      next: (data) => {
+        this.solicitudes = data.map((p: any) => {
+          const esExterno = p.tipo === 'FUERA';
+
+          const equipos = Array.isArray(p.equipos)
+            ? p.equipos.map((eq: any) => {
+                if (typeof eq === 'string') {
+                  return { codigo: '—', nombre: eq, imagen: null };
+                }
+                return {
+                  id: eq.id,
+                  codigo: eq.codigo_activo ?? eq.codigo ?? '—',
+                  nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
+                  imagen: this.imagenSrv.getStorageImage(eq.imagen) ?? null,
+                  tipoEquipoId: eq.tipo_equipo_id
+                };
+              })
+            : [];
+
+          return {
+            id: p.idPrestamo,
+            estudiante: p.user?.nombre ?? 'Desconocido',
+            email: p.user?.email ?? '',
+            userId: p.user?.idUser ?? undefined,
+            tipo: p.tipo,
+            bloque: p.bloquePrestamo ?? '—',
+            equipos,
+            integrantes: Array.isArray(p.integrantes) ? p.integrantes : [],
+            observacion: p.observacion ?? 'Sin observación',
+            fechaSolicitud: p.created_at,
+            fechaInicio: p.fecha_inicio ?? null,
+            fechaFin: p.fecha_fin ?? null,
+            periodo: esExterno ? `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}` : '—',
+            estado: p.estado
+
+          };
+        });
+        this.paginaPendientes = 1;
+        this.paginaPendientesEntrega = 1;
+        this.solicitudSeleccionada = null;
+      },
+      error: (err) => console.error('Error al cargar préstamos pendientes:', err)
     });
   }
 
@@ -429,7 +372,7 @@ export class SolicitudesPendientesComponent implements OnInit, OnDestroy {
       next: () => {
         this.notify.success('Solicitud actualizada correctamente.');
         this.cerrarEditarModal();
-        this.dataSync.invalidarPrestamos(this.solicitudSeleccionada!.id!, 'ACTUALIZAR');
+        this.cargarSolicitudes();
         this.solicitudSeleccionada = null;
       },
       error: (err: any) => {
@@ -450,8 +393,8 @@ export class SolicitudesPendientesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.notify.success('Solicitud aprobada correctamente.');
-          this.prestamoState.actualizarEstadoLocal(solicitudId, 'APROBADO');
-          this.dataSync.invalidarPrestamos(solicitudId, 'ACTUALIZAR');
+          this.actualizarEstadoLocal(solicitudId, 'APROBADO');
+          this.cargarSolicitudes();
           this.solicitudSeleccionada = null;
         },
         error: (err: any) => {
@@ -475,8 +418,8 @@ export class SolicitudesPendientesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.notify.success('Solicitud rechazada correctamente.');
-          this.prestamoState.actualizarEstadoLocal(this.solicitudSeleccionada!.id!, 'RECHAZADO');
-          this.dataSync.invalidarPrestamos(this.solicitudSeleccionada!.id!, 'ACTUALIZAR');
+          this.actualizarEstadoLocal(this.solicitudSeleccionada!.id!, 'RECHAZADO');
+          this.cargarSolicitudes();
           this.cerrarModal();
           this.solicitudSeleccionada = null;
           this.loadingRechazo = false;
@@ -523,8 +466,8 @@ export class SolicitudesPendientesComponent implements OnInit, OnDestroy {
     this.prestamosAdmin.marcarEntregado(id || this.solicitudSeleccionada.id!).subscribe({
       next: () => {
         this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
-        this.prestamoState.actualizarEstadoLocal(id || this.solicitudSeleccionada!.id!, 'ENTREGADO');
-        this.dataSync.invalidarPrestamos(id || this.solicitudSeleccionada!.id!, 'ACTUALIZAR');
+        this.actualizarEstadoLocal(id || this.solicitudSeleccionada!.id!, 'ENTREGADO');
+        this.cargarSolicitudes();
       },
       error: (err: any) => console.error('Error al marcar como entregado:', err),
     });
@@ -564,6 +507,20 @@ export class SolicitudesPendientesComponent implements OnInit, OnDestroy {
         return 'RECHAZADO';
       default:
         return 'PENDIENTE';
+    }
+  }
+
+  private actualizarEstadoLocal(id: number, estado: AdminSolicitud['estado']) {
+    const idx = this.solicitudes.findIndex((s) => s.id === id);
+    if (idx === -1) return;
+
+    const actualizado = { ...this.solicitudes[idx], estado };
+    const nuevas = [...this.solicitudes];
+    nuevas[idx] = actualizado;
+    this.solicitudes = nuevas;
+
+    if (this.solicitudSeleccionada?.id === id) {
+      this.solicitudSeleccionada = actualizado;
     }
   }
 }

@@ -23,7 +23,25 @@
   margin-top: 0.25rem;
 }
 
-/* Button spinner */
+/* Loading */
+.loading-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  justify-content: center;
+  color: #666;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 .spinner-sm {
   display: inline-block;
   width: 16px;
@@ -34,7 +52,10 @@
   animation: spin 0.8s linear infinite;
   vertical-align: middle;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 /* Error */
 .alert-error {

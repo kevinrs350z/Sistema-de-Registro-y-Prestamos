@@ -45,6 +45,23 @@
 }
 
 /* ── Loading / Error / Empty ── */
+.so-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 2rem;
+  color: #8094ae;
+  font-size: 0.9rem;
+}
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #dbdfea;
+  border-top-color: #6576ff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .so-error {
   background: #fff3f3;

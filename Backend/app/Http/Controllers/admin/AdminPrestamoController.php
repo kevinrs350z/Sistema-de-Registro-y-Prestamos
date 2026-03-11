@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Prestamo\StorePrestamoAdminRequest;
 use App\Services\PrestamoService;
 use App\Models\Asignatura;
-use App\Events\PrestamoCreated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -54,9 +53,6 @@ class AdminPrestamoController extends Controller
             $service->procesarEquipos($prestamo->idPrestamo, $request->equipos);
 
             DB::commit();
-
-            // 🔔 EMITIR EVENTO SSE: Nueva solicitud de préstamo creada por admin
-            event(new PrestamoCreated($prestamo));
 
             return response()->json([
                 'message'    => 'Préstamo registrado correctamente',

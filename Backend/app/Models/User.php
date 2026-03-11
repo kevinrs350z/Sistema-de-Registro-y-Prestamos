@@ -17,8 +17,7 @@ class User extends Authenticatable implements CanResetPasswordContract
 
      protected $table = 'users'; 
      protected $primaryKey = 'idUser'; 
-     // ISO 27001 — A.14.2.5: Solo $fillable define campos asignables masivamente
-     // protected $guarded = []; // REMOVIDO — $fillable ya restringe los campos
+     protected $guarded = [];
      protected $password = 'Contrasena'; 
     /**
      * The attributes that are mass assignable.

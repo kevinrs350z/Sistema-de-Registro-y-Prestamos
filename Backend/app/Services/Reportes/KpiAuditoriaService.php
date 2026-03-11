@@ -411,7 +411,7 @@ class KpiAuditoriaService
         $resumen = [
             'A' => ['modelos' => 0, 'prestamos' => 0, 'descripcion' => 'Alta rotación — nunca deben faltar'],
             'B' => ['modelos' => 0, 'prestamos' => 0, 'descripcion' => 'Uso intermedio — stock normal'],
-            'C' => ['modelos' => 0, 'prestamos' => 0, 'descripcion' => 'Bajo uso — candidatos a reasignación'],
+            'C' => ['modelos' => 0, 'prestamos' => 0, 'descripcion' => 'Bajo uso — candidatos a redistribución'],
         ];
         foreach ($data as $d) {
             $resumen[$d['clase']]['modelos']++;

@@ -13,7 +13,6 @@ import { PreguntasFrecuentesAdminComponent } from '../preguntas-frecuentes-admin
 import { AuthService } from '../../../services/auth.service';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
 import { NotificationService } from '../../../services/notification.service';
-import { SessionService } from '../../../services/session.service';
 
 @Component({
   selector: 'app-dashboard-admin',
@@ -39,7 +38,6 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   private prestamosAdmin = inject(PrestamosAdminService);
   public auth = this.api; // Exponer auth para template (admin/super)
   private notify = inject(NotificationService);
-  private session = inject(SessionService);
 
   // 🔹 Secciones internas del dashboard
   seccionActiva:
@@ -132,12 +130,12 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Cerrar sesión */
+  /** 🔹 Cerrar sesión */
   cerrarSesion() {
-    this.session.stop();
     this.api.logout();
+    sessionStorage.clear();
     this.notify.info('Sesión cerrada.');
-    this.router.navigate(['/auth/login'], { replaceUrl: true });
+    this.router.navigate(['/auth/login']);
   }
 
   /** 🔹 Navegar hacia la vista de asignaturas/eventos */

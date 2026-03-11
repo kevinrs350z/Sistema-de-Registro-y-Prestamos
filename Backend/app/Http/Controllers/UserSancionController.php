@@ -13,8 +13,6 @@ use App\Models\UserSancion;
 use App\Mail\SancionNotificacion;
 use App\Jobs\SendGenericEmailJob;
 use App\Services\EscalamientoService;
-use App\Events\SancionCreado;
-use App\Events\SancionActualizado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -173,10 +171,6 @@ class UserSancionController extends Controller
             'es_automatico'   => false,
             'created_at'      => now(),
         ]);
-
-        // 🔔 DISPARAR EVENTO DE CREACIÓN
-        $userSancion = UserSancion::findOrFail($pivotId);
-        event(new SancionCreado($userSancion));
 
         // ══════════════════════════════════════════════════
         // BLOQUEAR USUARIO (todas las sanciones bloquean)
@@ -347,9 +341,6 @@ class UserSancionController extends Controller
         $registro->fecha_fin = $nuevaFecha;
         $registro->save();
 
-        // 🔔 DISPARAR EVENTO DE ACTUALIZACIÓN
-        event(new SancionActualizado($registro, 'ampliacion'));
-
         // Historial
         HistorialSancion::create([
             'user_sancion_id' => $registro->id,
@@ -400,9 +391,6 @@ class UserSancionController extends Controller
         $estadoAnterior = $registro->estado_sancion;
         $registro->estado_sancion = EstadoSancion::EXPIRADA;
         $registro->save();
-
-        // 🔔 DISPARAR EVENTO DE ACTUALIZACIÓN
-        event(new SancionActualizado($registro, 'anulacion'));
 
         // Historial
         HistorialSancion::create([

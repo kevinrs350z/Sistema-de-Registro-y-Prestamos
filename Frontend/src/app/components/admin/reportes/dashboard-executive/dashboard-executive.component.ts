@@ -8,7 +8,6 @@ import {
 } from '../../../../services/reportes/dashboard-operational.service';
 import { ReportFiltersComponent } from '../report-filters/report-filters.component';
 import { ReportFilter } from '../../../../services/report-filters.service';
-import { DmLoaderComponent } from '../../../../shared/dm-loader/dm-loader.component';
 
 export interface KpiCard {
   key: string;
@@ -37,7 +36,7 @@ export interface KpiCard {
 @Component({
   selector: 'app-dashboard-executive',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReportFiltersComponent, DmLoaderComponent],
+  imports: [CommonModule, FormsModule, ReportFiltersComponent],
   templateUrl: './dashboard-executive.component.html',
   styleUrls: ['./dashboard-executive.component.css']
 })

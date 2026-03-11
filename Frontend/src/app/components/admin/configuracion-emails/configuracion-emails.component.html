@@ -7,7 +7,10 @@
   </div>
 
   <!-- Loading -->
-  <app-dm-loader *ngIf="cargando" size="sm">Cargando configuraciones...</app-dm-loader>
+  <div *ngIf="cargando" class="loading-box">
+    <div class="spinner"></div>
+    <span>Cargando configuraciones...</span>
+  </div>
 
   <!-- Error -->
   <div *ngIf="error" class="alert-error">

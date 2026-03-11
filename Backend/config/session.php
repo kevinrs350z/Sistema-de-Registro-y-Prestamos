@@ -46,8 +46,7 @@ return [
     |
     */
 
-    // ISO 27001 — A.10.1.1: Cifrar datos de sesión en reposo
-    'encrypt' => true,
+    'encrypt' => false,
 
     /*
     |--------------------------------------------------------------------------

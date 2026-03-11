@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
 import { EquiposService } from '../../../services/equipos.service';
-import { BloqueosHorarioService } from '../../../services/bloqueos-horario.service';
 import { NotificationService } from '../../../services/notification.service';
 
 interface BloqueHorarioItem {
@@ -92,7 +91,6 @@ export class BloqueosHorarioComponent implements OnInit {
   private auth = inject(AuthService);
   private tiposSrv = inject(TipoEquipoService);
   private equiposSrv = inject(EquiposService);
-  private bloqueosSrv = inject(BloqueosHorarioService);
   private notify = inject(NotificationService);
 
   private readonly storageKey = 'bloqueos-academicos-equipos-v1';
@@ -563,63 +561,9 @@ export class BloqueosHorarioComponent implements OnInit {
     const merged = [...updated, ...newBlocks];
     this.bloqueosAcademicos.set(merged);
     this.persistBlocks();
-    
-    // ✅ NUEVA: Sincronizar con el backend
-    this.syncBlocksToBackend(newBlocks);
-    
     this.refreshCellActivities();
     this.notify.success('Bloqueo académico guardado correctamente.');
     this.closeModal();
-  }
-
-  /**
-   * 📡 Sincroniza los bloqueos académicos con el backend
-   * Los bloqueos pueden contener múltiples equipos, pero el backend
-   * espera un equipo por POST. Entonces hacemos N llamadas.
-   */
-  private syncBlocksToBackend(blocks: BloqueoAcademico[]): void {
-    blocks.forEach((bloque) => {
-      if (!bloque.equipos || bloque.equipos.length === 0) {
-        return;
-      }
-
-      // Por cada equipo en cada bloque, hacer un POST al backend
-      bloque.equipos.forEach((equipo) => {
-        const equipoId = this.extractEquipoId(equipo.id);
-        if (!equipoId) return;
-
-        const payload = {
-          dia_semana: bloque.diaSemana,
-          idBloque: bloque.bloqueId,
-          idTipoEquipo: equipoId,
-          activo: true,
-          motivo: bloque.nombreActividad,
-          week_start: this.toISODate(new Date(bloque.fecha + 'T00:00:00'))
-        };
-
-        this.bloqueosSrv.setBloqueo(payload).subscribe({
-          next: () => {
-            console.log(`✅ Bloqueo sincronizado: ${equipo.nombre} en bloque ${bloque.bloqueId}`);
-          },
-          error: (err) => {
-            console.error(`❌ Error sincronizando bloqueo:`, err);
-            this.notify.warning(`⚠️ El bloqueo se guardó localmente pero puede no estar en el servidor: ${equipo.nombre}`);
-          }
-        });
-      });
-    });
-  }
-
-  /**
-   * Extrae el ID numérico del equipo (removemodelo- or fisico- prefix)
-   */
-  private extractEquipoId(equipoId: string): number | null {
-    const match = equipoId.match(/modelo-(\d+)|fisico-(\d+)/);
-    if (match) {
-      const id = match[1] || match[2];
-      return id ? Number(id) : null;
-    }
-    return null;
   }
 
   deleteCurrentBlock(): void {
@@ -634,52 +578,11 @@ export class BloqueosHorarioComponent implements OnInit {
     }
     const option = this.deletingSeriesOption();
     const remaining = this.removeByOption(this.bloqueosAcademicos(), editing, option);
-    
-    // Determinar qué bloqueos se van a eliminar para notificar al servidor
-    const removed = this.bloqueosAcademicos().filter(b => !remaining.includes(b));
-    
     this.bloqueosAcademicos.set(remaining);
     this.persistBlocks();
-    
-    // ✅ NUEVA: Sincronizar eliminaciones con el backend
-    this.deleteBlocksFromBackend(removed);
-    
     this.refreshCellActivities();
     this.notify.info('Bloqueo eliminado.');
     this.closeModal();
-  }
-
-  /**
-   * 📡 Elimina los bloqueos del backend (desactivándolos)
-   */
-  private deleteBlocksFromBackend(blocks: BloqueoAcademico[]): void {
-    blocks.forEach((bloque) => {
-      if (!bloque.equipos || bloque.equipos.length === 0) {
-        return;
-      }
-
-      bloque.equipos.forEach((equipo) => {
-        const equipoId = this.extractEquipoId(equipo.id);
-        if (!equipoId) return;
-
-        const payload = {
-          dia_semana: bloque.diaSemana,
-          idBloque: bloque.bloqueId,
-          idTipoEquipo: equipoId,
-          activo: false,  // Marca como inactivo
-          week_start: this.toISODate(new Date(bloque.fecha + 'T00:00:00'))
-        };
-
-        this.bloqueosSrv.setBloqueo(payload).subscribe({
-          next: () => {
-            console.log(`✅ Bloqueo eliminado del servidor: ${equipo.nombre}`);
-          },
-          error: (err) => {
-            console.error(`⚠️ Error eliminando bloqueo del servidor:`, err);
-          }
-        });
-      });
-    });
   }
 
   getCellActivityCount(day: DiaSemanaItem, block: BloqueHorarioItem): number {

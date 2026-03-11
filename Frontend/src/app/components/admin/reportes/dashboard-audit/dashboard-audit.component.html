@@ -32,7 +32,10 @@
   </div>
 
   <!-- ═══ Loading ═══ -->
-  <app-dm-loader *ngIf="loading" size="md">Calculando KPIs de auditoría…</app-dm-loader>
+  <div *ngIf="loading" class="audit-loading">
+    <div class="spinner"></div>
+    <span>Calculando KPIs de auditoría…</span>
+  </div>
 
   <!-- ═══ Error ═══ -->
   <div *ngIf="error && !loading" class="audit-error">
@@ -225,7 +228,7 @@
         {{ huerfanosTotal }} modelos ({{ huerfanosPct }}%)
       </span>
     </div>
-    <p class="section-desc">Tipos de equipo sin préstamos en los últimos <strong>{{ mesesHuerfanos }}</strong> meses — candidatos a reasignación o baja.</p>
+    <p class="section-desc">Tipos de equipo sin préstamos en los últimos <strong>{{ mesesHuerfanos }}</strong> meses — candidatos a redistribución o baja.</p>
 
     <div class="toolbar-group mb-3">
       <label>Umbral (meses):</label>

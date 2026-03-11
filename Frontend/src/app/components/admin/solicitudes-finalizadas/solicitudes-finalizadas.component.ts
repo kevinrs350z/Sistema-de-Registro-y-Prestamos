@@ -1,11 +1,7 @@
-import { Component, OnInit, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
-import { PrestamoStateService } from '../../../services/prestamo-state.service';
-import { DataSyncService } from '../../../services/data-sync.service';
 import { NavbarAdminComponent } from "../navbar-admin/navbar-admin.component";
 import { NotificationService } from '../../../services/notification.service';
 import { Router } from '@angular/router';
@@ -53,12 +49,9 @@ type ExtendModalState = {
   templateUrl: './solicitudes-finalizadas.component.html',
   styleUrls: ['./solicitudes-finalizadas.component.css']
 })
-export class SolicitudesFinalizadasComponent implements OnInit, OnDestroy {
+export class SolicitudesFinalizadasComponent implements OnInit {
 
   private notify = inject(NotificationService);
-  private prestamoState = inject(PrestamoStateService);
-  private dataSync = inject(DataSyncService);
-  private destroy$ = new Subject<void>();
 
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
@@ -85,39 +78,42 @@ export class SolicitudesFinalizadasComponent implements OnInit, OnDestroy {
   constructor(private api: PrestamosAdminService, private router: Router) {}
 
   ngOnInit(): void {
-    // Conectar a estado reactivo y filtrar solicitudes finalizadas
-    this.prestamoState.solicitudes$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(allSolicitudes => {
-        // Transformar datos de préstamo a formato de solicitudes finalizadas
-        this.solicitudes = (allSolicitudes || [])
-          .filter(p => ['ENTREGADO', 'DEVUELTO', 'RECHAZADO'].includes(p.estado))
-          .map((p): AdminSolicitud => {
-            const esDevuelto = p.estado === 'DEVUELTO';
-            const equiposDetallados = Array.isArray(p.equipos)
-              ? p.equipos.map((eq: any) => ({
-                  id: eq.id,
-                  nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
-                  codigoActivo: eq.codigo_activo ?? eq.codigo ?? '—',
-                  devuelto: esDevuelto ? true : Boolean(eq.devuelto)
-                }))
-              : [];
+    this.cargarSolicitudes();
+  }
 
-            return {
-              id: p.idPrestamo,
-              estudiante: p.user?.nombre ?? 'Desconocido',
-              email: p.user?.email ?? '',
-              tipo: p.tipo,
-              bloque: p.bloquePrestamo ?? '—',
-              periodo: `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}`,
-              fechaInicio: p.fecha_inicio ?? null,
-              fechaFin: p.fecha_fin ?? null,
-              equiposDetallados,
-              observacion: p.observacion ?? 'Sin observación',
-              fechaSolicitud: p.created_at ?? '',
-              estado: p.estado as AdminSolicitud['estado']
-            };
-          });
+  cargarSolicitudes(): void {
+    this.api.getHistorial().subscribe({
+      next: (data: any[]) => {
+        this.solicitudes = data.map((p): AdminSolicitud => {
+
+          // Si el estado es DEVUELTO, todos los equipos se consideran devueltos
+          const esDevuelto = p.estado === 'DEVUELTO';
+
+          const equiposDetallados = Array.isArray(p.equipos)
+            ? p.equipos.map((eq: any) => ({
+                id: eq.id,
+                nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
+                codigoActivo: eq.codigo_activo ?? eq.codigo ?? '—',
+                devuelto: esDevuelto ? true : Boolean(eq.devuelto)
+
+              }))
+            : [];
+
+          return {
+            id: p.idPrestamo,
+            estudiante: p.user?.nombre ?? 'Desconocido',
+            email: p.user?.email ?? '',
+            tipo: p.tipo,
+            bloque: p.bloquePrestamo ?? '—',
+            periodo: `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}`,
+            fechaInicio: p.fecha_inicio ?? null,
+            fechaFin: p.fecha_fin ?? null,
+            equiposDetallados,
+            observacion: p.observacion ?? 'Sin observación',
+            fechaSolicitud: p.created_at ?? '',
+            estado: p.estado as AdminSolicitud['estado']
+          };
+        });
 
         if (this.reselectPrestamoId !== null) {
           const seleccionada = this.solicitudes.find((s) => s.id === this.reselectPrestamoId) ?? null;
@@ -138,21 +134,9 @@ export class SolicitudesFinalizadasComponent implements OnInit, OnDestroy {
 
           this.reselectPrestamoId = null;
         }
-      });
-
-    // Iniciar polling automático
-    this.prestamoState.iniciarPolling();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.prestamoState.detenerPolling();
-  }
-
-  cargarSolicitudes(): void {
-    // Trigger cache invalidation to refresh data from API
-    this.dataSync.invalidarPrestamos();
+      },
+      error: (err) => console.error('Error al cargar historial:', err)
+    });
   }
 
   get solicitudesFiltradas(): AdminSolicitud[] {

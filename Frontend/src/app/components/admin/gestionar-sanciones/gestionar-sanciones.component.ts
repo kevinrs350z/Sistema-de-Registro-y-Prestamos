@@ -1,13 +1,9 @@
-import { Component, OnInit, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 import { SancionesService } from '../../../services/sanciones.service';
-import { SancionStateService } from '../../../services/sancion-state.service';
-import { DataSyncService } from '../../../services/data-sync.service';
 import { NotificationService } from '../../../services/notification.service';
 import { UsuariosService } from '../../../services/usuarios.service';
 import * as XLSX from 'xlsx';
@@ -60,18 +56,14 @@ interface PrefillData {
   templateUrl: './gestionar-sanciones.component.html',
   styleUrls: ['./gestionar-sanciones.component.css'],
 })
-export class GestionarSancionesComponent implements OnInit, OnDestroy {
+export class GestionarSancionesComponent implements OnInit {
 
   constructor(
     private router: Router,
     private sancionesService: SancionesService,
-    private route: ActivatedRoute,
-    private usuariosService: UsuariosService
+    private route: ActivatedRoute
+    , private usuariosService: UsuariosService
   ) {}
-
-  private sancionState = inject(SancionStateService);
-  private dataSync = inject(DataSyncService);
-  private destroy$ = new Subject<void>();
 
 
   sanciones: Sancion[] = [];
@@ -149,41 +141,8 @@ export class GestionarSancionesComponent implements OnInit, OnDestroy {
 
 
   ngOnInit(): void {
-    // Conectar a estado reactivo de sanciones
-    this.sancionState.sanciones$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(sanciones => {
-        this.sanciones = (sanciones || []).map((s: any) => ({
-          id: s.id,
-          key: `${s.id}`,
-          usuario: `${s.usuario_nombre ?? ''} ${s.usuario_apellido ?? ''}`.trim() || s.usuario_email || 'Sin usuario',
-          correo: s.usuario_email ?? '',
-          rut: s.usuario_rut ?? '',
-          nombre: s.usuario_nombre ?? '',
-          apellido: s.usuario_apellido ?? '',
-          motivo: s.nivel ?? s.sancion_nivel ?? '',
-          nivel: s.nivel ?? '',
-          descripcion: s.descripcion ?? '',
-          categoria_falta: s.categoria_falta ?? '',
-          fecha_inicio: s.fecha_inicio,
-          fecha_fin: s.fecha_fin,
-          estado: s.estado ?? 'ACTIVA',
-          escalada_desde_id: s.escalada_desde_id ?? null,
-          periodo_academico: s.periodo_academico ?? null,
-          asignada_por: s.asignada_por || '—',
-          asignada_en: s.asignada_en ?? ''
-        }));
-        this.sancionSeleccionada = this.sanciones[0] || null;
-        this.page = 1;
-      });
-
-    // Cargar catálogo
+    this.cargarDatosReales();
     this.cargarCatalogo();
-
-    // ⚠️ NO iniciar polling manual
-    // SancionStateService gestionará esto automáticamente:
-    // - Si SSE conecta → sin polling
-    // - Si SSE falla → polling fallback activado
 
     this.route.queryParams.subscribe((params) => {
       const prestamoId = Number(params['prestamoId']);
@@ -191,12 +150,27 @@ export class GestionarSancionesComponent implements OnInit, OnDestroy {
         this.precargarSancion(prestamoId);
       }
     });
-  }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.sancionState.detenerPolling();
+    // Listener navbar admin
+    window.addEventListener('admin-navegacion', (e: any) => {
+      const destino = e.detail;
+
+      if (destino === 'gestionar') {
+        this.router.navigate(['/admin/dashboard']);
+      }
+      if (destino === 'solicitudes') {
+        this.router.navigate(['/admin/solicitudes']);
+      }
+      if (destino === 'finalizadas') {
+        this.router.navigate(['/admin/solicitudes-finalizadas']);
+      }
+      if (destino === 'inventario') {
+        this.router.navigate(['/admin/dashboard']);
+      }
+      if (destino === 'cuentas') {
+        this.router.navigate(['/admin/dashboard']);
+      }
+    });
   }
 
   cargarCatalogo(): void {
@@ -272,10 +246,48 @@ export class GestionarSancionesComponent implements OnInit, OnDestroy {
 
 
   cargarDatosReales(): void {
-    // Se carga desde SancionStateService automáticamente
-    // Este método mantiene compatibilidad pero ya no hace nada
-    this.dataSync.invalidarSanciones();
-  }
+    this.cargandoSanciones = true;
+    this.errorSanciones = null;
+    this.sancionesService.getSanciones().subscribe({
+      next: (resp) => {
+        const lista = (resp.sanciones || []).map((r: any) => {
+          const nombre = r.usuario_nombre ?? '';
+          const apellido = r.usuario_apellido ?? '';
+
+          return {
+            id: r.id,
+            key: `${r.id}`,
+            usuario: `${nombre} ${apellido}`.trim() || r.usuario_email || 'Sin usuario',
+            correo: r.usuario_email ?? '',
+            rut: r.usuario_rut ?? '',
+            nombre,
+            apellido,
+            motivo: r.nivel ?? r.sancion_nivel ?? '',
+            nivel: r.nivel ?? '',
+            descripcion: r.descripcion ?? '',
+            categoria_falta: r.categoria_falta ?? '',
+            fecha_inicio: r.fecha_inicio,
+            fecha_fin: r.fecha_fin,
+            estado: r.estado ?? 'ACTIVA',
+            escalada_desde_id: r.escalada_desde_id ?? null,
+            periodo_academico: r.periodo_academico ?? null,
+            asignada_por: r.asignada_por || '—',
+            asignada_en: r.asignada_en ?? ''
+          } as Sancion;
+        });
+
+        this.sanciones = lista;
+        this.sancionSeleccionada = this.sanciones[0] || null;
+        this.page = 1;
+        this.cargandoSanciones = false;
+    },
+    error: (err) => {
+      console.error('Error cargando sanciones', err);
+      this.errorSanciones = 'No se pudieron cargar las sanciones.';
+      this.cargandoSanciones = false;
+    }
+  });
+}
 
 
 
@@ -460,29 +472,30 @@ export class GestionarSancionesComponent implements OnInit, OnDestroy {
     this.motivoAmpliacion = '';
   }
 
-  confirmarAmpliacion() {
-    if (!this.motivoAmpliacion.trim()) {
-      this.notify.warning('Debes ingresar un motivo para ampliar la sanción.');
-      return;
-    }
 
-    if (!this.sancionSeleccionada) return;
-
-    this.sancionesService
-      .ampliarSancion(this.sancionSeleccionada.id, this.motivoAmpliacion.trim())
-      .subscribe({
-        next: () => {
-          this.notify.success('Sanción ampliada correctamente.');
-          this.mostrarModalAmpliar = false;
-          this.motivoAmpliacion = '';
-          this.cargarDatosReales();
-        },
-        error: (err) => {
-          console.error(err);
-          this.notify.error('Ocurrió un error al ampliar la sanción.');
-        }
-      });
+confirmarAmpliacion() {
+  if (!this.motivoAmpliacion.trim()) {
+    this.notify.warning('Debes ingresar un motivo para ampliar la sanción.');
+    return;
   }
+
+  if (!this.sancionSeleccionada) return;
+
+  this.sancionesService
+    .ampliarSancion(this.sancionSeleccionada.id, this.motivoAmpliacion.trim())
+    .subscribe({
+      next: () => {
+        this.notify.success('Sanción ampliada correctamente.');
+        this.mostrarModalAmpliar = false;
+        this.motivoAmpliacion = '';
+        this.cargarDatosReales();
+      },
+      error: (err) => {
+        console.error(err);
+        this.notify.error('Ocurrió un error al ampliar la sanción.');
+      }
+    });
+}
 
   // ====== EDITAR SANCIÓN ======
   toggleEditarSancion() {

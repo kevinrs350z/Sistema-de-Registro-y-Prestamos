@@ -256,36 +256,5 @@ namespace App\Http\Controllers\Prestamo;
             ]);
         }
 
-        /* ============================================================
-            DEVOLUCIONES Y CANCELACIONES MASIVAS
-        ============================================================ */
-
-        /**
-         * Devolver todos los préstamos en estado ENTREGADO
-         * POST /admin/prestamos/masivo/devolver-todos
-         */
-        public function devolverTodosMasivo(Request $request)
-        {
-            $motivo = $request->input('motivo', 'Devolución masiva');
-            
-            $resultado = $this->service->devolverTodosMasivo($motivo);
-
-            return response()->json($resultado);
-        }
-
-        /**
-         * Cancelar todos los préstamos PENDIENTES
-         * POST /admin/prestamos/masivo/cancelar-pendientes
-         */
-        public function cancelarTodosPendientesMasivo(Request $request)
-        {
-            $motivo = $request->input('motivo', 'Cancelación masiva');
-            
-            $resultado = $this->service->cancelarTodosPendientesMasivo($motivo);
-
-            return response()->json($resultado);
-        }
 
 }
-
-

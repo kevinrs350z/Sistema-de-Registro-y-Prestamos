@@ -3,12 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfiguracionService, Configuracion } from '../../../services/configuracion.service';
 import { NotificationService } from '../../../services/notification.service';
-import { DmLoaderComponent } from '../../../shared/dm-loader/dm-loader.component';
 
 @Component({
   selector: 'app-configuracion-emails',
   standalone: true,
-  imports: [CommonModule, FormsModule, DmLoaderComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './configuracion-emails.component.html',
   styleUrls: ['./configuracion-emails.component.css']
 })

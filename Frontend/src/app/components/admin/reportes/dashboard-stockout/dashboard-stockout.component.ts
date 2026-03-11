@@ -11,12 +11,11 @@ import {
 } from '../../../../services/reportes/dashboard-operational.service';
 import { ReportFiltersComponent } from '../report-filters/report-filters.component';
 import { ReportFilter } from '../../../../services/report-filters.service';
-import { DmLoaderComponent } from '../../../../shared/dm-loader/dm-loader.component';
 
 @Component({
   selector: 'app-dashboard-stockout',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReportFiltersComponent, DmLoaderComponent],
+  imports: [CommonModule, FormsModule, ReportFiltersComponent],
   templateUrl: './dashboard-stockout.component.html',
   styleUrls: ['./dashboard-stockout.component.css']
 })

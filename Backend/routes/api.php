@@ -31,7 +31,6 @@ use App\Http\Controllers\MotivoRechazoController;
 use App\Http\Controllers\Analytics\DemandAnalyticsController;
 use App\Http\Controllers\Analytics\StockoutAnalyticsController;
 use App\Http\Controllers\Reportes\Dashboard\KpiAuditoriaController;
-use App\Http\Controllers\RealtimeSyncController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,12 +43,10 @@ use App\Http\Controllers\RealtimeSyncController;
 |
 */
 
-// 1. RUTAS PÚBLICAS (con rate limiting ISO 27001 — A.9.4.2)
-Route::middleware('throttle:auth')->group(function () {
-    Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-    Route::post('/reset', [ResetPasswordController::class, 'reset']);
-    Route::get('/password/validate-token/{token}', [ResetPasswordController::class, 'validateToken']);
-});
+// 1. RUTAS PÚBLICAS 
+Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/reset', [ResetPasswordController::class, 'reset']);
+Route::get('/password/validate-token/{token}', [ResetPasswordController::class, 'validateToken']);
 
 // =====================================================
 // RUTAS DE IMÁGENES (públicas, con CORS)
@@ -59,12 +56,12 @@ Route::get('/images/{path}', [\App\Http\Controllers\ImageController::class, 'sho
 
 Route::get('/tipo-equipos/{id}/imagen', [\App\Http\Controllers\ImageController::class, 'tipoEquipo']);
 
-// Ruta para iniciar sesión (con rate limiting)
+// Ruta para iniciar sesión
 // URL: /api/login
-Route::middleware('throttle:auth')->post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);
 
-// Ruta para Google Auth (con rate limiting)
-Route::middleware('throttle:auth')->post('/auth/google', [GoogleTokenController::class, 'login']);
+
+Route::post('/auth/google', [GoogleTokenController::class, 'login']);
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/analytics/executive-kpis', [DemandAnalyticsController::class, 'executiveKpis']);
@@ -87,15 +84,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 });
 
 
-// Ruta para registrar un nuevo usuario (con rate limiting)
+// Ruta para registrar un nuevo usuario
 // URL: /api/register
-Route::middleware('throttle:auth')->post('/register', [AuthController::class, 'register']);
-
-// ─────────────────────────────────────────────────────────────
-// SSE: Sincronización en tiempo real (autenticación manual)
-// ─────────────────────────────────────────────────────────────
-// Token via query parameter porque EventSource no soporta headers
-Route::get('/admin/stream/cambios', [RealtimeSyncController::class, 'stream']);
+Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
     
@@ -145,9 +136,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // =====================================================
 // ADMIN: GESTION DE CATEGORIAS + ENCARGADOS
-// ISO 27001 — A.9.4.1: Requiere autenticación + rol admin
 // =====================================================
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/categorias', [CategoriaController::class, 'adminIndex']);
     Route::post('/admin/categorias', [CategoriaController::class, 'store']);
     Route::get('/admin/categorias/{id}', [CategoriaController::class, 'adminShow']);
@@ -165,8 +155,6 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 });
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
    # Route::post('/prestamos/cambiar-estado', [PrestamoAdminController::class, 'cambiarEstado']);
-    
-    // Prestamos admin routes...
     Route::post('/admin/prestamos/aprobar/{id}',[PrestamoAdminController::class, 'aprobar']);
     Route::post('/admin/prestamos/rechazar/{id}',[PrestamoAdminController::class, 'rechazar']);
     Route::patch('/admin/prestamos/{id}/equipos', [PrestamoAdminController::class, 'actualizarEquipos']);
@@ -203,13 +191,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('admin/prestamos/historial', [PrestamoAdminController::class, 'historial']);
     Route::patch('/reservas/{idPrestamo}/equipos/{idEquipo}/devolver',[PrestamoAdminController::class, 'devolverEquipo']);
 
-    // 🔄 OPERACIONES MASIVAS DE PRÉSTAMOS
-    Route::post('/admin/prestamos/masivo/devolver-todos', [PrestamoAdminController::class, 'devolverTodosMasivo']);
-    Route::post('/admin/prestamos/masivo/cancelar-pendientes', [PrestamoAdminController::class, 'cancelarTodosPendientesMasivo']);
 
-    Route::post('admin/prestamos/{id}/devolver', [PrestamoAdminController::class, 'marcarDevuelto']);
-    Route::patch('admin/prestamos/{id}/extender', [PrestamoAdminController::class, 'extender']);
-    Route::post('admin/prestamos/{id}/entregar', [PrestamoAdminController::class, 'marcarEntregado']);
+Route::post('admin/prestamos/{id}/devolver', [PrestamoAdminController::class, 'marcarDevuelto']);
+Route::patch('admin/prestamos/{id}/extender', [PrestamoAdminController::class, 'extender']);
+Route::post('admin/prestamos/{id}/entregar', [PrestamoAdminController::class, 'marcarEntregado']);
 
     // ─────────────────────────────────────────────
     // Gestión de estados de equipos (auditoría/fallas)

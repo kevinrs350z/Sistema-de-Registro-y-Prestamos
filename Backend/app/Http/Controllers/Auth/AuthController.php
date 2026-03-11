@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth; 
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use App\Mail\LoginNotification;
 use App\Jobs\SendGenericEmailJob;
 
@@ -32,7 +30,7 @@ class AuthController extends Controller
             'apellido2' => 'nullable|string|max:255', // Añadido 'nullable' si es opcional
             'Rut' => 'required|string|unique:persona,Rut',
             'email' => 'required|email|unique:persona,Email',
-            'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+\-_.]).{8,}$/',
+            'password' => 'required|string|min:8|confirmed',
         ]);
     
         // 2. Crear la Entidad Persona
@@ -66,15 +64,8 @@ class AuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
     
         return response()->json([
-            'token' => $token,
-            'user' => [
-                'id' => $user->idUser,
-                'nombre' => $persona->Nombre ?? '',
-                'email' => $persona->Email ?? '',
-                'rol' => [
-                    'nombre' => $defaultRole->Nombre ?? 'ALUMNO',
-                ],
-            ],
+            'user' => $user->load('persona', 'roles'),
+            'token' => $token
         ], 201);
     } 
 
@@ -133,21 +124,10 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // 1️⃣ Validar los datos de entrada
-        //    ISO 27001 — A.9.4.2: NO usar «exists» para no enumerar cuentas
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|email|exists:persona,Email',
             'password' => 'required|string',
         ]);
-
-        // ISO 27001 — A.9.4.2: Account lockout tras intentos fallidos
-        $throttleKey = Str::lower($request->email) . '|' . $request->ip();
-
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
-            return response()->json([
-                'message' => "Demasiados intentos fallidos. Intenta de nuevo en {$seconds} segundos.",
-            ], 429);
-        }
 
         // 2️⃣ Buscar el usuario asociado a ese email
         $user = User::whereHas('persona', function ($query) use ($request) {
@@ -158,24 +138,15 @@ class AuthController extends Controller
 
         // 2.1️⃣ Bloquear acceso si está desactivado
         if ($user && (($user->estado ?? 'ACTIVO') !== 'ACTIVO' || (($user->persona->estado ?? 'ACTIVO') !== 'ACTIVO'))) {
-            return response()->json(['message' => 'Credenciales inválidas'], 401);
+            return response()->json(['message' => 'Usuario desactivado'], 403);
         }
 
         // 3️⃣ Validar credenciales
         if (!$user || !Auth::attempt(['idPersona' => $user->idPersona, 'password' => $request->password])) {
-            // Incrementar contador de intentos fallidos (expira en 60 segundos)
-            RateLimiter::hit($throttleKey, 60);
             return response()->json(['message' => 'Credenciales inválidas'], 401);
         }
 
-        // Login exitoso: limpiar contador de intentos
-        RateLimiter::clear($throttleKey);
-
-        // 4️⃣ ISO 27001 — A.9.2.1: Revocar tokens anteriores antes de emitir uno nuevo
-        //    Impide sesiones concurrentes no autorizadas.
-        $user->tokens()->delete();
-
-        // 5️⃣ Crear el token de autenticación
+        // 4️⃣ Crear el token de autenticación
         $token = $user->createToken('auth-token')->plainTextToken;
 
         // 5️⃣ Obtener el rol principal (si solo tiene uno)
@@ -194,18 +165,6 @@ class AuthController extends Controller
                 ],
             ],
         ], 200);
-    }
-
-    /**
-     * ISO 27001 — A.9.2.1: Cierre de sesión.
-     * Revoca el token actual del usuario autenticado.
-     */
-    public function logout(Request $request)
-    {
-        // Revocar el token que se usó para esta request
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json(['message' => 'Sesión cerrada'], 200);
     }
 
 }
