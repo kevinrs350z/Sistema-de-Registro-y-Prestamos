@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Prestamo;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Prestamo\StorePrestamoAdminRequest;
 use App\Services\PrestamoService;
+use App\Models\Asignatura;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -15,6 +16,20 @@ class AdminPrestamoController extends Controller
         DB::beginTransaction();
 
         try {
+            // Obtener asignatura - puede venir como nombre o como ID
+            $asignaturaInput = $request->asignatura;
+            $asignaturaId = null;
+
+            if ($asignaturaInput === 'OTROS') {
+                // Cuando es OTROS, no se asocia ninguna asignatura
+                $asignaturaId = null;
+            } elseif (is_numeric($asignaturaInput)) {
+                $asignaturaId = (int) $asignaturaInput;
+            } elseif (is_string($asignaturaInput) && trim($asignaturaInput) !== '') {
+                // Buscar asignatura por nombre (case insensitive)
+                $asignaturaId = Asignatura::whereRaw('LOWER(nombre) = ?', [mb_strtolower(trim($asignaturaInput))])->value('idAsignatura');
+            }
+
             $prestamo = $service->crearPrestamo([
                 'idUser'           => $request->idUserAlumno,
                 'fecha_inicio'     => $request->fecha_inicio,
@@ -22,6 +37,7 @@ class AdminPrestamoController extends Controller
                 'tipo'             => $request->tipo,
                 'estado'           => 'APROBADO',
                 'observacion'      => $request->observacion,
+                'otra_motivo'      => $request->motivo,
                 'aprobado_por'     => Auth::id(),
                 'fecha_aprobacion' => now(),
             ]);
@@ -30,7 +46,7 @@ class AdminPrestamoController extends Controller
                 $service->asignarBloques(
                     $prestamo->idPrestamo,
                     $request->bloques,
-                    $request->asignatura
+                    $asignaturaId
                 );
             }
 

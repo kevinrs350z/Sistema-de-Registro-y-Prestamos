@@ -1,9 +1,33 @@
 <app-loading-overlay></app-loading-overlay>
 <app-notification></app-notification>
 
-<app-navbar *ngIf="!esRutaAuth && !esRutaAdmin"></app-navbar>
-<app-navbar-admin *ngIf="esRutaAdmin"></app-navbar-admin>
+<app-navbar *ngIf="!esRutaAuth && !esRutaAdmin" #userNav></app-navbar>
 
-<div>
+<!-- Admin layout: sidebar + slim navbar -->
+<ng-container *ngIf="esRutaAdmin">
+  <app-admin-sidebar #adminSidebar (collapsedChange)="sidebarCollapsed = $event"></app-admin-sidebar>
+  <app-navbar-admin
+    #adminNav
+    [class.sidebar-collapsed]="sidebarCollapsed"
+    (toggleSidebarEvent)="onToggleSidebar()"
+  ></app-navbar-admin>
+</ng-container>
+
+<div
+  class="app-content"
+  [class.with-user-navbar]="!esRutaAuth && !esRutaAdmin"
+  [class.with-admin-sidebar]="esRutaAdmin"
+  [class.sidebar-collapsed]="esRutaAdmin && sidebarCollapsed"
+  [style.paddingTop.px]="navbarOffset"
+>
   <router-outlet></router-outlet>
+</div>
+
+<div [class.admin-footer-wrapper]="esRutaAdmin" [class.sidebar-collapsed]="esRutaAdmin && sidebarCollapsed">
+  <app-footer
+    [role]="esRutaAdmin ? 'admin' : 'alumno'"
+    [showLinks]="!esRutaAuth"
+    [compact]="esRutaAuth"
+    [version]="versionStamp"
+  ></app-footer>
 </div>

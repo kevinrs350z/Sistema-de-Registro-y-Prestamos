@@ -2,15 +2,13 @@
 
 namespace App\Services\Prestamos;
 
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\Prestamo;
 use App\Models\Observacion;
 use App\Models\PrestamoHistorial;
 use App\Models\User;
-use App\Mail\PrestamoAprobadoMail;
-use App\Mail\PrestamoRechazadoMail;
+use App\Jobs\SendPrestamoEmailJob;
 
 use App\Enums\EstadoPrestamo;
 use App\Enums\EstadoEquipo;
@@ -19,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Equipo;
 use App\Services\PrestamoService;
 use App\Models\Evento;
+use Carbon\Carbon;
 
 
 class PrestamoAdminService
@@ -45,9 +44,41 @@ class PrestamoAdminService
 
         // Guardamos estado
         $prestamo->estado = $nuevoEstado;
+
+        // Lógica para procesar motivo y observación
         if (!is_null($motivo) && trim($motivo) !== '') {
-            $prestamo->observacion = $motivo;
+            // Si es rechazo, intentamos extraer el enum del motivo
+            if ($accion === 'rechazar') {
+                $motivoEnum = null;
+                $textoObservacion = $motivo;
+
+                // Buscar si el string empieza con algún motivo válido
+                foreach (\App\Enums\MotivoRechazo::all() as $enum) {
+                    // Verificamos si empieza con el ENUM
+                    // Ej: "SIN_STOCK - No hay unidades" o "SIN_STOCK"
+                    if (str_starts_with($motivo, $enum)) {
+                        $motivoEnum = $enum;
+                        // Limpiamos el enum del texto de observación
+                        // Removemos el enum y caracteres separadores comunes (" - ", ": ", " ")
+                        $resto = substr($motivo, strlen($enum));
+                        $textoObservacion = ltrim($resto, " -:\t\n\r");
+                        break;
+                    }
+                }
+
+                // Asignamos el motivo detectado o null (o OTRO si preferimos default)
+                // Si no se detectó enum, asumimos que todo es observación y el motivo queda null o OTRO
+                $prestamo->motivo_rechazo = $motivoEnum; 
+                
+                // Si se detectó un enum, guardamos solo el texto limpio en observación
+                // Si no, guardamos todo el string original
+                $prestamo->observacion = $textoObservacion ?: null; // Si queda vacío, null
+            } else {
+                // Si es aprobar, todo va a observación directo
+                $prestamo->observacion = $motivo;
+            }
         }
+
         $prestamo->save();
 
         // 🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
@@ -57,7 +88,7 @@ class PrestamoAdminService
             $userId,
             $estadoAnterior,
             $nuevoEstado,
-            $motivo
+            $motivo // Guardamos el string completo original en historial para referencia
         );
 
         // Si se rechaza, liberar equipos a DISPONIBLE
@@ -74,32 +105,56 @@ class PrestamoAdminService
         $equipos = $prestamo->equipos->map(fn ($e) => [
             'nombre' => $e->tipo->nombre ?? 'Equipo',
             'codigo' => $e->codigo ?? '—'
-        ]);
+        ])->toArray();
 
+        // Envio de correo al alumno (no debe bloquear ni romper la respuesta)
         if ($email) {
             try {
-                if ($accion === 'aprobar') {
-                    Mail::to($email)->send(new PrestamoAprobadoMail(
-                        $nombre,
-                        $prestamo->idPrestamo,
-                        $prestamo->created_at->format('d/m/Y H:i'),
-                        $motivo,
-                        $equipos
-                    ));
-                } else {
-                    Mail::to($email)->send(new PrestamoRechazadoMail(
-                        $nombre,
-                        $prestamo->idPrestamo,
-                        $prestamo->created_at->format('d/m/Y H:i'),
-                        $motivo
-                    ));
-                }
-            } catch (\Throwable $e) {
-                Log::error('Error al enviar correo de préstamo', [
+                SendPrestamoEmailJob::dispatch(
+                    $accion === 'aprobar' ? 'aprobado' : 'rechazado',
+                    $email,
+                    $nombre,
+                    $prestamo->idPrestamo,
+                    $prestamo->created_at->format('d/m/Y H:i'),
+                    $motivo,
+                    $accion === 'aprobar' ? $equipos : null
+                );
+
+                Log::info('Job de correo encolado', [
                     'prestamo_id' => $prestamo->idPrestamo,
-                    'error' => $e->getMessage()
+                    'accion' => $accion,
+                    'email' => $email
                 ]);
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo encolar correo de préstamo', [
+                    'prestamo_id' => $prestamo->idPrestamo,
+                    'accion' => $accion,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+                // No se relanza la excepción para evitar que el front reciba 500
             }
+        }
+
+        // Notificar encargados del cambio de estado
+        try {
+            $this->prestamoService->notificarEncargadosCambioEstado($prestamo->idPrestamo, $accion);
+        } catch (\Exception $e) {
+            Log::warning('No se pudo notificar encargados del cambio de estado', [
+                'prestamo_id' => $prestamo->idPrestamo,
+                'accion' => $accion,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Si es externo (FUERA), notificar a inventario
+        try {
+            $this->prestamoService->notificarInventarioSiExterno($prestamo, $accion === 'aprobar' ? 'APROBADO' : 'RECHAZADO');
+        } catch (\Exception $e) {
+            Log::warning('No se pudo notificar inventario', [
+                'prestamo_id' => $prestamo->idPrestamo,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -108,15 +163,15 @@ class PrestamoAdminService
     ============================================================ */
     public function marcarDevuelto(
         int $idPrestamo,
-        string $motivo
+        ?string $motivo
     ): void {
         $prestamo = Prestamo::with(['equipos'])
             ->findOrFail($idPrestamo);
 
         $estadoAnterior = $prestamo->estado;
 
-        if ($prestamo->estado !== EstadoPrestamo::APROBADO) {
-            throw new \Exception('Solo préstamos APROBADOS pueden devolverse.');
+        if ($prestamo->estado !== EstadoPrestamo::ENTREGADO) {
+            throw new \Exception('Solo préstamos ENTREGADOS pueden marcarse como devueltos.');
         }
 
         $prestamo->estado = EstadoPrestamo::DEVUELTO;
@@ -124,17 +179,31 @@ class PrestamoAdminService
 
         // 🔹 REGISTRAR EN HISTORIAL DE CAMBIOS
         $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
+        $motivoFinal = $motivo && trim($motivo) !== ''
+            ? $motivo
+            : 'Préstamo devuelto por administración.';
+
         $this->registrarHistorial(
             $prestamo->idPrestamo,
             $userId,
             $estadoAnterior,
             EstadoPrestamo::DEVUELTO,
-            $motivo
+            $motivoFinal
         );
 
         foreach ($prestamo->equipos as $equipo) {
             $equipo->estado = EstadoEquipo::DISPONIBLE;
             $equipo->save();
+        }
+
+        // Notificar al alumno y encargados de la devolucion
+        try {
+            $this->prestamoService->notificarDevuelto($prestamo->idPrestamo, $motivoFinal);
+        } catch (\Exception $e) {
+            Log::warning('No se pudo notificar devolucion', [
+                'prestamo_id' => $prestamo->idPrestamo,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -150,8 +219,8 @@ class PrestamoAdminService
 
             $prestamo = Prestamo::with('equipos')->findOrFail($idPrestamo);
 
-            if ($prestamo->estado !== EstadoPrestamo::APROBADO) {
-                throw new \Exception('El préstamo no está en estado APROBADO.');
+            if ($prestamo->estado !== EstadoPrestamo::ENTREGADO) {
+                throw new \Exception('El préstamo no está en estado ENTREGADO.');
             }
 
             // 1️⃣ Marcar equipo como devuelto SOLO en este préstamo
@@ -179,7 +248,7 @@ class PrestamoAdminService
                 ->where('devuelto', false)
                 ->count();
 
-            // 5️⃣ Si NO quedan → préstamo DEVUELTO
+            // 5. Si NO quedan → prestamo DEVUELTO
             if ($pendientes === 0) {
                 $estadoAnterior = $prestamo->estado;
                 $prestamo->estado = EstadoPrestamo::DEVUELTO;
@@ -193,6 +262,136 @@ class PrestamoAdminService
                     EstadoPrestamo::DEVUELTO,
                     'Todos los equipos devueltos'
                 );
+
+                // Notificar al alumno y encargados
+                try {
+                    $this->prestamoService->notificarDevuelto($prestamo->idPrestamo, 'Todos los equipos devueltos');
+                } catch (\Exception $e) {
+                    Log::warning('No se pudo notificar devolucion completa', [
+                        'prestamo_id' => $prestamo->idPrestamo,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        });
+    }
+
+    public function extenderPrestamo(
+        int $idPrestamo,
+        string $nuevaFecha,
+        array $equiposIds,
+        ?string $comentario
+    ): void {
+        DB::transaction(function () use ($idPrestamo, $nuevaFecha, $equiposIds, $comentario) {
+            $prestamo = Prestamo::with(['equipos.tipo'])->findOrFail($idPrestamo);
+
+            if (!in_array($prestamo->estado, [EstadoPrestamo::APROBADO, EstadoPrestamo::ENTREGADO], true)) {
+                throw new \Exception('Solo préstamos APROBADOS o ENTREGADOS pueden extenderse.');
+            }
+
+            $equiposSeleccionados = collect($equiposIds)->unique()->values();
+
+            if ($equiposSeleccionados->isEmpty()) {
+                throw new \Exception('Debes seleccionar al menos un equipo para extender.');
+            }
+
+            $equiposPrestamo = $prestamo->equipos;
+            $idsPrestamo = $equiposPrestamo->pluck('id');
+
+            if ($equiposSeleccionados->diff($idsPrestamo)->isNotEmpty()) {
+                throw new \Exception('Algunos equipos seleccionados no pertenecen al préstamo.');
+            }
+
+            $pendientesActuales = $equiposPrestamo->filter(fn ($equipo) => !($equipo->pivot->devuelto ?? false))->pluck('id');
+
+            if ($pendientesActuales->isEmpty()) {
+                throw new \Exception('No existen equipos pendientes para extender.');
+            }
+
+            $pendientesSeleccionados = $equiposSeleccionados->intersect($pendientesActuales);
+
+            if ($pendientesSeleccionados->isEmpty()) {
+                throw new \Exception('Los equipos elegidos ya fueron devueltos.');
+            }
+
+            $userId = auth()->id() ?? auth('sanctum')->user()?->idUser;
+
+            // 1️⃣ Actualizar fecha límite del préstamo
+            $prestamo->fecha_fin = Carbon::parse($nuevaFecha)->endOfDay();
+            $prestamo->save();
+
+            // 2️⃣ Registrar observación de extensión
+            Observacion::create([
+                'idPrestamo'  => $prestamo->idPrestamo,
+                'idUser'      => $userId,
+                'descripcion' => $comentario ?: 'Extensión del préstamo registrada por administración.',
+                'tipo'        => 'EXTENSION',
+                'estado'      => 'habilitado'
+            ]);
+
+            // 3️⃣ Marcar como devueltos los equipos no seleccionados
+            $equiposNoExtender = $pendientesActuales->diff($pendientesSeleccionados);
+
+            if ($equiposNoExtender->isNotEmpty()) {
+                DB::table('prestamo_equipo')
+                    ->where('idPrestamo', $prestamo->idPrestamo)
+                    ->whereIn('idEquipo', $equiposNoExtender->all())
+                    ->update(['devuelto' => true]);
+
+                Equipo::whereIn('id', $equiposNoExtender->all())
+                    ->update(['estado' => EstadoEquipo::DISPONIBLE]);
+
+                foreach ($equiposPrestamo->whereIn('id', $equiposNoExtender->all()) as $equipoDevuelto) {
+                    Observacion::create([
+                        'idPrestamo'  => $prestamo->idPrestamo,
+                        'idUser'      => $userId,
+                        'descripcion' => sprintf(
+                            'Extensión: equipo %s (%s) devuelto automáticamente.',
+                            $equipoDevuelto->tipo->nombre ?? 'Equipo',
+                            $equipoDevuelto->codigo ?? '—'
+                        ),
+                        'tipo'        => 'DEVOLUCION_PARCIAL',
+                        'estado'      => 'habilitado'
+                    ]);
+                }
+            }
+
+            // 4️⃣ Garantizar que equipos seleccionados sigan pendientes
+            DB::table('prestamo_equipo')
+                ->where('idPrestamo', $prestamo->idPrestamo)
+                ->whereIn('idEquipo', $pendientesSeleccionados->all())
+                ->update(['devuelto' => false]);
+
+            // 5️⃣ Ajustar estado del préstamo
+            $quedanPendientes = DB::table('prestamo_equipo')
+                ->where('idPrestamo', $prestamo->idPrestamo)
+                ->where('devuelto', false)
+                ->exists();
+
+            if (!$quedanPendientes) {
+                $estadoAnterior = $prestamo->estado;
+                $prestamo->estado = EstadoPrestamo::DEVUELTO;
+                $prestamo->save();
+
+                $this->registrarHistorial(
+                    $prestamo->idPrestamo,
+                    $userId,
+                    $estadoAnterior,
+                    EstadoPrestamo::DEVUELTO,
+                    'Extensión cerrada: todos los equipos fueron devueltos.'
+                );
+            } elseif ($prestamo->estado !== EstadoPrestamo::ENTREGADO) {
+                $estadoAnterior = $prestamo->estado;
+                $prestamo->estado = EstadoPrestamo::ENTREGADO;
+                $prestamo->save();
+
+                $this->registrarHistorial(
+                    $prestamo->idPrestamo,
+                    $userId,
+                    $estadoAnterior,
+                    EstadoPrestamo::ENTREGADO,
+                    'Extensión: equipos pendientes continúan en préstamo.'
+                );
             }
         });
     }
@@ -205,7 +404,8 @@ class PrestamoAdminService
         return Prestamo::with([
             'user.persona',
             'equipos.tipo',
-            'bloquePrestamo.bloque'
+            'bloquePrestamo.bloque',
+            'integrantes.persona'
         ])
         ->whereIn('estado', [
             EstadoPrestamo::PENDIENTE,
@@ -225,6 +425,18 @@ class PrestamoAdminService
                     ->join(', ');
             }
 
+            // Mapear integrantes del equipo
+            $integrantesData = [];
+            if ($p->integrantes && $p->integrantes->count() > 0) {
+                $integrantesData = $p->integrantes->map(function ($integrante) {
+                    return [
+                        'idUser' => $integrante->idUser,
+                        'nombre' => $integrante->persona?->Nombre ?? 'Sin nombre',
+                        'email' => $integrante->persona?->Email ?? '',
+                    ];
+                })->toArray();
+            }
+
             return [
                 'idPrestamo' => $p->idPrestamo,
                 'estado' => $p->estado,
@@ -235,6 +447,7 @@ class PrestamoAdminService
                 'fecha_fin' => $p->fecha_fin,
 
                 'user' => [
+                    'idUser' => optional($p->user)->idUser,
                     'nombre' => $persona?->Nombre,
                     'email'  => $persona?->Email,
                 ],
@@ -243,15 +456,63 @@ class PrestamoAdminService
 
                 'equipos' => $p->equipos->map(function ($e) {
                     return [
+                        'id' => $e->id,
                         'codigo' => $e->codigo,
                         'nombre' => optional($e->tipo)->nombre ?? 'Equipo',
                         'imagen' => $e->imagen,
+                        'tipo_equipo_id' => $e->tipo_equipo_id,
                         'devuelto' => (bool) ($e->pivot->devuelto ?? false),
                     ];
                 }),
+
+                'integrantes' => $integrantesData,
             ];
         });
 
+    }
+
+    public function actualizarEquiposPrestamo(
+        int $idPrestamo,
+        array $equipos,
+        ?string $motivo
+    ): void {
+        DB::transaction(function () use ($idPrestamo, $equipos, $motivo) {
+            $prestamo = Prestamo::with(['equipos'])->findOrFail($idPrestamo);
+
+            if ($prestamo->estado !== EstadoPrestamo::PENDIENTE) {
+                throw new \Exception('Solo solicitudes PENDIENTES pueden modificarse.');
+            }
+
+            foreach ($prestamo->equipos as $equipo) {
+                $equipo->estado = EstadoEquipo::DISPONIBLE;
+                $equipo->save();
+            }
+
+            DB::table('prestamo_equipo')
+                ->where('idPrestamo', $prestamo->idPrestamo)
+                ->delete();
+
+            $equiposPayload = collect($equipos)
+                ->map(function ($e) {
+                    return [
+                        'idTipoEquipo' => $e['idTipoEquipo'],
+                        'cantidad' => $e['cantidad'],
+                        'modo' => 'cualquiera',
+                    ];
+                })
+                ->values()
+                ->all();
+
+            $this->prestamoService->procesarEquipos($prestamo->idPrestamo, $equiposPayload);
+
+            Observacion::create([
+                'idPrestamo' => $prestamo->idPrestamo,
+                'idUser' => auth()->id() ?? auth('sanctum')->user()?->idUser,
+                'descripcion' => $motivo ?: 'Ajuste de equipos realizado por administracion.',
+                'tipo' => 'AJUSTE_EQUIPOS',
+                'estado' => 'habilitado'
+            ]);
+        });
     }
 
 
@@ -331,11 +592,14 @@ class PrestamoAdminService
         } else {
 
             // 2️⃣ ASIGNATURA / NORMAL
-           
+            // Siempre guardar fecha_inicio (para DENTRO = fecha del día)
+            $fechaInicio = $request->fecha_inicio ?? now()->toDateString();
+            $fechaFin    = $request->fecha_fin ?? $fechaInicio;
+
             $prestamo = Prestamo::create(
                 array_merge($data, [
-                    'fecha_inicio' => null, 
-                    'fecha_fin'    => null, 
+                    'fecha_inicio' => $fechaInicio,
+                    'fecha_fin'    => $fechaFin,
                 ])
             );
 
@@ -362,14 +626,16 @@ class PrestamoAdminService
         int $idPrestamo,
         int $adminId
     ): void {
-        DB::transaction(function () use ($idPrestamo, $adminId) {
+        $nombreAdmin = null;
+
+        DB::transaction(function () use ($idPrestamo, $adminId, &$nombreAdmin) {
             
-            // 1️⃣ OBTENER PRÉSTAMO
+            // 1. OBTENER PRESTAMO
             $prestamo = Prestamo::findOrFail($idPrestamo);
 
             $estadoAnterior = $prestamo->estado;
 
-            // 2️⃣ VALIDAR: Solo APROBADO → ENTREGADO
+            // 2. VALIDAR: Solo APROBADO -> ENTREGADO
             if ($prestamo->estado !== EstadoPrestamo::APROBADO) {
                 throw new \Exception(
                     "Solo préstamos en estado APROBADO pueden marcarse como ENTREGADO. " .
@@ -377,17 +643,19 @@ class PrestamoAdminService
                 );
             }
 
-            // 3️⃣ VALIDAR QUE QUIEN EJECUTA SEA ADMIN
+            // 3. VALIDAR QUE QUIEN EJECUTA SEA ADMIN
             $admin = User::findOrFail($adminId);
             if (!$admin->isAdmin()) {
                 throw new \Exception('Solo un administrador puede marcar un préstamo como ENTREGADO.');
             }
 
-            // 4️⃣ CAMBIAR ESTADO
+            $nombreAdmin = $admin->persona?->Nombre ?? 'Administrador';
+
+            // 4. CAMBIAR ESTADO
             $prestamo->estado = EstadoPrestamo::ENTREGADO;
             $prestamo->save();
 
-            // 5️⃣ REGISTRAR EN HISTORIAL DE CAMBIOS
+            // 5. REGISTRAR EN HISTORIAL DE CAMBIOS
             $this->registrarHistorial(
                 $prestamo->idPrestamo,
                 $adminId,
@@ -396,14 +664,24 @@ class PrestamoAdminService
                 'Entrega física realizada'
             );
 
-            // 6️⃣ LOG DE AUDITORÍA
-            Log::info('Préstamo marcado como ENTREGADO', [
+            // 6. LOG DE AUDITORIA
+            Log::info('Prestamo marcado como ENTREGADO', [
                 'idPrestamo'   => $idPrestamo,
                 'admin_id'     => $adminId,
-                'admin_nombre' => $admin->persona?->Nombre ?? 'Admin',
+                'admin_nombre' => $nombreAdmin,
                 'timestamp'    => now(),
             ]);
         });
+
+        // 7. Notificar al alumno y encargados de la entrega (fuera de la transaccion)
+        try {
+            $this->prestamoService->notificarEntregado($idPrestamo, $nombreAdmin ?? 'Administrador');
+        } catch (\Exception $e) {
+            Log::warning('No se pudo notificar entrega', [
+                'prestamo_id' => $idPrestamo,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function registrarHistorial(

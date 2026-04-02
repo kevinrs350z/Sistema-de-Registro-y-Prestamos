@@ -1,0 +1,87 @@
+/* Contenedor principal */
+:host {
+  display: block;
+  background: #fff;
+  min-height: 100vh;
+}
+
+.gestionar-integrantes {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 10px;
+  color: #333;
+}
+
+.gestionar-integrantes h2 {
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.gestionar-integrantes h3 {
+  color: #374151;
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.gestionar-integrantes label {
+  color: #4b5563;
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.gestionar-integrantes input {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  margin-right: 0.5rem;
+  color: #1f2937;
+  background: #fff;
+}
+
+.gestionar-integrantes input::placeholder {
+  color: #9ca3af;
+}
+
+.gestionar-integrantes ul {
+  list-style: none;
+  padding: 0;
+}
+
+.gestionar-integrantes li {
+  margin-bottom: 0.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.gestionar-integrantes li:hover {
+  background: #f3f4f6;
+}
+
+.gestionar-integrantes button {
+  margin-left: 0.75rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #4f46e5;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.gestionar-integrantes button:hover {
+  background: #4338ca;
+}

@@ -1,15 +1,18 @@
 <?php
-
 namespace App\Services\Reportes;
 
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardOperationalService
 {
+    public function __construct(
+        private ReportesSancionesService $sancionesService,
+        private ReportesInventarioService $inventarioService
+    ) {}
     /**
      * KPIs OPERATIVOS PRINCIPALES
-     * - Préstamos activos (estado APROBADO)
+     * - Préstamos activos (estados en curso)
      * - Préstamos próximos a vencer (3 días)
      * - Préstamos vencidos (fecha_fin < hoy)
      * - Equipos disponibles
@@ -19,21 +22,24 @@ class DashboardOperationalService
         $hoy = Carbon::now();
         $en3Dias = Carbon::now()->addDays(3);
 
-        // Préstamos activos (APROBADO)
+        // Estados que representan préstamos activos (en curso)
+        $estadosActivos = ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'];
+
+        // Préstamos activos
         $activosCount = DB::table('prestamos')
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', $estadosActivos)
             ->count();
 
         // Préstamos próximos a vencer (fecha_fin entre hoy y +3 días)
         $proximosAVencerCount = DB::table('prestamos')
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', $estadosActivos)
             ->whereNotNull('fecha_fin')
             ->whereBetween('fecha_fin', [$hoy, $en3Dias])
             ->count();
 
         // Préstamos vencidos (fecha_fin < hoy)
         $vencidosCount = DB::table('prestamos')
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', $estadosActivos)
             ->whereNotNull('fecha_fin')
             ->where('fecha_fin', '<', $hoy)
             ->count();
@@ -63,20 +69,11 @@ class DashboardOperationalService
 
     /**
      * ESTADO DE INVENTARIO
-     * Distribución de equipos por estado (DISPONIBLE, PRESTADO, MANTENIMIENTO, BAJA)
+     * Delega a ReportesInventarioService (fuente canónica)
      */
     public function getEstadoInventario()
     {
-        return DB::table('equipos')
-            ->select('estado', DB::raw('COUNT(*) as total'))
-            ->groupBy('estado')
-            ->get()
-            ->map(function($item) {
-                return [
-                    'estado' => strtoupper($item->estado),
-                    'total' => $item->total
-                ];
-            });
+        return $this->inventarioService->estadoInventario();
     }
 
     /**
@@ -100,9 +97,11 @@ class DashboardOperationalService
         return DB::table('equipos as e')
             ->join('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
             ->select('e.id as id', 'e.codigo', 'te.nombre as tipo', 'e.estado', 'e.observacion', 'e.updated_at')
-            ->whereIn('estado', ['MANTENIMIENTO', 'BAJA'])
-            ->orWhere('observacion', 'like', '%bloque%')
-            ->orderBy('updated_at', 'desc')
+            ->where(function ($q) {
+                $q->whereIn('e.estado', ['MANTENIMIENTO', 'BAJA'])
+                  ->orWhere('e.observacion', 'like', '%bloque%');
+            })
+            ->orderBy('e.updated_at', 'desc')
             ->get();
     }
 
@@ -117,8 +116,8 @@ class DashboardOperationalService
             ->join('users as u', 'u.idUser', '=', 'p.idUser')
             ->join('persona as per', 'per.idPersona', '=', 'u.idPersona')
             ->where('pe.idEquipo', $idEquipo)
-            ->selectRaw("p.idPrestamo as prestamoId, p.estado as tipo_evento, p.created_at as fecha, CONCAT(per.Nombre,' ',per.apellido1) as usuario, p.observacion as nota")
-            ->orderBy('p.created_at', 'desc')
+            ->selectRaw("p.idPrestamo as prestamoId, p.estado as tipo_evento, p.fecha_inicio as fecha, CONCAT(per.Nombre,' ',per.apellido1) as usuario, p.observacion as nota")
+            ->orderBy('p.fecha_inicio', 'desc')
             ->first();
 
         return $evento;
@@ -131,7 +130,7 @@ class DashboardOperationalService
     {
         return DB::table('prestamos')
             ->where('idUser', $idUser)
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'])
             ->select('idPrestamo as idPrestamo', 'tipo', 'fecha_inicio', 'fecha_fin')
             ->get();
     }
@@ -146,7 +145,7 @@ class DashboardOperationalService
 
         return DB::table('prestamos')
             ->where('idUser', $idUser)
-            ->where('estado', 'APROBADO')
+            ->whereIn('estado', ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'])
             ->whereNotNull('fecha_fin')
             ->whereBetween('fecha_fin', [$hoy, $en3])
             ->select('idPrestamo as idPrestamo', 'tipo', 'fecha_inicio', 'fecha_fin')
@@ -161,7 +160,7 @@ class DashboardOperationalService
         // conteo de equipos críticos bajo su responsabilidad y préstamos próximos
         $equiposCriticos = DB::table('prestamos as p')
             ->join('prestamo_equipo as pe', 'pe.idPrestamo', '=', 'p.idPrestamo')
-            ->join('equipos as e', 'e.idEquipo', '=', 'pe.idEquipo')
+            ->join('equipos as e', 'e.id', '=', 'pe.idEquipo')
             ->where('p.idUser', $idUser)
             ->whereIn('e.estado', ['MANTENIMIENTO', 'BAJA'])
             ->count();
@@ -188,7 +187,7 @@ class DashboardOperationalService
             ->join('equipos as e', 'e.id', '=', 'pe.idEquipo')
             ->join('tipo_equipos as te', 'te.id', '=', 'e.tipo_equipo_id')
             ->where('p.idUser', $idUser)
-            ->where('p.estado', 'APROBADO')
+            ->whereIn('p.estado', ['APROBADO', 'PENDIENTE_ENTREGA', 'ENTREGADO', 'ATRASADO'])
             ->select('e.id as id', 'e.codigo', 'te.nombre as tipo', 'e.estado', 'p.fecha_fin as fecha_asignacion')
             ->get();
     }
@@ -288,7 +287,7 @@ class DashboardOperationalService
                 CONCAT(per.Nombre,' ',per.apellido1) as usuario,
                 p.estado as estado_prestamo,
                 p.tipo as tipo_prestamo,
-                p.created_at as fecha_solicitud,
+                p.fecha_inicio as fecha_solicitud,
                 p.fecha_fin as fecha_vencimiento,
                 CASE 
                     WHEN p.estado = 'APROBADO' AND p.fecha_fin < NOW() THEN 'Vencido'
@@ -298,7 +297,7 @@ class DashboardOperationalService
                     ELSE 'Otro'
                 END as estado_actual
             ")
-            ->orderBy('p.created_at', 'desc')
+            ->orderBy('p.fecha_inicio', 'desc')
             ->take(8)
             ->get();
     }
@@ -311,11 +310,13 @@ class DashboardOperationalService
     {
         $kpis = $this->getKPIsOperativos();
         
-        // Calcular score de salud (0-100)
+        // Calcular score de salud (0-100) usando proporciones, no absolutos
         $score = 100;
         
-        // Penalizar por vencidos
-        $score -= $kpis['prestamosVencidos'] * 5;
+        // Penalizar por vencidos (proporción sobre activos totales)
+        $totalActivos = max(1, $kpis['prestamosActivos'] + $kpis['prestamosVencidos']);
+        $tasaVencidos = ($kpis['prestamosVencidos'] / $totalActivos) * 100;
+        $score -= min(30, $tasaVencidos); // Máximo 30 puntos de penalización
         
         // Penalizar por baja disponibilidad
         if ($kpis['porcentajeDisponibilidad'] < 30) {
@@ -324,14 +325,16 @@ class DashboardOperationalService
             $score -= 10;
         }
         
-        // Penalizar por sanciones activas
+        // Penalizar por sanciones activas (proporción sobre total usuarios activos)
         $sancionesActivas = DB::table('sancions')
             ->where('estado', 'ACTIVA')
             ->count();
-        $score -= $sancionesActivas * 2;
+        $totalUsuarios = max(1, DB::table('users')->count());
+        $tasaSanciones = ($sancionesActivas / $totalUsuarios) * 100;
+        $score -= min(20, $tasaSanciones * 2); // Máximo 20 puntos
         
         // Asegurar que no baje de 0 ni suba de 100
-        $score = max(0, min(100, $score));
+        $score = max(0, min(100, round($score, 1)));
         
         // Determinar estado
         if ($score >= 80) {
@@ -353,5 +356,53 @@ class DashboardOperationalService
             'estado' => $estado,
             'color' => $color,
         ];
+    }
+
+    /**
+     * KPIs DE INVENTARIO
+     * Total equipos, disponibles, en mantenimiento, dados de baja
+     */
+    public function getKPIsInventario()
+    {
+        return [
+            'total' => DB::table('equipos')->count(),
+            'disponibles' => DB::table('equipos')->where('estado', 'DISPONIBLE')->count(),
+            'mantenimiento' => DB::table('equipos')->where('estado', 'MANTENIMIENTO')->count(),
+            'baja' => DB::table('equipos')->where('estado', 'BAJA')->count(),
+        ];
+    }
+
+    /**
+     * KPIs DE MANTENIMIENTOS
+     * Atrasos actuales, incidentes reportados, equipos en mantenimiento
+     */
+    public function getKPIsMantenimientos()
+    {
+        $atrasosCount = DB::table('prestamos')
+            ->where('estado', 'APROBADO')
+            ->whereNotNull('fecha_fin')
+            ->where('fecha_fin', '<', Carbon::now())
+            ->count();
+
+        $incidentesCount = DB::table('observaciones')->count();
+
+        $equiposMantenimientoCount = DB::table('equipos')
+            ->whereIn('estado', ['MANTENIMIENTO', 'BAJA'])
+            ->count();
+
+        return [
+            'atrasos' => $atrasosCount,
+            'incidentes' => $incidentesCount,
+            'equiposMantenimiento' => $equiposMantenimientoCount,
+        ];
+    }
+
+    /**
+     * KPIs DE SANCIONES
+     * Delega a ReportesSancionesService (fuente canónica)
+     */
+    public function getKPIsSanciones()
+    {
+        return $this->sancionesService->kpis();
     }
 }

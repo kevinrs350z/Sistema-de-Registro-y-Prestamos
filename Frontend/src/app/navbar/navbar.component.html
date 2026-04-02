@@ -1,72 +1,126 @@
-<nav class="navbar navbar-mobile" [class.menu-open]="menuAbierto && !esAdmin">
-  <div class="navbar-top">
-    <div class="nav-controls">
-      <button
-        type="button"
-        class="menu-toggle"
-        (click)="toggleMenu()"
-        [attr.aria-expanded]="menuAbierto"
-        aria-label="Menú"
-        [disabled]="esAdmin"
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+<nav class="navbar-uta" [class.menu-open]="menuAbierto">
+  <div class="navbar-bg"></div>
 
-      <button
-        type="button"
-        class="home-btn"
-        (click)="irCatalogo()"
-        aria-label="Inicio"
-      >
-        <span class="home-icon"></span>
-      </button>
+  <div class="navbar-content">
+    <div
+      class="navbar-brand"
+      role="button"
+      tabindex="0"
+      (click)="irHome()"
+      (keyup.enter)="irHome()"
+      aria-label="Ir al inicio"
+    >
+      <img
+        src="assets/logo-carrera-white.png"
+        alt="Diseno Multimedia"
+        class="logo-carrera"
+      />
     </div>
 
-    <div class="logo">
-      <span class="logo-title">Registro y Préstamos Diseño Multimedia</span>
-    </div>
-
-    <div class="nav-spacer" aria-hidden="true"></div>
-  </div>
-
-  <div class="nav-dropdown" *ngIf="!esAdmin">
-    <div class="dropdown-panel" [class.visible]="menuAbierto">
-      <a
-        routerLink="/equipos/catalogo"
-        routerLinkActive="active"
-        class="dropdown-btn"
-        (click)="menuAbierto = false"
-      >
-        Solicitar equipo
+    <div class="navbar-menu" *ngIf="!esAdmin">
+      <a routerLink="/equipos/catalogo" routerLinkActive="active" class="nav-link">
+        Inicio
       </a>
-
-      <a
-        routerLink="/mis-solicitudes"
-        routerLinkActive="active"
-        class="dropdown-btn"
-        (click)="menuAbierto = false"
-      >
-        Mis solicitudes
+      <a routerLink="/mis-solicitudes" routerLinkActive="active" class="nav-link">
+        Mis Solicitudes
       </a>
-
+      <a
+        routerLink="/mis-sanciones"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        Mis Sanciones
+      </a>
       <a
         routerLink="/preguntas-frecuentes"
         routerLinkActive="active"
-        class="dropdown-btn"
-        (click)="menuAbierto = false"
+        class="nav-link"
       >
-        Preguntas frecuentes
+        Preguntas Frecuentes
       </a>
-
-      <button
-        type="button"
-        class="dropdown-btn logout"
+      <span class="nav-separator">|</span>
+      <span class="nav-user-name">{{ getUserId() }}</span>
+      <a
+        href="javascript:void(0)"
+        class="nav-link nav-logout"
         (click)="cerrarSesion()"
       >
-        Cerrar sesión
-      </button>
+        <i class="bi bi-box-arrow-right"></i>
+        Salir
+      </a>
+    </div>
+
+    <div class="navbar-menu" *ngIf="esAdmin">
+      <a routerLink="/admin/dashboard" class="nav-link">Volver al dashboard</a>
+      <span class="nav-separator">|</span>
+      <span class="nav-user-name">{{ getUserId() }}</span>
+      <a
+        href="javascript:void(0)"
+        class="nav-link nav-logout"
+        (click)="cerrarSesion()"
+      >
+        <i class="bi bi-box-arrow-right"></i>
+        Salir
+      </a>
+    </div>
+
+    <button
+      type="button"
+      class="navbar-toggler"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="menuAbierto"
+      aria-label="Abrir menu"
+      *ngIf="!esAdmin"
+    >
+      <span class="toggler-icon"></span>
+      <span class="toggler-icon"></span>
+      <span class="toggler-icon"></span>
+    </button>
+  </div>
+
+  <div class="navbar-collapse" [class.show]="menuAbierto" *ngIf="!esAdmin">
+    <a
+      routerLink="/equipos/catalogo"
+      routerLinkActive="active"
+      class="nav-link-mobile"
+      (click)="menuAbierto = false"
+    >
+      Inicio
+    </a>
+    <a
+      routerLink="/mis-solicitudes"
+      routerLinkActive="active"
+      class="nav-link-mobile"
+      (click)="menuAbierto = false"
+    >
+      Mis Solicitudes
+    </a>
+    <a
+      routerLink="/mis-sanciones"
+      routerLinkActive="active"
+      class="nav-link-mobile"
+      (click)="menuAbierto = false"
+    >
+      Mis Sanciones
+    </a>
+    <a
+      routerLink="/preguntas-frecuentes"
+      routerLinkActive="active"
+      class="nav-link-mobile"
+      (click)="menuAbierto = false"
+    >
+      Preguntas Frecuentes
+    </a>
+    <div class="nav-mobile-footer">
+      <span class="nav-user-mobile">{{ getUserId() }}</span>
+      <a
+        href="javascript:void(0)"
+        class="nav-link-mobile nav-logout-mobile"
+        (click)="cerrarSesion()"
+      >
+        <i class="bi bi-box-arrow-right"></i>
+        Salir
+      </a>
     </div>
   </div>
 </nav>

@@ -1,0 +1,22 @@
+<div class="search-box">
+  <div class="input-row">
+    <input
+      class="input"
+      placeholder="Buscar estudiante (nombre, correo o RUT)"
+      [(ngModel)]="query"
+      (ngModelChange)="search()"
+    />
+    <span class="loader" *ngIf="loading"></span>
+  </div>
+  <p class="hint" *ngIf="!loading && results.length === 0 && query.length < 2">Escribe al menos 2 caracteres</p>
+  <p class="hint" *ngIf="!loading && results.length === 0 && query.length >= 2">Sin resultados</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <div class="results" *ngIf="results.length">
+    <div class="result" *ngFor="let u of results" (click)="choose(u)">
+      <div class="title">{{ u.nombre || 'Sin nombre' }}</div>
+      <div class="sub">{{ u.rut || 'Sin RUT' }}</div>
+      <div class="sub">{{ u.email }}</div>
+    </div>
+  </div>
+</div>

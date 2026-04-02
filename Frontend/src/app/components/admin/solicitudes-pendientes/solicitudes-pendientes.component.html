@@ -152,7 +152,7 @@
         <ng-container *ngIf="sel.tipo === 'FUERA'">
           <div class="detalle-item meta">
             <span class="label">Periodo</span>
-            <span class="valor">{{ sel.periodo || '—' }}</span>
+            <span class="valor">{{ formatearPeriodo(sel.fechaInicio, sel.fechaFin) }}</span>
           </div>
         </ng-container>
       </div>
@@ -173,6 +173,56 @@
         <p>{{ sel.observacion || 'Sin observación' }}</p>
       </div>
 
+      <div class="sanciones-box">
+        <div class="sanciones-header">
+          <h4>Historial de sanciones</h4>
+          <div class="sanciones-resumen" *ngIf="sancionesResumen">
+            <span class="pill">Activas: {{ sancionesResumen.activas }}</span>
+            <span class="pill">Total: {{ sancionesResumen.total }}</span>
+          </div>
+        </div>
+
+        <p class="sanciones-cargando" *ngIf="sancionesCargando">Cargando sanciones...</p>
+
+        <button
+          class="sanciones-toggle"
+          type="button"
+          [disabled]="sancionesCargando || !sancionesResumen"
+          (click)="sancionesAbierto = !sancionesAbierto"
+        >
+          {{ sancionesAbierto ? 'Ocultar historial' : 'Ver historial' }}
+        </button>
+
+        <div class="sanciones-lista" *ngIf="sancionesAbierto && sancionesResumen">
+          <div class="sancion-item" *ngFor="let s of sancionesResumen.items">
+            <div class="sancion-head">
+              <span class="nivel">{{ s.nivel }}</span>
+              <span class="estado" [class.activa]="s.estado === 'ACTIVA'">{{ s.estado }}</span>
+            </div>
+            <div class="sancion-fechas">{{ s.fecha_inicio }} → {{ s.fecha_fin }}</div>
+            <p class="sancion-detalle">{{ s.detalle || s.descripcion || 'Sin detalle' }}</p>
+          </div>
+
+          <p class="sanciones-vacio" *ngIf="sancionesResumen.items.length === 0">
+            No hay sanciones registradas para este alumno.
+          </p>
+        </div>
+      </div>
+
+      <!-- INTEGRANTES DEL EQUIPO -->
+      <div class="integrantes-box" *ngIf="sel.integrantes && sel.integrantes.length > 0">
+        <h4>Integrantes del equipo</h4>
+        <ul class="integrantes-lista">
+          <li *ngFor="let integrante of sel.integrantes" class="integrante-item">
+            <div class="integrante-avatar">{{ integrante.nombre.charAt(0) }}</div>
+            <div class="integrante-info">
+              <span class="integrante-nombre">{{ integrante.nombre }}</span>
+              <span class="integrante-email">{{ integrante.email }}</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
       <div class="acciones">
         <ng-container *ngIf="sel.estado === 'PENDIENTE'">
           <button class="btn-aceptar" (click)="aprobarSolicitud(sel.id)">
@@ -180,6 +230,9 @@
           </button>
           <button class="btn-rechazar" (click)="abrirRechazo()">
             Rechazar
+          </button>
+          <button class="btn-editar" (click)="abrirEditarEquipos()">
+            Editar solicitud
           </button>
         </ng-container>
 
@@ -202,18 +255,97 @@
   <div class="modal" *ngIf="mostrarModal">
     <div class="modal-content modal-rechazo">
       <h4>Motivo del rechazo</h4>
-
-      <textarea
-        [(ngModel)]="motivoRechazo"
-        rows="3"
-        placeholder="Ingrese el motivo..."
-      ></textarea>
-
+      <div *ngIf="loadingRechazo" class="loader">Cargando motivos...</div>
+      <div *ngIf="errorRechazo" class="error">{{ errorRechazo }}</div>
+      <div *ngIf="!loadingRechazo">
+        <label for="motivoTexto">Escribe el motivo (obligatorio)</label>
+        <textarea
+          id="motivoTexto"
+          [(ngModel)]="motivoRechazo"
+          rows="4"
+          placeholder="Ej: No hay stock disponible para el horario solicitado"
+        ></textarea>
+      </div>
       <div class="modal-actions">
-        <button class="btn-confirmar" (click)="confirmarRechazo()">
+        <button class="btn-confirmar" (click)="confirmarRechazo()" [disabled]="loadingRechazo">
           Confirmar
         </button>
-        <button class="btn-cancelar" (click)="cerrarModal()">
+        <button class="btn-cancelar" (click)="cerrarModal()" [disabled]="loadingRechazo">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR EQUIPOS -->
+  <div class="modal" *ngIf="mostrarEditarModal">
+    <div class="modal-content modal-edicion">
+      <h4>Editar equipos de la solicitud</h4>
+
+      <div class="equipos-edicion" *ngIf="editarEquipos.length > 0">
+        <div class="equipo-row" *ngFor="let e of editarEquipos; let i = index">
+          <div class="equipo-meta">
+            <span class="equipo-nombre">{{ e.nombre }}</span>
+            <span class="equipo-stock" [class.sin-stock]="e.stock === 0">
+              Stock: {{ e.stock ?? '—' }}
+            </span>
+          </div>
+          <div class="equipo-controls">
+            <input
+              type="number"
+              min="0"
+              [max]="e.stock ?? null"
+              [(ngModel)]="e.cantidad"
+            />
+            <span class="stock-alert" *ngIf="e.stock === 0">Sin stock</span>
+            <span class="stock-alert" *ngIf="e.stock !== undefined && e.cantidad > (e.stock ?? 0)">
+              Excede stock
+            </span>
+          </div>
+          <button type="button" class="btn-quitar" (click)="quitarEquipo(i)">
+            Quitar
+          </button>
+        </div>
+      </div>
+
+      <div class="equipos-edicion" *ngIf="editarEquipos.length === 0">
+        <p>No hay equipos cargados. Agrega nuevos equipos.</p>
+      </div>
+
+      <div class="agregar-equipo">
+        <div class="field">
+          <label>Equipo</label>
+          <select [(ngModel)]="tipoAgregar">
+            <option [ngValue]="null">Selecciona un tipo</option>
+            <option *ngFor="let t of tiposEquipo" [ngValue]="t.id">{{ t.nombre }}</option>
+          </select>
+        </div>
+        <div class="field field-cantidad">
+          <label>Cantidad</label>
+          <input type="number" min="1" [(ngModel)]="cantidadAgregar" placeholder="1" />
+        </div>
+        <button
+          type="button"
+          class="btn-agregar"
+          (click)="agregarTipo()"
+          [disabled]="!tipoAgregar || cantidadAgregar < 1 || getStockTipo(tipoAgregar) === 0"
+        >
+          Agregar
+        </button>
+      </div>
+
+      <div class="stock-ayuda" *ngIf="tipoAgregar as tipoId">
+        Stock disponible: {{ getStockTipo(tipoId) ?? '—' }}
+      </div>
+
+      <label>Motivo del ajuste</label>
+      <textarea rows="3" [(ngModel)]="motivoAjuste" placeholder="Describe el ajuste..."></textarea>
+
+      <div class="modal-actions">
+        <button class="btn-confirmar" (click)="confirmarEditarEquipos()">
+          Guardar cambios
+        </button>
+        <button class="btn-cancelar" (click)="cerrarEditarModal()">
           Cancelar
         </button>
       </div>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,7 @@ export class PrestamosAdminService {
 
   // Obtener header con token
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token') ?? '';
+    const token = sessionStorage.getItem('token') ?? '';
     return new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
@@ -54,6 +54,19 @@ marcarDevuelto(id: number, motivo: string) {
 marcarEntregado(id: number) {
   return this.http.post(`${this.apiUrl}/${id}/entregar`, {});
 }
+
+extenderPrestamo(id: number, payload: { fecha: string; comentario?: string; equiposIds: number[] }) {
+  return this.http.patch(`${this.apiUrl}/${id}/extender`, payload);
+}
+
+  actualizarEquiposPrestamo(
+    id: number,
+    payload: { equipos: Array<{ idTipoEquipo: number; cantidad: number }>; motivo?: string | null }
+  ) {
+    return this.http.patch(`${this.apiUrl}/${id}/equipos`, payload, {
+      headers: this.getAuthHeaders()
+    });
+  }
 
 //devolverEquipo(idPrestamo: number, idEquipo: number, motivo: string) {
  // return this.http.patch(`${this.apiUrl}/prestamos/${idPrestamo}/devolver-equipo/${idEquipo}`, {

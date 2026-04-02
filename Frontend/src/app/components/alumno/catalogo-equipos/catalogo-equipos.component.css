@@ -35,6 +35,19 @@
   color: #7a7a7a;
 }
 
+.alert-condicional {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .acciones button {
   padding: 14px 26px;
   font-size: 16px;
@@ -119,6 +132,7 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 28px;
   justify-items: center; /* 👈 centra las cards */
+  align-items: start; /* 👈 evita estiramiento vertical */
 }
 
 /* ======================================================
@@ -133,14 +147,40 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: fit-content; /* Evita estiramiento */
+}
+
+.card-equipo.bloqueado {
+  opacity: 0.75;
+  border-color: #f0c2c2;
+  background: #fff8f8;
+}
+
+.card-equipo.selected {
+  border-color: #446BA9;
+  border-width: 2px;
+  box-shadow: 0 4px 12px rgba(68, 107, 169, 0.2);
+}
+
+.badge {
+  border-radius: 4px !important;
 }
 
 /* IMAGEN UNIFORME */
-.card-equipo img {
+.card-equipo .imagen-wrapper {
   width: 100%;
   height: 180px;
-  object-fit: contain; /* 👈 NO rompe proporción */
   background: #f3f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-equipo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 👈 NO rompe proporción */
 }
 
 /* CONTENIDO */
@@ -167,6 +207,39 @@
   color: #7a7a7a;
 }
 
+.disponibilidad {
+  font-size: 13px;
+  text-align: center;
+  color: #365892;
+  margin: 4px 0;
+}
+
+.pill {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pill-bloqueado {
+  background: #fde2dc;
+  border: 1px solid #f5b3a5;
+  color: #c5472f;
+  margin: 6px auto;
+}
+
+.disponibilidad.bloqueada {
+  color: #c7652a;
+  background: #fff6ef;
+  border: 1px solid #f5b58b;
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: block;
+  text-align: center;
+}
+
 /* BOTÓN */
 .card-equipo > button {
   margin: 14px;
@@ -189,6 +262,53 @@
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.card-equipo .btn-principal:disabled {
+  background: #ffd9be;
+  color: #b66a3c;
+  cursor: not-allowed;
+}
+
+.cantidad-admin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 14px 16px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f3f6ff;
+  border: 1px solid #d7e0ff;
+}
+
+.cantidad-admin button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #f5a474;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cantidad-admin button:disabled {
+  background: #ffd9be;
+  color: #b66a3c;
+  cursor: not-allowed;
+}
+
+.cantidad-admin button:not(:disabled):hover {
+  background: #ff855c;
+  box-shadow: 0 4px 10px rgba(255, 133, 92, 0.3);
+}
+
+.cantidad-valor {
+  font-weight: 700;
+  color: #1f2a44;
+  min-width: 18px;
+  text-align: center;
 }
 
 .pack .descripcion {
@@ -258,6 +378,29 @@
   gap: 8px;
 }
 
+
+/* Bloqueo por horario */
+.alert-horario {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff6ef;
+  border: 1px solid #f5b58b;
+  color: #c7652a;
+  font-size: 0.85rem;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.alert-horario-title {
+  font-weight: 700;
+  color: #b95c23;
+}
+
+.alert-horario-text {
+  line-height: 1.35;
+}
 .pack-info-icon {
   width: 36px;
   height: 36px;
@@ -360,6 +503,7 @@
 
   .catalogo-expedia {
     padding: 16px;
+    padding-bottom: 100px; /* Espacio para botón flotante */
   }
 
   .encabezado-superior h1 {
@@ -372,23 +516,61 @@
     font-size: 14px;
   }
 
+  /* Barra de categorías más compacta en móvil */
+  .barra-categorias-expedia {
+    padding: 16px 12px;
+    margin-bottom: 20px;
+  }
+
+  .categorias-expedia {
+    gap: 20px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .categoria-item {
+    min-width: 60px;
+    font-size: 12px;
+  }
+
+  .categoria-item .icono-categoria {
+    font-size: 22px;
+  }
+
   /* 🔥 CLAVE REAL */
   .card-equipo {
-    max-width: 300px; /* MÁS ANGOSTO */
+    max-width: 100%; /* Ocupar todo el ancho en móvil */
   }
 
   .grid-equipos {
-    gap: 20px;
+    gap: 16px;
+    grid-template-columns: 1fr; /* Una columna en móvil */
+  }
+
+  /* Busqueda más compacta */
+  .busqueda {
+    max-width: 100%;
+    margin-top: 12px;
   }
 }
 
 /* ======================================================
    BOTÓN FLOTANTE ABAJO DERECHA
 ====================================================== */
-.btn-flotante-continuar {
-  position: fixed;
+.btn-flotante-container {
+  position: sticky;
   bottom: 20px;
-  right: 20px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 20px;
+  margin-top: 20px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.btn-flotante-continuar {
+  position: static;
   padding: 14px 26px;
   font-size: 16px;
   font-weight: 700;
@@ -398,8 +580,8 @@
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(68, 107, 169, 0.3);
   cursor: pointer;
-  z-index: 1000;
   transition: background 0.3s ease, transform 0.2s ease;
+  pointer-events: auto;
 }
 
 .btn-flotante-continuar:hover:not(:disabled) {
@@ -417,10 +599,20 @@
 
 /* En móviles, ajustar posición */
 @media (max-width: 768px) {
+  .btn-flotante-container {
+    justify-content: center;
+  }
+
   .btn-flotante-continuar {
-    top: 15px;
-    right: 15px;
     padding: 12px 20px;
     font-size: 14px;
+    width: calc(100% - 40px);
+    max-width: 320px;
+    text-align: center;
+  }
+  
+  /* Agregar espacio inferior para el botón flotante */
+  .catalogo-expedia {
+    padding-bottom: 100px;
   }
 }

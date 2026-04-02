@@ -12,6 +12,8 @@
         <option value="PENDIENTE">Pendiente</option>
         <option value="APROBADO">Aprobado</option>
         <option value="RECHAZADO">Rechazado</option>
+        <option value="ENTREGADO">Entregado</option>
+        <option value="DEVUELTO">Devuelto</option>
       </select>
 
       <select (change)="ordenarPorFecha($event)">
@@ -37,6 +39,7 @@
         </div>
 
         <div class="detalle">
+          <p><b>Asignatura:</b> {{ solicitudSeleccionada().asignatura }}</p>
           <p><b>Tipo:</b> {{ solicitudSeleccionada().tipo }}</p>
 
           <p>
@@ -60,13 +63,21 @@
             *ngIf="solicitudSeleccionada().equipos.length > 0"
           >
             <li *ngFor="let eq of solicitudSeleccionada().equipos">
-              <i class="bi bi-box-seam icono-equipo"></i>
               {{ eq.codigo }} — {{ eq.nombre }}
             </li>
           </ul>
 
           <p><b>Observación:</b> {{ solicitudSeleccionada().observacion }}</p>
           <p><b>Estado:</b> {{ solicitudSeleccionada().estado }}</p>
+
+          <!-- ⏱️ Cuenta regresiva detalle móvil -->
+          <div class="countdown-detail" *ngIf="solicitudSeleccionada().estado === 'PENDIENTE' && countdowns()[solicitudSeleccionada().id]">
+            <span class="countdown-icon">⏱</span>
+            <span>Tiempo restante: </span>
+            <strong [class.countdown-expired]="countdowns()[solicitudSeleccionada().id] === 'Tiempo agotado'">
+              {{ countdowns()[solicitudSeleccionada().id] }}
+            </strong>
+          </div>
         </div>
 
       </div>
@@ -76,12 +87,19 @@
     <div class="lista-solicitudes">
       <div
         class="solicitud-card"
-        *ngFor="let s of solicitudesFiltradas()"
+        *ngFor="let s of solicitudesPaginadas()"
         [class.active]="solicitudSeleccionada() === s"
         (click)="seleccionarSolicitud(s)"
       >
         <div class="card-header">
-          <h3>Solicitud #{{ s.id }} — {{ s.tipo }}</h3>
+          <h3>
+            Solicitud #{{ s.id }} — {{ s.asignatura || 'Solicitud externa' }}
+            <span
+              class="ajuste-dot"
+              *ngIf="s.tieneAjuste"
+              title="Solicitud ajustada por administración"
+            ></span>
+          </h3>
 
           <!-- 🔥 ESTADO -->
           <span class="estado" [ngClass]="getEstadoClass(s.estado)">
@@ -89,16 +107,33 @@
           </span>
         </div>
 
+        <!-- ⏱️ Cuenta regresiva para PENDIENTE -->
+        <div class="countdown-badge" *ngIf="s.estado === 'APROBADO' && countdowns()[s.id]">
+          <span class="countdown-icon">⏱</span>
+          <span [class.countdown-expired]="countdowns()[s.id] === 'Tiempo agotado'">
+            {{ countdowns()[s.id] }}
+          </span>
+        </div>
+
         <div class="card-body">
-          <p class="fecha">
-            📅
+          <div class="detalle-row">
+            <span class="detalle-item">{{ s.tipo }}</span>
+            <span class="detalle-item" *ngIf="s.bloqueTxt && s.bloqueTxt !== '—'">{{ s.bloqueTxt }}</span>
+          </div>
+          <p class="fecha" *ngIf="s.fecha_inicio || s.fecha_fin">
             {{
-              s.fecha_fin && s.fecha_inicio !== s.fecha_fin
-                ? (s.fecha_inicio | date : 'dd/MM') +
+              s.fecha_fin && s.fecha_inicio && s.fecha_inicio !== s.fecha_fin
+                ? 'Periodo: ' + (s.fecha_inicio | date : 'dd/MM') +
                   ' - ' +
                   (s.fecha_fin | date : 'dd/MM')
-                : (s.fecha_inicio | date : 'dd/MM')
+                : 'Fecha: ' + (s.fecha_inicio | date : 'dd/MM')
             }}
+          </p>
+          <p class="fecha" *ngIf="s.created_at">
+            Solicitado: {{ s.created_at | date : 'dd/MM/yyyy' }}
+          </p>
+          <p class="ajuste-badge" *ngIf="s.tieneAjuste">
+            Editado por administración
           </p>
         </div>
       </div>
@@ -106,6 +141,16 @@
       <p *ngIf="solicitudesFiltradas().length === 0" class="vacio">
         No hay solicitudes con esos filtros.
       </p>
+
+      <div class="paginacion" *ngIf="solicitudesFiltradas().length > pageSize">
+        <button type="button" (click)="cambiarPagina(-1)" [disabled]="currentPage() === 1">
+          Anterior
+        </button>
+        <span>Página {{ currentPage() }} de {{ totalPages() }}</span>
+        <button type="button" (click)="cambiarPagina(1)" [disabled]="currentPage() === totalPages()">
+          Siguiente
+        </button>
+      </div>
     </div>
 
     <!-- ================= DETALLE DESKTOP ================= -->
@@ -117,12 +162,14 @@
       <h2>Detalle de la solicitud</h2>
 
       <div class="detalle">
+        <p><b>Asignatura:</b> {{ solicitudSeleccionada().asignatura }}</p>
         <p><b>Tipo:</b> {{ solicitudSeleccionada().tipo }}</p>
 
-        <p>
+        <p *ngIf="solicitudSeleccionada().fecha_inicio || solicitudSeleccionada().fecha_fin">
           <b>Periodo:</b>
           {{
             solicitudSeleccionada().fecha_fin &&
+            solicitudSeleccionada().fecha_inicio &&
             solicitudSeleccionada().fecha_inicio !== solicitudSeleccionada().fecha_fin
               ? (solicitudSeleccionada().fecha_inicio | date : 'dd/MM') +
                 ' - ' +
@@ -131,7 +178,7 @@
           }}
         </p>
 
-        <p><b>Bloque:</b> {{ solicitudSeleccionada().bloqueTxt }}</p>
+        <p *ngIf="solicitudSeleccionada().bloqueTxt && solicitudSeleccionada().bloqueTxt !== '—'"><b>Bloque:</b> {{ solicitudSeleccionada().bloqueTxt }}</p>
 
         <p><b>Equipos:</b></p>
 
@@ -140,16 +187,35 @@
           *ngIf="solicitudSeleccionada().equipos.length > 0; else sinEquipos"
         >
           <li *ngFor="let eq of solicitudSeleccionada().equipos">
-            <i class="bi bi-box-seam icono-equipo"></i>
             {{ eq.codigo }} — {{ eq.nombre }}
           </li>
         </ul>
+
+        <!-- ⏱️ Cuenta regresiva detalle desktop -->
+        <div class="countdown-detail" *ngIf="solicitudSeleccionada().estado === 'APROBADO' && countdowns()[solicitudSeleccionada().id]">
+          <span class="countdown-icon">⏱</span>
+          <span>Tiempo restante para retirar: </span>
+          <strong [class.countdown-expired]="countdowns()[solicitudSeleccionada().id] === 'Tiempo agotado'">
+            {{ countdowns()[solicitudSeleccionada().id] }}
+          </strong>
+        </div>
+
+        <div class="card-actions">
+          <button
+            class="btn-cancelar"
+            *ngIf="['PENDIENTE','APROBADO'].includes(solicitudSeleccionada().estado)"
+            (click)="cancelarSolicitud(solicitudSeleccionada()); $event.stopPropagation()"
+          >
+            Cancelar
+          </button>
+        </div>
 
         <ng-template #sinEquipos>
           <p>—</p>
         </ng-template>
 
         <p><b>Observación:</b> {{ solicitudSeleccionada().observacion }}</p>
+        <p *ngIf="solicitudSeleccionada().ajusteEquipos"><b>Ajuste admin:</b> {{ solicitudSeleccionada().ajusteEquipos }}</p>
         <p><b>Estado:</b> {{ solicitudSeleccionada().estado }}</p>
       </div>
     </div>

@@ -23,6 +23,9 @@ class StorePrestamoAlumnoRequest extends FormRequest
             'bloques'      => 'required_if:tipo,DENTRO|array',
             'bloques.*'    => 'integer|exists:bloques,idBloque',
             'equipos'      => 'required|array|min:1',
+            'integrantes'  => 'nullable|array',
+            'integrantes.*' => 'integer|distinct|exists:users,idUser',
+            'grupo_id'     => 'nullable|integer|exists:grupos,id',
         ];
     }
 }

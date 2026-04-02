@@ -1,81 +1,146 @@
 <div class="admin-container">
 
-  <!-- FILTROS -->
   <div class="filtros-bar">
-    <input 
+    <input
       type="text"
       placeholder="Buscar por nombre, equipo u observación..."
       [(ngModel)]="filtroBusqueda"
+      (ngModelChange)="resetPaginacion()"
     />
 
-    <select [(ngModel)]="filtroEstado">
-      <option value="todos">Todos</option>
-      <option value="APROBADO">Aprobados</option>
-      <option value="ENTREGADO">Entregados</option>
-      <option value="DEVUELTO">Devueltos</option>
-      <option value="RECHAZADO">Rechazados</option>
-    </select>
-
-    <select [(ngModel)]="orden">
+    <select [(ngModel)]="orden" (ngModelChange)="resetPaginacion()">
       <option value="recientes">Más recientes</option>
       <option value="antiguas">Más antiguas</option>
     </select>
+
+    <button class="btn-reset" type="button" (click)="resetFiltros()">
+      Limpiar filtros
+    </button>
   </div>
 
-  <!-- CONTENIDO -->
   <div class="solicitudes-wrapper">
 
-    <!-- LISTA IZQUIERDA -->
-    <div class="lista-solicitudes">
-
-      <div
-        class="solicitud-card"
-        *ngFor="let s of solicitudesFiltradas"
-        (click)="seleccionarSolicitud(s)"
-        [class.activa]="s === solicitudSeleccionada"
-      >
-        <h4>{{ s.estudiante }}</h4>
-
-        <p>
-          <strong>Equipo:</strong>
-          <ng-container *ngIf="s.equiposDetallados as eqs">
-            {{ eqs.length ? eqs[0].nombre : '—' }}
-          </ng-container>
-        </p>
-
-        <p class="fecha">📅 {{ s.fechaSolicitud | date }}</p>
-
-        <span
-          class="estado"
-          [ngClass]="{
-            aprobado: s.estado === 'APROBADO',
-            entregado: s.estado === 'ENTREGADO',
-            devuelto: s.estado === 'DEVUELTO',
-            rechazado: s.estado === 'RECHAZADO'
-          }"
-        >
-          {{ s.estado }}
-        </span>
+    <div class="columna">
+      <div class="columna-header">
+        <h3>Solicitudes con equipos pendientes</h3>
+        <p>Préstamos con equipos por devolver o acciones abiertas.</p>
       </div>
 
-      <p *ngIf="solicitudesFiltradas.length === 0" class="sin-solicitudes">
-        No existen préstamos para los filtros aplicados.
-      </p>
-
-    </div>
-
-    <!-- PANEL DERECHO -->
-    <div class="detalle-solicitud" *ngIf="solicitudSeleccionada as sel">
-
-      <h3>Detalle del préstamo</h3>
-
-      <div class="detalle-grid">
-
-        <div class="detalle-item usuario">
-          <div class="avatar">
-            {{ sel.estudiante.charAt(0) }}
+      <div class="lista-solicitudes scroll-columna">
+        <div
+          class="solicitud-card"
+          *ngFor="let solicitud of paginaPendientesLista"
+          (click)="seleccionarSolicitud(solicitud)"
+          [class.activa]="solicitudSeleccionada?.id === solicitud.id"
+        >
+          <div class="card-header">
+            <h4>{{ solicitud.estudiante }}</h4>
+            <span class="estado" [ngClass]="{
+              'pendiente-devolucion': solicitud.estado === 'APROBADO',
+              'entregado': solicitud.estado === 'ENTREGADO',
+              'rechazado': solicitud.estado === 'RECHAZADO'
+            }">{{ solicitud.estado }}</span>
           </div>
 
+          <p class="detalle">{{ formatearFecha(solicitud.fechaSolicitud) }}</p>
+
+          <p class="resumen" *ngIf="equiposPendientesDe(solicitud).length">
+            Restan {{ equiposPendientesDe(solicitud).length }} equipos por devolver.
+          </p>
+        </div>
+
+        <p *ngIf="prestamosPendientes.length === 0" class="sin-solicitudes">
+          No hay solicitudes pendientes para los filtros aplicados.
+        </p>
+      </div>
+
+      <div class="paginacion" *ngIf="prestamosPendientes.length > tamanioPagina">
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaPendientes(paginaPendientes - 1)"
+          [disabled]="paginaPendientes === 1"
+        >
+          Anterior
+        </button>
+
+        <span class="paginacion-info">
+          Página {{ paginaPendientes }} de {{ totalPaginasPendientes }}
+        </span>
+
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaPendientes(paginaPendientes + 1)"
+          [disabled]="paginaPendientes === totalPaginasPendientes"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+
+    <div class="columna">
+      <div class="columna-header">
+        <h3>Solicitudes devueltas</h3>
+        <p>Préstamos finalizados y con todos los equipos devueltos.</p>
+      </div>
+
+      <div class="lista-solicitudes scroll-columna">
+        <div
+          class="solicitud-card devuelto"
+          *ngFor="let solicitud of paginaDevueltosLista"
+          (click)="seleccionarSolicitud(solicitud)"
+          [class.activa]="solicitudSeleccionada?.id === solicitud.id"
+        >
+          <div class="card-header">
+            <h4>{{ solicitud.estudiante }}</h4>
+            <span class="estado devuelto">Devuelto</span>
+          </div>
+
+          <p class="detalle">{{ formatearFecha(solicitud.fechaSolicitud) }}</p>
+          <p class="codigo">{{ solicitud.equiposDetallados.length }} equipos devueltos</p>
+        </div>
+
+        <p *ngIf="prestamosDevueltos.length === 0" class="sin-solicitudes">
+          No hay solicitudes devueltas para los filtros aplicados.
+        </p>
+      </div>
+
+      <div class="paginacion" *ngIf="prestamosDevueltos.length > tamanioPagina">
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaDevueltos(paginaDevueltos - 1)"
+          [disabled]="paginaDevueltos === 1"
+        >
+          Anterior
+        </button>
+
+        <span class="paginacion-info">
+          Página {{ paginaDevueltos }} de {{ totalPaginasDevueltos }}
+        </span>
+
+        <button
+          class="paginacion-btn"
+          (click)="irPaginaDevueltos(paginaDevueltos + 1)"
+          [disabled]="paginaDevueltos === totalPaginasDevueltos"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="detalle-overlay" *ngIf="solicitudSeleccionada as sel">
+    <div class="detalle-panel">
+      <div class="detalle-panel-header">
+        <div>
+          <h3>Detalle del préstamo</h3>
+          <p class="detalle-subtitulo">Gestiona devoluciones y consulta el historial.</p>
+        </div>
+        <button class="detalle-cerrar" (click)="cerrarDetalle()">Cerrar</button>
+      </div>
+
+      <div class="detalle-grid">
+        <div class="detalle-item usuario">
+          <div class="avatar">{{ sel.estudiante.charAt(0) }}</div>
           <div class="usuario-info">
             <span class="nombre">{{ sel.estudiante }}</span>
             <span class="email">{{ sel.email }}</span>
@@ -97,77 +162,175 @@
         <ng-container *ngIf="sel.tipo === 'FUERA'">
           <div class="detalle-item meta">
             <span class="label">Periodo</span>
-            <span class="valor">{{ sel.periodo || '—' }}</span>
+            <span class="valor">{{ formatearPeriodo(sel.fechaInicio, sel.fechaFin) }}</span>
           </div>
         </ng-container>
-
       </div>
 
-      <!-- EQUIPOS -->
-      <div class="equipos-box">
-        <h4>Equipos utilizados</h4>
+      <div class="equipos-columns">
+        <!-- Solo mostrar pendientes si hay equipos pendientes -->
+        <div class="equipos-list" *ngIf="equiposPendientesDe(sel) as pendientes">
+          <ng-container *ngIf="pendientes.length > 0">
+            <div class="equipos-list-header">
+              <h4>Pendientes de devolución</h4>
+              <span class="contador">{{ pendientes.length }}</span>
+            </div>
 
-        <div class="equipo" *ngFor="let eq of sel.equiposDetallados">
-          <p class="nombre">{{ eq.nombre }}</p>
-          <p class="codigo">Código: {{ eq.codigoActivo }}</p>
+            <div
+              class="equipo-item"
+              *ngFor="let eq of pendientes"
+              [class.activa]="equipoSeleccionado?.equipo?.id === eq.id"
+            >
+              <div>
+                <p class="nombre">{{ eq.nombre }}</p>
+                <p class="codigo">Código: {{ eq.codigoActivo }}</p>
+              </div>
 
-          <button 
-            class="btn-devolver-equipo"
-            *ngIf="sel.estado === 'APROBADO'&& !eq.devuelto"
-            (click)="devolverEquipo(sel.id, eq.id)"
+              <button class="btn-devolver-equipo" (click)="devolverEquipo(sel.id, eq.id)">
+                Marcar devuelto
+              </button>
+            </div>
+          </ng-container>
+        </div>
+
+        <div class="equipos-list" *ngIf="equiposDevueltosDe(sel) as devueltos">
+          <div class="equipos-list-header">
+            <h4>Equipos devueltos</h4>
+            <span class="contador" *ngIf="devueltos.length">{{ devueltos.length }}</span>
+          </div>
+
+          <div
+            class="equipo-item devuelto"
+            *ngFor="let eq of devueltos"
+            [class.activa]="equipoSeleccionado?.equipo?.id === eq.id"
           >
-            Devolver este equipo
-          </button>
+            <div>
+              <p class="nombre">{{ eq.nombre }}</p>
+              <p class="codigo">Código: {{ eq.codigoActivo }}</p>
+            </div>
+            <span class="estado devuelto">Devuelto</span>
+          </div>
+
+          <p class="sin-equipos" *ngIf="devueltos.length === 0">
+            Aún no hay equipos devueltos.
+          </p>
         </div>
       </div>
 
-      <!-- OBSERVACIÓN -->
       <div class="observacion-box">
         <h4>Observación</h4>
         <p>{{ sel.observacion || 'Sin observaciones' }}</p>
       </div>
 
-      <!-- FINALIZAR -->
-      <button
-        class="btn-finalizar"
-        *ngIf="sel.estado === 'APROBADO'"
-        (click)="abrirFinalizar()"
-      >
-        Devolver préstamo
-      </button>
+      <div class="acciones-finalizadas">
+        <button
+          class="btn-azul"
+          *ngIf="sel.estado === 'DEVUELTO' || sel.estado === 'ENTREGADO'"
+          (click)="irASanciones(sel.id)"
+        >
+          Ir a sanciones
+        </button>
 
-      <button
-        class="btn-azul"
-        *ngIf="sel.estado === 'DEVUELTO' || sel.estado === 'ENTREGADO'"
-        (click)="irASanciones(sel.id)"
-      >
-        Ir a sanciones
-      </button>
+        <button
+          class="btn-finalizar"
+          *ngIf="puedeDevolver(sel)"
+           (click)="devolverPrestamoDirecto()"
+        >
+          Devolver préstamo
+        </button>
 
-    </div>
-
-    <!-- MODAL -->
-    <div class="modal" *ngIf="mostrarModal">
-      <div class="modal-content">
-        <h4>Motivo de finalización</h4>
-
-        <textarea
-          rows="3"
-          [(ngModel)]="motivoFinalizar"
-          placeholder="Ingrese el motivo..."
-        ></textarea>
-
-        <div class="modal-actions">
-          <button class="btn-confirmar" (click)="confirmarFinalizar()">
-            Confirmar
-          </button>
-          <button class="btn-cancelar" (click)="cerrarModal()">
-            Cancelar
-          </button>
-        </div>
+        <button
+          class="btn-extender"
+          *ngIf="puedeExtender(sel)"
+          (click)="abrirExtender()"
+        >
+          Extender plazo
+        </button>
       </div>
     </div>
+  </div>
 
+  <div class="modal" *ngIf="mostrarExtendModal && solicitudSeleccionada as solicitudExt">
+    <div class="modal-content modal-extender">
+      <div class="modal-extender-header">
+        <h4>Extender plazo del préstamo</h4>
+        <button class="modal-close" (click)="cerrarExtendModal()">Cerrar</button>
+      </div>
+
+      <p class="modal-intro">
+        Ajusta la fecha límite para {{ solicitudExt.estudiante }} y define qué equipos seguirán prestados.
+      </p>
+
+      <label class="modal-label">Nueva fecha límite</label>
+      <input
+        type="date"
+        [(ngModel)]="extendModal.fecha"
+        [min]="hoyISO"
+      />
+
+      <label class="modal-label">Comentarios (opcional)</label>
+      <textarea
+        rows="2"
+        [(ngModel)]="extendModal.comentario"
+        placeholder="Notas sobre la extensión..."
+      ></textarea>
+
+      <div class="extender-opciones">
+        <label>
+          <input
+            type="radio"
+            name="modoExtension"
+            [value]="true"
+            [(ngModel)]="extendModal.aplicarATodos"
+          />
+          Extender todos los equipos
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="modoExtension"
+            [value]="false"
+            [(ngModel)]="extendModal.aplicarATodos"
+          />
+          Seleccionar equipos
+        </label>
+      </div>
+
+      <div class="extender-equipos" *ngIf="!extendModal.aplicarATodos">
+        <ng-container *ngIf="equiposPendientesDe(solicitudExt) as pendientes">
+          <p class="extender-subtitulo" *ngIf="pendientes.length">
+            Marca los equipos que continuarán en préstamo.
+          </p>
+
+          <div class="equipo-check" *ngFor="let eq of pendientes">
+            <label>
+              <input
+                type="checkbox"
+                [(ngModel)]="extendModal.equiposSeleccionados[eq.id]"
+                [ngModelOptions]="{ standalone: true }"
+              />
+              <span>
+                {{ eq.nombre }}
+                <small>Código {{ eq.codigoActivo }}</small>
+              </span>
+            </label>
+          </div>
+
+          <p class="sin-equipos" *ngIf="pendientes.length === 0">
+            No hay equipos pendientes para extender.
+          </p>
+        </ng-container>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-confirmar" (click)="confirmarExtension()">
+          Guardar cambios
+        </button>
+        <button class="btn-cancelar" (click)="cerrarExtendModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
   </div>
 
 </div>

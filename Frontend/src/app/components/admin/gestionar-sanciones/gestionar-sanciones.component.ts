@@ -10,19 +10,23 @@ import * as XLSX from 'xlsx';
 
 interface Sancion {
   id: number;
+  key: string;
 
- 
-  usuario: string;  
+  usuario: string;
   correo: string;
   rut: string;
   nombre: string;
   apellido: string;
 
   motivo: string;
+  nivel: string;
   descripcion?: string;
+  categoria_falta?: string;
   fecha_inicio: string;
   fecha_fin: string;
-  estado: 'ACTIVA' | 'EXPIRADA';  
+  estado: string;
+  escalada_desde_id?: number | null;
+  periodo_academico?: string | null;
   asignada_por?: string;
   asignada_en?: string;
 }
@@ -75,6 +79,8 @@ export class GestionarSancionesComponent implements OnInit {
 
 
   tiposSancion: { id: number; nivel: string; descripcion?: string }[] = [];
+  categoriasPorNivel: Record<string, { value: string; label: string }[]> = {};
+  estadosPosibles: string[] = [];
 
   // Formularios
   formularioVisible = false;
@@ -89,7 +95,35 @@ export class GestionarSancionesComponent implements OnInit {
   asignarInicio = '';
   asignarFin = '';
   asignarDescripcion = '';
+  asignarCategoria = '';
 
+  // Escalamiento alert
+  escalamientosAlert: string[] = [];
+
+  /**
+   * Devuelve las categorías de falta filtradas según el nivel de sanción seleccionado.
+   */
+  get categoriasFiltradas(): { value: string; label: string }[] {
+    const nivel = this.getNivelSeleccionado();
+    if (!nivel) return [];
+    return this.categoriasPorNivel[nivel] || [];
+  }
+
+  /**
+   * Obtiene el nivel (LEVE, MEDIA, etc.) del tipo de sanción seleccionado.
+   */
+  getNivelSeleccionado(): string {
+    if (!this.asignarTipo) return '';
+    const tipo = this.tiposSancion.find(t => t.id === this.asignarTipo);
+    return tipo ? String(tipo.nivel || '').toUpperCase() : '';
+  }
+
+  /**
+   * Cuando cambia el tipo de sanción, resetear la categoría seleccionada.
+   */
+  onTipoSancionChange(): void {
+    this.asignarCategoria = '';
+  }
 
   mostrarModalAmpliar = false;
   motivoAmpliacion = '';
@@ -141,9 +175,36 @@ export class GestionarSancionesComponent implements OnInit {
 
   cargarCatalogo(): void {
     this.sancionesService.getCatalogo().subscribe({
-      next: (resp) => {
-        this.tiposSancion = resp.sanciones || [];
+      next: (resp: any) => {
+        const nivelesPermitidos = ['LEVE', 'MEDIA', 'GRAVE', 'GRAVISIMA'];
+        const catalogo = (resp.sanciones || [])
+          .filter((s: any) => nivelesPermitidos.includes(String(s.nivel || '').toUpperCase()))
+          .reduce((acc: any[], s: any) => {
+            const nivel = String(s.nivel || '').toUpperCase();
+            if (!acc.some((x: any) => String(x.nivel || '').toUpperCase() === nivel)) {
+              acc.push({
+                id: s.id ?? s.idSancion,
+                nivel: s.nivel,
+                descripcion: s.descripcion
+              });
+            }
+            return acc;
+          }, [])
+          .sort((a: any, b: any) =>
+            nivelesPermitidos.indexOf(String(a.nivel || '').toUpperCase()) -
+            nivelesPermitidos.indexOf(String(b.nivel || '').toUpperCase())
+          );
+
+        this.tiposSancion = catalogo;
         this.asignarTipo = this.tiposSancion[0]?.id ?? 0;
+
+        // Categorías de falta agrupadas por nivel
+        if (resp.categorias_por_nivel) {
+          this.categoriasPorNivel = resp.categorias_por_nivel;
+        }
+        if (resp.estados) {
+          this.estadosPosibles = resp.estados;
+        }
       },
       error: () => {
         this.notify.error('No se pudo cargar el catálogo de sanciones.');
@@ -189,42 +250,36 @@ export class GestionarSancionesComponent implements OnInit {
     this.errorSanciones = null;
     this.sancionesService.getSanciones().subscribe({
       next: (resp) => {
-        this.sanciones = resp.sanciones.map((s: any) => {
-          const u = s.users?.[0]; // primer usuario asociado
-          const persona = u?.persona;
-
-          const estadoUI: 'ACTIVA' | 'EXPIRADA' =
-            s.estado === 'ACTIVA' ? 'ACTIVA' : 'EXPIRADA';
-
-
-          const nombre = persona?.Nombre ?? persona?.nombre ?? '';
-          const apellido =
-            persona?.Apellido1 ??
-            persona?.apellido1 ??
-            persona?.Apellido2 ??
-            persona?.apellido2 ??
-            '';
+        const lista = (resp.sanciones || []).map((r: any) => {
+          const nombre = r.usuario_nombre ?? '';
+          const apellido = r.usuario_apellido ?? '';
 
           return {
-            id: s.idSancion,
-            usuario: `${nombre} ${apellido}`.trim() || u?.Email || 'Sin usuario',
-            correo: u?.Email ?? '',
-            rut: persona?.Rut ?? '',
+            id: r.id,
+            key: `${r.id}`,
+            usuario: `${nombre} ${apellido}`.trim() || r.usuario_email || 'Sin usuario',
+            correo: r.usuario_email ?? '',
+            rut: r.usuario_rut ?? '',
             nombre,
             apellido,
-            motivo: s.nivel,
-            descripcion: s.descripcion ?? '',
-            fecha_inicio: s.fecha_inicio,
-            fecha_fin: s.fecha_fin,
-            estado: estadoUI,
-            asignada_por: `${u?.pivot?.assigned_by_nombre ?? ''} ${u?.pivot?.assigned_by_apellido ?? ''}`.trim() || u?.pivot?.assigned_by_email || '—',
-            asignada_en: u?.pivot?.created_at ?? ''
+            motivo: r.nivel ?? r.sancion_nivel ?? '',
+            nivel: r.nivel ?? '',
+            descripcion: r.descripcion ?? '',
+            categoria_falta: r.categoria_falta ?? '',
+            fecha_inicio: r.fecha_inicio,
+            fecha_fin: r.fecha_fin,
+            estado: r.estado ?? 'ACTIVA',
+            escalada_desde_id: r.escalada_desde_id ?? null,
+            periodo_academico: r.periodo_academico ?? null,
+            asignada_por: r.asignada_por || '—',
+            asignada_en: r.asignada_en ?? ''
           } as Sancion;
         });
 
-      this.sancionSeleccionada = this.sanciones[0] || null;
-      this.page = 1;
-      this.cargandoSanciones = false;
+        this.sanciones = lista;
+        this.sancionSeleccionada = this.sanciones[0] || null;
+        this.page = 1;
+        this.cargandoSanciones = false;
     },
     error: (err) => {
       console.error('Error cargando sanciones', err);
@@ -241,7 +296,10 @@ export class GestionarSancionesComponent implements OnInit {
     if (!f) return this.sanciones;
     return this.sanciones.filter(s =>
       s.usuario.toLowerCase().includes(f) ||
-      s.motivo.toLowerCase().includes(f)
+      s.motivo.toLowerCase().includes(f) ||
+      (s.nivel || '').toLowerCase().includes(f) ||
+      (s.estado || '').toLowerCase().includes(f) ||
+      (s.categoria_falta || '').toLowerCase().includes(f)
     );
   }
 
@@ -304,7 +362,8 @@ export class GestionarSancionesComponent implements OnInit {
       usuario: s.usuario,
       correo: s.correo,
       rut: s.rut,
-      motivo: s.motivo,
+      nivel: s.nivel || s.motivo,
+      categoria_falta: s.categoria_falta || '',
       descripcion: s.descripcion || '',
       fecha_inicio: s.fecha_inicio,
       fecha_fin: s.fecha_fin,
@@ -397,6 +456,7 @@ export class GestionarSancionesComponent implements OnInit {
     this.asignarInicio = '';
     this.asignarFin = '';
     this.asignarDescripcion = '';
+    this.asignarCategoria = '';
     this.prefillData = null;
     this.prefillError = null;
     this.usuariosSugeridos = [];
@@ -513,24 +573,41 @@ asignarSancion(): void {
     return;
   }
 
-  const payload = {
-    usuario: this.asignarUsuario.trim(), // id, correo o rut
-      idSancion: this.asignarTipo,
+  this.escalamientosAlert = [];
+
+  const payload: any = {
+    usuario: this.asignarUsuario.trim(),
+    idSancion: this.asignarTipo,
     descripcion: this.asignarDescripcion?.trim() || null,
     fecha_inicio: this.asignarInicio,
     fecha_fin: this.asignarFin,
   };
 
+  if (this.asignarCategoria) {
+    payload.categoria_falta = this.asignarCategoria;
+  }
+
   this.sancionesService.asignarSancion(payload).subscribe({
-    next: () => {
+    next: (resp: any) => {
       this.notify.success('Sanción asignada correctamente.');
-      this.cargarDatosReales();
-      this.resetFormularioAsignar();
+
+      // Mostrar alertas de escalamiento si las hay
+      if (resp?.escalamientos && resp.escalamientos.length > 0) {
+        this.escalamientosAlert = resp.escalamientos.map(
+          (e: any) => `⚠️ Escalamiento automático: Se creó sanción ${e.nivel} (ID: ${e.pivot_id})`
+        );
+        this.notify.warning(`Se generaron ${resp.escalamientos.length} escalamiento(s) automático(s).`);
+      }
+
       this.formularioAsignar = false;
+      this.filtro = '';
+      this.page = 1;
+      this.resetFormularioAsignar();
+      this.cargarDatosReales();
     },
     error: (err) => {
       console.error(err);
-      this.notify.error('Ocurrió un error al asignar la sanción.');
+        this.notify.error(err?.error?.error || err?.error?.message || 'Ocurrió un error al asignar la sanción.');
     }
   });
 }

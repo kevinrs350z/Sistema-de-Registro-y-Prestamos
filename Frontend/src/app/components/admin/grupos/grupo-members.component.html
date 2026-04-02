@@ -1,0 +1,40 @@
+<div class="members-card">
+  <div class="card-header">
+    <div>
+      <h4>Integrantes</h4>
+      <p class="hint">Agrega estudiantes usando búsqueda inteligente</p>
+    </div>
+    <span class="badge" [class.badge-red]="estado === 'CERRADO'">{{ estado || '—' }}</span>
+  </div>
+
+  <div class="search-block" *ngIf="estado !== 'CERRADO'">
+    <app-user-search-autocomplete (selected)="onSelectUser($event)"></app-user-search-autocomplete>
+  </div>
+  <div class="alert" *ngIf="estado === 'CERRADO'">Grupo cerrado. No se pueden editar integrantes.</div>
+
+  <table class="table" *ngIf="integrantes.length; else empty">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>RUT</th>
+        <th>Correo</th>
+        <th>Agregado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let i of integrantes">
+        <td>{{ i.nombre }}</td>
+        <td>{{ i.rut || '—' }}</td>
+        <td>{{ i.email || '—' }}</td>
+        <td>{{ i.agregado_en ? (i.agregado_en | date:'short') : '—' }}</td>
+        <td class="actions">
+          <button class="btn-link" (click)="confirmRemove(i)" [disabled]="estado === 'CERRADO'">Quitar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <ng-template #empty>
+    <div class="empty">Sin integrantes aún.</div>
+  </ng-template>
+</div>

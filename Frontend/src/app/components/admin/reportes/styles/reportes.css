@@ -24,6 +24,21 @@
   --r-radius: 12px;
 }
 
+/* Dark mode variables for reports */
+body.theme-dark {
+  --r-grad-start: #0b1120;
+  --r-grad-end: #111c30;
+
+  --r-bg: #121c2e;
+  --r-surface: #18283e;
+  --r-border: rgba(71, 85, 122, 0.55);
+  --r-text: #e2e8f0;
+  --r-muted: rgba(148, 163, 184, 0.85);
+
+  --r-shadow: 0 12px 32px rgba(7, 13, 28, 0.65);
+  --r-shadow-lg: 0 20px 50px rgba(7, 13, 28, 0.75);
+}
+
 /* =======================
    FONDO Y SUPERFICIE
 ======================= */
@@ -638,4 +653,163 @@
   .report-section-header {
     align-items: flex-start;
   }
+}
+/* =======================
+   DARK MODE OVERRIDES
+======================= */
+body.theme-dark .report-page {
+  background: linear-gradient(135deg, var(--r-grad-start) 0%, var(--r-grad-end) 100%);
+}
+
+body.theme-dark .report-surface,
+body.theme-dark .page-wrapper {
+  background: var(--r-bg);
+  border-color: var(--r-border);
+  box-shadow: var(--r-shadow);
+  color: var(--r-text);
+}
+
+body.theme-dark .inst-header {
+  background: var(--r-surface);
+  border-color: var(--r-border);
+}
+
+body.theme-dark .inst-header h2,
+body.theme-dark .inst-header h3 {
+  color: #93c5fd;
+}
+
+body.theme-dark .inst-header p {
+  color: var(--r-muted);
+}
+
+body.theme-dark .r-card,
+body.theme-dark .report-card,
+body.theme-dark .card {
+  background: var(--r-surface);
+  border-color: var(--r-border);
+  color: var(--r-text);
+}
+
+body.theme-dark .r-card h4,
+body.theme-dark .report-card h4,
+body.theme-dark .card h4,
+body.theme-dark .r-card h3,
+body.theme-dark .report-card h3,
+body.theme-dark .card h3 {
+  color: #93c5fd;
+}
+
+body.theme-dark .chart-area,
+body.theme-dark .chart-area-sm {
+  background: rgba(18, 28, 46, 0.85);
+  border-color: var(--r-border);
+}
+
+body.theme-dark .kpi-item {
+  background: var(--r-surface);
+  border-color: var(--r-border);
+}
+
+body.theme-dark .kpi-value {
+  color: #93c5fd;
+}
+
+body.theme-dark .kpi-label {
+  color: var(--r-muted);
+}
+
+body.theme-dark .styled-table th {
+  background: rgba(30, 41, 59, 0.9);
+  color: #93c5fd;
+  border-color: var(--r-border);
+}
+
+body.theme-dark .styled-table td {
+  color: var(--r-text);
+  border-color: rgba(71, 85, 122, 0.35);
+}
+
+body.theme-dark .styled-table tbody tr:hover {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+body.theme-dark .styled-table tbody tr:nth-child(even) {
+  background: rgba(24, 34, 54, 0.4);
+}
+
+body.theme-dark .report-section-header h2,
+body.theme-dark .report-section-header h3,
+body.theme-dark .section-title {
+  color: #93c5fd;
+}
+
+body.theme-dark .report-section-header p {
+  color: var(--r-muted);
+}
+
+body.theme-dark .table-wrapper {
+  background: var(--r-bg);
+  border-color: var(--r-border);
+}
+
+body.theme-dark .export-btn {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: var(--r-border);
+  color: var(--r-text);
+}
+
+body.theme-dark .export-btn:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+body.theme-dark .filter-bar,
+body.theme-dark .filters-row {
+  background: var(--r-surface);
+  border-color: var(--r-border);
+}
+
+body.theme-dark .filter-bar input,
+body.theme-dark .filter-bar select,
+body.theme-dark .filters-row input,
+body.theme-dark .filters-row select {
+  background: rgba(11, 19, 35, 0.95);
+  border-color: var(--r-border);
+  color: var(--r-text);
+}
+
+body.theme-dark .filter-bar input::placeholder,
+body.theme-dark .filters-row input::placeholder {
+  color: rgba(148, 163, 184, 0.65);
+}
+
+body.theme-dark .date-range-picker {
+  background: var(--r-surface);
+  border-color: var(--r-border);
+}
+
+body.theme-dark .stat-box {
+  background: var(--r-surface);
+  border-color: var(--r-border);
+}
+
+body.theme-dark .stat-box .value {
+  color: #93c5fd;
+}
+
+body.theme-dark .stat-box .label {
+  color: var(--r-muted);
+}
+
+body.theme-dark .legend-item {
+  color: var(--r-text);
+}
+
+body.theme-dark .no-data {
+  color: var(--r-muted);
+}
+
+body.theme-dark .badge-danger {
+  background: rgba(239, 68, 68, 0.85);
 }

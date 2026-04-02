@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +17,7 @@ export class EventosService {
               AUTH HEADERS
   ======================================= */
   private getToken(): string | null {
-    return localStorage.getItem('token')
+    return sessionStorage.getItem('token')
       || localStorage.getItem('access_token')
       || localStorage.getItem('auth_token');
   }

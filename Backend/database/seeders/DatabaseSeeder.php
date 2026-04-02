@@ -26,7 +26,13 @@ class DatabaseSeeder extends Seeder
             
             AsignaturaDocenteSeeder::class,
             //BloquePrestamosSeeder::class,
-            EquiposRelacionadosSeeder::class
+            EquiposRelacionadosSeeder::class,
+            
+            // Catálogo de tipos de falla para auditoría de equipos
+            TiposFallaSeeder::class,
+            
+            // Seeder de datos masivos para reportes
+            ReportesDataSeeder::class,
         ]);
     }
 }

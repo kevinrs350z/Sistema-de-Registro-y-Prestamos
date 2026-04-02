@@ -6,9 +6,20 @@
   </header>
 
   <div class="faq-lista">
-    <div class="faq-card" *ngFor="let p of preguntas">
-      <h3 class="faq-pregunta">{{ p.pregunta }}</h3>
-      <p class="faq-respuesta">{{ p.respuesta }}</p>
+    <div
+      class="faq-card"
+      *ngFor="let p of preguntas; let i = index"
+      [class.activa]="activa() === i"
+      (click)="toggle(i)"
+      tabindex="0"
+      (keyup.enter)="toggle(i)"
+    >
+      <div class="faq-header-row">
+        <span class="faq-pregunta">{{ p.pregunta }}</span>
+      </div>
+      <div class="faq-respuesta" *ngIf="activa() === i">
+        {{ p.respuesta }}
+      </div>
     </div>
   </div>
 

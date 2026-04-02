@@ -17,7 +17,7 @@ export class AsignaturasService {
         HEADERS CON TOKEN
   ============================ */
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token'); // o sessionStorage
+    const token = sessionStorage.getItem('token'); // o sessionStorage
     return new HttpHeaders({
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'

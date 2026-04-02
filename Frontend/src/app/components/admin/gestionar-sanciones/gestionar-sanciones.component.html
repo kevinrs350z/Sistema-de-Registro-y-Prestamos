@@ -2,6 +2,14 @@
 <h1 class="titulo-pagina">Gestión de Sanciones</h1>
 <p class="subtitulo-pagina">Visualizar y administrar sanciones registradas</p>
 
+<!-- Alerta de escalamientos automáticos -->
+<div class="escalamiento-alert" *ngIf="escalamientosAlert.length > 0">
+  <div class="escalamiento-card" *ngFor="let msg of escalamientosAlert">
+    {{ msg }}
+  </div>
+  <button class="btn-outline" type="button" (click)="escalamientosAlert = []" style="margin-top:8px">Cerrar alertas</button>
+</div>
+
 <div class="cuentas-container"
      [class.form-activo]="formularioVisible || formularioAsignar" style="position: relative;">
 
@@ -12,7 +20,6 @@
 
       <div class="botones-header">
         <button class="btn-crear" type="button" (click)="toggleAsignar()">Asignar sanción</button>
-        <button class="btn-crear" type="button" (click)="toggleRegistrar()">Registrar sanción</button>
         <button class="btn-outline" type="button" (click)="exportarCsv()">Exportar CSV</button>
         <button class="btn-outline" type="button" (click)="exportarExcel()">Exportar Excel</button>
       </div>
@@ -43,18 +50,25 @@
     <div class="items-grid" *ngIf="!cargandoSanciones">
       <div *ngFor="let s of sancionesPaginadas"
            class="item"
-           [class.activo]="sancionSeleccionada?.id === s.id"
+         [class.activo]="sancionSeleccionada?.key === s.key"
            (click)="seleccionar(s)">
 
         <p><strong>{{ s.usuario }}</strong></p>
-        <p>{{ s.motivo }}</p>
+        <p>
+          <span class="badge-nivel" [attr.data-nivel]="s.nivel">{{ s.nivel }}</span>
+          <span *ngIf="s.categoria_falta" style="font-size:0.8rem; color:#6b7280; margin-left:6px">{{ s.categoria_falta }}</span>
+        </p>
         <p class="meta-asignacion" *ngIf="s.asignada_por || s.asignada_en">
           <span>{{ s.asignada_por || '—' }}</span>
           <span class="dot">•</span>
           <span>{{ s.asignada_en ? (s.asignada_en | date:'dd MMM yyyy · HH:mm') : '—' }}</span>
         </p>
 
-        <p class="estado" [class.activa]="s.estado === 'ACTIVA'">
+        <p class="estado"
+           [class.activa]="s.estado === 'ACTIVA'"
+           [class.escalada]="s.estado === 'ESCALADA'"
+           [class.pendiente]="s.estado === 'PENDIENTE'"
+           [class.comite]="s.estado === 'EN_REVISION_COMITE'">
           {{ s.estado }}
         </p>
       </div>
@@ -84,19 +98,70 @@
 
     <h2>Detalle de Sanción</h2>
 
-<div class="detalle-grid">
-  <div><label>Nombre</label><p>{{ sancionSeleccionada.nombre }}</p></div>
-  <div><label>Apellido</label><p>{{ sancionSeleccionada.apellido }}</p></div>
-  <div><label>Correo</label><p>{{ sancionSeleccionada.correo }}</p></div>
-  <div><label>RUT</label><p>{{ sancionSeleccionada.rut }}</p></div>
-
-  <div><label>Motivo</label><p>{{ sancionSeleccionada.motivo }}</p></div>
-    <div class="col-100"><label>Descripción</label><p>{{ sancionSeleccionada.descripcion || '—' }}</p></div>
-  <div><label>Asignada por</label><p>{{ sancionSeleccionada.asignada_por || '—' }}</p></div>
-  <div><label>Asignada en</label><p>{{ sancionSeleccionada.asignada_en || '—' }}</p></div>
-  <div><label>Fecha inicio</label><p>{{ sancionSeleccionada.fecha_inicio }}</p></div>
-  <div><label>Fecha fin</label><p>{{ sancionSeleccionada.fecha_fin }}</p></div>
-  <div><label>Estado</label><p>{{ sancionSeleccionada.estado }}</p></div>
+<div class="detalle-grid detail-tiles">
+  <div class="detail-tile">
+    <p class="tile-label">Nombre</p>
+    <p class="tile-value">{{ sancionSeleccionada.nombre }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Apellido</p>
+    <p class="tile-value">{{ sancionSeleccionada.apellido }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Correo</p>
+    <p class="tile-value">{{ sancionSeleccionada.correo }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">RUT</p>
+    <p class="tile-value">{{ sancionSeleccionada.rut }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Nivel</p>
+    <p class="tile-value">
+      <span class="badge-nivel" [attr.data-nivel]="sancionSeleccionada.nivel">{{ sancionSeleccionada.nivel }}</span>
+    </p>
+  </div>
+  <div class="detail-tile" *ngIf="sancionSeleccionada.categoria_falta">
+    <p class="tile-label">Categoría de falta</p>
+    <p class="tile-value">{{ sancionSeleccionada.categoria_falta }}</p>
+  </div>
+  <div class="detail-tile col-100">
+    <p class="tile-label">Descripción</p>
+    <p class="tile-value">{{ sancionSeleccionada.descripcion || '—' }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Asignada por</p>
+    <p class="tile-value">{{ sancionSeleccionada.asignada_por || '—' }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Asignada el</p>
+    <p class="tile-value">{{ sancionSeleccionada.asignada_en ? (sancionSeleccionada.asignada_en | date:'dd/MM/yyyy · HH:mm') : '—' }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Fecha inicio</p>
+    <p class="tile-value">{{ sancionSeleccionada.fecha_inicio | date:'dd/MM/yyyy' }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Fecha fin</p>
+    <p class="tile-value">{{ sancionSeleccionada.fecha_fin ? (sancionSeleccionada.fecha_fin | date:'dd/MM/yyyy') : 'Indefinido' }}</p>
+  </div>
+  <div class="detail-tile">
+    <p class="tile-label">Estado</p>
+    <p class="tile-value"
+       [class.estado-activa]="sancionSeleccionada.estado === 'ACTIVA'"
+       [class.estado-escalada]="sancionSeleccionada.estado === 'ESCALADA'"
+       [class.estado-comite]="sancionSeleccionada.estado === 'EN_REVISION_COMITE'">
+      {{ sancionSeleccionada.estado }}
+    </p>
+  </div>
+  <div class="detail-tile" *ngIf="sancionSeleccionada.escalada_desde_id">
+    <p class="tile-label">Escalada desde</p>
+    <p class="tile-value">Sanción #{{ sancionSeleccionada.escalada_desde_id }}</p>
+  </div>
+  <div class="detail-tile" *ngIf="sancionSeleccionada.periodo_academico">
+    <p class="tile-label">Periodo académico</p>
+    <p class="tile-value">{{ sancionSeleccionada.periodo_academico }}</p>
+  </div>
 </div>
 
 
@@ -125,23 +190,6 @@
         <button class="btn-azul" type="button" (click)="guardarEdicion()">Guardar</button>
         <button class="btn-cancelar" type="button" (click)="toggleEditarSancion()">Cancelar</button>
       </div>
-    </div>
-  </div>
-
-  <!-- FORMULARIO REGISTRAR (CORREGIDO CON ESTILO PANEL) -->
-  <div class="detalle" *ngIf="formularioVisible">
-    <h2>Registrar Nueva Sanción</h2>
-
-    <div class="detalle-grid">
-      <div class="col-100">
-        <label>Nombre del tipo de sanción</label>
-        <input type="text" [(ngModel)]="nuevoTipo">
-      </div>
-    </div>
-
-    <div style="display:flex; gap:8px; align-items:center">
-      <button class="btn-azul" type="button" (click)="registrarTipo()">Registrar</button>
-      <button type="button" class="btn-cancelar" (click)="cancelarRegistrar()">Cancelar</button>
     </div>
   </div>
 
@@ -237,10 +285,20 @@
 
       <div class="col-100">
         <label>Tipo de sanción</label>
-        <select [(ngModel)]="asignarTipo" [disabled]="tiposSancion.length === 0">
+        <select [(ngModel)]="asignarTipo" (ngModelChange)="onTipoSancionChange()" [disabled]="tiposSancion.length === 0">
           <option [ngValue]="0" disabled>Selecciona un tipo</option>
           <option *ngFor="let t of tiposSancion" [ngValue]="t.id">
             {{ t.nivel }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-100" *ngIf="categoriasFiltradas.length > 0">
+        <label>Categoría de falta</label>
+        <select [(ngModel)]="asignarCategoria">
+          <option value="">Selecciona la falta cometida</option>
+          <option *ngFor="let c of categoriasFiltradas" [value]="c.value">
+            {{ c.label }}
           </option>
         </select>
       </div>
@@ -264,7 +322,7 @@
 
     <div class="acciones-asignar">
       <button class="btn-azul" type="button"
-              [disabled]="!asignarUsuario.trim() || !asignarTipo || !asignarInicio || !asignarFin || tiposSancion.length === 0"
+              [disabled]="tiposSancion.length === 0"
               (click)="asignarSancion()">
         Asignar sanción
       </button>

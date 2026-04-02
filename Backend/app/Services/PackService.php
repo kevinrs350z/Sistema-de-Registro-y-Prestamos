@@ -48,7 +48,7 @@ class PackService
 
             // Imagen
             $imagenPath = null;
-            if (isset($data['imagen'])) {
+            if (isset($data['imagen']) && $data['imagen'] instanceof \Illuminate\Http\UploadedFile) {
                 $imagenPath = $data['imagen']->store('packs', 'public');
             }
 

@@ -354,6 +354,40 @@
   margin-bottom: 20px;
 }
 
+.detalle-grid.detail-tiles {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.detail-tile {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.tile-label {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.01em;
+}
+
+.tile-value {
+  margin: 0;
+  color: #111827;
+  font-weight: 600;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
 /* GRID PARA ITEMS EN LISTA */
 .items-grid {
   display: grid;
@@ -647,4 +681,91 @@ app-navbar-admin {
 .cuentas-container {
   position: relative;
   z-index: 1; /* Evita que tape al navbar */
+}
+
+/* ========================
+   BADGE NIVEL SANCION
+========================= */
+.badge-nivel {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-nivel[data-nivel="LEVE"] {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-nivel[data-nivel="MEDIA"] {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-nivel[data-nivel="GRAVE"] {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-nivel[data-nivel="GRAVISIMA"] {
+  background: #581c87;
+  color: #fff;
+}
+
+/* ========================
+   ESTADO COLORS
+========================= */
+.estado.escalada {
+  color: #92400e;
+}
+
+.estado.pendiente {
+  color: #6b7280;
+}
+
+.estado.comite {
+  color: #581c87;
+}
+
+.estado-activa {
+  color: #d9534f;
+  font-weight: 700;
+}
+
+.estado-escalada {
+  color: #92400e;
+  font-weight: 700;
+}
+
+.estado-comite {
+  color: #581c87;
+  font-weight: 700;
+}
+
+/* ========================
+   ESCALAMIENTO ALERT
+========================= */
+.escalamiento-alert {
+  max-width: 800px;
+  margin: 0 auto 16px;
+  padding: 12px 16px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+}
+
+.escalamiento-card {
+  padding: 8px 0;
+  color: #9a3412;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #fed7aa;
+}
+
+.escalamiento-card:last-of-type {
+  border-bottom: none;
 }

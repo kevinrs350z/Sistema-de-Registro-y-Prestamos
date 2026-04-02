@@ -61,17 +61,14 @@ class PackController extends Controller
      */
     public function store(StorePackRequest $request)
     {
-        $equipos = $request->input('equipos');
-
-        if (is_string($equipos)) {
-            $request->merge([
-                'equipos' => json_decode($equipos, true)
-            ]);
+        $data = $request->validated();
+        
+        // Asegurar que la imagen se pase como archivo si existe
+        if ($request->hasFile('imagen')) {
+            $data['imagen'] = $request->file('imagen');
         }
 
-        $pack = $this->service->crear($request->validated() + [
-            'imagen' => $request->file('imagen'),
-        ]);
+        $pack = $this->service->crear($data);
 
         return response()->json([
             'message' => 'Pack creado correctamente.',

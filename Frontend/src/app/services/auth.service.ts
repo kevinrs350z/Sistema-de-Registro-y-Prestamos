@@ -20,6 +20,28 @@ interface LoginResponse {
   providedIn: 'root'
 })
 export class AuthService {
+    /** Devuelve el rol actual del usuario autenticado */
+    getRol(): string {
+      // Puede estar en localStorage como 'rol' o en el objeto 'user'
+      const rol = sessionStorage.getItem('rol');
+      if (rol) return rol;
+      const user = sessionStorage.getItem('user');
+      if (user) {
+        try {
+          const obj = JSON.parse(user);
+          if (obj.rol && obj.rol.nombre) return obj.rol.nombre;
+        } catch {}
+      }
+      return '';
+    }
+
+    isAdmin(): boolean {
+      return this.getRol().toUpperCase() === 'ADMIN';
+    }
+
+    isSuperUsuario(): boolean {
+      return this.getRol().toUpperCase() === 'SUPER_USUARIO';
+    }
   //private apiUrl = 'https://cofferlike-nonaseptic-stephen.ngrok-free.dev/api'; 
   private readonly apiUrl = `${environment.apiBaseUrl}/api`;
   //private apiUrl = 'http://192.168.1.83:8000/api';
@@ -28,7 +50,7 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   private getHeaders(): HttpHeaders {
-      const token = localStorage.getItem('token') ?? '';
+      const token = sessionStorage.getItem('token') ?? '';
       return new HttpHeaders({
         Authorization: `Bearer ${token}`,
         Accept: 'application/json'
@@ -80,6 +102,18 @@ export class AuthService {
 
     return this.http.post(`${this.apiUrl}/prestamos`, payload, { headers });
   }
+
+  validarMaximoPrestamo(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/prestamos/validar-maximo`, payload, {
+      headers: this.getHeaders()
+    });
+  }
+
+  verificarBloqueosHorario(payload: { fecha: string; bloques: number[]; tipo_equipo_ids: number[] }): Observable<any[]> {
+    return this.http.post<any[]>(`${this.apiUrl}/verificar-bloqueos-horario`, payload, {
+      headers: this.getHeaders()
+    });
+  }
     getPrestamos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/admin/prestamos`, {
       headers: this.getHeaders(),
@@ -104,6 +138,12 @@ export class AuthService {
     return this.http.get<any[]>(`${this.apiUrl}/prestamos`, { headers });
   }
 
+  cancelarPrestamo(id: number) {
+    return this.http.delete(`${this.apiUrl}/prestamos/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
   //muestra el usuario utenticado
   getUsuario(token: string) {
     const headers = {
@@ -114,6 +154,12 @@ export class AuthService {
   }
   getSancionesActivas(token: string) {
     return this.http.get<any[]>(`${this.apiUrl}/admin/sanciones/activa`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+
+  getMisSanciones(token: string) {
+    return this.http.get<{ sanciones: any[] }>(`${this.apiUrl}/sanciones/mis`, {
       headers: { Authorization: `Bearer ${token}` }
     });
   }
@@ -139,12 +185,12 @@ export class AuthService {
   
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('rol');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('rol');
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
+    return !!sessionStorage.getItem('token');
   }
 }

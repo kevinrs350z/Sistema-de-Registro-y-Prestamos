@@ -1,178 +1,137 @@
-/* ======== NAVBAR GENERAL ======== */
-.navbar-admin {
-  width: 100%;
-  height: 130px;
-  background-color: #446BA9; /* Azul institucional */
+/* ==========================
+   NAVBAR ADMIN – Barra superior slim
+   Trabaja junto con el sidebar lateral
+========================== */
+.admin-navbar-slim {
+  position: fixed;
+  top: 0;
+  left: 260px;       /* Sincronizado con sidebar width */
+  right: 0;
+  z-index: 1040;
+  height: 52px;
+  font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+  transition: left 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navbar-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      105deg,
+      rgba(45, 27, 78, 0.97) 0%,
+      rgba(58, 35, 95, 0.95) 25%,
+      rgba(74, 44, 122, 0.93) 50%,
+      rgba(55, 40, 100, 0.94) 75%,
+      rgba(35, 30, 90, 0.96) 100%
+    );
+  z-index: -1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.navbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 50px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1100;
-  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.25);
-  border-bottom: 2px solid rgba(145, 181, 232, 0.3);
-  font-family: "Poppins", sans-serif;
-  transition: transform 0.3s ease;
+  height: 100%;
+  padding: 0 24px;
+  width: 100%;
 }
 
-/* ======== HOST OCULTO ======== */
-:host(.navbar-hidden) .navbar-admin {
-  transform: translateY(-100%);
+.navbar-spacer {
+  flex: 1;
 }
 
-/* ======== LADO IZQUIERDO ======== */
-.nav-left {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-/* Botón hamburguesa */
-.icon-btn {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  flex-direction: column;
+/* Botón hamburguesa – solo visible en mobile */
+.sidebar-toggle-btn {
+  display: none;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
-}
-
-.icon-btn span {
-  width: 20px;
-  height: 2px;
-  background: #ffffff;
-  border-radius: 2px;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-
-.icon-btn:hover {
-  border-color: #F5A474;
-  box-shadow: 0 0 0 2px rgba(245, 164, 116, 0.35);
-  transform: translateY(-2px);
-}
-
-/* Menú desplegable */
-.menu-dropdown {
-  position: absolute;
-  top: 60px;
-  left: 0;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  min-width: 150px;
-  max-width: 185px;
-  overflow: hidden;
-  z-index: 10000;
-}
-
-.home-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
-}
-
-.home-btn:hover {
-  border-color: #F5A474;
-  box-shadow: 0 0 0 2px rgba(245, 164, 116, 0.35);
-  transform: translateY(-2px);
-}
-
-.home-btn i {
-  font-size: 22px;
-  color: #ffffff;
-}
-.menu-dropdown button {
-  border: none;
-  background: none;
-  padding: 10px 14px;
-  text-align: left;
-  font-weight: 600;
-  color: #446BA9;
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1.25rem;
   cursor: pointer;
   transition: background 0.2s ease;
+  margin-right: 12px;
 }
 
-.menu-dropdown button:hover {
-  background-color: #EAF1FB;
+.sidebar-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
-/* ======== CENTRO ======== */
-.nav-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.brand {
-  color: #fff;
-  font-weight: 800;
-  font-size: 24px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-/* ======== DERECHA ======== */
-.nav-right {
+.navbar-admin-tools {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
-.btn-logout {
-  background-color: #F5A474;
-  color: white;
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff !important;
+  text-decoration: none;
+  background: none;
   border: none;
-  font-weight: 700;
-  padding: 12px 26px;
-  border-radius: 14px;
-  font-size: 16px;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  transition: color 0.2s ease;
 }
 
-.btn-logout:hover {
-  background-color: #91B5E8;
-  transform: translateY(-3px);
+.nav-logout:hover {
+  color: #fca5a5 !important;
 }
 
-/* ======== RESPONSIVE ======== */
-@media (max-width: 768px) {
-  .navbar-admin {
-    flex-direction: column;
-    padding: 20px;
-    height: auto;
-    gap: 10px;
+.nav-separator {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  margin: 0 2px;
+  user-select: none;
+}
+
+.nav-user-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffb58c;
+}
+
+/* ============================
+   RESPONSIVE
+============================ */
+@media (max-width: 991.98px) {
+  .admin-navbar-slim {
+    left: 0;  /* Full width en mobile */
   }
 
-  .nav-center {
-    justify-content: center;
-  }
-
-  .brand {
-    font-size: 18px;
-  }
-
-  .btn-logout {
-    padding: 10px 20px;
-    font-size: 15px;
+  .sidebar-toggle-btn {
+    display: flex;
   }
 }
+
+@media (max-width: 576px) {
+  .nav-user-name {
+    display: none;
+  }
+
+  .nav-separator {
+    display: none;
+  }
+}
+
+/* ============================
+   COLLAPSED STATE (desde host class)
+============================ */
+:host(.sidebar-collapsed) .admin-navbar-slim {
+  left: 64px;
+}
+

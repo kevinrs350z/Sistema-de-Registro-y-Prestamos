@@ -133,27 +133,52 @@ class UsuarioController extends Controller
     }
 
     /**
+    public function update(UpdateUsuarioRequest $request, $id, UsuarioService $service)
+    {
+        $user = $request->user();
+        $data = $request->validated();
+        // Solo ADMIN puede cambiar roles de otros usuarios
+        if (isset($data['rol']) && !$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para asignar roles.'
+            ], 403);
+        }
+        try {
+            $usuario = $service->actualizarUsuario($id, $data);
+            return response()->json([
+                'message' => 'Usuario actualizado correctamente',
+                'data' => $usuario
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar el usuario',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Elimina un usuario del sistema.
-     *
-     * Este método solicita al UsuarioService la eliminación del usuario especificado.
-     * En caso de error, retorna una respuesta controlada para mantener consistencia
-     * en las respuestas de la API.
      *
      * @param  int             $id       Identificador del usuario a eliminar.
      * @param  UsuarioService  $service  Servicio encargado de la eliminación.
+     * @param  Request         $request  Request para verificar permisos.
      * @return \Illuminate\Http\JsonResponse  Respuesta JSON confirmando la operación.
      */
-    public function destroy($id, UsuarioService $service)
+    public function destroy($id, UsuarioService $service, Request $request)
     {
+        $user = $request->user();
+        if ($user && method_exists($user, 'hasRole') && !$user->hasRole('ADMIN')) {
+            return response()->json([
+                'error' => 'No tienes permisos para eliminar usuarios.'
+            ], 403);
+        }
         try {
             $service->eliminarUsuario($id);
-
             return response()->json([
                 'message' => 'Usuario desactivado correctamente'
             ], 200);
-
         } catch (\Exception $e) {
-
             return response()->json([
                 'error'   => 'Error al eliminar el usuario',
                 'message' => $e->getMessage()
@@ -235,6 +260,38 @@ class UsuarioController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'No se pudo desbloquear al alumno',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Búsqueda de usuarios para autocompletado (usado en gestión de grupos).
+     * GET /api/admin/users/search?q=texto
+     */
+    public function search(Request $request, UsuarioService $service)
+    {
+        try {
+            $q = $request->query('q', '');
+            $rolesParam = $request->query('roles', '');
+            $roles = [];
+
+            if (!empty($rolesParam)) {
+                $roles = array_values(array_filter(array_map('trim', explode(',', $rolesParam))));
+            }
+
+            // Mínimo 2 caracteres para buscar
+            if (strlen($q) < 2) {
+                return response()->json([]);
+            }
+
+            $usuarios = $service->buscarUsuarios($q, 20, $roles);
+
+            return response()->json($usuarios);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error en búsqueda de usuarios',
                 'message' => $e->getMessage()
             ], 500);
         }

@@ -1,253 +1,358 @@
-.home-btn {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 60;
-  width: 100%;
-  background: linear-gradient(135deg, #446ba9, #3b5f98);
-  border-bottom: 2px solid rgba(145, 181, 232, 0.28);
-  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.28);
-  padding: 16px 18px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+/* =====================================================
+   NAVBAR INSTITUCIONAL UTA
+   Universidad de Tarapacá - Sistema de Préstamos
+   Estilo UTAMed - Red de conexiones científicas
+   ===================================================== */
+
+/* Variables institucionales */
+:root {
+  --uta-purple-dark: #2d1b4e;
+  --uta-purple: #4a2c7a;
+  --uta-purple-light: #6b4d99;
+  --uta-blue-dark: #1a237e;
+  --uta-accent: #f5a623;
+  --uta-text: #ffffff;
+  --uta-text-muted: rgba(255, 255, 255, 0.85);
 }
 
-.navbar-top {
+/* Navbar principal */
+.navbar-uta {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  height: 72px;
+}
+
+/* Fondo institucional con patrón de red científica estilo UTAMed */
+.navbar-bg {
+  position: absolute;
+  inset: 0;
+  /* Overlay degradado morado institucional */
+  background: 
+    linear-gradient(
+      105deg,
+      rgba(45, 27, 78, 0.97) 0%,
+      rgba(58, 35, 95, 0.95) 25%,
+      rgba(74, 44, 122, 0.93) 50%,
+      rgba(55, 40, 100, 0.94) 75%,
+      rgba(35, 30, 90, 0.96) 100%
+    ),
+    /* Patrón de red de nodos/conexiones científicas */
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200"><defs><radialGradient id="node" cx="50%25" cy="50%25" r="50%25"><stop offset="0%25" style="stop-color:rgba(255,255,255,0.12)"/><stop offset="100%25" style="stop-color:rgba(255,255,255,0)"/></radialGradient></defs><rect fill="%232d1b4e" width="1200" height="200"/><g stroke="rgba(255,255,255,0.06)" stroke-width="1" fill="none"><line x1="50" y1="40" x2="180" y2="90"/><line x1="180" y1="90" x2="320" y2="50"/><line x1="320" y1="50" x2="450" y2="120"/><line x1="450" y1="120" x2="600" y2="70"/><line x1="600" y1="70" x2="750" y2="130"/><line x1="750" y1="130" x2="900" y2="60"/><line x1="900" y1="60" x2="1050" y2="100"/><line x1="1050" y1="100" x2="1180" y2="45"/><line x1="100" y1="160" x2="250" y2="110"/><line x1="250" y1="110" x2="400" y2="170"/><line x1="400" y1="170" x2="550" y2="100"/><line x1="550" y1="100" x2="700" y2="160"/><line x1="700" y1="160" x2="850" y2="90"/><line x1="850" y1="90" x2="1000" y2="150"/><line x1="1000" y1="150" x2="1150" y2="80"/><line x1="180" y1="90" x2="250" y2="110"/><line x1="450" y1="120" x2="400" y2="170"/><line x1="600" y1="70" x2="550" y2="100"/><line x1="750" y1="130" x2="700" y2="160"/><line x1="900" y1="60" x2="850" y2="90"/><line x1="320" y1="50" x2="250" y2="110"/><line x1="600" y1="70" x2="700" y2="160"/></g><g fill="url(%23node)"><circle cx="50" cy="40" r="8"/><circle cx="180" cy="90" r="10"/><circle cx="320" cy="50" r="7"/><circle cx="450" cy="120" r="9"/><circle cx="600" cy="70" r="11"/><circle cx="750" cy="130" r="8"/><circle cx="900" cy="60" r="10"/><circle cx="1050" cy="100" r="7"/><circle cx="1180" cy="45" r="9"/><circle cx="100" cy="160" r="7"/><circle cx="250" cy="110" r="9"/><circle cx="400" cy="170" r="8"/><circle cx="550" cy="100" r="10"/><circle cx="700" cy="160" r="7"/><circle cx="850" cy="90" r="9"/><circle cx="1000" cy="150" r="8"/><circle cx="1150" cy="80" r="10"/></g><g fill="rgba(255,255,255,0.04)"><circle cx="200" cy="30" r="60"/><circle cx="600" cy="150" r="80"/><circle cx="1000" cy="40" r="50"/></g></svg>');
+  background-size: cover, 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
+/* Contenido del navbar */
+.navbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  height: 100%;
+  padding: 0 60px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
 }
 
-.nav-controls {
+/* === BRAND / LOGO === */
+.navbar-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
-.menu-toggle {
-  width: 44px;
+.logo-uta {
   height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-carrera {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* === MENÚ DESKTOP === */
+.navbar-menu {
+  display: none;
+  align-items: center;
+  gap: 0;
+}
+
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #ffffff !important;
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nav-link i {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.6);
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #ffffff !important;
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.nav-link.active {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.nav-link.active::after {
+  transform: scaleX(1);
+  background: #ffffff;
+}
+
+/* Separador */
+.nav-separator {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  margin: 0 8px;
+  user-select: none;
+}
+
+/* Usuario - texto simple sin cuadros */
+.nav-user-name {
+  font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffb58c;
+  margin-right: 4px;
+}
+
+/* Link salir - mismo estilo que navegación */
+.nav-logout {
+  color: #ffffff;
+}
+
+.nav-logout:hover {
+  color: #fca5a5;
+}
+
+.nav-logout::after {
+  display: none;
+}
+
+/* === BOTÓN HAMBURGUESA === */
+.navbar-toggler {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 6px;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
 }
 
-.menu-toggle span {
-  width: 18px;
+.navbar-toggler:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.toggler-icon {
+  display: block;
+  width: 20px;
   height: 2px;
-  background: #ffffff;
+  background: var(--uta-text);
   border-radius: 2px;
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-.menu-toggle:not(:disabled):hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: #f5a474;
-  box-shadow: 0 0 0 2px rgba(245, 164, 116, 0.35);
-  transform: translateY(-1px);
+.menu-open .navbar-toggler .toggler-icon:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
 }
 
-.menu-toggle:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.menu-open .menu-toggle {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-.menu-open .menu-toggle span:nth-child(1) {
-  transform: translateY(6px) rotate(45deg);
-}
-
-.menu-open .menu-toggle span:nth-child(2) {
+.menu-open .navbar-toggler .toggler-icon:nth-child(2) {
   opacity: 0;
 }
 
-.menu-open .menu-toggle span:nth-child(3) {
-  transform: translateY(-6px) rotate(-45deg);
+.menu-open .navbar-toggler .toggler-icon:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
-.home-btn {
-  padding: 10px 20px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.home-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #f5a474;
-  box-shadow: 0 0 0 2px rgba(245, 164, 116, 0.35);
-}
-
-.home-icon {
-  position: relative;
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-}
-
-.home-icon::before,
-.home-icon::after {
-  content: '';
+/* === MENÚ MÓVIL COLAPSABLE === */
+.navbar-collapse {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #ffffff;
-}
-
-.home-icon::before {
-  width: 18px;
-  height: 12px;
-  bottom: 0;
-  border-radius: 3px;
-}
-
-.home-icon::after {
-  width: 14px;
-  height: 14px;
-  top: 0;
-  transform: translate(-50%, -25%) rotate(45deg);
-  border-radius: 3px 3px 0 0;
-}
-
-.logo {
-  flex: 1;
-  text-align: center;
-}
-
-.logo-title {
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 1.08rem;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-
-.nav-spacer {
-  width: 64px;
-  height: 1px;
-}
-
-.nav-dropdown {
-  position: relative;
-  width: 100%;
-}
-
-.dropdown-panel {
-  position: absolute;
-  top: 16px;
+  top: 72px;
   left: 0;
-  width: min(230px, calc(100vw - 32px));
+  right: 0;
   display: none;
   flex-direction: column;
-  gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #d7dcef;
-  border-radius: 18px;
-  padding: 12px;
-  box-shadow: 0 22px 46px rgba(15, 23, 42, 0.28);
-  z-index: 10;
+  padding: 16px 24px;
+  background: linear-gradient(
+    180deg,
+    rgba(45, 27, 78, 0.98) 0%,
+    rgba(74, 44, 122, 0.98) 100%
+  );
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-.dropdown-panel.visible {
+.navbar-collapse.show {
   display: flex;
-  animation: dropdownFade 0.22s ease;
+  animation: slideDown 0.25s ease;
 }
 
-.dropdown-btn {
+.nav-link-mobile {
+  display: block;
+  padding: 14px 0;
+  font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nav-link-mobile:last-of-type {
+  border-bottom: none;
+}
+
+.nav-link-mobile:hover {
+  color: #ffffff;
+}
+
+.nav-link-mobile.active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Footer móvil con usuario y salir */
+.nav-mobile-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  text-decoration: none;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-weight: 600;
-  font-size: 0.94rem;
-  color: #1f2a4a;
-  background: #ffffff;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
-  transition: all 0.2s ease;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.dropdown-btn:hover,
-.dropdown-btn.active,
-.dropdown-btn[routerLinkActive="active"] {
-  border-color: #446ba9;
-  box-shadow: 0 12px 28px rgba(68, 107, 169, 0.2);
+.nav-user-mobile {
+  font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.dropdown-btn.logout {
-  padding: 10px 14px;
-  background: #fef2f2;
-  border-color: #fbd5d5;
-  color: #c53030;
-  font-size: 0.88rem;
+.nav-logout-mobile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  border: none;
+  border-bottom: none;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.dropdown-btn.logout:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
+.nav-logout-mobile:hover {
+  color: #fca5a5;
 }
 
+/* === RESPONSIVE === */
+
+/* Tablet y desktop */
 @media (min-width: 768px) {
-  .navbar {
-    padding: 20px 36px;
+  .navbar-uta {
+    height: 76px;
   }
 
-  .logo-title {
-    font-size: 1.18rem;
-    letter-spacing: 0.5px;
+  .navbar-content {
+    padding: 0 60px;
   }
 
-  .dropdown-panel {
-    width: 260px;
+  .navbar-toggler {
+    display: none;
+  }
+
+  .navbar-menu {
+    display: flex;
+  }
+
+  .navbar-collapse {
+    display: none !important;
+  }
+
+  .logo-uta {
+    height: 50px;
+  }
+
+  .logo-carrera {
+    height: 46px;
   }
 }
 
+/* Desktop grande */
 @media (min-width: 1200px) {
-  .navbar {
-    padding: 22px 64px;
+  .navbar-content {
+    padding: 0 60px;
   }
 
-  .logo-title {
-    font-size: 1.28rem;
+  .nav-link {
+    padding: 10px 18px;
+    font-size: 0.92rem;
   }
 
-  .dropdown-panel {
-    width: 280px;
+  .logo-uta {
+    height: 54px;
+  }
+
+  .logo-carrera {
+    height: 50px;
   }
 }
 
-@keyframes dropdownFade {
+/* Animaciones */
+@keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;

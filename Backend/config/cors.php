@@ -15,21 +15,26 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'storage/*'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
-    //'allowed_origins' => ['http://localhost:4200'],
+    'allowed_origins' => [
+        'http://localhost:4200',
+        'https://localhost:4200',
+        'https://frontend-eight-mauve-x55iioi3rr.vercel.app',
+        'https://frontend-2t6tugwdd-kevinrojassierra-9548s-projects.vercel.app',
+        'https://*.vercel.app',
+    ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => ['/https:\/\/.*\.vercel\.app$/'],
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['*'],
 
-    'max_age' => 0,
+    'max_age' => 86400,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];

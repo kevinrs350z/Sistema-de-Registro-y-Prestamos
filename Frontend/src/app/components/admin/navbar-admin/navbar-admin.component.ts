@@ -1,4 +1,4 @@
-import { Component, inject, HostListener, HostBinding } from '@angular/core';
+import { Component, inject, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
@@ -13,62 +13,33 @@ import { NotificationService } from '../../../services/notification.service';
 })
 export class NavbarAdminComponent {
 
-  menuAbierto = false;
-  navbarVisible = true;
-  private lastScrollTop = 0;
+  /** Emitir cuando se pulse el botón hamburguesa (mobile) */
+  @Output() toggleSidebarEvent = new EventEmitter<void>();
 
-  private auth = inject(AuthService);
+  public auth = inject(AuthService);
   private notify = inject(NotificationService);
 
   constructor(private router: Router) {}
 
-  @HostBinding('class.navbar-hidden')
-  get isHidden() { return !this.navbarVisible; }
+  toggleSidebar() {
+    this.toggleSidebarEvent.emit();
+  }
 
-  @HostListener('window:scroll', [])
-  onScroll() {
-    const st = window.pageYOffset || document.documentElement.scrollTop;
-    if (st > this.lastScrollTop && st > 100) {
-      // Scroll hacia abajo y pasó 100px
-      this.navbarVisible = false;
-      this.menuAbierto = false; // Cerrar menú si está abierto
-    } else {
-      // Scroll hacia arriba
-      this.navbarVisible = true;
+  irHome() {
+    this.router.navigate(['/admin/dashboard']);
+  }
+
+  getUserId(): string {
+    try {
+      const raw = sessionStorage.getItem('user');
+      if (raw) {
+        const user = JSON.parse(raw);
+        return user?.rut || user?.codigo || user?.email?.split('@')[0] || 'Usuario';
+      }
+    } catch {
+      // ignore
     }
-    this.lastScrollTop = st <= 0 ? 0 : st;
-  }
-
-  toggleMenu() {
-    this.menuAbierto = !this.menuAbierto;
-  }
-
-  /** Navegar a sección - usa evento si está en dashboard, si no navega por ruta */
-  navegarInterno(seccion: string) {
-    this.menuAbierto = false;
-
-    // Si estamos en el dashboard, usar eventos
-    if (this.router.url === '/admin/dashboard' || this.router.url.startsWith('/admin/dashboard')) {
-      window.dispatchEvent(
-        new CustomEvent('admin-navegacion', { detail: seccion })
-      );
-    } else {
-      // Si no estamos en dashboard, navegar a la ruta correspondiente
-      this.router.navigate(['/admin/dashboard']).then(() => {
-        // Pequeño delay para que el dashboard cargue y escuche el evento
-        setTimeout(() => {
-          window.dispatchEvent(
-            new CustomEvent('admin-navegacion', { detail: seccion })
-          );
-        }, 100);
-      });
-    }
-  }
-
-  /** 📊 IR A REPORTES (ruta real) */
-  irReportes() {
-    this.menuAbierto = false;
-    this.router.navigate(['/admin/reportes']);
+    return 'Usuario';
   }
 
   cerrarSesion() {

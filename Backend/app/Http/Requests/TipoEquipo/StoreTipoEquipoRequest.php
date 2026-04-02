@@ -18,9 +18,11 @@ class StoreTipoEquipoRequest extends FormRequest
 
             'nombre'       => 'required|string|max:255|unique:tipo_equipos,nombre',
 
-            'imagen'       => 'nullable|image|max:2048',
+            'imagen'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
 
-            'descripcion'  => 'nullable|string'
+            'descripcion'  => 'nullable|string',
+
+            'maximo_prestamo' => 'required|integer|min:0'
         ];
     }
 }

@@ -10,28 +10,30 @@ class PersonalAccessToken extends Model implements HasAbilities
     /**
      * The attributes that should be cast to native types.
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $casts = [
         'abilities' => 'json',
         'last_used_at' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'token',
         'abilities',
+        'expires_at',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $hidden = [
         'token',

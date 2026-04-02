@@ -1,0 +1,72 @@
+<!-- Overlay para mobile -->
+<div
+  class="sidebar-overlay"
+  [class.visible]="isOpen"
+  (click)="onOverlayClick()"
+></div>
+
+<!-- Sidebar -->
+<aside class="admin-sidebar" [class.open]="isOpen" [class.collapsed]="collapsed">
+
+  <!-- ─── Header: solo logo + close mobile ─── -->
+  <div class="sidebar-header">
+    <img
+      src="assets/logo-carrera-white.png"
+      alt="Diseño Multimedia"
+      class="sidebar-logo"
+    />
+
+    <!-- Botón cerrar en mobile -->
+    <button class="sidebar-close" (click)="onOverlayClick()" aria-label="Cerrar menú">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <div class="sidebar-divider header-divider"></div>
+
+  <!-- ─── Navegación con acordeones ─── -->
+  <nav class="sidebar-nav">
+    <ng-container *ngFor="let section of visibleSections; let first = first">
+      <!-- Separador entre secciones (no antes de la primera) -->
+      <div class="section-divider" *ngIf="!first"></div>
+
+      <!-- Cabecera de la sección -->
+      <button
+        class="section-header"
+        (click)="toggleSection(section.key)"
+        [attr.aria-expanded]="openSections[section.key]"
+      >
+        <div class="section-header-left">
+          <i class="bi {{ section.icon }} section-icon"></i>
+          <span class="section-label">{{ section.label }}</span>
+        </div>
+        <i
+          class="bi bi-chevron-down section-chevron"
+          [class.rotated]="openSections[section.key]"
+        ></i>
+      </button>
+
+      <!-- Items de la sección (acordeón) -->
+      <div
+        class="section-items"
+        [class.expanded]="openSections[section.key]"
+        [style.--item-count]="section.items.length"
+      >
+        <button
+          *ngFor="let item of section.items"
+          class="sidebar-item"
+          [class.active]="isItemActive(item)"
+          (click)="onItemClick(item)"
+          [attr.title]="collapsed ? item.label : null"
+        >
+          <i class="bi {{ item.icon }} item-icon"></i>
+          <span class="item-label">{{ item.label }}</span>
+          <span class="active-indicator" *ngIf="isItemActive(item)"></span>
+        </button>
+      </div>
+    </ng-container>
+  </nav>
+
+
+
+</aside>

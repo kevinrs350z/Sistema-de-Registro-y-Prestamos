@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 interface LoginResponse {
   token: string;
@@ -20,7 +21,8 @@ interface LoginResponse {
 })
 export class AuthService {
   //private apiUrl = 'https://cofferlike-nonaseptic-stephen.ngrok-free.dev/api'; 
-  private apiUrl = 'http://localhost:8000/api';
+  //private apiUrl = 'http://localhost:8000/api';//}
+  private readonly apiUrl = `${environment.apiBaseUrl}/api`;  
 
   constructor(private http: HttpClient) { }
 
@@ -38,9 +40,9 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('rol');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('rol');
   }
 
 

@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_1"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Sistema de Reserva - Diseño Multimedia"
+                  exporterVersion="2.0">
+
+  <bpmn:collaboration id="Collaboration_Prestamo">
+    <bpmn:participant id="Pool_Alumno" name="Alumno" processRef="Process_Alumno" />
+    <bpmn:participant id="Pool_Admin" name="Administrador" processRef="Process_Admin" />
+
+    <bpmn:messageFlow id="MF_01" name="Solicitud de préstamo" sourceRef="Task_A_Enviar" targetRef="Event_B_RecibeSolicitud" />
+    <bpmn:messageFlow id="MF_02" name="Email: Confirmación de solicitud" sourceRef="Task_B_EmailConfirmacion" targetRef="Event_A_RecibeConfirmacion" />
+    <bpmn:messageFlow id="MF_03" name="Email: Préstamo aprobado" sourceRef="Task_B_EmailAprobado" targetRef="Event_A_Aprobado" />
+    <bpmn:messageFlow id="MF_04" name="Email: Préstamo rechazado" sourceRef="Task_B_EmailRechazado" targetRef="Event_A_Rechazado" />
+    <bpmn:messageFlow id="MF_05" name="Alumno se presenta a retirar" sourceRef="Task_A_Presentarse" targetRef="Event_B_AlumnoPresente" />
+    <bpmn:messageFlow id="MF_06" name="Email: Equipos entregados" sourceRef="Task_B_EmailEntregado" targetRef="Event_A_Entregado" />
+    <bpmn:messageFlow id="MF_07" name="Alumno devuelve equipos" sourceRef="Task_A_Devolver" targetRef="Event_B_RecibeDev" />
+    <bpmn:messageFlow id="MF_08" name="Email: Devolución confirmada" sourceRef="Task_B_EmailDevuelto" targetRef="Event_A_Devuelto" />
+  </bpmn:collaboration>
+
+  <!-- ======================================================== -->
+  <!--  POOL: ALUMNO                                            -->
+  <!-- ======================================================== -->
+  <bpmn:process id="Process_Alumno" name="Flujo del Alumno" isExecutable="false">
+
+    <bpmn:startEvent id="Start_A" name="Necesita equipos">
+      <bpmn:outgoing>F_A01</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:exclusiveGateway id="GW_A_Bloqueado" name="¿Bloqueado o sancionado?">
+      <bpmn:incoming>F_A01</bpmn:incoming>
+      <bpmn:outgoing>F_A02_Si</bpmn:outgoing>
+      <bpmn:outgoing>F_A02_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_A_Bloqueado" name="Acceso denegado">
+      <bpmn:incoming>F_A02_Si</bpmn:incoming>
+      <bpmn:terminateEventDefinition />
+    </bpmn:endEvent>
+
+    <bpmn:userTask id="Task_A_Catalogo" name="Explorar catálogo de equipos&#10;(Fotografía, Audiovisual, Iluminación, Computacional, Packs)">
+      <bpmn:incoming>F_A02_No</bpmn:incoming>
+      <bpmn:outgoing>F_A03</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_A_Carrito" name="Seleccionar equipos al carrito&#10;(cantidad, modo: cualquiera / específico)">
+      <bpmn:incoming>F_A03</bpmn:incoming>
+      <bpmn:outgoing>F_A04</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_A_Formulario" name="Completar formulario:&#10;• Tipo: DENTRO / FUERA&#10;• Horarios o Fechas&#10;• Asignatura&#10;• Proyecto grupal (opcional)&#10;• Observación&#10;• Aceptar T&amp;C">
+      <bpmn:incoming>F_A04</bpmn:incoming>
+      <bpmn:outgoing>F_A05</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sendTask id="Task_A_Enviar" name="Enviar solicitud">
+      <bpmn:incoming>F_A05</bpmn:incoming>
+      <bpmn:outgoing>F_A06</bpmn:outgoing>
+    </bpmn:sendTask>
+
+    <bpmn:intermediateCatchEvent id="Event_A_RecibeConfirmacion" name="Recibe confirmación por email">
+      <bpmn:incoming>F_A06</bpmn:incoming>
+      <bpmn:outgoing>F_A07</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_A01" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:userTask id="Task_A_Esperar" name="Esperar respuesta del administrador">
+      <bpmn:incoming>F_A07</bpmn:incoming>
+      <bpmn:outgoing>F_A08</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:eventBasedGateway id="GW_A_Respuesta" name="Respuesta recibida">
+      <bpmn:incoming>F_A08</bpmn:incoming>
+      <bpmn:outgoing>F_A09_Apr</bpmn:outgoing>
+      <bpmn:outgoing>F_A09_Rech</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+
+    <bpmn:intermediateCatchEvent id="Event_A_Aprobado" name="Recibe email: Aprobado">
+      <bpmn:incoming>F_A09_Apr</bpmn:incoming>
+      <bpmn:outgoing>F_A10</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_A02" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:intermediateCatchEvent id="Event_A_Rechazado" name="Recibe email: Rechazado (con motivo)">
+      <bpmn:incoming>F_A09_Rech</bpmn:incoming>
+      <bpmn:outgoing>F_A_Fin_Rech</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_A03" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:endEvent id="End_A_Rechazado" name="Solicitud rechazada">
+      <bpmn:incoming>F_A_Fin_Rech</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sendTask id="Task_A_Presentarse" name="Presentarse a retirar equipos en el laboratorio">
+      <bpmn:incoming>F_A10</bpmn:incoming>
+      <bpmn:outgoing>F_A11</bpmn:outgoing>
+    </bpmn:sendTask>
+
+    <bpmn:intermediateCatchEvent id="Event_A_Entregado" name="Recibe email: Equipos entregados">
+      <bpmn:incoming>F_A11</bpmn:incoming>
+      <bpmn:outgoing>F_A12</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_A04" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:userTask id="Task_A_Usar" name="Usar equipos (en lab o externo)">
+      <bpmn:incoming>F_A12</bpmn:incoming>
+      <bpmn:outgoing>F_A13</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sendTask id="Task_A_Devolver" name="Devolver equipos al laboratorio">
+      <bpmn:incoming>F_A13</bpmn:incoming>
+      <bpmn:outgoing>F_A14</bpmn:outgoing>
+    </bpmn:sendTask>
+
+    <bpmn:intermediateCatchEvent id="Event_A_Devuelto" name="Recibe email: Devolución confirmada">
+      <bpmn:incoming>F_A14</bpmn:incoming>
+      <bpmn:outgoing>F_A_Fin</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_A05" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:endEvent id="End_A_Ok" name="Préstamo finalizado">
+      <bpmn:incoming>F_A_Fin</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="F_A01" sourceRef="Start_A" targetRef="GW_A_Bloqueado" />
+    <bpmn:sequenceFlow id="F_A02_Si" name="Sí" sourceRef="GW_A_Bloqueado" targetRef="End_A_Bloqueado" />
+    <bpmn:sequenceFlow id="F_A02_No" name="No" sourceRef="GW_A_Bloqueado" targetRef="Task_A_Catalogo" />
+    <bpmn:sequenceFlow id="F_A03" sourceRef="Task_A_Catalogo" targetRef="Task_A_Carrito" />
+    <bpmn:sequenceFlow id="F_A04" sourceRef="Task_A_Carrito" targetRef="Task_A_Formulario" />
+    <bpmn:sequenceFlow id="F_A05" sourceRef="Task_A_Formulario" targetRef="Task_A_Enviar" />
+    <bpmn:sequenceFlow id="F_A06" sourceRef="Task_A_Enviar" targetRef="Event_A_RecibeConfirmacion" />
+    <bpmn:sequenceFlow id="F_A07" sourceRef="Event_A_RecibeConfirmacion" targetRef="Task_A_Esperar" />
+    <bpmn:sequenceFlow id="F_A08" sourceRef="Task_A_Esperar" targetRef="GW_A_Respuesta" />
+    <bpmn:sequenceFlow id="F_A09_Apr" sourceRef="GW_A_Respuesta" targetRef="Event_A_Aprobado" />
+    <bpmn:sequenceFlow id="F_A09_Rech" sourceRef="GW_A_Respuesta" targetRef="Event_A_Rechazado" />
+    <bpmn:sequenceFlow id="F_A_Fin_Rech" sourceRef="Event_A_Rechazado" targetRef="End_A_Rechazado" />
+    <bpmn:sequenceFlow id="F_A10" sourceRef="Event_A_Aprobado" targetRef="Task_A_Presentarse" />
+    <bpmn:sequenceFlow id="F_A11" sourceRef="Task_A_Presentarse" targetRef="Event_A_Entregado" />
+    <bpmn:sequenceFlow id="F_A12" sourceRef="Event_A_Entregado" targetRef="Task_A_Usar" />
+    <bpmn:sequenceFlow id="F_A13" sourceRef="Task_A_Usar" targetRef="Task_A_Devolver" />
+    <bpmn:sequenceFlow id="F_A14" sourceRef="Task_A_Devolver" targetRef="Event_A_Devuelto" />
+    <bpmn:sequenceFlow id="F_A_Fin" sourceRef="Event_A_Devuelto" targetRef="End_A_Ok" />
+  </bpmn:process>
+
+  <!-- ======================================================== -->
+  <!--  POOL: ADMINISTRADOR                                     -->
+  <!-- ======================================================== -->
+  <bpmn:process id="Process_Admin" name="Flujo del Administrador" isExecutable="false">
+
+    <bpmn:startEvent id="Event_B_RecibeSolicitud" name="Recibe solicitud de préstamo">
+      <bpmn:outgoing>F_B01</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_B01" />
+    </bpmn:startEvent>
+
+    <bpmn:sendTask id="Task_B_EmailConfirmacion" name="Enviar email de confirmación al alumno">
+      <bpmn:incoming>F_B01</bpmn:incoming>
+      <bpmn:outgoing>F_B02</bpmn:outgoing>
+    </bpmn:sendTask>
+
+    <bpmn:userTask id="Task_B_Revisar" name="Revisar solicitud&#10;(datos del alumno, equipos, fechas, asignatura)">
+      <bpmn:incoming>F_B02</bpmn:incoming>
+      <bpmn:outgoing>F_B03</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="GW_B_Ajustar" name="¿Necesita ajustar equipos?">
+      <bpmn:incoming>F_B03</bpmn:incoming>
+      <bpmn:outgoing>F_B04_Si</bpmn:outgoing>
+      <bpmn:outgoing>F_B04_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_B_Ajustar" name="Ajustar equipos asignados">
+      <bpmn:incoming>F_B04_Si</bpmn:incoming>
+      <bpmn:outgoing>F_B05</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="GW_B_MergeAjustar">
+      <bpmn:incoming>F_B04_No</bpmn:incoming>
+      <bpmn:incoming>F_B05</bpmn:incoming>
+      <bpmn:outgoing>F_B06</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:exclusiveGateway id="GW_B_Decision" name="¿Aprobar o rechazar?">
+      <bpmn:incoming>F_B06</bpmn:incoming>
+      <bpmn:outgoing>F_B07_Apr</bpmn:outgoing>
+      <bpmn:outgoing>F_B07_Rech</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- RAMA RECHAZAR -->
+    <bpmn:userTask id="Task_B_MotivoRechazo" name="Indicar motivo de rechazo:&#10;• Sin stock&#10;• Conflicto de horario&#10;• Sanción activa&#10;• Documentación incompleta&#10;• Límite de préstamos&#10;• Otro">
+      <bpmn:incoming>F_B07_Rech</bpmn:incoming>
+      <bpmn:outgoing>F_B08_Rech</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_B_LibEquipos" name="Liberar equipos (estado → Disponible)">
+      <bpmn:incoming>F_B08_Rech</bpmn:incoming>
+      <bpmn:outgoing>F_B09_Rech</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sendTask id="Task_B_EmailRechazado" name="Enviar email de rechazo al alumno (con motivo)">
+      <bpmn:incoming>F_B09_Rech</bpmn:incoming>
+      <bpmn:outgoing>F_B_FinRech</bpmn:outgoing>
+    </bpmn:sendTask>
+
+    <bpmn:endEvent id="End_B_Rechazado" name="Solicitud rechazada">
+      <bpmn:incoming>F_B_FinRech</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- RAMA APROBAR -->
+    <bpmn:sendTask id="Task_B_EmailAprobado" name="Enviar email de aprobación al alumno">
+      <bpmn:incoming>F_B07_Apr</bpmn:incoming>
+      <bpmn:outgoing>F_B08_Apr</bpmn:outgoing>
+    </bpmn:sendTask>
+
+    <bpmn:intermediateCatchEvent id="Event_B_AlumnoPresente" name="Alumno se presenta a retirar">
+      <bpmn:incoming>F_B08_Apr</bpmn:incoming>
+      <bpmn:outgoing>F_B09_Apr</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_B02" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:userTask id="Task_B_Entregar" name="Verificar identidad y entregar equipos físicamente">
+      <bpmn:incoming>F_B09_Apr</bpmn:incoming>
+      <bpmn:outgoing>F_B10</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sendTask id="Task_B_EmailEntregado" name="Enviar email de entrega al alumno">
+      <bpmn:incoming>F_B10</bpmn:incoming>
+      <bpmn:outgoing>F_B11</bpmn:outgoing>
+    </bpmn:sendTask>
+
+    <bpmn:intermediateCatchEvent id="Event_B_RecibeDev" name="Alumno devuelve equipos">
+      <bpmn:incoming>F_B11</bpmn:incoming>
+      <bpmn:incoming>F_B_VolverEspera</bpmn:incoming>
+      <bpmn:outgoing>F_B12</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_B03" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:userTask id="Task_B_Verificar" name="Verificar estado de los equipos">
+      <bpmn:incoming>F_B12</bpmn:incoming>
+      <bpmn:outgoing>F_B13</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="GW_B_TipoDev" name="¿Devolución completa?">
+      <bpmn:incoming>F_B13</bpmn:incoming>
+      <bpmn:outgoing>F_B14_Completa</bpmn:outgoing>
+      <bpmn:outgoing>F_B14_Parcial</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_B_DevParcial" name="Registrar devolución parcial (marcar equipos devueltos)">
+      <bpmn:incoming>F_B14_Parcial</bpmn:incoming>
+      <bpmn:outgoing>F_B_VolverEspera</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_B_LibTodos" name="Liberar todos los equipos (estado → Disponible)">
+      <bpmn:incoming>F_B14_Completa</bpmn:incoming>
+      <bpmn:outgoing>F_B15</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sendTask id="Task_B_EmailDevuelto" name="Enviar email de devolución al alumno">
+      <bpmn:incoming>F_B15</bpmn:incoming>
+      <bpmn:outgoing>F_B_Fin</bpmn:outgoing>
+    </bpmn:sendTask>
+
+    <bpmn:endEvent id="End_B_Ok" name="Préstamo finalizado">
+      <bpmn:incoming>F_B_Fin</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="F_B01" sourceRef="Event_B_RecibeSolicitud" targetRef="Task_B_EmailConfirmacion" />
+    <bpmn:sequenceFlow id="F_B02" sourceRef="Task_B_EmailConfirmacion" targetRef="Task_B_Revisar" />
+    <bpmn:sequenceFlow id="F_B03" sourceRef="Task_B_Revisar" targetRef="GW_B_Ajustar" />
+    <bpmn:sequenceFlow id="F_B04_Si" name="Sí" sourceRef="GW_B_Ajustar" targetRef="Task_B_Ajustar" />
+    <bpmn:sequenceFlow id="F_B04_No" name="No" sourceRef="GW_B_Ajustar" targetRef="GW_B_MergeAjustar" />
+    <bpmn:sequenceFlow id="F_B05" sourceRef="Task_B_Ajustar" targetRef="GW_B_MergeAjustar" />
+    <bpmn:sequenceFlow id="F_B06" sourceRef="GW_B_MergeAjustar" targetRef="GW_B_Decision" />
+    <bpmn:sequenceFlow id="F_B07_Apr" name="Aprobar" sourceRef="GW_B_Decision" targetRef="Task_B_EmailAprobado" />
+    <bpmn:sequenceFlow id="F_B07_Rech" name="Rechazar" sourceRef="GW_B_Decision" targetRef="Task_B_MotivoRechazo" />
+    <bpmn:sequenceFlow id="F_B08_Rech" sourceRef="Task_B_MotivoRechazo" targetRef="Task_B_LibEquipos" />
+    <bpmn:sequenceFlow id="F_B09_Rech" sourceRef="Task_B_LibEquipos" targetRef="Task_B_EmailRechazado" />
+    <bpmn:sequenceFlow id="F_B_FinRech" sourceRef="Task_B_EmailRechazado" targetRef="End_B_Rechazado" />
+    <bpmn:sequenceFlow id="F_B08_Apr" sourceRef="Task_B_EmailAprobado" targetRef="Event_B_AlumnoPresente" />
+    <bpmn:sequenceFlow id="F_B09_Apr" sourceRef="Event_B_AlumnoPresente" targetRef="Task_B_Entregar" />
+    <bpmn:sequenceFlow id="F_B10" sourceRef="Task_B_Entregar" targetRef="Task_B_EmailEntregado" />
+    <bpmn:sequenceFlow id="F_B11" sourceRef="Task_B_EmailEntregado" targetRef="Event_B_RecibeDev" />
+    <bpmn:sequenceFlow id="F_B12" sourceRef="Event_B_RecibeDev" targetRef="Task_B_Verificar" />
+    <bpmn:sequenceFlow id="F_B13" sourceRef="Task_B_Verificar" targetRef="GW_B_TipoDev" />
+    <bpmn:sequenceFlow id="F_B14_Completa" name="Sí, completa" sourceRef="GW_B_TipoDev" targetRef="Task_B_LibTodos" />
+    <bpmn:sequenceFlow id="F_B14_Parcial" name="No, parcial" sourceRef="GW_B_TipoDev" targetRef="Task_B_DevParcial" />
+    <bpmn:sequenceFlow id="F_B_VolverEspera" sourceRef="Task_B_DevParcial" targetRef="Event_B_RecibeDev" />
+    <bpmn:sequenceFlow id="F_B15" sourceRef="Task_B_LibTodos" targetRef="Task_B_EmailDevuelto" />
+    <bpmn:sequenceFlow id="F_B_Fin" sourceRef="Task_B_EmailDevuelto" targetRef="End_B_Ok" />
+  </bpmn:process>
+
+  <!-- ======================================================== -->
+  <!--  DIAGRAMA VISUAL                                         -->
+  <!-- ======================================================== -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Prestamo">
+
+      <!-- POOL ALUMNO -->
+      <bpmndi:BPMNShape id="Pool_Alumno_di" bpmnElement="Pool_Alumno" isHorizontal="true">
+        <dc:Bounds x="160" y="60" width="2640" height="350" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Start_A_di" bpmnElement="Start_A">
+        <dc:Bounds x="222" y="212" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_A_Bloqueado_di" bpmnElement="GW_A_Bloqueado" isMarkerVisible="true">
+        <dc:Bounds x="305" y="205" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_A_Bloqueado_di" bpmnElement="End_A_Bloqueado">
+        <dc:Bounds x="312" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_A_Catalogo_di" bpmnElement="Task_A_Catalogo">
+        <dc:Bounds x="410" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_A_Carrito_di" bpmnElement="Task_A_Carrito">
+        <dc:Bounds x="560" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_A_Formulario_di" bpmnElement="Task_A_Formulario">
+        <dc:Bounds x="710" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_A_Enviar_di" bpmnElement="Task_A_Enviar">
+        <dc:Bounds x="860" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_A_RecibeConfirmacion_di" bpmnElement="Event_A_RecibeConfirmacion">
+        <dc:Bounds x="1012" y="212" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_A_Esperar_di" bpmnElement="Task_A_Esperar">
+        <dc:Bounds x="1100" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_A_Respuesta_di" bpmnElement="GW_A_Respuesta">
+        <dc:Bounds x="1255" y="205" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_A_Aprobado_di" bpmnElement="Event_A_Aprobado">
+        <dc:Bounds x="1362" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_A_Rechazado_di" bpmnElement="Event_A_Rechazado">
+        <dc:Bounds x="1362" y="312" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_A_Rechazado_di" bpmnElement="End_A_Rechazado">
+        <dc:Bounds x="1452" y="312" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_A_Presentarse_di" bpmnElement="Task_A_Presentarse">
+        <dc:Bounds x="1460" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_A_Entregado_di" bpmnElement="Event_A_Entregado">
+        <dc:Bounds x="1612" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_A_Usar_di" bpmnElement="Task_A_Usar">
+        <dc:Bounds x="1700" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_A_Devolver_di" bpmnElement="Task_A_Devolver">
+        <dc:Bounds x="1860" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_A_Devuelto_di" bpmnElement="Event_A_Devuelto">
+        <dc:Bounds x="2022" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_A_Ok_di" bpmnElement="End_A_Ok">
+        <dc:Bounds x="2112" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- Edges Alumno -->
+      <bpmndi:BPMNEdge id="F_A01_di" bpmnElement="F_A01">
+        <di:waypoint x="258" y="230" /><di:waypoint x="305" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A02_Si_di" bpmnElement="F_A02_Si">
+        <di:waypoint x="330" y="205" /><di:waypoint x="330" y="138" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A02_No_di" bpmnElement="F_A02_No">
+        <di:waypoint x="355" y="230" /><di:waypoint x="410" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A03_di" bpmnElement="F_A03">
+        <di:waypoint x="510" y="230" /><di:waypoint x="560" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A04_di" bpmnElement="F_A04">
+        <di:waypoint x="660" y="230" /><di:waypoint x="710" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A05_di" bpmnElement="F_A05">
+        <di:waypoint x="810" y="230" /><di:waypoint x="860" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A06_di" bpmnElement="F_A06">
+        <di:waypoint x="960" y="230" /><di:waypoint x="1012" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A07_di" bpmnElement="F_A07">
+        <di:waypoint x="1048" y="230" /><di:waypoint x="1100" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A08_di" bpmnElement="F_A08">
+        <di:waypoint x="1200" y="230" /><di:waypoint x="1255" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A09_Apr_di" bpmnElement="F_A09_Apr">
+        <di:waypoint x="1280" y="205" /><di:waypoint x="1280" y="160" /><di:waypoint x="1362" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A09_Rech_di" bpmnElement="F_A09_Rech">
+        <di:waypoint x="1280" y="255" /><di:waypoint x="1280" y="330" /><di:waypoint x="1362" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A_Fin_Rech_di" bpmnElement="F_A_Fin_Rech">
+        <di:waypoint x="1398" y="330" /><di:waypoint x="1452" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A10_di" bpmnElement="F_A10">
+        <di:waypoint x="1398" y="160" /><di:waypoint x="1460" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A11_di" bpmnElement="F_A11">
+        <di:waypoint x="1560" y="160" /><di:waypoint x="1612" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A12_di" bpmnElement="F_A12">
+        <di:waypoint x="1648" y="160" /><di:waypoint x="1700" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A13_di" bpmnElement="F_A13">
+        <di:waypoint x="1800" y="160" /><di:waypoint x="1860" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A14_di" bpmnElement="F_A14">
+        <di:waypoint x="1960" y="160" /><di:waypoint x="2022" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_A_Fin_di" bpmnElement="F_A_Fin">
+        <di:waypoint x="2058" y="160" /><di:waypoint x="2112" y="160" />
+      </bpmndi:BPMNEdge>
+
+      <!-- POOL ADMIN -->
+      <bpmndi:BPMNShape id="Pool_Admin_di" bpmnElement="Pool_Admin" isHorizontal="true">
+        <dc:Bounds x="160" y="480" width="2640" height="520" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Event_B_RecibeSolicitud_di" bpmnElement="Event_B_RecibeSolicitud">
+        <dc:Bounds x="892" y="622" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_EmailConfirmacion_di" bpmnElement="Task_B_EmailConfirmacion">
+        <dc:Bounds x="970" y="600" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_Revisar_di" bpmnElement="Task_B_Revisar">
+        <dc:Bounds x="1110" y="600" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_B_Ajustar_di" bpmnElement="GW_B_Ajustar" isMarkerVisible="true">
+        <dc:Bounds x="1255" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_Ajustar_di" bpmnElement="Task_B_Ajustar">
+        <dc:Bounds x="1230" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_B_MergeAjustar_di" bpmnElement="GW_B_MergeAjustar" isMarkerVisible="true">
+        <dc:Bounds x="1365" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_B_Decision_di" bpmnElement="GW_B_Decision" isMarkerVisible="true">
+        <dc:Bounds x="1465" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+
+      <!-- Rama Rechazar -->
+      <bpmndi:BPMNShape id="Task_B_MotivoRechazo_di" bpmnElement="Task_B_MotivoRechazo">
+        <dc:Bounds x="1560" y="810" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_LibEquipos_di" bpmnElement="Task_B_LibEquipos">
+        <dc:Bounds x="1710" y="810" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_EmailRechazado_di" bpmnElement="Task_B_EmailRechazado">
+        <dc:Bounds x="1860" y="810" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_B_Rechazado_di" bpmnElement="End_B_Rechazado">
+        <dc:Bounds x="2012" y="832" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- Rama Aprobar -->
+      <bpmndi:BPMNShape id="Task_B_EmailAprobado_di" bpmnElement="Task_B_EmailAprobado">
+        <dc:Bounds x="1560" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_B_AlumnoPresente_di" bpmnElement="Event_B_AlumnoPresente">
+        <dc:Bounds x="1702" y="532" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_Entregar_di" bpmnElement="Task_B_Entregar">
+        <dc:Bounds x="1790" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_EmailEntregado_di" bpmnElement="Task_B_EmailEntregado">
+        <dc:Bounds x="1940" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_B_RecibeDev_di" bpmnElement="Event_B_RecibeDev">
+        <dc:Bounds x="2082" y="532" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_Verificar_di" bpmnElement="Task_B_Verificar">
+        <dc:Bounds x="2160" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_B_TipoDev_di" bpmnElement="GW_B_TipoDev" isMarkerVisible="true">
+        <dc:Bounds x="2305" y="525" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_DevParcial_di" bpmnElement="Task_B_DevParcial">
+        <dc:Bounds x="2280" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_LibTodos_di" bpmnElement="Task_B_LibTodos">
+        <dc:Bounds x="2400" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_B_EmailDevuelto_di" bpmnElement="Task_B_EmailDevuelto">
+        <dc:Bounds x="2550" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_B_Ok_di" bpmnElement="End_B_Ok">
+        <dc:Bounds x="2702" y="532" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- Edges Admin -->
+      <bpmndi:BPMNEdge id="F_B01_di" bpmnElement="F_B01">
+        <di:waypoint x="928" y="640" /><di:waypoint x="970" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B02_di" bpmnElement="F_B02">
+        <di:waypoint x="1070" y="640" /><di:waypoint x="1110" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B03_di" bpmnElement="F_B03">
+        <di:waypoint x="1210" y="640" /><di:waypoint x="1255" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B04_Si_di" bpmnElement="F_B04_Si">
+        <di:waypoint x="1280" y="615" /><di:waypoint x="1280" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B04_No_di" bpmnElement="F_B04_No">
+        <di:waypoint x="1305" y="640" /><di:waypoint x="1365" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B05_di" bpmnElement="F_B05">
+        <di:waypoint x="1330" y="550" /><di:waypoint x="1390" y="550" /><di:waypoint x="1390" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B06_di" bpmnElement="F_B06">
+        <di:waypoint x="1415" y="640" /><di:waypoint x="1465" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B07_Apr_di" bpmnElement="F_B07_Apr">
+        <di:waypoint x="1490" y="615" /><di:waypoint x="1490" y="550" /><di:waypoint x="1560" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B07_Rech_di" bpmnElement="F_B07_Rech">
+        <di:waypoint x="1490" y="665" /><di:waypoint x="1490" y="850" /><di:waypoint x="1560" y="850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B08_Rech_di" bpmnElement="F_B08_Rech">
+        <di:waypoint x="1660" y="850" /><di:waypoint x="1710" y="850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B09_Rech_di" bpmnElement="F_B09_Rech">
+        <di:waypoint x="1810" y="850" /><di:waypoint x="1860" y="850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B_FinRech_di" bpmnElement="F_B_FinRech">
+        <di:waypoint x="1960" y="850" /><di:waypoint x="2012" y="850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B08_Apr_di" bpmnElement="F_B08_Apr">
+        <di:waypoint x="1660" y="550" /><di:waypoint x="1702" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B09_Apr_di" bpmnElement="F_B09_Apr">
+        <di:waypoint x="1738" y="550" /><di:waypoint x="1790" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B10_di" bpmnElement="F_B10">
+        <di:waypoint x="1890" y="550" /><di:waypoint x="1940" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B11_di" bpmnElement="F_B11">
+        <di:waypoint x="2040" y="550" /><di:waypoint x="2082" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B12_di" bpmnElement="F_B12">
+        <di:waypoint x="2118" y="550" /><di:waypoint x="2160" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B13_di" bpmnElement="F_B13">
+        <di:waypoint x="2260" y="550" /><di:waypoint x="2305" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B14_Completa_di" bpmnElement="F_B14_Completa">
+        <di:waypoint x="2355" y="550" /><di:waypoint x="2400" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B14_Parcial_di" bpmnElement="F_B14_Parcial">
+        <di:waypoint x="2330" y="575" /><di:waypoint x="2330" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B_VolverEspera_di" bpmnElement="F_B_VolverEspera">
+        <di:waypoint x="2280" y="680" /><di:waypoint x="2100" y="680" /><di:waypoint x="2100" y="568" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B15_di" bpmnElement="F_B15">
+        <di:waypoint x="2500" y="550" /><di:waypoint x="2550" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_B_Fin_di" bpmnElement="F_B_Fin">
+        <di:waypoint x="2650" y="550" /><di:waypoint x="2702" y="550" />
+      </bpmndi:BPMNEdge>
+
+      <!-- MESSAGE FLOWS (flechas punteadas entre pools) -->
+      <bpmndi:BPMNEdge id="MF_01_di" bpmnElement="MF_01">
+        <di:waypoint x="910" y="270" /><di:waypoint x="910" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_02_di" bpmnElement="MF_02">
+        <di:waypoint x="1030" y="600" /><di:waypoint x="1030" y="248" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_03_di" bpmnElement="MF_03">
+        <di:waypoint x="1610" y="510" /><di:waypoint x="1380" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_04_di" bpmnElement="MF_04">
+        <di:waypoint x="1910" y="810" /><di:waypoint x="1380" y="348" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_05_di" bpmnElement="MF_05">
+        <di:waypoint x="1510" y="200" /><di:waypoint x="1720" y="532" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_06_di" bpmnElement="MF_06">
+        <di:waypoint x="1990" y="510" /><di:waypoint x="1630" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_07_di" bpmnElement="MF_07">
+        <di:waypoint x="1910" y="200" /><di:waypoint x="2100" y="532" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_08_di" bpmnElement="MF_08">
+        <di:waypoint x="2600" y="510" /><di:waypoint x="2040" y="178" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

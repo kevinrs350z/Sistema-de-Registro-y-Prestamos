@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Pack } from '../models/pack.model';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class PacksService {
@@ -12,11 +12,24 @@ export class PacksService {
   constructor(private http: HttpClient) {}
 
   private getAuthHeaders(): HttpHeaders {
+    const token = sessionStorage.getItem('token');
+
+    return new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Accept': 'application/json'
+    });
+  }
+
+  /**
+   * Headers para FormData (sin Content-Type, el navegador lo agrega automáticamente)
+   */
+  private getFormDataHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
 
     return new HttpHeaders({
       'Authorization': token ? `Bearer ${token}` : '',
       'Accept': 'application/json'
+      // NO incluir Content-Type, el navegador lo establece con el boundary correcto
     });
   }
 
@@ -39,7 +52,7 @@ export class PacksService {
     return this.http.post(
       `${this.baseUrl}/packs`,
       formData,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getFormDataHeaders() }
     );
   }
 
@@ -47,7 +60,7 @@ export class PacksService {
     return this.http.post(
       `${this.baseUrl}/packs/${id}?_method=PUT`,
       formData,
-      { headers: this.getAuthHeaders() }
+      { headers: this.getFormDataHeaders() }
     );
   }
 

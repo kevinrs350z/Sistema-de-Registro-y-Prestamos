@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 /**
  * Modelo que representa una categoría dentro del sistema de inventario.
@@ -47,8 +48,22 @@ class Categoria extends Model
      */
     protected $fillable = [
         'nombre',
-        'descripcion'
+        'descripcion',
+        'icono',
+        'activo'
     ];
+
+    protected $casts = [
+        'activo' => 'boolean',
+    ];
+
+    /**
+     * Icono por defecto si no tiene uno asignado.
+     */
+    public function getIconoAttribute($value)
+    {
+        return $value ?: 'bi-tag';
+    }
 
     /**
      * Relación uno a muchos con TipoEquipo.
@@ -62,6 +77,21 @@ class Categoria extends Model
     public function tipoEquipos()
     {
         return $this->hasMany(TipoEquipo::class, 'categoria_id');
+    }
+
+    /**
+     * Encargados asignados a esta categoria.
+     */
+    public function encargados()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'categoria_encargado',
+            'categoria_id',
+            'user_id',
+            'id',
+            'idUser'
+        )->withTimestamps();
     }
 
 

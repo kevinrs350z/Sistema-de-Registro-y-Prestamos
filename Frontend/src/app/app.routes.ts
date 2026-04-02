@@ -9,22 +9,20 @@ import { ResetPasswordComponent } from './components/auth/reset-password/reset-p
 // ALUMNO
 import { CatalogoEquiposComponent } from './components/alumno/catalogo-equipos/catalogo-equipos.component';
 import { SolicitarReservaComponent } from './components/alumno/solicitar-reserva/solicitar-reserva.component';
+import { MisSancionesComponent } from './components/alumno/mis-sanciones/mis-sanciones.component';
 
 // ADMIN
 import { DashboardAdminComponent } from './components/admin/dashboard-admin/dashboard-admin.component';
 import { NotificacionesComponent } from './components/admin/notificaciones/notificaciones.component';
 import { SolicitudesPendientesComponent } from './components/admin/solicitudes-pendientes/solicitudes-pendientes.component';
 import { ReportesComponent } from './components/admin/reportes/reportes/reportes.component';
-import { ReportesTendenciasComponent } from './components/admin/reportes/reportes-tendencias/reportes-tendencias.component';
-import { ReportesAlumnosComponent } from './components/admin/reportes/reportes-alumnos/reportes-alumnos.component';
-import { ReportesProfesoresComponent } from './components/admin/reportes/reportes-profesores/reportes-profesores.component';
-import { ReportesAsignaturasComponent } from './components/admin/reportes/reportes-asignaturas/reportes-asignaturas.component';
-import { ReportesInventarioComponent } from './components/admin/reportes/reportes-inventario/reportes-inventario.component';
-import { ReportesSancionesComponent } from './components/admin/reportes/reportes-sanciones/reportes-sanciones.component';
-import { ReportesMantenimientosComponent } from './components/admin/reportes/reportes-mantenimientos/reportes-mantenimientos.component';
-import { ReportesEquiposComponent } from './components/admin/reportes/reportes-equipos/reportes-equipos.component';
 import { GestionarAsignaturasComponent } from './components/admin/asignaturas/gestionar-asignaturas.component';
 import { DashboardOperationalComponent } from './components/admin/reportes/dashboard-operational/dashboard-operational.component';
+import { DashboardExecutiveComponent } from './components/admin/reportes/dashboard-executive/dashboard-executive.component';
+import { BloqueosHorarioComponent } from './components/admin/bloqueos-horario/bloqueos-horario.component';
+import { DashboardStockoutComponent } from './components/admin/reportes/dashboard-stockout/dashboard-stockout.component';
+import { DashboardAuditComponent } from './components/admin/reportes/dashboard-audit/dashboard-audit.component';
+import { CategoriasEncargadosComponent } from './components/admin/categorias-encargados/categorias-encargados.component';
 export const routes: Routes = [
   // REDIRECCIÓN INICIAL
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -51,6 +49,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'mis-sanciones',
+    component: MisSancionesComponent
+  },
+
+  {
     path: 'preguntas-frecuentes',
     loadComponent: () =>
       import('./components/alumno/preguntas-frecuentes-alumno/preguntas-frecuentes-alumno.component')
@@ -64,21 +67,17 @@ export const routes: Routes = [
   { path: 'admin/notificaciones', component: NotificacionesComponent },
 
   { path: 'admin/solicitudes', component: SolicitudesPendientesComponent },
+  { path: 'admin/bloqueos-horario', component: BloqueosHorarioComponent },
+  { path: 'admin/categorias', component: CategoriasEncargadosComponent },
   {
     path: 'admin/reportes',
     component: ReportesComponent,
     children: [
+      { path: 'executive', component: DashboardExecutiveComponent },
       { path: 'dashboard', component: DashboardOperationalComponent },
-      { path: 'equipos', component: ReportesEquiposComponent },
-      { path: 'alumnos', component: ReportesAlumnosComponent },
-      { path: 'profesores', component: ReportesProfesoresComponent },
-      { path: 'asignaturas', component: ReportesAsignaturasComponent },
-      { path: 'inventario', component: ReportesInventarioComponent },
-      { path: 'sanciones', component: ReportesSancionesComponent },
-      { path: 'mantenimientos', component: ReportesMantenimientosComponent },
-      { path: 'tendencias', component: ReportesTendenciasComponent },
-
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+      { path: 'stockout', component: DashboardStockoutComponent },
+      { path: 'audit', component: DashboardAuditComponent },
+      { path: '', redirectTo: 'executive', pathMatch: 'full' }
     ]
   },
 

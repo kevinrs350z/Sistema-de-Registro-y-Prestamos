@@ -1,0 +1,457 @@
+<mxfile host="app.diagrams.net" modified="2026-01-28T12:00:00.000Z" agent="5.0" version="21.0.0" type="device">
+  <diagram id="flujo-prestamos" name="Flujo de Préstamos">
+    <mxGraphModel dx="1434" dy="780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- ========== POOL ALUMNO ========== -->
+        <mxCell id="pool_alumno" value="ALUMNO / USUARIO" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="2100" height="280" as="geometry" />
+        </mxCell>
+        
+        <!-- Start Event Alumno -->
+        <mxCell id="start_alumno" value="Necesita&#xa;equipo" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="30" y="110" width="60" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Seleccionar equipos -->
+        <mxCell id="task_seleccionar_equipos" value="Seleccionar&#xa;equipos&#xa;disponibles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="120" y="100" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Seleccionar tipo -->
+        <mxCell id="task_seleccionar_tipo" value="Seleccionar&#xa;tipo de&#xa;préstamo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="250" y="100" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway Tipo -->
+        <mxCell id="gw_tipo" value="¿Tipo?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="380" y="105" width="70" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Seleccionar bloques (DENTRO) -->
+        <mxCell id="task_bloques" value="Seleccionar&#xa;bloques y&#xa;asignatura" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="480" y="20" width="90" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Seleccionar fechas (FUERA) -->
+        <mxCell id="task_fechas" value="Seleccionar&#xa;fecha inicio&#xa;y fecha fin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="480" y="200" width="90" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Agregar motivo -->
+        <mxCell id="task_motivo" value="Agregar&#xa;motivo /&#xa;justificación" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="600" y="100" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Enviar solicitud -->
+        <mxCell id="task_enviar" value="Enviar&#xa;solicitud de&#xa;préstamo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="730" y="100" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Estado: PENDIENTE -->
+        <mxCell id="estado_pendiente" value="Estado:&#xa;PENDIENTE" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;fontStyle=2;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="740" y="190" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Esperar respuesta -->
+        <mxCell id="task_esperar" value="Esperar&#xa;respuesta&#xa;del admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="860" y="100" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway Resultado -->
+        <mxCell id="gw_resultado" value="¿Resultado?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="990" y="105" width="70" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Recibir aprobación -->
+        <mxCell id="event_aprobado" value="Aprobado&#xa;✉️" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="1090" y="30" width="50" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Recibir rechazo -->
+        <mxCell id="event_rechazado" value="Rechazado&#xa;✉️" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="1090" y="200" width="50" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Recoger equipos -->
+        <mxCell id="task_recoger" value="Recoger&#xa;equipos&#xa;físicamente" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="1170" y="20" width="90" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Usar equipos -->
+        <mxCell id="task_usar" value="Usar&#xa;equipos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="1290" y="20" width="90" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Devolver equipos -->
+        <mxCell id="task_devolver_alumno" value="Devolver&#xa;equipos&#xa;físicamente" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="1410" y="20" width="90" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- End exitoso -->
+        <mxCell id="end_exitoso" value="Préstamo&#xa;completado" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;strokeWidth=3;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="1530" y="30" width="60" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- End rechazado -->
+        <mxCell id="end_rechazado_alumno" value="Solicitud&#xa;rechazada" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;strokeWidth=3;" vertex="1" parent="pool_alumno">
+          <mxGeometry x="1170" y="200" width="60" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Flows Alumno -->
+        <mxCell id="f1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="start_alumno" target="task_seleccionar_equipos">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_seleccionar_equipos" target="task_seleccionar_tipo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_seleccionar_tipo" target="gw_tipo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f4a" value="DENTRO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontStyle=1;fontSize=9;" edge="1" parent="pool_alumno" source="gw_tipo" target="task_bloques">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f4b" value="FUERA" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontStyle=1;fontSize=9;" edge="1" parent="pool_alumno" source="gw_tipo" target="task_fechas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f5a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_bloques" target="task_motivo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="50" />
+              <mxPoint x="580" y="140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f5b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_fechas" target="task_motivo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="230" />
+              <mxPoint x="580" y="140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_motivo" target="task_enviar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_enviar" target="task_esperar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_esperar" target="gw_resultado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f9a" value="✓" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;fontStyle=1;fontSize=12;" edge="1" parent="pool_alumno" source="gw_resultado" target="event_aprobado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f9b" value="✗" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;fontStyle=1;fontSize=12;" edge="1" parent="pool_alumno" source="gw_resultado" target="event_rechazado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="event_aprobado" target="task_recoger">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_recoger" target="task_usar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_usar" target="task_devolver_alumno">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="task_devolver_alumno" target="end_exitoso">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_alumno" source="event_rechazado" target="end_rechazado_alumno">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        
+        <!-- ========== POOL ADMINISTRADOR ========== -->
+        <mxCell id="pool_admin" value="ADMINISTRADOR / RESPONSABLE" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="360" width="2100" height="400" as="geometry" />
+        </mxCell>
+        
+        <!-- Recibir solicitud -->
+        <mxCell id="start_admin" value="Recibir&#xa;solicitud&#xa;✉️" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="pool_admin">
+          <mxGeometry x="30" y="170" width="60" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Revisar solicitud -->
+        <mxCell id="task_revisar" value="Revisar&#xa;detalles de&#xa;la solicitud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_admin">
+          <mxGeometry x="120" y="160" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Verificar disponibilidad -->
+        <mxCell id="task_verificar_disp" value="Verificar&#xa;disponibilidad&#xa;de equipos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_admin">
+          <mxGeometry x="250" y="160" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Verificar sanciones -->
+        <mxCell id="task_verificar_sanc" value="Verificar&#xa;sanciones&#xa;del alumno" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_admin">
+          <mxGeometry x="380" y="160" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway Sanciones -->
+        <mxCell id="gw_sanciones" value="¿Tiene&#xa;sanciones?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="pool_admin">
+          <mxGeometry x="510" y="165" width="70" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Rechazar por sanción -->
+        <mxCell id="task_rechazar_sancion" value="Rechazar por&#xa;sanción activa" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="pool_admin">
+          <mxGeometry x="600" y="60" width="90" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway Aprobar -->
+        <mxCell id="gw_aprobar" value="¿Aprobar&#xa;solicitud?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="pool_admin">
+          <mxGeometry x="610" y="165" width="70" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Aprobar préstamo -->
+        <mxCell id="task_aprobar" value="Aprobar&#xa;préstamo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="pool_admin">
+          <mxGeometry x="710" y="160" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Estado APROBADO -->
+        <mxCell id="estado_aprobado" value="PENDIENTE&#xa;→ APROBADO" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;fontStyle=2;" vertex="1" parent="pool_admin">
+          <mxGeometry x="720" y="250" width="80" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Rechazar préstamo -->
+        <mxCell id="task_rechazar" value="Rechazar&#xa;préstamo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="pool_admin">
+          <mxGeometry x="710" y="310" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Estado RECHAZADO -->
+        <mxCell id="estado_rechazado" value="PENDIENTE&#xa;→ RECHAZADO&#xa;Equipos: DISPONIBLE" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f8cecc;strokeColor=#b85450;fontSize=8;fontStyle=2;" vertex="1" parent="pool_admin">
+          <mxGeometry x="820" y="310" width="90" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Entregar equipos -->
+        <mxCell id="task_entregar" value="Entregar&#xa;equipos&#xa;físicamente" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="pool_admin">
+          <mxGeometry x="840" y="160" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Marcar entregado -->
+        <mxCell id="task_marcar_entregado" value="Marcar como&#xa;ENTREGADO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="pool_admin">
+          <mxGeometry x="970" y="160" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Estado ENTREGADO -->
+        <mxCell id="estado_entregado" value="APROBADO&#xa;→ ENTREGADO&#xa;Equipos: PRESTADO" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=8;fontStyle=2;" vertex="1" parent="pool_admin">
+          <mxGeometry x="980" y="250" width="90" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Esperar devolución -->
+        <mxCell id="event_esperar_dev" value="Esperar&#xa;devolución" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1100" y="175" width="50" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Recibir devolución -->
+        <mxCell id="task_recibir_dev" value="Recibir&#xa;devolución&#xa;de equipos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1180" y="160" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Verificar estado equipos -->
+        <mxCell id="task_verificar_estado" value="Verificar&#xa;estado de&#xa;equipos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1310" y="160" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway Estado Equipos -->
+        <mxCell id="gw_estado_equipos" value="¿Buen&#xa;estado?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1440" y="165" width="70" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Marcar devuelto (OK) -->
+        <mxCell id="task_marcar_devuelto" value="Marcar como&#xa;DEVUELTO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1540" y="80" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Estado DEVUELTO -->
+        <mxCell id="estado_devuelto" value="ENTREGADO&#xa;→ DEVUELTO&#xa;Equipos: DISPONIBLE" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=8;fontStyle=2;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1650" y="80" width="95" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Aplicar sanción -->
+        <mxCell id="task_aplicar_sancion" value="Aplicar&#xa;sanción&#xa;(LEVE/MEDIA/GRAVE)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1540" y="260" width="100" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Marcar devuelto con sanción -->
+        <mxCell id="task_marcar_devuelto_sancion" value="Marcar como&#xa;DEVUELTO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1670" y="260" width="100" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- End préstamo finalizado -->
+        <mxCell id="end_finalizado" value="Préstamo&#xa;finalizado" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;strokeWidth=3;" vertex="1" parent="pool_admin">
+          <mxGeometry x="1800" y="170" width="60" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- End rechazado admin -->
+        <mxCell id="end_rechazado_admin" value="Solicitud&#xa;rechazada" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;strokeWidth=3;" vertex="1" parent="pool_admin">
+          <mxGeometry x="930" y="315" width="60" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Flows Admin -->
+        <mxCell id="fa1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="start_admin" target="task_revisar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_revisar" target="task_verificar_disp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_verificar_disp" target="task_verificar_sanc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_verificar_sanc" target="gw_sanciones">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa5a" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;fontStyle=1;fontSize=10;" edge="1" parent="pool_admin" source="gw_sanciones" target="task_rechazar_sancion">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa5b" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;fontStyle=1;fontSize=10;" edge="1" parent="pool_admin" source="gw_sanciones" target="gw_aprobar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa6a" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;fontStyle=1;fontSize=10;" edge="1" parent="pool_admin" source="gw_aprobar" target="task_aprobar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa6b" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;fontStyle=1;fontSize=10;" edge="1" parent="pool_admin" source="gw_aprobar" target="task_rechazar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_aprobar" target="task_entregar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_rechazar" target="end_rechazado_admin">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa8b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_rechazar_sancion" target="end_rechazado_admin">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="85" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fa9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_entregar" target="task_marcar_entregado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_marcar_entregado" target="event_esperar_dev">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="event_esperar_dev" target="task_recibir_dev">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_recibir_dev" target="task_verificar_estado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_verificar_estado" target="gw_estado_equipos">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa14a" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;fontStyle=1;fontSize=10;" edge="1" parent="pool_admin" source="gw_estado_equipos" target="task_marcar_devuelto">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa14b" value="No (daño)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;fontStyle=1;fontSize=9;" edge="1" parent="pool_admin" source="gw_estado_equipos" target="task_aplicar_sancion">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_marcar_devuelto" target="end_finalizado">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1830" y="110" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fa16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_aplicar_sancion" target="task_marcar_devuelto_sancion">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fa17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pool_admin" source="task_marcar_devuelto_sancion" target="end_finalizado">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1830" y="295" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        
+        <!-- ========== POOL SISTEMA ========== -->
+        <mxCell id="pool_sistema" value="SISTEMA (Notificaciones / Base de Datos)" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="800" width="2100" height="120" as="geometry" />
+        </mxCell>
+        
+        <!-- Enviar email aprobado -->
+        <mxCell id="task_email_aprobado" value="Enviar email:&#xa;Préstamo Aprobado" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="pool_sistema">
+          <mxGeometry x="710" y="30" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Enviar email rechazado -->
+        <mxCell id="task_email_rechazado" value="Enviar email:&#xa;Préstamo Rechazado" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="pool_sistema">
+          <mxGeometry x="840" y="30" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Registrar historial -->
+        <mxCell id="task_historial" value="Registrar en&#xa;PrestamoHistorial" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="pool_sistema">
+          <mxGeometry x="970" y="30" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Actualizar equipos -->
+        <mxCell id="task_actualizar_equipos" value="Actualizar estado&#xa;de equipos&#xa;(DISPONIBLE/PRESTADO)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="pool_sistema">
+          <mxGeometry x="1100" y="30" width="110" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Notificar sanción -->
+        <mxCell id="task_notificar_sancion" value="Enviar email:&#xa;Notificación Sanción" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="pool_sistema">
+          <mxGeometry x="1540" y="30" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        
+        <!-- ========== MESSAGE FLOWS (entre pools) ========== -->
+        <!-- Solicitud enviada -->
+        <mxCell id="msg_solicitud" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" parent="1" source="task_enviar" target="start_admin">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="340" />
+              <mxPoint x="110" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        
+        <!-- ========== LEYENDA ========== -->
+        <mxCell id="leyenda" value="LEYENDA - FLUJO DE ESTADOS" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="960" width="600" height="180" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley1" value="1. PENDIENTE → Solicitud creada por alumno" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="leyenda">
+          <mxGeometry x="20" y="35" width="270" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley2" value="2. APROBADO → Admin aprueba la solicitud" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="leyenda">
+          <mxGeometry x="20" y="60" width="270" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley3" value="3. ENTREGADO → Admin entrega equipos físicamente" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="leyenda">
+          <mxGeometry x="20" y="85" width="280" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley4" value="4. DEVUELTO → Alumno devuelve equipos, admin confirma" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="leyenda">
+          <mxGeometry x="20" y="110" width="300" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley5" value="5. RECHAZADO → Admin rechaza la solicitud" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="leyenda">
+          <mxGeometry x="20" y="135" width="270" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley_tipo1" value="DENTRO = Uso en laboratorio (bloques)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="leyenda">
+          <mxGeometry x="340" y="35" width="220" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley_tipo2" value="FUERA = Préstamo externo (fechas)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="leyenda">
+          <mxGeometry x="340" y="60" width="220" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley_sancion" value="⚠️ Sanciones: LEVE (7-14d), MEDIA (15-30d), GRAVE (30-60d)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="leyenda">
+          <mxGeometry x="340" y="100" width="250" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ley_equipo" value="📦 Equipos: DISPONIBLE ↔ PRESTADO" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="leyenda">
+          <mxGeometry x="340" y="135" width="220" height="20" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

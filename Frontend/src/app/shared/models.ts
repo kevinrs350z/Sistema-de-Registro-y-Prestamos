@@ -15,6 +15,7 @@ export interface Equipo {
   codigo: string;
   disponible: boolean;
   imagen: string;
+  imagen_url?: string;
 }
 
 

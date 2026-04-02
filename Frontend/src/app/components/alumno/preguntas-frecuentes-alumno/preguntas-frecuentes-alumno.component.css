@@ -46,11 +46,24 @@
   border: 1.5px solid #ccd7ff;
   box-shadow: 0 4px 10px rgba(0, 40, 150, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
 
 .faq-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(90, 121, 255, 0.1);
+}
+
+.faq-card.activa {
+  border-color: #8aa0c4;
+  box-shadow: 0 8px 18px rgba(90, 121, 255, 0.14);
+}
+
+.faq-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
 }
 
 /* =============================
@@ -60,13 +73,13 @@
   font-size: 1.05rem;
   font-weight: 600;
   color: #3451b2;
-  margin-bottom: 0.4rem;
 }
 
 .faq-respuesta {
   font-size: 0.9rem;
   color: #444;
   line-height: 1.5;
+  margin-top: 0.6rem;
 }
 
 /* =============================

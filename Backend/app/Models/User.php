@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
+use App\Models\Categoria;
 
 class User extends Authenticatable implements CanResetPasswordContract
 {
@@ -84,8 +85,19 @@ class User extends Authenticatable implements CanResetPasswordContract
     public function sanciones()
     {
         return $this->belongsToMany(Sancion::class, 'user_sancion', 'idUser', 'idSancion')
-            ->withPivot(['assigned_by', 'prestamo_id', 'descripcion', 'accion', 'created_at'])
+            ->withPivot([
+                'id', 'assigned_by', 'prestamo_id', 'descripcion', 'accion',
+                'nivel', 'estado_sancion', 'categoria_falta',
+                'fecha_inicio', 'fecha_fin', 'escalada_desde_id', 'periodo_academico',
+                'created_at',
+            ])
             ->withTimestamps();
+    }
+
+    /** Registros individuales de sanciones (relación directa al pivot). */
+    public function sancionesIndividuales()
+    {
+        return $this->hasMany(\App\Models\UserSancion::class, 'idUser', 'idUser');
     }
 
      // Verifica si el usuario tiene un rol específico
@@ -100,6 +112,26 @@ class User extends Authenticatable implements CanResetPasswordContract
     public function isAdmin()
     {
         return $this->hasRole('ADMIN');
+    }
+
+    public function isAdminOrSuper(): bool
+    {
+        return $this->hasRole('ADMIN') || $this->hasRole('SUPER_USUARIO');
+    }
+
+    /**
+     * Categorias donde el usuario es encargado.
+     */
+    public function categoriasEncargadas()
+    {
+        return $this->belongsToMany(
+            Categoria::class,
+            'categoria_encargado',
+            'user_id',
+            'categoria_id',
+            'idUser',
+            'id'
+        )->withTimestamps();
     }
 
     /**

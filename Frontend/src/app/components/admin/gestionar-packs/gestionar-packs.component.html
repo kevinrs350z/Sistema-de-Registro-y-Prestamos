@@ -22,7 +22,7 @@
 
       <div class="header-lista">
         <h3>Packs</h3>
-        <button class="btn-crear" (click)="nuevoPack()">+ Crear nuevo pack</button>
+        <button class="btn-crear" (click)="nuevoPack()">Crear nuevo pack</button>
       </div>
 
       <p *ngIf="packs.length === 0 && !cargando" class="sin-reservas">
@@ -88,7 +88,7 @@
 
       <div class="formulario-reserva">
         <h3 class="titulo-form">
-          {{ editandoPack ? 'Editar Pack' : 'Crear Nuevo Pack' }}
+          {{ editandoPack ? 'Editar pack' : 'Crear nuevo pack' }}
         </h3>
 
         <!-- Nombre -->
@@ -137,13 +137,20 @@
           <label>Agregar equipo</label>
 
           <div class="equipo-flex">
+            <select [(ngModel)]="tipoSeleccionado">
+              <option [ngValue]="null">Filtrar por tipo (todos)</option>
+              <option *ngFor="let t of tiposEquipos" [ngValue]="t">{{ t }}</option>
+            </select>
+          </div>
+
+          <div class="equipo-flex">
             <select [(ngModel)]="equipoSeleccionado">
               <option [ngValue]="null">Seleccionar equipo...</option>
               <option
-                *ngFor="let eq of equipos; trackBy: trackById"
+                *ngFor="let eq of equiposFiltrados; trackBy: trackById"
                 [ngValue]="eq"
               >
-                {{ eq.nombre }}
+                {{ eq.codigo_activo || 'S/C' }} — {{ eq.nombre }} ({{ getTipoNombre(eq) }})
               </option>
             </select>
 
@@ -184,8 +191,8 @@
             [disabled]="guardando"
           >
             {{ guardando
-                ? 'Guardando...'
-                : (editandoPack ? '💾 Guardar cambios' : '➕ Crear Pack') }}
+              ? 'Guardando...'
+              : (editandoPack ? 'Guardar cambios' : 'Crear pack') }}
           </button>
 
           <button
@@ -250,7 +257,7 @@
             type="button"
             (click)="editarPack()"
           >
-            ✏️ Editar Pack
+            Editar pack
           </button>
 
           <button
@@ -259,7 +266,7 @@
             (click)="eliminarPack(packSeleccionado.id)"
             [disabled]="eliminando"
           >
-            {{ eliminando ? 'Eliminando...' : '🗑 Eliminar Pack' }}
+            {{ eliminando ? 'Eliminando...' : 'Eliminar pack' }}
           </button>
 
           <button
@@ -269,7 +276,7 @@
             (click)="reactivarPack(packSeleccionado.id)"
             [disabled]="guardando"
           >
-            {{ guardando ? 'Procesando...' : '♻️ Reactivar Pack' }}
+            {{ guardando ? 'Procesando...' : 'Reactivar pack' }}
           </button>
 
         </div>

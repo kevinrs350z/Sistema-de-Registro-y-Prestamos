@@ -1,10 +1,10 @@
 <?php
-
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+
 
 class PrestamoSeeder extends Seeder
 {
@@ -19,11 +19,11 @@ class PrestamoSeeder extends Seeder
         */
         $p1 = DB::table('prestamos')->insertGetId([
             'idUser'       => 1,
-            'fecha_inicio' => null,
-            'fecha_fin'    => null,
-            'estado'       => 'pendiente',
+            'fecha_inicio' => $now->toDateString(),
+            'fecha_fin'    => $now->toDateString(),
+            'estado'       => 'PENDIENTE',
             'tipo'         => 'DENTRO',
-            'otra_motivo'  => 'Uso en laboratorio',
+            'otra_motivo'  => 'Clase práctica',
             'observacion'  => null,
             'created_at'   => $now,
             'updated_at'   => $now,
@@ -49,7 +49,7 @@ class PrestamoSeeder extends Seeder
             'idUser'       => 2,
             'fecha_inicio' => '2025-11-20',
             'fecha_fin'    => '2025-11-22',
-            'estado'       => 'pendiente',
+            'estado'       => 'PENDIENTE',
             'tipo'         => 'FUERA',
             'otra_motivo'  => 'Grabación externa',
             'observacion'  => null,
@@ -70,9 +70,9 @@ class PrestamoSeeder extends Seeder
         */
         $p3 = DB::table('prestamos')->insertGetId([
             'idUser'       => 1,
-            'fecha_inicio' => null,
-            'fecha_fin'    => null,
-            'estado'       => 'aprobado',
+            'fecha_inicio' => $now->toDateString(),
+            'fecha_fin'    => $now->toDateString(),
+            'estado'       => 'APROBADO',
             'tipo'         => 'DENTRO',
             'otra_motivo'  => 'Práctica guiada',
             'observacion'  => null,
@@ -98,7 +98,7 @@ class PrestamoSeeder extends Seeder
             'idUser'       => 3,
             'fecha_inicio' => '2025-12-01',
             'fecha_fin'    => '2025-12-08',
-            'estado'       => 'pendiente',
+            'estado'       => 'PENDIENTE',
             'tipo'         => 'FUERA',
             'otra_motivo'  => 'Proyecto personal',
             'observacion'  => 'Debe devolver antes del lunes',
@@ -119,9 +119,9 @@ class PrestamoSeeder extends Seeder
         */
         $p5 = DB::table('prestamos')->insertGetId([
             'idUser'       => 2,
-            'fecha_inicio' => null,
-            'fecha_fin'    => null,
-            'estado'       => 'pendiente',
+            'fecha_inicio' => $now->toDateString(),
+            'fecha_fin'    => $now->toDateString(),
+            'estado'       => 'PENDIENTE',
             'tipo'         => 'DENTRO',
             'otra_motivo'  => 'Clases prácticas',
             'observacion'  => null,
@@ -142,12 +142,14 @@ class PrestamoSeeder extends Seeder
         // GENERAR MUCHOS MÁS PRÉSTAMOS PARA VISUALIZAR EL RANKING
         for ($i = 2; $i <= 5; $i++) {
             for ($j = 0; $j < 8; $j++) {
+                $fechaRand = Carbon::now()->subDays(rand(1, 30));
+                $tipoRand = ['DENTRO', 'FUERA'][rand(0, 1)];
                 DB::table('prestamos')->insert([
                     'idUser'       => $i,
-                    'fecha_inicio' => null,
-                    'fecha_fin'    => null,
-                    'estado'       => ['pendiente', 'aprobado', 'devuelto'][rand(0, 2)],
-                    'tipo'         => ['DENTRO', 'FUERA'][rand(0, 1)],
+                    'fecha_inicio' => $fechaRand->toDateString(),
+                    'fecha_fin'    => $tipoRand === 'FUERA' ? $fechaRand->copy()->addDays(rand(1, 5))->toDateString() : $fechaRand->toDateString(),
+                    'estado'       => ['PENDIENTE', 'APROBADO', 'DEVUELTO'][rand(0, 2)],
+                    'tipo'         => $tipoRand,
                     'otra_motivo'  => 'Préstamo ' . $j,
                     'observacion'  => null,
                     'created_at'   => Carbon::now()->subDays(rand(1, 30)),
@@ -171,7 +173,7 @@ class PrestamoSeeder extends Seeder
                     'idUser'       => $u,
                     'fecha_inicio' => $inicio,
                     'fecha_fin'    => $fin,
-                    'estado'       => 'aprobado',
+                    'estado'       => 'APROBADO',
                     'tipo'         => 'FUERA',
                     'otra_motivo'  => 'Préstamo exterior próximamente a vencer',
                     'observacion'  => null,

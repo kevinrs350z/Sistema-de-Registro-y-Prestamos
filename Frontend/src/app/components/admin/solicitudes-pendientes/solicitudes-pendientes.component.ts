@@ -4,16 +4,24 @@ import { FormsModule } from '@angular/forms';
 import { SolicitudEquipo } from '../../../shared/models';
 import { PrestamosAdminService } from '../../../services/prestamos-admin.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ImagenService } from '../../../services/image.service';
+import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { MotivosRechazoService } from '../../../services/motivos-rechazo.service';
+import { SancionesService } from '../../../services/sanciones.service';
 
 type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
   tipo?: 'DENTRO' | 'FUERA';
   bloque?: string;
   periodo?: string;
+  fechaInicio?: string | null;
+  fechaFin?: string | null;
   observacion?: string;
-  equipos?: { codigo: string; nombre: string; imagen?: string }[];
+  equipos?: { id?: number; codigo: string; nombre: string; imagen?: string; tipoEquipoId?: number }[];
+  integrantes?: { idUser: number; nombre: string; email: string }[];
   motivoAprobacion?: string;
   estudiante?: string;
   email?: string;
+  userId?: number;
   estado: 'PENDIENTE' | 'APROBADO' | 'ENTREGADO' | 'RECHAZADO';
 };
 
@@ -27,22 +35,81 @@ type AdminSolicitud = Omit<SolicitudEquipo, 'estado'> & {
 export class SolicitudesPendientesComponent implements OnInit {
 
   private notify = inject(NotificationService);
+  private imagenSrv = inject(ImagenService);
+  private tiposSrv = inject(TipoEquipoService);
+  private sancionesSrv = inject(SancionesService);
 
   solicitudes: AdminSolicitud[] = [];
   solicitudSeleccionada: AdminSolicitud | null = null;
 
   motivoRechazo = '';
+  motivoObservacion = '';
   mostrarModal = false;
+  mostrarEditarModal = false;
+  motivos: any[] = [];
+  loadingRechazo = false;
+  errorRechazo = '';
   filtroBusqueda = '';
   orden: 'recientes' | 'antiguas' = 'recientes';
   paginaPendientes = 1;
   paginaPendientesEntrega = 1;
   tamanioPagina = 6;
+  tiposEquipo: any[] = [];
+  editarEquipos: { idTipoEquipo: number; nombre: string; cantidad: number; stock?: number }[] = [];
+  tipoAgregar: number | null = null;
+  cantidadAgregar = 1;
+  motivoAjuste = '';
+  sancionesResumen: { activas: number; total: number; items: any[] } | null = null;
+  sancionesCargando = false;
+  sancionesAbierto = false;
 
-  constructor(private prestamosAdmin: PrestamosAdminService) {}
+  constructor(
+    private prestamosAdmin: PrestamosAdminService,
+    private motivosSrv: MotivosRechazoService,
+      // private sancionesSrv = inject(SancionesService), // Removed duplicate declaration
+  ) {}
 
   ngOnInit(): void {
+    this.cargarTipos();
     this.cargarSolicitudes();
+  }
+
+  private cargarTipos() {
+    this.tiposSrv.getTipos().subscribe({
+          next: (data: any) => {
+        this.tiposEquipo = data || [];
+        this.tipoAgregar = this.tiposEquipo[0]?.id ?? null;
+
+        // Enriquecer con stock disponible usando el catálogo (siempre que el endpoint lo entregue)
+        this.tiposSrv.getCatalogo().subscribe({
+          next: (catalogo) => {
+            const lista = Array.isArray(catalogo)
+              ? catalogo
+              : Array.isArray((catalogo as any)?.data)
+                ? (catalogo as any).data
+                : [];
+            if (!Array.isArray(lista) || lista.length === 0) return;
+
+            const porId = new Map<number, any>();
+            lista.forEach((c: any) => porId.set(Number(c.id), c));
+
+            this.tiposEquipo = (this.tiposEquipo || []).map((t: any) => {
+              const cat = porId.get(Number(t.id));
+              if (cat) {
+                const disponibles = cat.disponibles ?? cat.disponible ?? cat.stock_disponible ?? cat.stockDisponible ?? cat.stock;
+                const total = cat.total ?? cat.stock ?? t.stockTotal;
+                return { ...t, stock: typeof disponibles === 'number' ? disponibles : t.stock, stockTotal: total };
+              }
+              return t;
+            });
+          },
+          error: () => {
+            // si falla, continuamos con el listado base
+          }
+        });
+      },
+      error: () => this.notify.error('No se pudieron cargar los tipos de equipo.')
+    });
   }
 
   cargarSolicitudes() {
@@ -54,14 +121,14 @@ export class SolicitudesPendientesComponent implements OnInit {
           const equipos = Array.isArray(p.equipos)
             ? p.equipos.map((eq: any) => {
                 if (typeof eq === 'string') {
-                  return { codigo: '—', nombre: eq, imagen: 'assets/equipos/default.jpg' };
+                  return { codigo: '—', nombre: eq, imagen: null };
                 }
                 return {
+                  id: eq.id,
                   codigo: eq.codigo_activo ?? eq.codigo ?? '—',
                   nombre: eq.nombre ?? eq.tipo?.nombre ?? 'Equipo',
-                  imagen: eq.imagen
-                    ? `http://localhost:8000/storage/${eq.imagen}`
-                    : 'assets/equipos/default.jpg'
+                  imagen: this.imagenSrv.getStorageImage(eq.imagen) ?? null,
+                  tipoEquipoId: eq.tipo_equipo_id
                 };
               })
             : [];
@@ -70,13 +137,15 @@ export class SolicitudesPendientesComponent implements OnInit {
             id: p.idPrestamo,
             estudiante: p.user?.nombre ?? 'Desconocido',
             email: p.user?.email ?? '',
+            userId: p.user?.idUser ?? undefined,
             tipo: p.tipo,
             bloque: p.bloquePrestamo ?? '—',
             equipos,
+            integrantes: Array.isArray(p.integrantes) ? p.integrantes : [],
             observacion: p.observacion ?? 'Sin observación',
             fechaSolicitud: p.created_at,
-            fechaInicio: p.fecha_inicio,
-            fechaFin: p.fecha_fin,
+            fechaInicio: p.fecha_inicio ?? null,
+            fechaFin: p.fecha_fin ?? null,
             periodo: esExterno ? `${p.fecha_inicio ?? '—'} - ${p.fecha_fin ?? '—'}` : '—',
             estado: p.estado
 
@@ -151,6 +220,12 @@ export class SolicitudesPendientesComponent implements OnInit {
 
   seleccionarSolicitud(s: AdminSolicitud) {
     this.solicitudSeleccionada = s;
+    this.sancionesResumen = null;
+    this.sancionesAbierto = false;
+
+    if (s.userId) {
+      this.cargarSancionesUsuario(s.userId);
+    }
   }
 
   irPaginaPendientes(pagina: number) {
@@ -173,10 +248,138 @@ export class SolicitudesPendientesComponent implements OnInit {
 
   cerrarDetalle() {
     this.solicitudSeleccionada = null;
+    this.sancionesResumen = null;
+    this.sancionesAbierto = false;
+  }
+
+  private cargarSancionesUsuario(idUser: number) {
+    this.sancionesCargando = true;
+    this.sancionesSrv.getSancionesUsuario(idUser).subscribe({
+      next: (data) => {
+        this.sancionesResumen = {
+          activas: data?.resumen?.activas ?? 0,
+          total: data?.resumen?.total ?? 0,
+          items: data?.sanciones ?? []
+        };
+        this.sancionesCargando = false;
+      },
+      error: () => {
+        this.sancionesCargando = false;
+        this.sancionesResumen = { activas: 0, total: 0, items: [] };
+      }
+    });
   }
 
   abrirRechazo() {
     this.mostrarModal = true;
+    this.loadingRechazo = true;
+    this.errorRechazo = '';
+    this.motivosSrv.getMotivos().subscribe({
+      next: (data) => {
+        this.motivos = data;
+        this.loadingRechazo = false;
+      },
+      error: (err) => {
+        this.errorRechazo = 'Error al cargar motivos.';
+        this.loadingRechazo = false;
+      }
+    });
+  }
+
+  abrirEditarEquipos() {
+    if (!this.solicitudSeleccionada) return;
+    if (this.solicitudSeleccionada.estado !== 'PENDIENTE') {
+      this.notify.warning('Solo solicitudes pendientes pueden editarse.');
+      return;
+    }
+
+    const conteo = new Map<number, number>();
+    (this.solicitudSeleccionada.equipos || []).forEach((eq: any) => {
+      if (!eq.tipoEquipoId) return;
+      const actual = conteo.get(eq.tipoEquipoId) ?? 0;
+      conteo.set(eq.tipoEquipoId, actual + 1);
+    });
+
+    this.editarEquipos = Array.from(conteo.entries()).map(([idTipoEquipo, cantidad]) => {
+      const tipo = this.tiposEquipo.find(t => t.id === idTipoEquipo);
+      return {
+        idTipoEquipo,
+        nombre: tipo?.nombre ?? 'Equipo',
+        cantidad,
+        stock: this.getStockTipo(idTipoEquipo) ?? undefined
+      };
+    });
+
+    this.cantidadAgregar = 1;
+    this.motivoAjuste = '';
+    this.mostrarEditarModal = true;
+  }
+
+  cerrarEditarModal() {
+    this.mostrarEditarModal = false;
+    this.editarEquipos = [];
+    this.motivoAjuste = '';
+  }
+
+  agregarTipo() {
+    if (!this.tipoAgregar || this.cantidadAgregar < 1) return;
+    const tipo = this.tiposEquipo.find(t => t.id === this.tipoAgregar);
+    if (!tipo) return;
+
+    const existente = this.editarEquipos.find(e => e.idTipoEquipo === tipo.id);
+    if (existente) {
+      existente.cantidad += this.cantidadAgregar;
+    } else {
+      this.editarEquipos.push({
+        idTipoEquipo: tipo.id,
+        nombre: tipo.nombre,
+        cantidad: this.cantidadAgregar,
+        stock: this.getStockTipo(tipo.id) ?? undefined
+      });
+    }
+    this.cantidadAgregar = 1;
+  }
+
+  quitarEquipo(index: number) {
+    this.editarEquipos.splice(index, 1);
+  }
+
+  confirmarEditarEquipos() {
+    if (!this.solicitudSeleccionada) return;
+
+    const equipos = this.editarEquipos
+      .filter(e => e.cantidad > 0)
+      .map(e => ({ idTipoEquipo: e.idTipoEquipo, cantidad: e.cantidad }));
+
+    if (equipos.length === 0) {
+      this.notify.warning('Debes mantener al menos un equipo.');
+      return;
+    }
+
+    const excedidos = this.editarEquipos.filter(e =>
+      typeof e.stock === 'number' && e.stock >= 0 && e.cantidad > e.stock
+    );
+    if (excedidos.length > 0) {
+      const nombres = excedidos.map(e => e.nombre).join(', ');
+      this.notify.error(`Stock insuficiente para: ${nombres}.`);
+      return;
+    }
+
+    this.prestamosAdmin.actualizarEquiposPrestamo(this.solicitudSeleccionada.id!, {
+      equipos,
+      motivo: this.motivoAjuste?.trim() || null
+    }).subscribe({
+      next: () => {
+        this.notify.success('Solicitud actualizada correctamente.');
+        this.cerrarEditarModal();
+        this.cargarSolicitudes();
+        this.solicitudSeleccionada = null;
+      },
+      error: (err: any) => {
+        console.error('Error actualizando solicitud:', err);
+        this.notify.error(err?.error?.message || 'No se pudo actualizar la solicitud.');
+      }
+    });
   }
 
   aprobarSolicitud(id?: number) {
@@ -190,62 +393,106 @@ export class SolicitudesPendientesComponent implements OnInit {
       .subscribe({
         next: () => {
           this.notify.success('Solicitud aprobada correctamente.');
+          this.actualizarEstadoLocal(solicitudId, 'APROBADO');
           this.cargarSolicitudes();
+          this.solicitudSeleccionada = null;
         },
-        error: (err) => console.error('Error al aprobar:', err)
+        error: (err: any) => {
+          console.error('Error al aprobar:', err);
+          this.notify.error('No se pudo aprobar la solicitud.');
+        }
       });
   }
 
-confirmarRechazo() {
-  if (!this.solicitudSeleccionada) return;
-  if (this.motivoRechazo.trim() === '') {
-    this.notify.warning('Debes ingresar un motivo para el rechazo.');
-    return;
+  confirmarRechazo() {
+    if (!this.solicitudSeleccionada || !this.motivoRechazo) return;
+    this.loadingRechazo = true;
+    this.errorRechazo = '';
+
+    this.prestamosAdmin
+      .rechazarPrestamo(
+        this.solicitudSeleccionada.id!,
+        this.motivoRechazo,
+        'rechazar'
+      )
+      .subscribe({
+        next: () => {
+          this.notify.success('Solicitud rechazada correctamente.');
+          this.actualizarEstadoLocal(this.solicitudSeleccionada!.id!, 'RECHAZADO');
+          this.cargarSolicitudes();
+          this.cerrarModal();
+          this.solicitudSeleccionada = null;
+          this.loadingRechazo = false;
+        },
+        error: (err: any) => {
+          this.errorRechazo = 'Error al rechazar solicitud.';
+          this.loadingRechazo = false;
+          console.error('Error al rechazar:', err);
+          this.notify.error('No se pudo rechazar la solicitud.');
+        }
+      });
   }
-
-  this.prestamosAdmin
-    .rechazarPrestamo(
-      this.solicitudSeleccionada.id!,
-      this.motivoRechazo,
-      'rechazar'
-    )
-    .subscribe({
-      next: () => {
-        this.notify.success('Solicitud rechazada correctamente.');
-        this.cargarSolicitudes();
-        this.cerrarModal();
-      },
-      error: (err) => console.error('Error al rechazar:', err)
-    });
-}
-
 
   cerrarModal() {
     this.mostrarModal = false;
     this.motivoRechazo = '';
+    this.motivoObservacion = '';
     this.solicitudSeleccionada = null;
+    this.loadingRechazo = false;
+    this.errorRechazo = '';
   }
 
   formatearFecha(f: string): string {
     if (!f) return '—';
-    return new Date(f).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    const d = new Date(f);
+    if (isNaN(d.getTime())) return '—';
+    const dia = d.getDate().toString().padStart(2, '0');
+    const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+    const anio = d.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
+
+  formatearPeriodo(fechaInicio: string | null, fechaFin: string | null): string {
+    const inicio = this.formatearFecha(fechaInicio || '');
+    const fin = this.formatearFecha(fechaFin || '');
+    if (inicio === '—' && fin === '—') return '—';
+    if (inicio === fin) return inicio;
+    return `${inicio} - ${fin}`;
   }
 
   marcarEntregado(id?: number) {
     if (!this.solicitudSeleccionada) return;
-    
-    // Llamada real a la API
+
     this.prestamosAdmin.marcarEntregado(id || this.solicitudSeleccionada.id!).subscribe({
       next: () => {
         this.notify.success('Préstamo marcado como ENTREGADO correctamente.');
+        this.actualizarEstadoLocal(id || this.solicitudSeleccionada!.id!, 'ENTREGADO');
         this.cargarSolicitudes();
       },
       error: (err: any) => console.error('Error al marcar como entregado:', err),
     });
+  }
+
+  getStockTipo(idTipoEquipo: number): number | null {
+    const idNum = Number(idTipoEquipo);
+    const tipo = this.tiposEquipo.find((t: any) => Number(t.id) === idNum);
+    if (!tipo) return null;
+
+    // Acepta distintas claves que pueda traer el API
+    const posibles = [
+      tipo.stock,
+      tipo.stock_disponible,
+      tipo.stockDisponible,
+      tipo.disponible,
+      tipo.disponibles
+    ];
+
+    const valor = posibles.find((v) => typeof v === 'number');
+    return typeof valor === 'number' ? valor : null;
+  }
+
+  getNombreTipo(idTipoEquipo: number): string {
+    return this.tiposEquipo.find((t: any) => t.id === idTipoEquipo)?.nombre ?? 'Equipo';
   }
 
   getEstadoTexto(estado?: string): string {
@@ -260,6 +507,20 @@ confirmarRechazo() {
         return 'RECHAZADO';
       default:
         return 'PENDIENTE';
+    }
+  }
+
+  private actualizarEstadoLocal(id: number, estado: AdminSolicitud['estado']) {
+    const idx = this.solicitudes.findIndex((s) => s.id === id);
+    if (idx === -1) return;
+
+    const actualizado = { ...this.solicitudes[idx], estado };
+    const nuevas = [...this.solicitudes];
+    nuevas[idx] = actualizado;
+    this.solicitudes = nuevas;
+
+    if (this.solicitudSeleccionada?.id === id) {
+      this.solicitudSeleccionada = actualizado;
     }
   }
 }

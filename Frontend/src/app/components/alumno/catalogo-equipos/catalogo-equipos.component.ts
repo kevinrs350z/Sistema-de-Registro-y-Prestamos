@@ -1,26 +1,36 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TipoEquipoService } from '../../../services/tipoEquipo.service';
+import { AuthService } from '../../../services/auth.service';
 import { Pack } from '../../../models/pack.model';
 import { CarritoItem } from '../catalogo-equipos/carrito-item.model';
 import { CarritoService } from '../../../services/carrito.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ImagenService } from '../../../services/image.service';
 
 @Component({
   selector: 'app-catalogo-equipos',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './catalogo-equipos.component.html',
-  styleUrls: ['./catalogo-equipos.component.css']
+  styleUrls: ['./catalogo-equipos.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CatalogoEquiposComponent {
 
   private api = inject(TipoEquipoService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private carritoSrv = inject(CarritoService);
   private notify = inject(NotificationService);
+  private imagenSrv = inject(ImagenService);
+  private auth = inject(AuthService);
+  private readonly formatoDisponibilidad = new Intl.DateTimeFormat('es-CL', {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  });
 
   // ===========================
   // ESTADOS
@@ -32,22 +42,137 @@ export class CatalogoEquiposComponent {
 
   categoriaSeleccionada = signal<string>('TODOS');
   busqueda = signal<string>('');
+  horarioSeleccionado = signal<{ fecha?: string | null; bloqueId?: number | null }>({});
 
   // ✅ carrito se lee desde el servicio (fuente única)
   carrito = computed(() => this.carritoSrv.getCarrito());
+
+  computadoresEnCarrito = computed(() =>
+    this.carrito()
+      .filter(item => item.tipo === 'equipo' && this.esComputadorItem(item))
+      .map(item => item.idTipoEquipo)
+      .filter((id): id is number => typeof id === 'number')
+  );
+
+  bloqueoPorComputador = computed(() => this.computadoresEnCarrito().length > 0);
+  esAdmin = this.auth.isAdmin();
+
+  // ===========================
+  // MAPAS PRECOMPUTADOS (evitan llamadas repetidas en template)
+  // ===========================
+  private imagenMap = computed(() => {
+    const m = new Map<number, string | null>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this.imagenSrv.resolveTipoEquipoImage({
+        id: t.id, imagen_url: t.imagen_url, imagen: t.imagen, nombre: t.nombre
+      }));
+    }
+    return m;
+  });
+
+  private enCarritoMap = computed(() => {
+    const m = new Map<number, boolean>();
+    const carritoItems = this.carrito();
+    for (const t of this.tipos()) {
+      m.set(t.id, carritoItems.some(c => c.tipo === 'equipo' && c.idTipoEquipo === t.id));
+    }
+    return m;
+  });
+
+  private cantidadMap = computed(() => {
+    const m = new Map<number, number>();
+    for (const c of this.carrito()) {
+      if (c.tipo === 'equipo' && c.idTipoEquipo != null) {
+        m.set(c.idTipoEquipo, c.cantidad ?? 0);
+      }
+    }
+    return m;
+  });
+
+  private bloqueadoHorarioMap = computed(() => {
+    const m = new Map<number, boolean>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this._bloqueoHorarioActivo(t));
+    }
+    return m;
+  });
+
+  private disponibilidadMap = computed(() => {
+    const m = new Map<number, string | null>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this._obtenerMensajeDisponibilidad(t));
+    }
+    return m;
+  });
+
+  private disponibleMap = computed(() => {
+    const m = new Map<number, boolean>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this._estaDisponible(t));
+    }
+    return m;
+  });
+
+  private sinStockMap = computed(() => {
+    const m = new Map<number, boolean>();
+    for (const t of this.tipos()) {
+      m.set(t.id, this._estaSinStock(t));
+    }
+    return m;
+  });
+
+  private puedeSolicitarMap = computed(() => {
+    const m = new Map<number, boolean>();
+    const carritoItems = this.carrito();
+    const compEnCarrito = this.computadoresEnCarrito();
+    const bloqueoPorComp = compEnCarrito.length > 0;
+    for (const t of this.tipos()) {
+      if (this.esAdmin) { m.set(t.id, true); continue; }
+      const bh = this.bloqueadoHorarioMap().get(t.id) ?? false;
+      const ss = this.sinStockMap().get(t.id) ?? false;
+      const disp = this.disponibleMap().get(t.id) ?? false;
+      if (bh || t.bloqueado || ss || !disp || (bloqueoPorComp && !compEnCarrito.includes(t.id))) {
+        m.set(t.id, false);
+      } else {
+        m.set(t.id, true);
+      }
+    }
+    return m;
+  });
+
+  // ===========================
+  // TRACK-BY FUNCTIONS
+  // ===========================
+  trackByCategoria = (_i: number, c: { nombre: string }): string => c.nombre;
+  trackByEquipo = (_i: number, e: TipoEquipo): number => e.id;
+  trackByPack = (_i: number, p: Pack): number => p.id;
+  trackByEquipoNombre = (_i: number, e: { nombre: string }): string => e.nombre;
 
   // ===========================
   // INIT
   // ===========================
   ngOnInit(): void {
-    const token: string = localStorage.getItem('token') ?? '';
+    const token: string = sessionStorage.getItem('token') ?? '';
     if (!token) {
       this.notify.warning('Debes iniciar sesión para ver el catálogo de equipos.');
       this.router.navigate(['/auth/login']);
       return;
     }
 
-    this.api.getCatalogo().subscribe({
+    const queryParams = this.route.snapshot.queryParamMap;
+    const fecha = queryParams.get('fecha');
+    const bloqueParam = queryParams.get('bloqueId') ?? queryParams.get('bloque');
+    const bloqueId = bloqueParam !== null ? Number(bloqueParam) : undefined;
+
+    this.horarioSeleccionado.set({
+      fecha,
+      bloqueId: Number.isFinite(bloqueId) ? bloqueId : null,
+    });
+
+    this.api.getCatalogo({
+      fecha: fecha || undefined,
+      bloqueId: Number.isFinite(bloqueId) ? bloqueId : undefined,
+    }).subscribe({
       next: (data: TipoEquipo[]) => this.tipos.set(data),
       error: (err: any) => console.error('❌ Error catálogo:', err)
     });
@@ -61,9 +186,19 @@ export class CatalogoEquiposComponent {
   // ===========================
   // CATEGORÍAS
   // ===========================
-  categorias = computed((): string[] => {
-    const cats = this.tipos().map(t => t.categoria ?? 'Otros');
-    return ['TODOS', 'PACKS', ...Array.from(new Set(cats))];
+  categorias = computed((): { nombre: string; icono: string }[] => {
+    const seen = new Map<string, string>();
+    for (const t of this.tipos()) {
+      const cat = t.categoria ?? 'Otros';
+      if (!seen.has(cat)) {
+        seen.set(cat, t.categoria_icono ?? 'bi-tag');
+      }
+    }
+    return [
+      { nombre: 'TODOS', icono: 'bi-grid-1x2' },
+      { nombre: 'PACKS', icono: 'bi-box-seam' },
+      ...Array.from(seen.entries()).map(([nombre, icono]) => ({ nombre, icono }))
+    ];
   });
 
   esVistaPacks = computed((): boolean =>
@@ -88,41 +223,126 @@ export class CatalogoEquiposComponent {
     this.busqueda.set((event.target as HTMLInputElement).value);
   }
 
-  // ===========================
-  // IMÁGENES
-  // ===========================
-  urlImagen(path: string): string {
-    return `http://localhost:8000/storage/${path}`;
+  private getMotivoNoDisponible(e: TipoEquipo): string | null {
+    return e.motivoNoDisponible ?? e.motivo_no_disponible ?? null;
   }
 
-  getImagenEquipo(e: TipoEquipo): string {
-    const n = e.nombre.toLowerCase();
-    if (n.includes('cámara')) return 'assets/equipos/camara.jpg';
-    if (n.includes('micrófono')) return 'assets/equipos/aro.jpg';
-    if (n.includes('tablet')) return 'assets/equipos/computador.jpg';
-    if (n.includes('proyector')) return 'assets/equipos/proyector.jpg';
-    return 'assets/equipos/lampara.jpg';
+  estaBloqueadoPorHorario(e: TipoEquipo): boolean {
+    return this.bloqueadoHorarioMap().get(e.id) ?? false;
+  }
+
+  estaSinStock(e: TipoEquipo): boolean {
+    return this.sinStockMap().get(e.id) ?? this._estaSinStock(e);
+  }
+
+  estaDisponible(e: TipoEquipo): boolean {
+    return this.disponibleMap().get(e.id) ?? this._estaDisponible(e);
+  }
+
+  private _estaSinStock(e: TipoEquipo): boolean {
+    const motivo = this.getMotivoNoDisponible(e);
+    if (motivo === 'SIN_STOCK') return true;
+    return (e.stock ?? 0) <= 0;
+  }
+
+  private _estaDisponible(e: TipoEquipo): boolean {
+    if (typeof e.disponible === 'boolean') {
+      return e.disponible && !this._bloqueoHorarioActivo(e);
+    }
+    return (e.stock ?? 0) > 0 && !this._bloqueoHorarioActivo(e);
+  }
+
+  private _obtenerMensajeDisponibilidad(e: TipoEquipo): string | null {
+    const motivo = this.getMotivoNoDisponible(e);
+    if (motivo === 'BLOQUEADO_HORARIO' || this._bloqueoHorarioActivo(e)) return 'Bloqueado en este horario';
+    if (motivo === 'SIN_STOCK') return 'Sin stock';
+    if (this._estaDisponible(e)) return 'Disponible ahora';
+    if (this._estaSinStock(e) && e.proxima_disponibilidad) {
+      const fecha = this.formatearDisponibilidad(e.proxima_disponibilidad);
+      return fecha ? `Disponible desde ${fecha}` : 'Sin stock';
+    }
+    return 'Sin disponibilidad próxima';
+  }
+
+  private _bloqueoHorarioActivo(e: TipoEquipo): boolean {
+    return !!(e.bloqueo_horario_activo || e.bloqueo_horario || e.bloqueado_horario || e.bloqueo_horario_hasta || e.bloqueo_hasta);
   }
 
   // ===========================
-  // CARRITO – EQUIPOS
+  // IMÁGENES (usa mapa precomputado)
+  // ===========================
+  getImagenEquipo(e: TipoEquipo): string | null {
+    return this.imagenMap().get(e.id) ?? null;
+  }
+
+  // ===========================
+  // CARRITO – EQUIPOS (usa mapas precomputados)
   // ===========================
   estaEnCarrito(idTipo: number): boolean {
-    return this.carrito().some(
-      c => c.tipo === 'equipo' && c.idTipoEquipo === idTipo
-    );
+    return this.enCarritoMap().get(idTipo) ?? false;
   }
 
   getCantidad(idTipo: number): number {
-    return this.carrito().find(
-      c => c.tipo === 'equipo' && c.idTipoEquipo === idTipo
-    )?.cantidad ?? 0;
+    return this.cantidadMap().get(idTipo) ?? 0;
   }
 
   getModo(idTipo: number): 'cualquiera' | 'especifico' {
     return this.carrito().find(
       c => c.idTipoEquipo === idTipo
     )?.modo ?? 'cualquiera';
+  }
+
+  esComputador(e: TipoEquipo): boolean {
+    return this.esTextoComputador(e.categoria) || this.esTextoComputador(e.nombre);
+  }
+
+  estaComputadorSeleccionado(e: TipoEquipo): boolean {
+    return this.computadoresEnCarrito().includes(e.id);
+  }
+
+  private esComputadorItem(item: CarritoItem): boolean {
+    return this.esTextoComputador(item.categoria) || this.esTextoComputador(item.nombre);
+  }
+
+  private esTextoComputador(texto?: string): boolean {
+    if (!texto) return false;
+    return /(computador|computacional|laptop|notebook|pc)/i.test(texto);
+  }
+
+  obtenerMensajeDisponibilidad(e: TipoEquipo): string | null {
+    return this.disponibilidadMap().get(e.id) ?? this._obtenerMensajeDisponibilidad(e);
+  }
+
+  private formatearDisponibilidad(fechaIso: string): string | null {
+    const fecha = new Date(fechaIso);
+    if (Number.isNaN(fecha.getTime())) {
+      return null;
+    }
+
+    return this.formatoDisponibilidad.format(fecha);
+  }
+
+  bloqueoHorarioActivo(e: TipoEquipo): boolean {
+    return this.bloqueadoHorarioMap().get(e.id) ?? this._bloqueoHorarioActivo(e);
+  }
+
+  getBloqueoHorarioTexto(e: TipoEquipo): string {
+    const base = e.bloqueo_horario_motivo || e.bloqueo_motivo || 'Bloqueado temporalmente por horario.';
+    const hasta = this.getBloqueoHastaFecha(e);
+
+    if (hasta) {
+      return `${base} Disponible desde ${this.formatoDisponibilidad.format(hasta)}.`;
+    }
+
+    const fecha = this.horarioSeleccionado().fecha;
+    return fecha ? `${base} (${fecha}).` : base;
+  }
+
+  private getBloqueoHastaFecha(e: TipoEquipo): Date | null {
+    const raw = e.bloqueo_horario_hasta || e.bloqueo_hasta;
+    if (!raw) return null;
+    const fecha = new Date(raw);
+    return Number.isNaN(fecha.getTime()) ? null : fecha;
   }
 
   // ===========================
@@ -132,7 +352,24 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
-    if (e.stock <= 0 && delta > 0) {
+    if (!this.esAdmin) {
+      if (this.estaBloqueadoPorHorario(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
+      if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+        this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
+        return;
+      }
+      if (e.bloqueado && delta > 0) {
+        this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
+        return;
+      }
+      if (delta > 0 && !this.puedeAgregarCantidad(e, delta)) {
+        return;
+      }
+    }
+    if (this.estaSinStock(e) && delta > 0) {
       this.notify.warning('Este equipo está agotado.');
       return;
     }
@@ -182,7 +419,28 @@ export class CatalogoEquiposComponent {
 
     const e = this.tipos().find(t => t.id === idTipo);
     if (!e) return;
-    if (e.stock <= 0) {
+    if (!this.esAdmin) {
+      if (this.estaBloqueadoPorHorario(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
+      if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+        this.notify.warning('Solo puedes solicitar el computador condicional seleccionado.');
+        return;
+      }
+      if (e.bloqueado) {
+        this.notify.warning(e.bloqueo_motivo || 'Límite alcanzado para este tipo de equipo.');
+        return;
+      }
+      if (!this.estaEnCarrito(idTipo) && !this.puedeAgregarCantidad(e, 1)) {
+        return;
+      }
+      if (!this.estaDisponible(e)) {
+        this.notify.warning(this.getBloqueoHorarioTexto(e));
+        return;
+      }
+    }
+    if (this.estaSinStock(e)) {
       this.notify.warning('Este equipo está agotado.');
       return;
     }
@@ -196,6 +454,13 @@ export class CatalogoEquiposComponent {
       return;
     }
 
+    if (!this.esAdmin && this.esComputador(e)) {
+      const otros = actual.filter(c => c.tipo !== 'equipo' || c.idTipoEquipo !== idTipo);
+      if (otros.length > 0) {
+        this.notify.info('Se removieron otros equipos porque seleccionaste un computador condicional.');
+      }
+    }
+
     const nuevo: CarritoItem = {
       tipo: 'equipo',
       idTipoEquipo: idTipo,
@@ -206,13 +471,96 @@ export class CatalogoEquiposComponent {
       equiposSeleccionados: []
     };
 
-    this.carritoSrv.setCarrito([...actual, nuevo]);
+    if (!this.esAdmin && this.esComputador(e)) {
+      this.carritoSrv.setCarrito([nuevo]);
+    } else {
+      this.carritoSrv.setCarrito([...actual, nuevo]);
+    }
+  }
+
+  private puedeAgregarCantidad(e: TipoEquipo, delta: number): boolean {
+    if (this.esAdmin) {
+      return true;
+    }
+    const maximo = typeof e.maximo_prestamo === 'number' ? e.maximo_prestamo : null;
+    if (maximo === null) {
+      return true;
+    }
+
+    const activos = e.prestamos_activos ?? 0;
+    const grupoIds = this.obtenerGrupoRelacionados(e);
+    const totalCarritoGrupo = this.obtenerTotalCarritoGrupo(grupoIds);
+    const disponible = Math.max(0, maximo - activos);
+
+    if (maximo === 0 || disponible <= 0) {
+      this.notify.warning(`No puedes solicitar más de ${maximo} ${e.nombre}.`);
+      return false;
+    }
+
+    if (totalCarritoGrupo + delta > disponible) {
+      const restante = Math.max(0, disponible - totalCarritoGrupo);
+      this.notify.warning(
+        `Límite alcanzado para ${e.nombre}. Solo puedes agregar ${restante} más (máximo ${maximo}).`
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  private obtenerGrupoRelacionados(e: TipoEquipo): number[] {
+    const ids = Array.isArray(e.grupo_relacionados) && e.grupo_relacionados.length
+      ? e.grupo_relacionados
+      : [e.id];
+
+    return ids.map((id) => Number(id)).filter((id) => Number.isFinite(id));
+  }
+
+  private obtenerTotalCarritoGrupo(ids: number[]): number {
+    if (ids.length === 0) {
+      return 0;
+    }
+
+    return this.carrito().reduce((total, item) => {
+      if (item.tipo === 'equipo' && item.idTipoEquipo && ids.includes(item.idTipoEquipo)) {
+        return total + (item.cantidad ?? 0);
+      }
+      return total;
+    }, 0);
+  }
+
+  puedeSolicitar(e: TipoEquipo): boolean {
+    if (this.esAdmin) {
+      return true;
+    }
+
+    if (this.estaBloqueadoPorHorario(e)) {
+      return false;
+    }
+
+    if (e.bloqueado) {
+      return false;
+    }
+
+    if (this.bloqueoPorComputador() && !this.estaComputadorSeleccionado(e)) {
+      return false;
+    }
+
+    if (this.estaSinStock(e)) {
+      return false;
+    }
+
+    return this.estaDisponible(e);
   }
 
   // ===========================
   // CARRITO – PACKS (✅ ahora modifica el servicio)
   // ===========================
   agregarPackAlCarrito(pack: Pack): void {
+    if (this.bloqueoPorComputador()) {
+      this.notify.warning('No puedes agregar packs mientras exista un computador condicional en la solicitud.');
+      return;
+    }
     if (pack.disponibles !== undefined && pack.disponibles <= 0) {
       this.notify.warning('Este pack está agotado.');
       return;
@@ -241,6 +589,10 @@ export class CatalogoEquiposComponent {
   }
 
   togglePack(idPack: number): void {
+    if (this.bloqueoPorComputador()) {
+      this.notify.warning('No puedes agregar packs mientras exista un computador condicional en la solicitud.');
+      return;
+    }
     const p = this.packs().find(x => x.id === idPack);
     if (!p) return;
 
@@ -314,8 +666,25 @@ interface TipoEquipo {
   nombre: string;
   descripcion?: string;
   categoria?: string;
+  categoria_icono?: string;
   imagen?: string;
+  imagen_url?: string;
   stock: number;
+  maximo_prestamo?: number;
+  prestamos_activos?: number;
+  grupo_relacionados?: number[];
+  bloqueado?: boolean;
+  bloqueo_motivo?: string | null;
+  bloqueo_horario?: boolean;
+  bloqueado_horario?: boolean;
+  bloqueo_horario_activo?: boolean;
+  bloqueo_horario_hasta?: string | null;
+  bloqueo_hasta?: string | null;
+  bloqueo_horario_motivo?: string | null;
+  proxima_disponibilidad?: string | null;
+  disponible?: boolean;
+  motivo_no_disponible?: string | null;
+  motivoNoDisponible?: string | null;
 }
 
 interface EquipoFisico {

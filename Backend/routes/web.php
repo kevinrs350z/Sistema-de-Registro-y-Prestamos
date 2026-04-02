@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Auth\GmailOAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +17,10 @@ use App\Http\Controllers\Auth\GoogleController;
 */
 Route::get('/', fn() => response()->json(['message' => 'API funcionando 🚀']));
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+
+// Gmail API OAuth - Rutas temporales para obtener refresh_token (usar solo una vez)
+Route::get('/gmail/authorize', [GmailOAuthController::class, 'redirectToGmail']);
+Route::get('/gmail/callback',  [GmailOAuthController::class, 'callback']);
 
 //Auth::routes();
 
