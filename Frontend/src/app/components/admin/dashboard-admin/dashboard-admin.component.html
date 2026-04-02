@@ -11,100 +11,102 @@
     <div class="stat-card">
       <div class="stat-info">
         <h3>{{ totalEquipos }}</h3>
-        <p>Equipos Totales</p>
+        <p>EQUIPOS TOTALES</p>
       </div>
     </div>
 
     <div class="stat-card">
       <div class="stat-info">
         <h3>{{ equiposPrestados }}</h3>
-        <p>Equipos Prestados</p>
+        <p>BLOQUEOS ACTIVOS</p>
       </div>
     </div>
 
     <div class="stat-card">
       <div class="stat-info">
         <h3>{{ prestamosActivos }}</h3>
-        <p>Préstamos Activos</p>
+        <p>PRÉSTAMOS ACTIVOS</p>
       </div>
     </div>
   </div>
 
-  <!-- 🔹 Acciones Rápidas -->
+  <!-- 🔹 Acciones Principales -->
   <div class="admin-actions">
-    <h2 class="section-title">Acciones Rápidas</h2>
+    <h2 class="section-title-label">ACCIONES PRINCIPALES</h2>
 
-    <div class="action-grid">
+    <div class="action-grid-4">
 
-      <a routerLink="/equipos/catalogo" class="action-card solicitudes">
-        <div class="action-icon"><i class="bi bi-clipboard-check"></i></div>
-        <h3>Crear solicitud</h3>
+      <a routerLink="/equipos/catalogo" class="action-card-compact active-card">
+        <h3>Crear Solicitud</h3>
         <p>Usa la vista de alumno para registrar una solicitud.</p>
       </a>
 
-      <!-- Gestión Equipos -->
-      <div class="action-card equipos" (click)="seccionActiva = 'inventario'">
-        <div class="action-icon"><i class="bi bi-hdd-stack"></i></div>
+      <div class="action-card-compact" (click)="seccionActiva = 'inventario'">
         <h3>Gestionar Equipos</h3>
         <p>Crear, editar y eliminar equipos del sistema</p>
       </div>
 
-      <!-- Gestión Packs -->
-      <a routerLink="/admin/packs" class="action-card packs">
-        <div class="action-icon"><i class="bi bi-box-seam"></i></div>
+      <a routerLink="/admin/packs" class="action-card-compact">
         <h3>Gestionar Packs</h3>
-        <p>Crear y administrar paquetes de equipos</p>
+        <p>Crear y administrar paquetes de equipos.</p>
       </a>
 
-      <!-- Gestión Sanciones -->
-      <a routerLink="/admin/sanciones" class="action-card sanciones">
-        <div class="action-icon"><i class="bi bi-exclamation-triangle"></i></div>
+      <a routerLink="/admin/sanciones" class="action-card-compact">
         <h3>Gestionar Sanciones</h3>
-        <p>Emitir y administrar sanciones a usuarios</p>
+        <p>Administra las sanciones aplicadas en el sistema</p>
       </a>
 
-      <!-- Solicitudes Pendientes -->
-      <div class="action-card solicitudes-pendientes" (click)="seccionActiva = 'solicitudes'">
-        <div class="action-icon"><i class="bi bi-hourglass-split"></i></div>
-        <h3>Solicitudes Pendientes</h3>
-        <p>Revisar y gestionar solicitudes en espera de aprobación</p>
-      </div>
+    </div>
+  </div>
 
-      <!-- Solicitudes Finalizadas -->
-      <div class="action-card solicitudes-finalizadas" (click)="seccionActiva = 'finalizadas'">
-        <div class="action-icon"><i class="bi bi-check-circle"></i></div>
-        <h3>Solicitudes Finalizadas</h3>
-        <p>Consultar el historial de préstamos completados</p>
-      </div>
+  <!-- 🔹 Sección inferior: Gestión + Reportes -->
+  <div class="bottom-sections">
 
-      <a routerLink="/admin/bloqueos-horario" class="action-card bloqueos">
-        <div class="action-icon"><i class="bi bi-calendar2-week"></i></div>
-        <h3>Bloqueos de horario</h3>
-        <p>Bloquear equipos por bloque y dia.</p>
-      </a>
+    <!-- GESTIÓN -->
+    <div class="bottom-card gestion-card">
+      <h2 class="section-title-label">GESTIÓN</h2>
 
-      <a routerLink="/admin/categorias" class="action-card categorias">
-        <div class="action-icon"><i class="bi bi-tags"></i></div>
-        <h3>Gestionar Categorias</h3>
-        <p>Categorias, encargados y correos del sistema.</p>
-      </a>
-
-      <!-- 📊 Visualizar Reportes -->
-      <div class="action-card reportes" (click)="irReportes()">
-        <div class="action-icon">
-          <i class="bi bi-bar-chart-line-fill"></i>
+      <div class="gestion-item" (click)="seccionActiva = 'solicitudes'">
+        <span class="dot dot-orange"></span>
+        <div class="gestion-text">
+          <h4>Solicitudes Pendientes</h4>
+          <p>Revisa y acepta solicitudes en espera de aprobación.</p>
         </div>
-        <h3>Visualizar Reportes</h3>
-        <p>Consultar estadísticas y reportes del sistema</p>
       </div>
 
+      <div class="gestion-row">
+        <div class="gestion-item" (click)="seccionActiva = 'finalizadas'">
+          <span class="dot dot-green"></span>
+          <div class="gestion-text">
+            <h4>Solicitudes Finalizadas</h4>
+            <p>Revisa el historial de solicitudes completadas.</p>
+          </div>
+        </div>
+
+        <a routerLink="/admin/bloqueos-horario" class="gestion-item">
+          <span class="dot dot-blue"></span>
+          <div class="gestion-text">
+            <h4>Bloqueos de horario</h4>
+            <p>Gestionar bloqueos de horarios en el sistema.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div class="bottom-card reportes-card" (click)="irReportes()">
+      <h2 class="section-title-label">REPORTES</h2>
+      <div class="reportes-content">
+        <div class="reportes-icon">
+          <i class="bi bi-graph-up"></i>
+        </div>
+        <h4>Visualizar reportes</h4>
+        <p>Consulta y analiza los reportes del sistema.</p>
+      </div>
     </div>
 
   </div>
 
-  <div class="admin-footer">
-    <p class="footer-text"></p>
-  </div>
 </div>
 
 <!-- 🧩 SECCIÓN SOLICITUDES PENDIENTES -->
