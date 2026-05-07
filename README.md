@@ -206,25 +206,16 @@ No destinado a uso comercial.
 
 ## 12. Equipo de Desarrollo
 
-- **Andrea Navia**  
-  GitHub: https://github.com/galletaneru  
-  LinkedIn: —  
-
-- **Ignacio Garrido**  
-  GitHub: https://github.com/Nach129
-  LinkedIn: —  
 
 - **Juan Meneses**  
   GitHub: https://github.com/dujuu  
-  LinkedIn: https://www.linkedin.com/in/juan-meneses-muñoz  
+  LinkedIn: https://www.linkedin.com/in/juan-meneses-muñoz
+  Role: Backend completo (Laravel, API REST, base de datos) 
 
 - **Kevin Rojas**  
   GitHub: https://github.com/kevinrs350z  
-  LinkedIn: —  
-
-- **Pablo Valladares**  
-  GitHub: https://github.com/DGX5  
-  LinkedIn: —  
+  LinkedIn: —
+  Role: Frontend completo(Angular)
 
 
 ## License
